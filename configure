@@ -1,0 +1,81 @@
+#!/bin/bash
+## configure --
+
+if [ "$BUILDROOT" == "" ]; then
+	BUILDROOT="build";
+fi;
+
+if [ "$TMPDIR" == "" ]; then
+	TMPDIR="$BUILDROOT/tmp"
+fi;
+
+if [ "$DEPROOT" == "" ]; then
+	DEPROOT="$BUILDROOT/deps";
+fi;
+
+if [ "$MBLIB_BUILDDIR" == "" ]; then
+	MBLIB_BUILDDIR="$BUILDROOT/MBLib";
+fi;
+
+if [ "$MBLIB_DEPDIR" == "" ]; then
+	MBLIB_DEPDIR="$DEPROOT/MBLib";
+fi;
+
+if [ "$MBLIB_SRCDIR" == "" ]; then
+	MBLIB_SRCDIR="./MBLib";
+fi;
+
+mkdir -p "$BUILDROOT"
+mkdir -p "$TMPDIR"
+mkdir -p "$DEPROOT"
+
+for i in MBLib; do
+	mkdir -p "$BUILDROOT/$i"
+	mkdir -p "$BUILDROOT/deps/$i"
+done;
+
+CONFIG_MK="config.mk"
+CONFIG_H="$BUILDROOT/config.h"
+
+cat /dev/null > $CONFIG_H;
+cat /dev/null > $CONFIG_MK;
+
+echo "BUILDROOT=$BUILDROOT" >> $CONFIG_MK;
+echo "TMPDIR=$TMPDIR" >> $CONFIG_MK;
+echo "DEPROOT=$DEPROOT" >> $CONFIG_MK;
+echo "MBLIB_BUILDDIR=$MBLIB_BUILDDIR" >> $CONFIG_MK;
+echo "MBLIB_DEPDIR=$MBLIB_DEPDIR" >> $CONFIG_MK;
+echo "MBLIB_SRCDIR=$MBLIB_SRCDIR" >> $CONFIG_MK;
+
+if [ `uname -a | cut -c 1-5` == "Linux" ]; then
+	echo '#define LINUX 1' >> $CONFIG_H;
+	echo 'LINUX=1' >> $CONFIG_MK;
+else
+	echo '#define MACOS 1' >> $CONFIG_H;
+	echo 'MACOS=1' >> $CONFIG_MK;
+fi;
+
+if [ "$USE_CLANG" != "" ]; then
+    echo CC=clang >> $CONFIG_MK;
+    echo CXX=clang++ >> $CONFIG_MK;
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-constant-logical-operand"
+else
+    echo CC=gcc >> $CONFIG_MK;
+    echo CXX=g++ >> $CONFIG_MK;
+fi;
+
+if [ "$DEBUG" == "" ]; then
+	DEBUG=1;
+fi;
+
+echo '#define DEBUG ' $DEBUG >> $CONFIG_H
+echo DEBUG=$DEBUG >> $CONFIG_MK;
+
+if [ "$DEBUG" != "0" ]; then
+	DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -Werror -Wall -g"
+else
+	DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -O2 -fomit-frame-pointer"
+fi;
+
+echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
+
