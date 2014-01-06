@@ -3,3 +3,5 @@ config.mk
 local.mk
 gmon.out
 
+.cproject
+.project
