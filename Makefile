@@ -19,7 +19,7 @@ TARGET=ants
 CFLAGS = ${DEFAULT_CFLAGS} -I $(BUILDROOT) $(INCLUDE_FLAGS)
 CPPFLAGS = ${CFLAGS}
 
-LIBFLAGS =
+LIBFLAGS = -lm
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	${CC} -c ${CFLAGS} -o $(BUILDDIR)/$*.o $<;
@@ -63,7 +63,7 @@ MBLib:
 $(TARGET): $(BUILDROOT)/$(TARGET)
 
 $(BUILDROOT)/$(TARGET): $(TARGET_OBJ)
-	${CXX} ${CFLAGS} ${LIBFLAGS} $(TARGET_OBJ) -o $(BUILDROOT)/$(TARGET)
+	${CXX} ${CFLAGS} $(TARGET_OBJ) $(LIBFLAGS) -o $(BUILDROOT)/$(TARGET)
 
 # XXX: I don't yet have a way to auto create the build dirs before
 #      building... 
