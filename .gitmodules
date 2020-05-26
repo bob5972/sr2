@@ -1,3 +1,3 @@
 [submodule "MBLib"]
 	path = MBLib
-	url = ssh://git.banack.net:7396/home/bob5972/src/git/MBLib.git
+	url = https://github.com/bob5972/MBLib.git
