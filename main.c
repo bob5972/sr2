@@ -5,10 +5,13 @@
 #include <stdio.h>
 #include <math.h>
 
+#include <SDL.h>
+
 #include "mbtypes.h"
 #include "mbutil.h"
 #include "mbassert.h"
 #include "random.h"
+#include "display.h"
 
 #define INVALID_ID ((uint32)-1)
 #define MOB_SPEED (1.0f)
@@ -87,7 +90,7 @@ int main(void)
     uint32 targetsReached = 0;
 
     //Setup
-    Warning("Starting ants...\n");
+    Warning("Starting SpaceRobots2 ...\n");
     Random_Init();
 
     Util_Zero(&mainData, sizeof(mainData));
@@ -137,6 +140,8 @@ int main(void)
             Warning("Finished tick %d\n", tick);
         }
     }
+
+    Display_Main();
 
     //Cleanup
     Warning("targetsReached = %d\n", targetsReached);

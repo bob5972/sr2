@@ -6,20 +6,20 @@ include config.mk
 -include local.mk
 
 SRCROOT=.
-INCLUDE_FLAGS=-I MBLib/public
+INCLUDE_FLAGS=-I MBLib/public -I /usr/include/SDL2
 
 SRCDIR=$(SRCROOT)
 BUILDDIR=$(BUILDROOT)
 DEPDIR=$(DEPROOT)
 
 #Final binary
-TARGET=ants
+TARGET=sr2
 
 #The BUILDROOT folder is included for config.h
 CFLAGS = ${DEFAULT_CFLAGS} -I $(BUILDROOT) $(INCLUDE_FLAGS)
 CPPFLAGS = ${CFLAGS}
 
-LIBFLAGS = -lm
+LIBFLAGS = -lm -lSDL2 -lGL
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	${CC} -c ${CFLAGS} -o $(BUILDDIR)/$*.o $<;
@@ -38,8 +38,10 @@ $(DEPROOT)/%.dpp: $(SRCDIR)/%.cpp Makefile
 endif
 
 #No paths. VPATH is assumed
-C_SOURCES = main.c
-CPP_SOURCES = 
+C_SOURCES = main.c \
+            displayUtil.c \
+            display.c
+CPP_SOURCES =
 
 #For reasons I cannot fathom, MBLIB_OBJ has to be last
 # or things don't link right...
@@ -49,7 +51,7 @@ MBLIB_OBJ = $(MBLIB_BUILDDIR)/MBLib.a
 C_OBJ=$(addprefix $(BUILDDIR)/, $(subst .c,.o, $(C_SOURCES)))
 CPP_OBJ=$(addprefix $(BUILDDIR)/, $(subst .cpp,.opp, $(CPP_SOURCES)))
 TARGET_OBJ = $(C_OBJ) $(CPP_OBJ) $(MBLIB_OBJ)
-		     
+
 .PHONY: all clean distclean dist MBLib
 
 #The config check is to test if we've been configured
@@ -66,7 +68,7 @@ $(BUILDROOT)/$(TARGET): $(TARGET_OBJ)
 	${CXX} ${CFLAGS} $(TARGET_OBJ) $(LIBFLAGS) -o $(BUILDROOT)/$(TARGET)
 
 # XXX: I don't yet have a way to auto create the build dirs before
-#      building... 
+#      building...
 # clean leaves the dep files
 clean:
 	$(MAKE) -f $(MBLIB_SRCDIR)/Makefile clean
@@ -78,7 +80,7 @@ clean:
 distclean: clean
 	rm -rf $(BUILDROOT)/
 	rm -rf config.mk
-	
+
 install: $(TARGET)
 	./install.sh
 
@@ -87,4 +89,3 @@ ifeq ($(CC), gcc)
 -include $(addprefix $(DEPDIR)/,$(subst .c,.d,$(C_SOURCES)))
 -include $(addprefix $(DEPDIR)/,$(subst .cpp,.dpp,$(CPP_SOURCES)))
 endif
-
