@@ -147,6 +147,7 @@ int Main_EngineThreadMain(void *data)
         }
     }
 
+    Warning("targetsReached = %d\n", mainData.targetsReached);
     return 0;
 }
 
@@ -189,8 +190,6 @@ int main(void)
     Display_Main();
     SDL_WaitThread(mainData.engineThread, NULL);
 
-    Warning("targetsReached = %d\n", mainData.targetsReached);
-
     //Cleanup
     Display_Exit();
     Random_Exit();
@@ -198,4 +197,3 @@ int main(void)
     Warning("Done!\n");
     return 0;
 }
-
