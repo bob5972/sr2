@@ -80,6 +80,7 @@ int main(void)
     Random_Init();
 
     Util_Zero(&bp, sizeof(bp));
+    bp.numPlayers = 8;
     bp.width = 1600;
     bp.height = 1200;
 

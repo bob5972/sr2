@@ -27,16 +27,19 @@ void Battle_Init(const BattleParams *bp)
 {
     ASSERT(bp != NULL);
     ASSERT(Util_IsZero(&battle, sizeof(battle)));
+
+    ASSERT(bp->numPlayers > 0);
     battle.bp = *bp;
 
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
         BattleMob *mob = &battle.mobs[i];
         mob->alive = TRUE;
         if (Random_Bit()) {
-            // Force more intra-team collisions.
+            // Force more intra-team collisions for testing.
+            ASSERT(battle.bp.numPlayers >= 2);
             mob->playerID = i % 2;
         } else {
-            mob->playerID = i % 8;
+            mob->playerID = i % battle.bp.numPlayers;
         }
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
