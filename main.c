@@ -29,7 +29,7 @@ int Main_EngineThreadMain(void *data)
     while (!finished) {
         const BattleMob *bMobs;
         uint32 numMobs;
-        DisplayMob *dMobs;
+        BattleMob *dMobs;
 
         // Run the AI and Physics
         Battle_RunTick();
@@ -37,19 +37,15 @@ int Main_EngineThreadMain(void *data)
         // Draw
         bMobs = Battle_AcquireMobs(&numMobs);
         dMobs = Display_AcquireMobs(numMobs);
-        for (uint32 i = 0; i < numMobs; i++) {
-            dMobs[i].visible = bMobs[i].alive;
-            dMobs[i].rect.x = (uint32)bMobs[i].pos.x;
-            dMobs[i].rect.y = (uint32)bMobs[i].pos.y;
-            dMobs[i].rect.w = (uint32)bMobs[i].pos.w;
-            dMobs[i].rect.h = (uint32)bMobs[i].pos.h;
-        }
+        memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
         Display_ReleaseMobs();
         Battle_ReleaseMobs();
 
         bStatus = Battle_AcquireStatus();
         if (bStatus->tick % 1000 == 0) {
             Warning("Finished tick %d\n", bStatus->tick);
+            Warning("\ttargetsReached = %d\n", bStatus->targetsReached);
+            Warning("\tcollisions = %d\n", bStatus->collisions);
         }
         if (bStatus->finished) {
             finished = TRUE;
@@ -58,8 +54,9 @@ int Main_EngineThreadMain(void *data)
     }
 
     bStatus = Battle_AcquireStatus();
-    Warning("targetsReached = %d\n", bStatus->targetsReached);
-    Warning("collisions = %d\n", bStatus->collisions);
+    Warning("Finished tick %d\n", bStatus->tick);
+    Warning("\ttargetsReached = %d\n", bStatus->targetsReached);
+    Warning("\tcollisions = %d\n", bStatus->collisions);
     Battle_ReleaseStatus();
 
     return 0;

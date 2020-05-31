@@ -30,10 +30,17 @@ void Battle_Init(const BattleParams *bp)
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
         BattleMob *mob = &battle.mobs[i];
         mob->alive = TRUE;
+        if (Random_Bit()) {
+            // Force more intra-team collisions.
+            mob->playerID = i % 2;
+        } else {
+            mob->playerID = i % 8;
+        }
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
-        mob->pos.w = Random_Int(10, 20);
-        mob->pos.h = Random_Int(10, 20);
+        mob->pos.w = Random_Int(10, 80);
+        mob->pos.h = Random_Int(10, 80);
+
         mob->target.x = Random_Float(0.0f, battle.bp.width);
         mob->target.y = Random_Float(0.0f, battle.bp.height);
     }
@@ -110,6 +117,9 @@ bool BattleCheckMobCollision(const BattleMob *lhs, const BattleMob *rhs)
 {
     ASSERT(lhs->alive);
     ASSERT(rhs->alive);
+    if (lhs->playerID == rhs->playerID) {
+        return FALSE;
+    }
     return FQuad_Intersect(&lhs->pos, &rhs->pos);
 }
 
@@ -123,12 +133,19 @@ void Battle_RunTick()
         BattleMob *mob = &battle.mobs[i];
         ASSERT(BattleCheckMobInvariants(mob));
         if (mob->pos.x == mob->target.x &&
-                mob->pos.y == mob->target.y) {
+            mob->pos.y == mob->target.y) {
             battle.bs.targetsReached++;
             //Warning("Mob %d has reached target (%f, %f)\n",
             //        i, mob->target.x, mob->target.y);
-            mob->target.x = Random_Float(0.0f, battle.bp.width);
-            mob->target.y = Random_Float(0.0f, battle.bp.height);
+            if (Random_Bit()) {
+                mob->target.x = Random_Float(0.0f, battle.bp.width);
+                mob->target.y = Random_Float(0.0f, battle.bp.height);
+            } else {
+                // Head towards the center more frequently to get more
+                // cross-team collisions.
+                mob->target.x = battle.bp.width/2;
+                mob->target.y = battle.bp.height/2;
+            }
         }
         ASSERT(BattleCheckMobInvariants(mob));
     }

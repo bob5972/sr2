@@ -19,6 +19,7 @@
 typedef struct DisplayShip {
     bool initialized;
     uint32 color;
+    SDL_Rect rect;
     SDL_Surface *sprite;
 } DisplayShip;
 
@@ -37,7 +38,7 @@ typedef struct DisplayGlobalData {
     SDL_sem *mainSignal;
     uint64 mobGeneration;
     bool mobsAcquired;
-    DisplayMob *mobs;
+    BattleMob *mobs;
     uint32 numMobs;
 
     DisplayShipVector ships;
@@ -100,7 +101,7 @@ void Display_Exit()
 }
 
 
-DisplayMob *Display_AcquireMobs(uint32 numMobs)
+BattleMob *Display_AcquireMobs(uint32 numMobs)
 {
     SDL_LockMutex(display.mobMutex);
     ASSERT(!display.mobsAcquired);
@@ -154,6 +155,22 @@ void Display_ReleaseMobs()
     SDL_UnlockMutex(display.mobMutex);
 }
 
+static uint32 DisplayGetColor(uint32 index)
+{
+    uint32 colors[] = {
+        0xFF0000,
+        0x00FF00,
+        0x0000FF,
+        0x808000,
+        0x800080,
+        0x008080,
+        0xFFFFFF,
+    };
+
+    index %= ARRAYSIZE(colors);
+    return colors[index] | ((SHIP_ALPHA & 0xFF) << 24);
+}
+
 static void DisplayDrawFrame()
 {
     SDL_Surface *sdlSurface = NULL;
@@ -183,23 +200,25 @@ static void DisplayDrawFrame()
     ASSERT(DisplayShipVector_Size(&display.ships) == display.numMobs);
     for (i = 0; i < display.numMobs; i++) {
         DisplayShip *ship = DisplayShipVector_GetPtr(&display.ships, i);
-        DisplayMob *mob = &display.mobs[i];
+        BattleMob *mob = &display.mobs[i];
+
+        ship->rect.x = (uint32)mob->pos.x;
+        ship->rect.y = (uint32)mob->pos.y;
+        ship->rect.w = (uint32)mob->pos.w;
+        ship->rect.h = (uint32)mob->pos.h;
 
         if (!ship->initialized) {
-            ship->color = SDL_MapRGBA(sdlSurface->format, SHIP_ALPHA,
-                                    Random_Uint32(), Random_Uint32(),
-                                    Random_Uint32());
-            ship->sprite = SDL_CreateRGBSurface(0, mob->rect.w, mob->rect.h,
-                                                32, 0xFF << 24, 0xFF << 16,
-                                                0xFF << 8, 0xFF << 0);
+            ship->color = DisplayGetColor(mob->playerID);
+            ship->sprite = SDL_CreateRGBSurfaceWithFormat(0, ship->rect.w, ship->rect.h,
+                                                          32, SDL_PIXELFORMAT_BGRA32);
             SDL_FillRect(ship->sprite, NULL, ship->color);
             ship->initialized = TRUE;
 
             //XXX: This is never cleaned up.
         }
 
-        if (mob->visible) {
-            SDL_BlitSurface(ship->sprite, NULL, sdlSurface, &mob->rect);
+        if (mob->alive) {
+            SDL_BlitSurface(ship->sprite, NULL, sdlSurface, &ship->rect);
         }
     }
 
