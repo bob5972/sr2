@@ -39,7 +39,6 @@ endif
 
 #No paths. VPATH is assumed
 C_SOURCES = main.c \
-            displayUtil.c \
             display.c
 CPP_SOURCES =
 
