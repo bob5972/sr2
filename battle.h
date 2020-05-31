@@ -21,11 +21,15 @@ typedef struct BattleStatus {
     uint32 collisions;
 } BattleStatus;
 
+typedef struct BattleMobCmd {
+    FPoint target;
+} BattleMobCmd;
+
 typedef struct BattleMob {
     bool alive;
     PlayerID playerID;
     FQuad pos;
-    FPoint target;
+    BattleMobCmd cmd;
 } BattleMob;
 
 void Battle_Init(const BattleParams *bp);

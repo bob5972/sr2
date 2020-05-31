@@ -41,8 +41,8 @@ void Battle_Init(const BattleParams *bp)
         mob->pos.w = Random_Int(10, 80);
         mob->pos.h = Random_Int(10, 80);
 
-        mob->target.x = Random_Float(0.0f, battle.bp.width);
-        mob->target.y = Random_Float(0.0f, battle.bp.height);
+        mob->cmd.target.x = Random_Float(0.0f, battle.bp.width);
+        mob->cmd.target.y = Random_Float(0.0f, battle.bp.height);
     }
 
     battle.initialized = TRUE;
@@ -61,10 +61,10 @@ bool BattleCheckMobInvariants(const BattleMob *mob)
     ASSERT(mob->pos.x <= (uint32)battle.bp.width);
     ASSERT(mob->pos.y <= (uint32)battle.bp.height);
 
-    ASSERT(mob->target.x >= 0.0f);
-    ASSERT(mob->target.y >= 0.0f);
-    ASSERT(mob->target.x <= (uint32)battle.bp.width);
-    ASSERT(mob->target.y <= (uint32)battle.bp.height);
+    ASSERT(mob->cmd.target.x >= 0.0f);
+    ASSERT(mob->cmd.target.y >= 0.0f);
+    ASSERT(mob->cmd.target.x <= (uint32)battle.bp.width);
+    ASSERT(mob->cmd.target.y <= (uint32)battle.bp.height);
 
     return TRUE;
 }
@@ -79,14 +79,14 @@ void BattleMoveMobToTarget(BattleMob *mob)
     //XXX: Should we be using the center of the quad?
     origin.x = mob->pos.x;
     origin.y = mob->pos.y;
-    distance = FPoint_Distance(&origin, &mob->target);
+    distance = FPoint_Distance(&origin, &mob->cmd.target);
 
     if (distance <= MOB_SPEED) {
-        mob->pos.x = mob->target.x;
-        mob->pos.y = mob->target.y;
+        mob->pos.x = mob->cmd.target.x;
+        mob->pos.y = mob->cmd.target.y;
     } else {
-        float dx = mob->target.x - mob->pos.x;
-        float dy = mob->target.y - mob->pos.y;
+        float dx = mob->cmd.target.x - mob->pos.x;
+        float dy = mob->cmd.target.y - mob->pos.y;
         float factor = MOB_SPEED / distance;
         FPoint newPos;
 
@@ -94,7 +94,7 @@ void BattleMoveMobToTarget(BattleMob *mob)
         newPos.y = mob->pos.y + dy * factor;
 
 //         Warning("tPos(%f, %f) pos(%f, %f) newPos(%f, %f)\n",
-//                 mob->target.x, mob->target.y,
+//                 mob->cmd.target.x, mob->cmd.target.y,
 //                 mob->pos.x, mob->pos.y,
 //                 newPos.x, newPos.y);
 //         Warning("diffPos(%f, %f)\n",
@@ -132,19 +132,19 @@ void Battle_RunTick()
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
         BattleMob *mob = &battle.mobs[i];
         ASSERT(BattleCheckMobInvariants(mob));
-        if (mob->pos.x == mob->target.x &&
-            mob->pos.y == mob->target.y) {
+        if (mob->pos.x == mob->cmd.target.x &&
+            mob->pos.y == mob->cmd.target.y) {
             battle.bs.targetsReached++;
             //Warning("Mob %d has reached target (%f, %f)\n",
-            //        i, mob->target.x, mob->target.y);
+            //        i, mob->cmd.target.x, mob->cmd.target.y);
             if (Random_Bit()) {
-                mob->target.x = Random_Float(0.0f, battle.bp.width);
-                mob->target.y = Random_Float(0.0f, battle.bp.height);
+                mob->cmd.target.x = Random_Float(0.0f, battle.bp.width);
+                mob->cmd.target.y = Random_Float(0.0f, battle.bp.height);
             } else {
                 // Head towards the center more frequently to get more
                 // cross-team collisions.
-                mob->target.x = battle.bp.width/2;
-                mob->target.y = battle.bp.height/2;
+                mob->cmd.target.x = battle.bp.width/2;
+                mob->cmd.target.y = battle.bp.height/2;
             }
         }
         ASSERT(BattleCheckMobInvariants(mob));
