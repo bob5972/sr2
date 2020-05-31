@@ -10,7 +10,9 @@
 
 typedef struct BattleGlobalData {
     bool initialized;
+
     BattleParams bp;
+    bool paramsAcquired;
 
     BattleStatus bs;
     bool statusAcquired;
@@ -128,31 +130,11 @@ void Battle_RunTick()
     ASSERT(battle.bs.tick < MAX_UINT32);
     battle.bs.tick++;
 
-    // Run AI
-    for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
-        BattleMob *mob = &battle.mobs[i];
-        ASSERT(BattleCheckMobInvariants(mob));
-        if (mob->pos.x == mob->cmd.target.x &&
-            mob->pos.y == mob->cmd.target.y) {
-            battle.bs.targetsReached++;
-            //Warning("Mob %d has reached target (%f, %f)\n",
-            //        i, mob->cmd.target.x, mob->cmd.target.y);
-            if (Random_Bit()) {
-                mob->cmd.target.x = Random_Float(0.0f, battle.bp.width);
-                mob->cmd.target.y = Random_Float(0.0f, battle.bp.height);
-            } else {
-                // Head towards the center more frequently to get more
-                // cross-team collisions.
-                mob->cmd.target.x = battle.bp.width/2;
-                mob->cmd.target.y = battle.bp.height/2;
-            }
-        }
-        ASSERT(BattleCheckMobInvariants(mob));
-    }
-
     // Run Physics
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
         BattleMob *mob = &battle.mobs[i];
+        ASSERT(BattleCheckMobInvariants(mob));
+
         if (mob->alive) {
             BattleMoveMobToTarget(mob);
         }
@@ -192,8 +174,9 @@ void Battle_RunTick()
     }
 }
 
-const BattleMob *Battle_AcquireMobs(uint32 *numMobs)
+BattleMob *Battle_AcquireMobs(uint32 *numMobs)
 {
+    ASSERT(battle.initialized);
     ASSERT(numMobs != NULL);
     ASSERT(!battle.mobsAcquired);
 
@@ -205,12 +188,14 @@ const BattleMob *Battle_AcquireMobs(uint32 *numMobs)
 
 void Battle_ReleaseMobs()
 {
+    ASSERT(battle.initialized);
     ASSERT(battle.mobsAcquired);
     battle.mobsAcquired = FALSE;
 }
 
 const BattleStatus *Battle_AcquireStatus()
 {
+    ASSERT(battle.initialized);
     ASSERT(!battle.statusAcquired);
 
     battle.statusAcquired = TRUE;
@@ -219,6 +204,17 @@ const BattleStatus *Battle_AcquireStatus()
 
 void Battle_ReleaseStatus()
 {
+    ASSERT(battle.initialized);
     ASSERT(battle.statusAcquired);
     battle.statusAcquired = FALSE;
+}
+
+const BattleParams *Battle_GetParams()
+{
+    /*
+     * This is called from multiple threads,and is
+     * safe safe only because this never changes.
+     */
+    ASSERT(battle.initialized);
+    return &battle.bp;
 }

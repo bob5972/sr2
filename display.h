@@ -7,12 +7,7 @@
 
 #include "battle.h"
 
-typedef struct DisplayMapParams {
-    uint32 width;
-    uint32 height;
-} DisplayMapParams;
-
-void Display_Init(const DisplayMapParams *dmp);
+void Display_Init();
 void Display_Exit();
 BattleMob *Display_AcquireMobs(uint32 numMobs);
 void Display_ReleaseMobs();

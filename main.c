@@ -14,6 +14,7 @@
 #include "display.h"
 #include "geometry.h"
 #include "battle.h"
+#include "fleet.h"
 
 struct MainData {
     SDL_Thread *engineThread;
@@ -27,11 +28,16 @@ int Main_EngineThreadMain(void *data)
     ASSERT(data == NULL);
 
     while (!finished) {
-        const BattleMob *bMobs;
+        BattleMob *bMobs;
         uint32 numMobs;
         BattleMob *dMobs;
 
-        // Run the AI and Physics
+        // Run the AI
+        bMobs = Battle_AcquireMobs(&numMobs);
+        Fleet_RunTick(bMobs, numMobs);
+        Battle_ReleaseMobs();
+
+        // Run the Physics
         Battle_RunTick();
 
         // Draw
@@ -44,7 +50,6 @@ int Main_EngineThreadMain(void *data)
         bStatus = Battle_AcquireStatus();
         if (bStatus->tick % 1000 == 0) {
             Warning("Finished tick %d\n", bStatus->tick);
-            Warning("\ttargetsReached = %d\n", bStatus->targetsReached);
             Warning("\tcollisions = %d\n", bStatus->collisions);
         }
         if (bStatus->finished) {
@@ -55,16 +60,16 @@ int Main_EngineThreadMain(void *data)
 
     bStatus = Battle_AcquireStatus();
     Warning("Finished tick %d\n", bStatus->tick);
-    Warning("\ttargetsReached = %d\n", bStatus->targetsReached);
     Warning("\tcollisions = %d\n", bStatus->collisions);
     Battle_ReleaseStatus();
+    Warning("\n");
+    Warning("Battle Finished!\n");
 
     return 0;
 }
 
 int main(void)
 {
-    DisplayMapParams dmp;
     BattleParams bp;
 
     ASSERT(Util_IsZero(&mainData, sizeof(mainData)));
@@ -77,15 +82,13 @@ int main(void)
     Util_Zero(&bp, sizeof(bp));
     bp.width = 1600;
     bp.height = 1200;
-    Battle_Init(&bp);
 
-    Util_Zero(&dmp, sizeof(dmp));
-    dmp.width = bp.width;
-    dmp.height = bp.height;
-    Display_Init(&dmp);
+    Battle_Init(&bp);
+    Fleet_Init();
+    Display_Init();
 
     // Launch Engine Thread
-    mainData.engineThread = SDL_CreateThread(Main_EngineThreadMain, "engine",
+    mainData.engineThread = SDL_CreateThread(Main_EngineThreadMain, "battle",
                                              NULL);
     ASSERT(mainData.engineThread != NULL);
 
@@ -94,6 +97,8 @@ int main(void)
 
     //Cleanup
     Display_Exit();
+    Fleet_Exit();
+    Battle_Exit();
     Random_Exit();
     SDL_Quit();
     Warning("Done!\n");

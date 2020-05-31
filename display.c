@@ -27,7 +27,9 @@ DECLARE_MBVECTOR_TYPE(DisplayShip, DisplayShipVector);
 
 typedef struct DisplayGlobalData {
     bool initialized;
-    DisplayMapParams dmp;
+    uint32 width;
+    uint32 height;
+
     SDL_Window *sdlWindow;
     bool paused;
     bool inMain;
@@ -46,13 +48,15 @@ typedef struct DisplayGlobalData {
 
 static DisplayGlobalData display;
 
-void Display_Init(const DisplayMapParams *dmp)
+void Display_Init()
 {
     SDL_Surface *sdlSurface = NULL;
+    const BattleParams *bp = Battle_GetParams();
 
-    ASSERT(dmp != NULL);
     ASSERT(Util_IsZero(&display, sizeof(display)));
-    display.dmp = *dmp;
+    display.width = bp->width;
+    display.height = bp->height;
+
     DisplayShipVector_CreateEmpty(&display.ships);
     display.mobGenerationDrawn = 0;
     display.mobGeneration = 1;
@@ -66,7 +70,7 @@ void Display_Init(const DisplayMapParams *dmp)
     display.sdlWindow =
         SDL_CreateWindow("SpaceRobots2",
                          SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                         dmp->width, dmp->height,
+                         display.width, display.height,
                          SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     if (display.sdlWindow == NULL) {
