@@ -17,6 +17,7 @@ typedef struct BattleGlobalData {
     BattleStatus bs;
     bool statusAcquired;
 
+    MobID lastMobID;
     BattleMob mobs[100];
     bool mobsAcquired;
 } BattleGlobalData;
@@ -41,6 +42,7 @@ void Battle_Init(const BattleParams *bp)
         } else {
             mob->playerID = i % battle.bp.numPlayers;
         }
+        mob->id = ++battle.lastMobID;
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
         mob->pos.w = Random_Int(10, 80);

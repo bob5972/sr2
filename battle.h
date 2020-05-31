@@ -8,6 +8,7 @@
 #include "geometry.h"
 
 typedef uint32 PlayerID;
+typedef uint32 MobID;
 
 typedef struct BattleParams {
     uint32 numPlayers;
@@ -27,6 +28,7 @@ typedef struct BattleMobCmd {
 
 typedef struct BattleMob {
     bool alive;
+    MobID id;
     PlayerID playerID;
     FQuad pos;
     BattleMobCmd cmd;
