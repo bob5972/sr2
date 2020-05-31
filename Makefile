@@ -39,6 +39,7 @@ endif
 
 #No paths. VPATH is assumed
 C_SOURCES = main.c \
+            battle.c \
             display.c
 CPP_SOURCES =
 

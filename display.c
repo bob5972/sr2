@@ -63,7 +63,9 @@ void Display_Init(const DisplayMapParams *dmp)
     ASSERT(display.mainSignal != NULL);
 
     display.sdlWindow =
-        SDL_CreateWindow("SpaceRobots2", 0, 0, dmp->width, dmp->height,
+        SDL_CreateWindow("SpaceRobots2",
+                         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                         dmp->width, dmp->height,
                          SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     if (display.sdlWindow == NULL) {
