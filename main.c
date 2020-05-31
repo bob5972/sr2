@@ -21,12 +21,12 @@ struct MainData {
 
 int Main_EngineThreadMain(void *data)
 {
-    uint32 tick;
+    bool finished = FALSE;
     const BattleStatus *bStatus;
 
     ASSERT(data == NULL);
 
-    for (tick = 0; tick < 10000; tick++) {
+    while (!finished) {
         const BattleMob *bMobs;
         uint32 numMobs;
         DisplayMob *dMobs;
@@ -38,6 +38,7 @@ int Main_EngineThreadMain(void *data)
         bMobs = Battle_AcquireMobs(&numMobs);
         dMobs = Display_AcquireMobs(numMobs);
         for (uint32 i = 0; i < numMobs; i++) {
+            dMobs[i].visible = bMobs[i].alive;
             dMobs[i].rect.x = (uint32)bMobs[i].pos.x;
             dMobs[i].rect.y = (uint32)bMobs[i].pos.y;
             dMobs[i].rect.w = (uint32)bMobs[i].pos.w;
@@ -46,13 +47,19 @@ int Main_EngineThreadMain(void *data)
         Display_ReleaseMobs();
         Battle_ReleaseMobs();
 
-        if (tick % 1000 == 0) {
-            Warning("Finished tick %d\n", tick);
+        bStatus = Battle_AcquireStatus();
+        if (bStatus->tick % 1000 == 0) {
+            Warning("Finished tick %d\n", bStatus->tick);
         }
+        if (bStatus->finished) {
+            finished = TRUE;
+        }
+        Battle_ReleaseStatus();
     }
 
     bStatus = Battle_AcquireStatus();
     Warning("targetsReached = %d\n", bStatus->targetsReached);
+    Warning("collisions = %d\n", bStatus->collisions);
     Battle_ReleaseStatus();
 
     return 0;

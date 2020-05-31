@@ -29,6 +29,7 @@ void Battle_Init(const BattleParams *bp)
 
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
         BattleMob *mob = &battle.mobs[i];
+        mob->alive = TRUE;
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
         mob->pos.w = Random_Int(10, 20);
@@ -66,6 +67,7 @@ void BattleMoveMobToTarget(BattleMob *mob)
     FPoint origin;
     float distance;
     ASSERT(BattleCheckMobInvariants(mob));
+    ASSERT(mob->alive);
 
     //XXX: Should we be using the center of the quad?
     origin.x = mob->pos.x;
@@ -104,6 +106,13 @@ void BattleMoveMobToTarget(BattleMob *mob)
     ASSERT(BattleCheckMobInvariants(mob));
 }
 
+bool BattleCheckMobCollision(const BattleMob *lhs, const BattleMob *rhs)
+{
+    ASSERT(lhs->alive);
+    ASSERT(rhs->alive);
+    return FQuad_Intersect(&lhs->pos, &rhs->pos);
+}
+
 void Battle_RunTick()
 {
     ASSERT(battle.bs.tick < MAX_UINT32);
@@ -127,9 +136,42 @@ void Battle_RunTick()
     // Run Physics
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
         BattleMob *mob = &battle.mobs[i];
-        ASSERT(BattleCheckMobInvariants(mob));
-        BattleMoveMobToTarget(mob);
-        ASSERT(BattleCheckMobInvariants(mob));
+        if (mob->alive) {
+            BattleMoveMobToTarget(mob);
+        }
+    }
+
+    // Check for collisions
+    for (uint32 outer = 0; outer < ARRAYSIZE(battle.mobs); outer++) {
+        BattleMob *oMob = &battle.mobs[outer];
+
+        if (!oMob->alive) {
+            continue;
+        }
+
+        for (uint32 inner = outer + 1; inner < ARRAYSIZE(battle.mobs);
+            inner++) {
+            BattleMob *iMob = &battle.mobs[inner];
+
+            if (iMob->alive) {
+                if (BattleCheckMobCollision(oMob, iMob)) {
+                    battle.bs.collisions++;
+                    oMob->alive = FALSE;
+                    iMob->alive = FALSE;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Check for victory!
+    battle.bs.finished = TRUE;
+    for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
+        BattleMob *mob = &battle.mobs[i];
+        if (mob->alive) {
+            battle.bs.finished = FALSE;
+            break;
+        }
     }
 }
 

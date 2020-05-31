@@ -11,6 +11,7 @@ typedef struct DisplayMapParams {
 } DisplayMapParams;
 
 typedef struct DisplayMob {
+    bool visible;
     SDL_Rect rect;
 } DisplayMob;
 

@@ -198,7 +198,9 @@ static void DisplayDrawFrame()
             //XXX: This is never cleaned up.
         }
 
-        SDL_BlitSurface(ship->sprite, NULL, sdlSurface, &mob->rect);
+        if (mob->visible) {
+            SDL_BlitSurface(ship->sprite, NULL, sdlSurface, &mob->rect);
+        }
     }
 
     SDL_UpdateWindowSurface(display.sdlWindow);
