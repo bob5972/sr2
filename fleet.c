@@ -6,7 +6,7 @@
 #include "random.h"
 #include "MBVector.h"
 
-DECLARE_MBVECTOR_TYPE(BattleMob, MobVector);
+DECLARE_MBVECTOR_TYPE(Mob, MobVector);
 
 typedef struct FleetAI {
     MobVector mobs;
@@ -48,7 +48,7 @@ void Fleet_Exit()
     fleet.initialized = FALSE;
 }
 
-void FleetUpdateMobCmd(BattleMob *mobs, uint32 numMobs, BattleMob *m)
+void FleetUpdateMobCmd(Mob *mobs, uint32 numMobs, Mob *m)
 {
     for (uint32 i = 0; i < numMobs; i++) {
         if (mobs[i].id == m->id) {
@@ -59,7 +59,7 @@ void FleetUpdateMobCmd(BattleMob *mobs, uint32 numMobs, BattleMob *m)
     }
 }
 
-void Fleet_RunTick(BattleMob *mobs, uint32 numMobs)
+void Fleet_RunTick(Mob *mobs, uint32 numMobs)
 {
     const BattleParams *bp = Battle_GetParams();
 
@@ -71,12 +71,12 @@ void Fleet_RunTick(BattleMob *mobs, uint32 numMobs)
      * Sort the incoming ships by player.
      */
     for (uint32 i = 0; i < numMobs; i++) {
-        BattleMob *mob = &mobs[i];
+        Mob *mob = &mobs[i];
         PlayerID p = mob->playerID;
 
         ASSERT(p < fleet.numAIs);
         if (mob->alive) {
-            BattleMob *m;
+            Mob *m;
             uint32 oldSize = MobVector_Size(&fleet.ais[p].mobs);
             MobVector_GrowBy(&fleet.ais[p].mobs, 1);
             m = MobVector_GetPtr(&fleet.ais[p].mobs, oldSize);
@@ -89,7 +89,7 @@ void Fleet_RunTick(BattleMob *mobs, uint32 numMobs)
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
         for (uint32 m = 0; m < MobVector_Size(&fleet.ais[p].mobs); m++) {
-            BattleMob *mob = MobVector_GetPtr(&fleet.ais[p].mobs, m);
+            Mob *mob = MobVector_GetPtr(&fleet.ais[p].mobs, m);
             if (mob->pos.x == mob->cmd.target.x &&
                 mob->pos.y == mob->cmd.target.y) {
                 //Warning("Mob %d has reached target (%f, %f)\n",
@@ -114,7 +114,7 @@ void Fleet_RunTick(BattleMob *mobs, uint32 numMobs)
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
         for (uint32 m = 0; m < MobVector_Size(&fleet.ais[p].mobs); m++) {
-            BattleMob *mob = MobVector_GetPtr(&fleet.ais[p].mobs, m);
+            Mob *mob = MobVector_GetPtr(&fleet.ais[p].mobs, m);
             ASSERT(mob->playerID == p);
             FleetUpdateMobCmd(mobs, numMobs, mob);
         }

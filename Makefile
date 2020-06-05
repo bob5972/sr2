@@ -19,7 +19,7 @@ TARGET=sr2
 CFLAGS = ${DEFAULT_CFLAGS} -I $(BUILDROOT) $(INCLUDE_FLAGS)
 CPPFLAGS = ${CFLAGS}
 
-LIBFLAGS = -lm -lSDL2 -lGL
+LIBFLAGS = -lm -lSDL2 -lGL -rdynamic
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	${CC} -c ${CFLAGS} -o $(BUILDDIR)/$*.o $<;
@@ -41,7 +41,8 @@ endif
 C_SOURCES = main.c \
             battle.c \
             display.c \
-            fleet.c
+            fleet.c \
+	    mob.c
 CPP_SOURCES =
 
 #For reasons I cannot fathom, MBLIB_OBJ has to be last

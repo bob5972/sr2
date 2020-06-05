@@ -5,7 +5,6 @@
 #include "battle.h"
 #include "random.h"
 
-#define MOB_SPEED (1.0f)
 #define MICRON (0.1f)
 
 typedef struct BattleGlobalData {
@@ -18,7 +17,7 @@ typedef struct BattleGlobalData {
     bool statusAcquired;
 
     MobID lastMobID;
-    BattleMob mobs[100];
+    Mob mobs[100];
     bool mobsAcquired;
 } BattleGlobalData;
 
@@ -33,7 +32,7 @@ void Battle_Init(const BattleParams *bp)
     battle.bp = *bp;
 
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
-        BattleMob *mob = &battle.mobs[i];
+        Mob *mob = &battle.mobs[i];
         mob->alive = TRUE;
         if (Random_Bit()) {
             // Force more intra-team collisions for testing.
@@ -43,10 +42,9 @@ void Battle_Init(const BattleParams *bp)
             mob->playerID = i % battle.bp.numPlayers;
         }
         mob->id = ++battle.lastMobID;
+        mob->type = Random_Int(MOB_TYPE_MIN, MOB_TYPE_MAX - 1);
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
-        mob->pos.w = Random_Int(10, 80);
-        mob->pos.h = Random_Int(10, 80);
 
         mob->cmd.target.x = Random_Float(0.0f, battle.bp.width);
         mob->cmd.target.y = Random_Float(0.0f, battle.bp.height);
@@ -61,7 +59,7 @@ void Battle_Exit()
     battle.initialized = FALSE;
 }
 
-bool BattleCheckMobInvariants(const BattleMob *mob)
+bool BattleCheckMobInvariants(const Mob *mob)
 {
     ASSERT(mob->pos.x >= 0.0f);
     ASSERT(mob->pos.y >= 0.0f);
@@ -76,10 +74,11 @@ bool BattleCheckMobInvariants(const BattleMob *mob)
     return TRUE;
 }
 
-void BattleMoveMobToTarget(BattleMob *mob)
+void BattleMoveMobToTarget(Mob *mob)
 {
     FPoint origin;
     float distance;
+    float speed;
     ASSERT(BattleCheckMobInvariants(mob));
     ASSERT(mob->alive);
 
@@ -88,13 +87,15 @@ void BattleMoveMobToTarget(BattleMob *mob)
     origin.y = mob->pos.y;
     distance = FPoint_Distance(&origin, &mob->cmd.target);
 
-    if (distance <= MOB_SPEED) {
+    speed = Mob_GetSpeed(mob);
+
+    if (distance <= speed) {
         mob->pos.x = mob->cmd.target.x;
         mob->pos.y = mob->cmd.target.y;
     } else {
         float dx = mob->cmd.target.x - mob->pos.x;
         float dy = mob->cmd.target.y - mob->pos.y;
-        float factor = MOB_SPEED / distance;
+        float factor = speed / distance;
         FPoint newPos;
 
         newPos.x = mob->pos.x + dx * factor;
@@ -109,25 +110,29 @@ void BattleMoveMobToTarget(BattleMob *mob)
 //                 (newPos.y - mob->pos.y));
 //         Warning("distance=%f, speed+micron=%f, error=%f\n",
 //                 (float)FPoint_Distance(&newPos, &mob->pos),
-//                 (float)(MOB_SPEED + MICRON),
-//                 (float)(FPoint_Distance(&newPos, &mob->pos) - (MOB_SPEED + MICRON)));
+//                 (float)(speed + MICRON),
+//                 (float)(FPoint_Distance(&newPos, &mob->pos) - (speed + MICRON)));
 
         //XXX: This ASSERT is hitting for resonable-seeming micron values...?
-        ASSERT(FPoint_Distance(&newPos, &origin) <= MOB_SPEED + MICRON);
+        ASSERT(FPoint_Distance(&newPos, &origin) <= speed + MICRON);
         mob->pos.x = newPos.x;
         mob->pos.y = newPos.y;
     }
     ASSERT(BattleCheckMobInvariants(mob));
 }
 
-bool BattleCheckMobCollision(const BattleMob *lhs, const BattleMob *rhs)
+bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
+    FQuad lq, rq;
     ASSERT(lhs->alive);
     ASSERT(rhs->alive);
     if (lhs->playerID == rhs->playerID) {
         return FALSE;
     }
-    return FQuad_Intersect(&lhs->pos, &rhs->pos);
+
+    Mob_GetQuad(lhs, &lq);
+    Mob_GetQuad(rhs, &rq);
+    return FQuad_Intersect(&lq, &rq);
 }
 
 void Battle_RunTick()
@@ -137,7 +142,7 @@ void Battle_RunTick()
 
     // Run Physics
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
-        BattleMob *mob = &battle.mobs[i];
+        Mob *mob = &battle.mobs[i];
         ASSERT(BattleCheckMobInvariants(mob));
 
         if (mob->alive) {
@@ -147,7 +152,7 @@ void Battle_RunTick()
 
     // Check for collisions
     for (uint32 outer = 0; outer < ARRAYSIZE(battle.mobs); outer++) {
-        BattleMob *oMob = &battle.mobs[outer];
+        Mob *oMob = &battle.mobs[outer];
 
         if (!oMob->alive) {
             continue;
@@ -155,7 +160,7 @@ void Battle_RunTick()
 
         for (uint32 inner = outer + 1; inner < ARRAYSIZE(battle.mobs);
             inner++) {
-            BattleMob *iMob = &battle.mobs[inner];
+            Mob *iMob = &battle.mobs[inner];
 
             if (iMob->alive) {
                 if (BattleCheckMobCollision(oMob, iMob)) {
@@ -169,17 +174,25 @@ void Battle_RunTick()
     }
 
     // Check for victory!
+    int32 livePlayer = -1;
     battle.bs.finished = TRUE;
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
-        BattleMob *mob = &battle.mobs[i];
+        Mob *mob = &battle.mobs[i];
         if (mob->alive) {
-            battle.bs.finished = FALSE;
-            break;
+            if (livePlayer == -1) {
+                livePlayer = mob->playerID;
+            } else if (livePlayer != mob->playerID) {
+                battle.bs.finished = FALSE;
+                break;
+            }
         }
+    }
+    if (livePlayer == -1) {
+        battle.bs.finished = FALSE;
     }
 }
 
-BattleMob *Battle_AcquireMobs(uint32 *numMobs)
+Mob *Battle_AcquireMobs(uint32 *numMobs)
 {
     ASSERT(battle.initialized);
     ASSERT(numMobs != NULL);

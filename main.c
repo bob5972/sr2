@@ -28,9 +28,9 @@ int Main_EngineThreadMain(void *data)
     ASSERT(data == NULL);
 
     while (!finished) {
-        BattleMob *bMobs;
+        Mob *bMobs;
         uint32 numMobs;
-        BattleMob *dMobs;
+        Mob *dMobs;
 
         // Run the AI
         bMobs = Battle_AcquireMobs(&numMobs);

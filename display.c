@@ -40,7 +40,7 @@ typedef struct DisplayGlobalData {
     SDL_sem *mainSignal;
     uint64 mobGeneration;
     bool mobsAcquired;
-    BattleMob *mobs;
+    Mob *mobs;
     uint32 numMobs;
 
     DisplayShipVector ships;
@@ -105,7 +105,7 @@ void Display_Exit()
 }
 
 
-BattleMob *Display_AcquireMobs(uint32 numMobs)
+Mob *Display_AcquireMobs(uint32 numMobs)
 {
     SDL_LockMutex(display.mobMutex);
     ASSERT(!display.mobsAcquired);
@@ -203,13 +203,15 @@ static void DisplayDrawFrame()
 
     ASSERT(DisplayShipVector_Size(&display.ships) == display.numMobs);
     for (i = 0; i < display.numMobs; i++) {
+        FQuad quad;
         DisplayShip *ship = DisplayShipVector_GetPtr(&display.ships, i);
-        BattleMob *mob = &display.mobs[i];
+        Mob *mob = &display.mobs[i];
 
-        ship->rect.x = (uint32)mob->pos.x;
-        ship->rect.y = (uint32)mob->pos.y;
-        ship->rect.w = (uint32)mob->pos.w;
-        ship->rect.h = (uint32)mob->pos.h;
+        Mob_GetQuad(mob, &quad);
+        ship->rect.x = (uint32)quad.x;
+        ship->rect.y = (uint32)quad.y;
+        ship->rect.w = (uint32)quad.w;
+        ship->rect.h = (uint32)quad.h;
 
         if (!ship->initialized) {
             ship->color = DisplayGetColor(mob->playerID);
