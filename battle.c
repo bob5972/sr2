@@ -187,9 +187,6 @@ void Battle_RunTick()
             }
         }
     }
-    if (livePlayer == -1) {
-        battle.bs.finished = FALSE;
-    }
 }
 
 Mob *Battle_AcquireMobs(uint32 *numMobs)
