@@ -18,12 +18,28 @@
 
 struct MainData {
     SDL_Thread *engineThread;
+    uint32 startTimeMS;
 } mainData;
+
+void MainPrintBattleStatus(const BattleStatus *bStatus)
+{
+    uint32 stopTimeMS = SDL_GetTicks();
+    uint32 elapsedMS = stopTimeMS - mainData.startTimeMS;
+
+    Warning("Finished tick %d\n", bStatus->tick);
+    Warning("\tcollisions = %d\n", bStatus->collisions);
+    Warning("\t%d ticks in %d ms\n", bStatus->tick, elapsedMS);
+    Warning("\t%.1f ticks/second\n", ((float)bStatus->tick)/elapsedMS * 1000.0f);
+    Warning("\n");
+}
 
 int Main_EngineThreadMain(void *data)
 {
     bool finished = FALSE;
     const BattleStatus *bStatus;
+
+
+    mainData.startTimeMS = SDL_GetTicks();
 
     ASSERT(data == NULL);
 
@@ -48,9 +64,8 @@ int Main_EngineThreadMain(void *data)
         Battle_ReleaseMobs();
 
         bStatus = Battle_AcquireStatus();
-        if (bStatus->tick % 1000 == 0) {
-            Warning("Finished tick %d\n", bStatus->tick);
-            Warning("\tcollisions = %d\n", bStatus->collisions);
+        if (bStatus->tick % 200 == 0) {
+            MainPrintBattleStatus(bStatus);
         }
         if (bStatus->finished) {
             finished = TRUE;
@@ -59,10 +74,9 @@ int Main_EngineThreadMain(void *data)
     }
 
     bStatus = Battle_AcquireStatus();
-    Warning("Finished tick %d\n", bStatus->tick);
-    Warning("\tcollisions = %d\n", bStatus->collisions);
+    MainPrintBattleStatus(bStatus);
     Battle_ReleaseStatus();
-    Warning("\n");
+
     Warning("Battle Finished!\n");
 
     return 0;
@@ -76,6 +90,7 @@ int main(void)
 
     // Setup
     Warning("Starting SpaceRobots2 ...\n");
+    Warning("\n");
     SDL_Init(SDL_INIT_VIDEO);
     Random_Init();
 
