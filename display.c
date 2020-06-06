@@ -18,6 +18,7 @@
 
 typedef struct DisplayShip {
     bool initialized;
+    MobID mobid;
     uint32 color;
     SDL_Rect rect;
     SDL_Surface *sprite;
@@ -244,6 +245,7 @@ static void DisplayDrawFrame()
 
         if (!ship->initialized) {
             SDL_Point cPoint;
+            ship->mobid = mob->id;
             ship->color = DisplayGetColor(mob->playerID);
             ship->sprite = SDL_CreateRGBSurfaceWithFormat(0, ship->rect.w, ship->rect.h,
                                                           32, SDL_PIXELFORMAT_BGRA32);
@@ -254,6 +256,8 @@ static void DisplayDrawFrame()
 
             //XXX: This is never cleaned up.
         }
+
+        ASSERT(ship->mobid == mob->id);
 
         if (mob->alive) {
             SDL_BlitSurface(ship->sprite, NULL, sdlSurface, &ship->rect);
