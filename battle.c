@@ -43,6 +43,7 @@ void Battle_Init(const BattleParams *bp)
         }
         mob->id = ++battle.lastMobID;
         mob->type = Random_Int(MOB_TYPE_MIN, MOB_TYPE_MAX - 1);
+        mob->fuel = Mob_GetMaxFuelForType(mob->type);
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
 
@@ -144,6 +145,14 @@ void Battle_RunTick()
     for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
         Mob *mob = &battle.mobs[i];
         ASSERT(BattleCheckMobInvariants(mob));
+
+        if (mob->alive && mob->type == MOB_TYPE_ROCKET) {
+            mob->fuel--;
+
+            if (mob->fuel <= 0) {
+                mob->alive = FALSE;
+            }
+        }
 
         if (mob->alive) {
             BattleMoveMobToTarget(mob);

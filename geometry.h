@@ -64,21 +64,6 @@ static inline bool FQuad_Intersect(const FQuad *a, const FQuad *b)
 
 static inline bool FCircle_Intersect(const FCircle *a, const FCircle *b)
 {
-//    FQuad aBox, bBox;
-//    aBox.x = a->center.x - a->radius;
-//    aBox.y = a->center.y - a->radius;
-//    aBox.w = 2 * a->radius;
-//    aBox.h = 2 * a->radius;
-//
-//    bBox.x = b->center.x - b->radius;
-//    bBox.y = b->center.y - b->radius;
-//    bBox.w = 2 * b->radius;
-//    bBox.h = 2 * b->radius;
-//
-//    if (!FQuad_Intersect(&aBox, &bBox)) {
-//        return FALSE;
-//    }
-
     float dx = a->center.x - b->center.x;
     float dy = a->center.y - b->center.y;
     float dr = a->radius + b->radius;
