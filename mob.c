@@ -4,19 +4,17 @@
 
 #include "mob.h"
 
-void Mob_GetQuad(const Mob *mob, FQuad *q)
+void Mob_GetCircle(const Mob *mob, FCircle *c)
 {
-    q->x = mob->pos.x;
-    q->y = mob->pos.y;
+    c->center.x = mob->pos.x;
+    c->center.y = mob->pos.y;
 
     switch (mob->type) {
         case MOB_TYPE_BASE:
-            q->w = 50.0f;
-            q->h = 50.0f;
+            c->radius = 50.0f;
             break;
         case MOB_TYPE_FIGHTER:
-            q->w = 10.0f;
-            q->h = 10.0f;
+            c->radius = 10.0f;
             break;
         default:
             PANIC("Unhandled mob type: %d\n", mob->type);
@@ -26,12 +24,13 @@ void Mob_GetQuad(const Mob *mob, FQuad *q)
 
 float Mob_GetSpeed(const Mob *mob)
 {
+    float scale = 2.0f;
     switch (mob->type) {
         case MOB_TYPE_BASE:
-            return 1.0f;
+            return 1.0f / scale;
             break;
         case MOB_TYPE_FIGHTER:
-            return 5.0f;
+            return 5.0f / scale;
             break;
         default:
             PANIC("Unhandled mob type: %d\n", mob->type);

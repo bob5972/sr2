@@ -123,16 +123,16 @@ void BattleMoveMobToTarget(Mob *mob)
 
 bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
-    FQuad lq, rq;
+    FCircle lc, rc;
     ASSERT(lhs->alive);
     ASSERT(rhs->alive);
     if (lhs->playerID == rhs->playerID) {
         return FALSE;
     }
 
-    Mob_GetQuad(lhs, &lq);
-    Mob_GetQuad(rhs, &rq);
-    return FQuad_Intersect(&lq, &rq);
+    Mob_GetCircle(lhs, &lc);
+    Mob_GetCircle(rhs, &rc);
+    return FCircle_Intersect(&lc, &rc);
 }
 
 void Battle_RunTick()

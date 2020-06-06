@@ -175,6 +175,35 @@ static uint32 DisplayGetColor(uint32 index)
     return colors[index] | ((SHIP_ALPHA & 0xFF) << 24);
 }
 
+static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
+                              const SDL_Point *center, int radius)
+{
+    uint8 *pixels;
+    int minX = MAX(0, center->x - radius);
+    int maxX = MIN(sdlSurface->w, center->x + radius + 1);
+    int minY = MAX(0, center->y - radius);
+    int maxY = MIN(sdlSurface->h, center->y + radius + 1);
+
+    SDL_LockSurface(sdlSurface);
+    pixels = (uint8 *)sdlSurface->pixels;
+    pixels += sdlSurface->pitch * minY;
+
+    for (int y = minY; y < maxY; y++) {
+        uint32 *row = (uint32 *)pixels;
+        int dy = abs(y - center->y);
+        for (int x = minX; x < maxX; x++) {
+            int dx = abs(x - center->x);
+            if (dx * dx + dy * dy <= radius * radius) {
+                row[x] = color;
+            }
+        }
+        pixels += sdlSurface->pitch;
+    }
+
+    SDL_UnlockSurface(sdlSurface);
+}
+
+
 static void DisplayDrawFrame()
 {
     SDL_Surface *sdlSurface = NULL;
@@ -203,21 +232,24 @@ static void DisplayDrawFrame()
 
     ASSERT(DisplayShipVector_Size(&display.ships) == display.numMobs);
     for (i = 0; i < display.numMobs; i++) {
-        FQuad quad;
+        FCircle circle;
         DisplayShip *ship = DisplayShipVector_GetPtr(&display.ships, i);
         Mob *mob = &display.mobs[i];
 
-        Mob_GetQuad(mob, &quad);
-        ship->rect.x = (uint32)quad.x;
-        ship->rect.y = (uint32)quad.y;
-        ship->rect.w = (uint32)quad.w;
-        ship->rect.h = (uint32)quad.h;
+        Mob_GetCircle(mob, &circle);
+        ship->rect.x = (uint32)(circle.center.x - circle.radius);
+        ship->rect.y = (uint32)(circle.center.y - circle.radius);
+        ship->rect.w = (uint32)(2 * circle.radius);
+        ship->rect.h = ship->rect.w;
 
         if (!ship->initialized) {
+            SDL_Point cPoint;
             ship->color = DisplayGetColor(mob->playerID);
             ship->sprite = SDL_CreateRGBSurfaceWithFormat(0, ship->rect.w, ship->rect.h,
                                                           32, SDL_PIXELFORMAT_BGRA32);
-            SDL_FillRect(ship->sprite, NULL, ship->color);
+            cPoint.x = ship->rect.w / 2;
+            cPoint.y = ship->rect.h / 2;
+            DisplayDrawCircle(ship->sprite, ship->color, &cPoint, circle.radius);
             ship->initialized = TRUE;
 
             //XXX: This is never cleaned up.

@@ -31,7 +31,7 @@ typedef struct Mob {
     MobCmd cmd;
 } Mob;
 
-void Mob_GetQuad(const Mob *mob, FQuad *q);
+void Mob_GetCircle(const Mob *mob, FCircle *q);
 float Mob_GetSpeed(const Mob *mob);
 
 #endif // _MOB_H_202006041753
