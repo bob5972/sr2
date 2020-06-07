@@ -93,7 +93,7 @@ void BattleDoMobSpawn(Mob *mob)
     ASSERT(mob->cmd.spawn == MOB_TYPE_INVALID ||
            mob->cmd.spawn >= MOB_TYPE_MIN);
     ASSERT(mob->cmd.spawn < MOB_TYPE_MAX);
-    ASSERT(mob->cmd.spawn == MOB_TYPE_ROCKET);
+    ASSERT(mob->cmd.spawn == MOB_TYPE_MISSILE);
 
     MobVector_Grow(&battle.mobs);
     size = MobVector_Size(&battle.mobs);
@@ -183,7 +183,7 @@ void Battle_RunTick()
         Mob *mob = MobVector_GetPtr(&battle.mobs, i);
         ASSERT(BattleCheckMobInvariants(mob));
 
-        if (mob->alive && mob->type == MOB_TYPE_ROCKET) {
+        if (mob->alive && mob->type == MOB_TYPE_MISSILE) {
             mob->fuel--;
 
             if (mob->fuel <= 0) {

@@ -18,7 +18,7 @@ typedef enum MobType {
     MOB_TYPE_BASE    = 1,
     MOB_TYPE_MIN     = 1,
     MOB_TYPE_FIGHTER = 2,
-    MOB_TYPE_ROCKET  = 3,
+    MOB_TYPE_MISSILE = 3,
     MOB_TYPE_MAX,
 } MobType;
 

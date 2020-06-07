@@ -91,14 +91,12 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
 
             if (mob->type == MOB_TYPE_FIGHTER) {
                 if (Random_Int(0, 200) == 0) {
-                    mob->cmd.spawn = MOB_TYPE_ROCKET;
+                    mob->cmd.spawn = MOB_TYPE_MISSILE;
                 }
             }
 
             if (mob->pos.x == mob->cmd.target.x &&
                 mob->pos.y == mob->cmd.target.y) {
-                //Warning("Mob %d has reached target (%f, %f)\n",
-                //        i, mob->cmd.target.x, mob->cmd.target.y);
                 if (Random_Bit()) {
                     mob->cmd.target.x = Random_Float(0.0f, bp->width);
                     mob->cmd.target.y = Random_Float(0.0f, bp->height);

@@ -16,7 +16,7 @@ float MobType_GetRadius(MobType type)
         case MOB_TYPE_FIGHTER:
             return 10.0f / SIZE_SCALE;
             break;
-        case MOB_TYPE_ROCKET:
+        case MOB_TYPE_MISSILE:
             return 3.0f / SIZE_SCALE;
             break;
         default:
@@ -45,7 +45,7 @@ float Mob_GetSpeed(const Mob *mob)
         case MOB_TYPE_FIGHTER:
             speed = 5.0f / SPEED_SCALE;
             break;
-        case MOB_TYPE_ROCKET:
+        case MOB_TYPE_MISSILE:
             speed = 10.0f / SPEED_SCALE;
             break;
         default:
@@ -70,7 +70,7 @@ uint MobType_GetMaxFuel(MobType type)
             return -1;
         case MOB_TYPE_FIGHTER:
             return -1;
-        case MOB_TYPE_ROCKET:
+        case MOB_TYPE_MISSILE:
             return 100;
         default:
             PANIC("Unhandled mob type: %d\n", type);
