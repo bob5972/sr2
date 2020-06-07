@@ -164,6 +164,7 @@ void BattleDoMobMove(Mob *mob)
 bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
     FCircle lc, rc;
+    bool canCollide;
 
     ASSERT(lhs->alive);
     ASSERT(rhs->alive);
@@ -172,9 +173,17 @@ bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
         // Players don't collide with themselves...
         return FALSE;
     }
-    if (lhs->type != MOB_TYPE_MISSILE &&
-        rhs->type != MOB_TYPE_MISSILE) {
-        // Only missiles can hit things.
+
+    canCollide = FALSE;
+    if (lhs->type == MOB_TYPE_BASE ||
+        rhs->type == MOB_TYPE_BASE) {
+        canCollide = TRUE;
+    }
+    if (lhs->type == MOB_TYPE_MISSILE ||
+        rhs->type == MOB_TYPE_MISSILE) {
+        canCollide = TRUE;
+    }
+    if (!canCollide) {
         return FALSE;
     }
 
@@ -249,8 +258,8 @@ void Battle_RunTick()
                 if (BattleCheckMobCollision(oMob, iMob)) {
                     battle.bs.collisions++;
 
-                    oMob->health--;
-                    iMob->health--;
+                    oMob->health -= MobType_GetMaxHealth(iMob->type);
+                    iMob->health -= MobType_GetMaxHealth(oMob->type);
 
                     if (oMob->health <= 0) {
                         oMob->alive = FALSE;
@@ -328,7 +337,8 @@ void Battle_RunTick()
             battle.bs.players[i].credits += battle.bp.creditsPerTick;
         }
     }
-    if (livePlayers <= 1) {
+    if (livePlayers <= 1 ||
+        battle.bs.tick >= battle.bp.timeLimit) {
         battle.bs.finished = TRUE;
     }
 }

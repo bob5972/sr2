@@ -117,7 +117,7 @@ int MobType_GetMaxHealth(MobType type)
 {
     switch (type) {
         case MOB_TYPE_BASE:
-            return 20;
+            return 50;
         case MOB_TYPE_FIGHTER:
             return 1;
         case MOB_TYPE_MISSILE:

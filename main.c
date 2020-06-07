@@ -109,6 +109,7 @@ int main(void)
     bp.height = 1200;
     bp.startingCredits = 1000;
     bp.creditsPerTick = 1;
+    bp.timeLimit = 10 * 1000;
 
     p = 0;
     bp.players[p].playerName = "Player 1";
