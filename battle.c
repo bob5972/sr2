@@ -287,7 +287,6 @@ void Battle_RunTick()
                 livePlayer = mob->playerID;
             } else if (livePlayer != mob->playerID) {
                 battle.bs.finished = FALSE;
-                break;
             }
         } else {
             /*
@@ -295,8 +294,7 @@ void Battle_RunTick()
              * fleet AI's can see that it died.
              */
             if (mob->removeMob) {
-                uint32 size = MobVector_Size(&battle.mobs);
-                Mob *last = MobVector_GetPtr(&battle.mobs, size - 1);
+                Mob *last = MobVector_GetLastPtr(&battle.mobs);
                 *mob = *last;
                 MobVector_Shrink(&battle.mobs);
 

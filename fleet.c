@@ -115,6 +115,7 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
 
             i = IntMap_Get(&mobidMap, mob->id);
             ASSERT(i != MOB_INVALID_ID);
+            ASSERT(mobs[i].id == mob->id);
             mobs[i].cmd = mob->cmd;
         }
     }
@@ -122,9 +123,36 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
     IntMap_Destroy(&mobidMap);
 }
 
+static int FleetFindClosestSensor(FleetAI *ai, Mob *m)
+{
+    float distance;
+    int index;
+    SensorMob *sm;
+
+    ASSERT(SensorMobVector_Size(&ai->sensors) > 0);
+
+    index = 0;
+    sm = SensorMobVector_GetPtr(&ai->sensors, index);
+    distance = FPoint_Distance(&m->pos, &sm->pos);
+
+    for (uint i = 1; i < SensorMobVector_Size(&ai->sensors); i++) {
+        sm = SensorMobVector_GetPtr(&ai->sensors, index);
+        float curDistance = FPoint_Distance(&m->pos, &sm->pos);
+        if (curDistance < distance) {
+            distance = curDistance;
+            index = i;
+        }
+    }
+
+    return index;
+}
+
 static void FleetRunAI(FleetAI *ai)
 {
     const BattleParams *bp = Battle_GetParams();
+
+    ASSERT(ai->player.aiType == FLEET_AI_DUMMY ||
+           ai->player.aiType == FLEET_AI_SIMPLE);
 
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
@@ -133,7 +161,12 @@ static void FleetRunAI(FleetAI *ai)
         if (ai->player.aiType == FLEET_AI_SIMPLE &&
             SensorMobVector_Size(&ai->sensors) > 0) {
             if (mob->type == MOB_TYPE_FIGHTER) {
-                if (Random_Int(0, 200) == 0) {
+                SensorMob *sm;
+                int s = FleetFindClosestSensor(ai, mob);
+
+                sm = SensorMobVector_GetPtr(&ai->sensors, s);
+                mob->cmd.target = sm->pos;
+                if (Random_Int(0, 20) == 0) {
                     mob->cmd.spawn = MOB_TYPE_MISSILE;
                 }
             }
@@ -146,7 +179,7 @@ static void FleetRunAI(FleetAI *ai)
                 mob->cmd.target.y = Random_Float(0.0f, bp->height);
             } else {
                 // Head towards the center more frequently to get more
-                // cross-team collisions.
+                // cross-team collisions for testing.
                 mob->cmd.target.x = bp->width / 2;
                 mob->cmd.target.y = bp->height / 2;
             }
