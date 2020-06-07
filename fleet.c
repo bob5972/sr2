@@ -8,7 +8,9 @@
 #include "battle.h"
 
 typedef struct FleetAI {
+    PlayerID id;
     BattlePlayerParams player;
+    int credits;
     MobVector mobs;
     SensorMobVector sensors;
 } FleetAI;
@@ -22,7 +24,7 @@ typedef struct FleetGlobalData {
 
 static FleetGlobalData fleet;
 
-static void FleetRunAI(const BattleStatus *bs, FleetAI *ai);
+static void FleetRunAI(FleetAI *ai);
 
 void Fleet_Init()
 {
@@ -34,6 +36,7 @@ void Fleet_Init()
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MBUtil_Zero(&fleet.ais[i], sizeof(fleet.ais[i]));
+        fleet.ais[i].id = i;
         fleet.ais[i].player = bp->players[i];
         MobVector_CreateEmpty(&fleet.ais[i].mobs);
         SensorMobVector_CreateEmpty(&fleet.ais[i].sensors);
@@ -65,6 +68,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_MakeEmpty(&fleet.ais[i].mobs);
         SensorMobVector_MakeEmpty(&fleet.ais[i].sensors);
+        fleet.ais[i].credits = bs->players[i].credits;
     }
 
     /*
@@ -101,7 +105,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
      * Run the AI for all the players.
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
-        FleetRunAI(bs, &fleet.ais[p]);
+        FleetRunAI(&fleet.ais[p]);
     }
 
     /*
@@ -147,7 +151,7 @@ static int FleetFindClosestSensor(FleetAI *ai, Mob *m)
     return index;
 }
 
-static void FleetRunAI(const BattleStatus *bs, FleetAI *ai)
+static void FleetRunAI(FleetAI *ai)
 {
     const BattleParams *bp = Battle_GetParams();
 
@@ -157,24 +161,32 @@ static void FleetRunAI(const BattleStatus *bs, FleetAI *ai)
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
 
-        // Dummy fleet doesn't shoot.
-        if (ai->player.aiType == FLEET_AI_SIMPLE &&
-            SensorMobVector_Size(&ai->sensors) > 0) {
-            if (mob->type == MOB_TYPE_FIGHTER) {
-                SensorMob *sm;
-                int s = FleetFindClosestSensor(ai, mob);
+        if (ai->player.aiType == FLEET_AI_SIMPLE) {
+            if (SensorMobVector_Size(&ai->sensors) > 0) {
+                if (mob->type == MOB_TYPE_FIGHTER) {
+                    SensorMob *sm;
+                    int s = FleetFindClosestSensor(ai, mob);
 
-                sm = SensorMobVector_GetPtr(&ai->sensors, s);
-                mob->cmd.target = sm->pos;
-                if (Random_Int(0, 20) == 0) {
-                    mob->cmd.spawn = MOB_TYPE_MISSILE;
+                    sm = SensorMobVector_GetPtr(&ai->sensors, s);
+                    mob->cmd.target = sm->pos;
+                    if (Random_Int(0, 20) == 0) {
+                        mob->cmd.spawn = MOB_TYPE_MISSILE;
+                    }
                 }
             }
-        }
 
-        if (mob->type == MOB_TYPE_BASE) {
-            if (Random_Int(0, 100) == 0) {
-                mob->cmd.spawn = MOB_TYPE_FIGHTER;
+            if (mob->type == MOB_TYPE_BASE) {
+                if (ai->credits > 200 &&
+                    Random_Int(0, 100) == 0) {
+                    mob->cmd.spawn = MOB_TYPE_FIGHTER;
+                }
+            }
+        } else {
+            ASSERT(ai->player.aiType == FLEET_AI_DUMMY);
+            if (mob->type == MOB_TYPE_BASE) {
+                if (Random_Int(0, 100) == 0) {
+                    mob->cmd.spawn = MOB_TYPE_FIGHTER;
+                }
             }
         }
 
