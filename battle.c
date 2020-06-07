@@ -248,8 +248,16 @@ void Battle_RunTick()
             if (iMob->alive) {
                 if (BattleCheckMobCollision(oMob, iMob)) {
                     battle.bs.collisions++;
-                    oMob->alive = FALSE;
-                    iMob->alive = FALSE;
+
+                    oMob->health--;
+                    iMob->health--;
+
+                    if (oMob->health <= 0) {
+                        oMob->alive = FALSE;
+                    }
+                    if (iMob->health <= 0) {
+                        iMob->alive = FALSE;
+                    }
                     break;
                 }
             }

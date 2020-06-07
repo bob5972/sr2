@@ -127,24 +127,22 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
     IntMap_Destroy(&mobidMap);
 }
 
-static int FleetFindClosestSensor(FleetAI *ai, Mob *m)
+static int FleetFindClosestSensor(FleetAI *ai, Mob *m, bool includeMissiles)
 {
     float distance;
-    int index;
+    int index = -1;
     SensorMob *sm;
 
     ASSERT(SensorMobVector_Size(&ai->sensors) > 0);
 
-    index = 0;
-    sm = SensorMobVector_GetPtr(&ai->sensors, index);
-    distance = FPoint_Distance(&m->pos, &sm->pos);
-
-    for (uint i = 1; i < SensorMobVector_Size(&ai->sensors); i++) {
-        sm = SensorMobVector_GetPtr(&ai->sensors, index);
-        float curDistance = FPoint_Distance(&m->pos, &sm->pos);
-        if (curDistance < distance) {
-            distance = curDistance;
-            index = i;
+    for (uint i = 0; i < SensorMobVector_Size(&ai->sensors); i++) {
+        if (includeMissiles || sm->type != MOB_TYPE_MISSILE) {
+            sm = SensorMobVector_GetPtr(&ai->sensors, i);
+            float curDistance = FPoint_Distance(&m->pos, &sm->pos);
+            if (index == -1 || curDistance < distance) {
+                distance = curDistance;
+                index = i;
+            }
         }
     }
 
@@ -165,13 +163,19 @@ static void FleetRunAI(FleetAI *ai)
             if (SensorMobVector_Size(&ai->sensors) > 0) {
                 if (mob->type == MOB_TYPE_FIGHTER) {
                     SensorMob *sm;
-                    int s = FleetFindClosestSensor(ai, mob);
+                    int s = FleetFindClosestSensor(ai, mob, FALSE);
 
                     sm = SensorMobVector_GetPtr(&ai->sensors, s);
                     mob->cmd.target = sm->pos;
                     if (Random_Int(0, 20) == 0) {
                         mob->cmd.spawn = MOB_TYPE_MISSILE;
                     }
+                } else if (mob->type == MOB_TYPE_MISSILE) {
+                    SensorMob *sm;
+                    int s = FleetFindClosestSensor(ai, mob, TRUE);
+
+                    sm = SensorMobVector_GetPtr(&ai->sensors, s);
+                    mob->cmd.target = sm->pos;
                 }
             }
 

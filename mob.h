@@ -37,6 +37,7 @@ typedef struct Mob {
     bool removeMob;
     FPoint pos;
     int fuel;
+    int health;
     uint64 scannedBy;
 
     MobCmd cmd;
@@ -48,7 +49,6 @@ typedef struct SensorMob {
     PlayerID playerID;
     bool alive;
     FPoint pos;
-    int fuel;
 } SensorMob;
 
 DECLARE_MBVECTOR_TYPE(Mob, MobVector);
@@ -58,6 +58,7 @@ float MobType_GetSpeed(MobType type);
 float MobType_GetRadius(MobType type);
 float MobType_GetSensorRadius(MobType type);
 int MobType_GetMaxFuel(MobType type);
+int MobType_GetMaxHealth(MobType type);
 int MobType_GetCost(MobType type);
 
 void Mob_Init(Mob *mob, MobType t);

@@ -29,7 +29,15 @@ float MobType_GetRadius(MobType type)
 
 float MobType_GetSensorRadius(MobType type)
 {
-    return 3.0f * MobType_GetRadius(type);
+    float sensorScale;
+
+    if (type == MOB_TYPE_BASE) {
+        sensorScale = 5.0f;
+    } else {
+        sensorScale = 3.0f;
+    }
+
+    return sensorScale * MobType_GetRadius(type);
 }
 
 void Mob_GetCircle(const Mob *mob, FCircle *c)
@@ -95,7 +103,25 @@ int MobType_GetMaxFuel(MobType type)
         case MOB_TYPE_FIGHTER:
             return -1;
         case MOB_TYPE_MISSILE:
-            return 100;
+            return 50;
+        default:
+            PANIC("Unhandled mob type: %d\n", type);
+            break;
+    }
+
+    NOT_REACHED();
+}
+
+
+int MobType_GetMaxHealth(MobType type)
+{
+    switch (type) {
+        case MOB_TYPE_BASE:
+            return 20;
+        case MOB_TYPE_FIGHTER:
+            return 1;
+        case MOB_TYPE_MISSILE:
+            return 1;
         default:
             PANIC("Unhandled mob type: %d\n", type);
             break;
@@ -112,6 +138,7 @@ void Mob_Init(Mob *mob, MobType t)
     mob->id = MOB_ID_INVALID;
     mob->type = t;
     mob->fuel = MobType_GetMaxFuel(t);
+    mob->health = MobType_GetMaxHealth(t);
     mob->cmd.spawn = MOB_TYPE_INVALID;
 }
 
@@ -125,6 +152,7 @@ bool Mob_CheckInvariants(const Mob *m)
     ASSERT(m->playerID != PLAYER_ID_INVALID);
     ASSERT(!(m->removeMob && m->alive));
     ASSERT(m->fuel <= MobType_GetMaxFuel(m->type));
+    ASSERT(m->health <= MobType_GetMaxHealth(m->type));
     return TRUE;
 }
 
@@ -139,5 +167,4 @@ void SensorMob_InitFromMob(SensorMob *sm, const Mob *mob)
     sm->playerID = mob->playerID;
     sm->alive = mob->alive;
     sm->pos = mob->pos;
-    sm->fuel = mob->fuel;
 }
