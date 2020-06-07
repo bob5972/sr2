@@ -7,8 +7,23 @@
 #include "IntMap.h"
 #include "battle.h"
 
+struct FleetAI;
+
+typedef struct FleetAIOps {
+    void (*create)(struct FleetAI *ai);
+    void (*destroy)(struct FleetAI *ai);
+    void (*runAI)(struct FleetAI *ai);
+} FleetAIOps;
+
 typedef struct FleetAI {
     PlayerID id;
+
+    /*
+     * Filled out by FleetAI controller.
+     */
+    FleetAIOps ops;
+    void *aiHandle;
+
     BattlePlayerParams player;
     int credits;
     MobVector mobs;
@@ -24,6 +39,7 @@ typedef struct FleetGlobalData {
 
 static FleetGlobalData fleet;
 
+static void FleetGetOps(FleetAI *ai);
 static void FleetRunAI(FleetAI *ai);
 static void SimpleFleetRunAI(FleetAI *ai);
 static void DummyFleetRunAI(FleetAI *ai);
@@ -42,6 +58,11 @@ void Fleet_Init()
         fleet.ais[i].player = bp->players[i];
         MobVector_CreateEmpty(&fleet.ais[i].mobs);
         SensorMobVector_CreateEmpty(&fleet.ais[i].sensors);
+
+        FleetGetOps(&fleet.ais[i]);
+        if (fleet.ais[i].ops.create != NULL) {
+            fleet.ais[i].ops.create(&fleet.ais[i]);
+        }
     }
 
     fleet.initialized = TRUE;
@@ -54,6 +75,10 @@ void Fleet_Exit()
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_Destroy(&fleet.ais[i].mobs);
         SensorMobVector_Destroy(&fleet.ais[i].sensors);
+
+        if (fleet.ais[i].ops.destroy != NULL) {
+            fleet.ais[i].ops.destroy(&fleet.ais[i]);
+        }
     }
 
     free(fleet.ais);
@@ -151,18 +176,27 @@ static int FleetFindClosestSensor(FleetAI *ai, Mob *m, bool includeMissiles)
     return index;
 }
 
-static void FleetRunAI(FleetAI *ai)
+static void FleetGetOps(FleetAI *ai)
 {
+    MBUtil_Zero(&ai->ops, sizeof(ai->ops));
+
     switch(ai->player.aiType) {
         case FLEET_AI_DUMMY:
-            DummyFleetRunAI(ai);
+            ai->ops.runAI = &DummyFleetRunAI;
             break;
         case FLEET_AI_SIMPLE:
-            SimpleFleetRunAI(ai);
+            ai->ops.runAI = &SimpleFleetRunAI;
             break;
         default:
             PANIC("Unknown AI type=%d\n", ai->player.aiType);
     }
+}
+
+
+static void FleetRunAI(FleetAI *ai)
+{
+    ASSERT(ai->ops.runAI != NULL);
+    ai->ops.runAI(ai);
 }
 
 
