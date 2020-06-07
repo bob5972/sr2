@@ -22,7 +22,7 @@ typedef struct FleetGlobalData {
 
 static FleetGlobalData fleet;
 
-static void FleetRunAI(FleetAI *ai);
+static void FleetRunAI(const BattleStatus *bs, FleetAI *ai);
 
 void Fleet_Init()
 {
@@ -55,7 +55,7 @@ void Fleet_Exit()
     fleet.initialized = FALSE;
 }
 
-void Fleet_RunTick(Mob *mobs, uint32 numMobs)
+void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 {
     IntMap mobidMap;
 
@@ -101,7 +101,7 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
      * Run the AI for all the players.
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
-        FleetRunAI(&fleet.ais[p]);
+        FleetRunAI(bs, &fleet.ais[p]);
     }
 
     /*
@@ -147,7 +147,7 @@ static int FleetFindClosestSensor(FleetAI *ai, Mob *m)
     return index;
 }
 
-static void FleetRunAI(FleetAI *ai)
+static void FleetRunAI(const BattleStatus *bs, FleetAI *ai)
 {
     const BattleParams *bp = Battle_GetParams();
 

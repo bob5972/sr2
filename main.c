@@ -55,8 +55,10 @@ int Main_EngineThreadMain(void *data)
 
         // Run the AI
         bMobs = Battle_AcquireMobs(&numMobs);
-        Fleet_RunTick(bMobs, numMobs);
+        bStatus = Battle_AcquireStatus();
+        Fleet_RunTick(bStatus, bMobs, numMobs);
         Battle_ReleaseMobs();
+        Battle_ReleaseStatus();
 
         // Run the Physics
         Battle_RunTick();
