@@ -57,7 +57,8 @@ DECLARE_MBVECTOR_TYPE(SensorMob, SensorMobVector);
 float MobType_GetSpeed(MobType type);
 float MobType_GetRadius(MobType type);
 float MobType_GetSensorRadius(MobType type);
-uint MobType_GetMaxFuel(MobType type);
+int MobType_GetMaxFuel(MobType type);
+int MobType_GetCost(MobType type);
 
 void Mob_Init(Mob *mob, MobType t);
 bool Mob_CheckInvariants(const Mob *mob);

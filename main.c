@@ -105,6 +105,8 @@ int main(void)
     MBUtil_Zero(&bp, sizeof(bp));
     bp.width = 1600;
     bp.height = 1200;
+    bp.startingCredits = 1000;
+    bp.creditsPerTick = 1;
 
     p = 0;
     bp.players[p].playerName = "Player 1";

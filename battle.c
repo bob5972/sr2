@@ -35,6 +35,7 @@ void Battle_Init(const BattleParams *bp)
     battle.bs.numPlayers = bp->numPlayers;
     for (uint32 i = 0; i < bp->numPlayers; i++) {
         battle.bs.players[i].alive = TRUE;
+        battle.bs.players[i].credits = bp->startingCredits;
     }
 
     MobVector_Create(&battle.mobs, bp->numPlayers, 1024);
@@ -94,18 +95,24 @@ void BattleDoMobSpawn(Mob *mob)
     ASSERT(mob->cmd.spawn == MOB_TYPE_MISSILE ||
            mob->type == MOB_TYPE_BASE);
 
-    MobVector_Grow(&battle.mobs);
-    size = MobVector_Size(&battle.mobs);
-    spawn = MobVector_GetPtr(&battle.mobs, size - 1);
+    ASSERT(mob->playerID < ARRAYSIZE(battle.bs.players));
+    if (battle.bs.players[mob->playerID].credits >=
+        MobType_GetCost(mob->cmd.spawn)) {
+        battle.bs.players[mob->playerID].credits -=
+            MobType_GetCost(mob->cmd.spawn);
+        MobVector_Grow(&battle.mobs);
+        size = MobVector_Size(&battle.mobs);
+        spawn = MobVector_GetPtr(&battle.mobs, size - 1);
 
-    Mob_Init(spawn, mob->cmd.spawn);
-    spawn->playerID = mob->playerID;
-    spawn->id = ++battle.lastMobID;
-    spawn->pos = mob->pos;
-    spawn->cmd.target = mob->cmd.target;
+        Mob_Init(spawn, mob->cmd.spawn);
+        spawn->playerID = mob->playerID;
+        spawn->id = ++battle.lastMobID;
+        spawn->pos = mob->pos;
+        spawn->cmd.target = mob->cmd.target;
 
-    mob->cmd.spawn = MOB_TYPE_INVALID;
-    battle.bs.spawns++;
+        mob->cmd.spawn = MOB_TYPE_INVALID;
+        battle.bs.spawns++;
+    }
 }
 
 void BattleDoMobMove(Mob *mob)
@@ -305,11 +312,12 @@ void Battle_RunTick()
         }
     }
 
-    // Check for victory
+    // Check for victory, pay the players
     uint32 livePlayers = 0;
     for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
         if (battle.bs.players[i].alive) {
             livePlayers++;
+            battle.bs.players[i].credits += battle.bp.creditsPerTick;
         }
     }
     if (livePlayers <= 1) {

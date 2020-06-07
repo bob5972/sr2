@@ -70,7 +70,24 @@ float MobType_GetSpeed(MobType type)
     return speed;
 }
 
-uint MobType_GetMaxFuel(MobType type)
+int MobType_GetCost(MobType type)
+{
+    switch (type) {
+        case MOB_TYPE_BASE:
+            return -1;
+        case MOB_TYPE_FIGHTER:
+            return 100;
+        case MOB_TYPE_MISSILE:
+            return 1;
+        default:
+            PANIC("Unhandled mob type: %d\n", type);
+            break;
+    }
+
+    NOT_REACHED();
+}
+
+int MobType_GetMaxFuel(MobType type)
 {
     switch (type) {
         case MOB_TYPE_BASE:

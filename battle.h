@@ -16,25 +16,28 @@ typedef struct BattlePlayerParams {
 
 typedef struct BattleParams {
     BattlePlayerParams players[MAX_PLAYERS];
-    uint32 numPlayers;
-    uint32 width;
-    uint32 height;
+    uint numPlayers;
+    uint width;
+    uint height;
+    uint startingCredits;
+    uint creditsPerTick;
 } BattleParams;
 
 typedef struct BattlePlayerStatus {
     bool alive;
+    int credits;
 } BattlePlayerStatus;
 
 typedef struct BattleStatus {
     bool finished;
-    uint32 tick;
+    uint tick;
 
     BattlePlayerStatus players[MAX_PLAYERS];
-    uint32 numPlayers;
+    uint numPlayers;
 
-    uint32 collisions;
-    uint32 sensorContacts;
-    uint32 spawns;
+    int collisions;
+    int sensorContacts;
+    int spawns;
 } BattleStatus;
 
 void Battle_Init(const BattleParams *bp);
