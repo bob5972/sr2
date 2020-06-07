@@ -20,6 +20,7 @@ typedef struct BattleStatus {
     bool finished;
     uint32 tick;
     uint32 collisions;
+    uint32 spawns;
 } BattleStatus;
 
 void Battle_Init(const BattleParams *bp);

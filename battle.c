@@ -17,7 +17,7 @@ typedef struct BattleGlobalData {
     bool statusAcquired;
 
     MobID lastMobID;
-    Mob mobs[100];
+    MobVector mobs;
     bool mobsAcquired;
 } BattleGlobalData;
 
@@ -31,8 +31,12 @@ void Battle_Init(const BattleParams *bp)
     ASSERT(bp->numPlayers > 0);
     battle.bp = *bp;
 
-    for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
-        Mob *mob = &battle.mobs[i];
+    MobVector_Create(&battle.mobs, 100, 1024);
+    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
+
+        Util_Zero(mob, sizeof(*mob));
+
         mob->alive = TRUE;
         if (Random_Bit()) {
             // Force more intra-team collisions for testing.
@@ -57,6 +61,7 @@ void Battle_Init(const BattleParams *bp)
 void Battle_Exit()
 {
     ASSERT(battle.initialized);
+    MobVector_Destroy(&battle.mobs);
     battle.initialized = FALSE;
 }
 
@@ -71,11 +76,43 @@ bool BattleCheckMobInvariants(const Mob *mob)
     ASSERT(mob->cmd.target.y >= 0.0f);
     ASSERT(mob->cmd.target.x <= (uint32)battle.bp.width);
     ASSERT(mob->cmd.target.y <= (uint32)battle.bp.height);
+    ASSERT(!(mob->removeMob && mob->alive));
 
     return TRUE;
 }
 
-void BattleMoveMobToTarget(Mob *mob)
+void BattleDoMobSpawn(Mob *mob)
+{
+    uint32 size;
+    Mob *spawn;
+
+    ASSERT(mob != NULL);
+    ASSERT(mob->alive);
+    ASSERT(mob->type == MOB_TYPE_BASE ||
+           mob->type == MOB_TYPE_FIGHTER);
+    ASSERT(mob->cmd.spawn == MOB_TYPE_INVALID ||
+           mob->cmd.spawn >= MOB_TYPE_MIN);
+    ASSERT(mob->cmd.spawn < MOB_TYPE_MAX);
+    ASSERT(mob->cmd.spawn == MOB_TYPE_ROCKET);
+
+    MobVector_Grow(&battle.mobs);
+    size = MobVector_Size(&battle.mobs);
+    spawn = MobVector_GetPtr(&battle.mobs, size - 1);
+
+    Util_Zero(spawn, sizeof(*spawn));
+    spawn->alive = TRUE;
+    spawn->playerID = mob->playerID;
+    spawn->id = ++battle.lastMobID;
+    spawn->type = mob->cmd.spawn;
+    spawn->fuel = MobType_GetMaxFuel(spawn->type);
+    spawn->pos = mob->pos;
+    spawn->cmd.target = mob->cmd.target;
+
+    mob->cmd.spawn = MOB_TYPE_INVALID;
+    battle.bs.spawns++;
+}
+
+void BattleDoMobMove(Mob *mob)
 {
     FPoint origin;
     float distance;
@@ -142,8 +179,8 @@ void Battle_RunTick()
     battle.bs.tick++;
 
     // Run Physics
-    for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
-        Mob *mob = &battle.mobs[i];
+    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
         ASSERT(BattleCheckMobInvariants(mob));
 
         if (mob->alive && mob->type == MOB_TYPE_ROCKET) {
@@ -155,21 +192,29 @@ void Battle_RunTick()
         }
 
         if (mob->alive) {
-            BattleMoveMobToTarget(mob);
+            BattleDoMobMove(mob);
+        }
+    }
+
+    // Spawn things
+    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
+        if (mob->alive && mob->cmd.spawn != MOB_TYPE_INVALID) {
+            BattleDoMobSpawn(mob);
         }
     }
 
     // Check for collisions
-    for (uint32 outer = 0; outer < ARRAYSIZE(battle.mobs); outer++) {
-        Mob *oMob = &battle.mobs[outer];
+    for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
+        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
 
         if (!oMob->alive) {
             continue;
         }
 
-        for (uint32 inner = outer + 1; inner < ARRAYSIZE(battle.mobs);
+        for (uint32 inner = outer + 1; inner < MobVector_Size(&battle.mobs);
             inner++) {
-            Mob *iMob = &battle.mobs[inner];
+            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
 
             if (iMob->alive) {
                 if (BattleCheckMobCollision(oMob, iMob)) {
@@ -185,14 +230,30 @@ void Battle_RunTick()
     // Check for victory!
     int32 livePlayer = -1;
     battle.bs.finished = TRUE;
-    for (uint32 i = 0; i < ARRAYSIZE(battle.mobs); i++) {
-        Mob *mob = &battle.mobs[i];
+    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
         if (mob->alive) {
             if (livePlayer == -1) {
                 livePlayer = mob->playerID;
             } else if (livePlayer != mob->playerID) {
                 battle.bs.finished = FALSE;
                 break;
+            }
+        } else {
+            /*
+             * Keep the mob around for one tick after it dies so the
+             * fleet AI's can see that it died.
+             */
+            if (mob->removeMob) {
+                uint32 size = MobVector_Size(&battle.mobs);
+                Mob *last = MobVector_GetPtr(&battle.mobs, size - 1);
+                *mob = *last;
+                MobVector_Shrink(&battle.mobs);
+
+                // Redo the current index
+                i--;
+            } else {
+                mob->removeMob = TRUE;
             }
         }
     }
@@ -206,8 +267,8 @@ Mob *Battle_AcquireMobs(uint32 *numMobs)
 
     battle.mobsAcquired = TRUE;
 
-    *numMobs = ARRAYSIZE(battle.mobs);
-    return &battle.mobs[0];
+    *numMobs = MobVector_Size(&battle.mobs);
+    return MobVector_GetCArray(&battle.mobs);
 }
 
 void Battle_ReleaseMobs()

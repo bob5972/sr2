@@ -4,9 +4,6 @@
 
 #include "fleet.h"
 #include "random.h"
-#include "MBVector.h"
-
-DECLARE_MBVECTOR_TYPE(Mob, MobVector);
 
 typedef struct FleetAI {
     MobVector mobs;
@@ -50,6 +47,7 @@ void Fleet_Exit()
 
 void FleetUpdateMobCmd(Mob *mobs, uint32 numMobs, Mob *m)
 {
+    // XXX: We really need a better way to do this.
     for (uint32 i = 0; i < numMobs; i++) {
         if (mobs[i].id == m->id) {
             ASSERT(mobs[i].playerID == m->playerID);
@@ -90,6 +88,13 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
     for (uint32 p = 0; p < fleet.numAIs; p++) {
         for (uint32 m = 0; m < MobVector_Size(&fleet.ais[p].mobs); m++) {
             Mob *mob = MobVector_GetPtr(&fleet.ais[p].mobs, m);
+
+            if (mob->type == MOB_TYPE_FIGHTER) {
+                if (Random_Int(0, 200) == 0) {
+                    mob->cmd.spawn = MOB_TYPE_ROCKET;
+                }
+            }
+
             if (mob->pos.x == mob->cmd.target.x &&
                 mob->pos.y == mob->cmd.target.y) {
                 //Warning("Mob %d has reached target (%f, %f)\n",
@@ -109,8 +114,6 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
 
     /*
      * Write the commands back to the original mob array.
-     *
-     * XXX: We really need a better way to do this.
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
         for (uint32 m = 0; m < MobVector_Size(&fleet.ais[p].mobs); m++) {

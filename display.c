@@ -36,8 +36,7 @@ typedef struct DisplayGlobalData {
     SDL_sem *mainSignal;
     uint64 mobGeneration;
     bool mobsAcquired;
-    Mob *mobs;
-    uint32 numMobs;
+    MobVector mobs;
 
     FleetSprites fleets[8];
 } DisplayGlobalData;
@@ -99,12 +98,17 @@ void Display_Init()
             DisplayDrawCircle(sprite, color, &cPoint, radius);
         }
     }
+
+    MobVector_CreateEmpty(&display.mobs);
+
     display.initialized = TRUE;
 }
 
 void Display_Exit()
 {
     ASSERT(display.initialized);
+
+    MobVector_Destroy(&display.mobs);
 
     for (uint x = 0; x < ARRAYSIZE(display.fleets); x++) {
         for (uint i = 0; i < ARRAYSIZE(display.fleets[x].mobSprites); i++) {
@@ -113,9 +117,6 @@ void Display_Exit()
             }
         }
     }
-
-    free(display.mobs);
-    display.mobs = NULL;
 
     SDL_DestroyWindow(display.sdlWindow);
     display.sdlWindow = NULL;
@@ -147,21 +148,13 @@ Mob *Display_AcquireMobs(uint32 numMobs)
     }
     display.mainWaiting = FALSE;
 
-    if (numMobs > display.numMobs) {
-        //XXX: realloc ?
-        display.numMobs = numMobs;
-        free(display.mobs);
-        display.mobs = malloc(numMobs * sizeof(display.mobs[0]));
-    } else {
-        ASSERT(display.numMobs == numMobs);
-    }
-
+    MobVector_Resize(&display.mobs, numMobs);
     display.mobsAcquired = TRUE;
 
     /*
      * We don't unlock the mutex until Display_ReleaseMobs.
      */
-    return display.mobs;
+    return MobVector_GetCArray(&display.mobs);
 }
 
 void Display_ReleaseMobs()
@@ -185,6 +178,7 @@ static uint32 DisplayGetColor(uint32 index)
         0x800080,
         0x008080,
         0xFFFFFF,
+        0x888888,
     };
 
     index %= ARRAYSIZE(colors);
@@ -246,8 +240,8 @@ static void DisplayDrawFrame()
     SDL_FillRect(sdlSurface, NULL,
                  SDL_MapRGB(sdlSurface->format, 0x00, 0x00, 0x00));
 
-    for (i = 0; i < display.numMobs; i++) {
-        Mob *mob = &display.mobs[i];
+    for (i = 0; i < MobVector_Size(&display.mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&display.mobs, i);
 
         if (mob->alive) {
             FCircle circle;

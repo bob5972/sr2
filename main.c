@@ -31,6 +31,7 @@ void MainPrintBattleStatus(const BattleStatus *bStatus)
 
     Warning("Finished tick %d\n", bStatus->tick);
     Warning("\tcollisions = %d\n", bStatus->collisions);
+    Warning("\tspawns = %d\n", bStatus->spawns);
     Warning("\t%d ticks in %d ms\n", bStatus->tick, elapsedMS);
     Warning("\t%.1f ticks/second\n", ((float)bStatus->tick)/elapsedMS * 1000.0f);
     Warning("\n");
@@ -100,7 +101,7 @@ int main(void)
     Random_Init();
 
     Util_Zero(&bp, sizeof(bp));
-    bp.numPlayers = 8;
+    bp.numPlayers = 4;
     bp.width = 1600;
     bp.height = 1200;
 

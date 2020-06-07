@@ -6,6 +6,7 @@
 #define _MOB_H_202006041753
 
 #include "geometry.h"
+#include "MBVector.h"
 
 typedef uint32 PlayerID;
 
@@ -23,6 +24,7 @@ typedef enum MobType {
 
 typedef struct MobCmd {
     FPoint target;
+    MobType spawn;
 } MobCmd;
 
 typedef struct Mob {
@@ -30,10 +32,13 @@ typedef struct Mob {
     MobType type;
     PlayerID playerID;
     bool alive;
+    bool removeMob;
     FPoint pos;
     MobCmd cmd;
     int fuel;
 } Mob;
+
+DECLARE_MBVECTOR_TYPE(Mob, MobVector);
 
 void Mob_GetCircle(const Mob *mob, FCircle *q);
 float Mob_GetSpeed(const Mob *mob);
