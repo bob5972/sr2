@@ -4,6 +4,7 @@
 
 #include "fleet.h"
 #include "random.h"
+#include "IntMap.h"
 
 typedef struct FleetAI {
     MobVector mobs;
@@ -45,21 +46,13 @@ void Fleet_Exit()
     fleet.initialized = FALSE;
 }
 
-void FleetUpdateMobCmd(Mob *mobs, uint32 numMobs, Mob *m)
-{
-    // XXX: We really need a better way to do this.
-    for (uint32 i = 0; i < numMobs; i++) {
-        if (mobs[i].id == m->id) {
-            ASSERT(mobs[i].playerID == m->playerID);
-            mobs[i].cmd = m->cmd;
-            break;
-        }
-    }
-}
-
 void Fleet_RunTick(Mob *mobs, uint32 numMobs)
 {
+    IntMap mobidMap;
     const BattleParams *bp = Battle_GetParams();
+
+    IntMap_Create(&mobidMap);
+    IntMap_SetEmptyValue(&mobidMap, MOB_INVALID_ID);
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_MakeEmpty(&fleet.ais[i].mobs);
@@ -71,6 +64,8 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
     for (uint32 i = 0; i < numMobs; i++) {
         Mob *mob = &mobs[i];
         PlayerID p = mob->playerID;
+
+        IntMap_Put(&mobidMap, mob->id, i);
 
         ASSERT(p < fleet.numAIs);
         if (mob->alive) {
@@ -115,9 +110,15 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
         for (uint32 m = 0; m < MobVector_Size(&fleet.ais[p].mobs); m++) {
+            uint32 i;
             Mob *mob = MobVector_GetPtr(&fleet.ais[p].mobs, m);
             ASSERT(mob->playerID == p);
-            FleetUpdateMobCmd(mobs, numMobs, mob);
+
+            i = IntMap_Get(&mobidMap, mob->id);
+            ASSERT(i != MOB_INVALID_ID);
+            mobs[i].cmd = mob->cmd;
         }
     }
+
+    IntMap_Destroy(&mobidMap);
 }
