@@ -52,7 +52,7 @@ void Display_Init()
     SDL_Surface *sdlSurface = NULL;
     const BattleParams *bp = Battle_GetParams();
 
-    ASSERT(Util_IsZero(&display, sizeof(display)));
+    ASSERT(MBUtil_IsZero(&display, sizeof(display)));
     display.width = bp->width;
     display.height = bp->height;
 

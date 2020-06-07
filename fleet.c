@@ -21,7 +21,7 @@ static FleetGlobalData fleet;
 void Fleet_Init()
 {
     const BattleParams *bp = Battle_GetParams();
-    ASSERT(Util_IsZero(&fleet, sizeof(fleet)));
+    ASSERT(MBUtil_IsZero(&fleet, sizeof(fleet)));
 
     fleet.numAIs = bp->numPlayers;
     fleet.ais = malloc(fleet.numAIs * sizeof(fleet.ais[0]));

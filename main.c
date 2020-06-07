@@ -92,7 +92,7 @@ int main(void)
 {
     BattleParams bp;
 
-    ASSERT(Util_IsZero(&mainData, sizeof(mainData)));
+    ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
 
     // Setup
     Warning("Starting SpaceRobots2 ...\n");
@@ -100,7 +100,7 @@ int main(void)
     SDL_Init(SDL_INIT_VIDEO);
     Random_Init();
 
-    Util_Zero(&bp, sizeof(bp));
+    MBUtil_Zero(&bp, sizeof(bp));
     bp.numPlayers = 4;
     bp.width = 1600;
     bp.height = 1200;

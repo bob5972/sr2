@@ -26,7 +26,7 @@ static BattleGlobalData battle;
 void Battle_Init(const BattleParams *bp)
 {
     ASSERT(bp != NULL);
-    ASSERT(Util_IsZero(&battle, sizeof(battle)));
+    ASSERT(MBUtil_IsZero(&battle, sizeof(battle)));
 
     ASSERT(bp->numPlayers > 0);
     battle.bp = *bp;
@@ -35,7 +35,7 @@ void Battle_Init(const BattleParams *bp)
     for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
         Mob *mob = MobVector_GetPtr(&battle.mobs, i);
 
-        Util_Zero(mob, sizeof(*mob));
+        MBUtil_Zero(mob, sizeof(*mob));
 
         mob->alive = TRUE;
         if (Random_Bit()) {
@@ -99,7 +99,7 @@ void BattleDoMobSpawn(Mob *mob)
     size = MobVector_Size(&battle.mobs);
     spawn = MobVector_GetPtr(&battle.mobs, size - 1);
 
-    Util_Zero(spawn, sizeof(*spawn));
+    MBUtil_Zero(spawn, sizeof(*spawn));
     spawn->alive = TRUE;
     spawn->playerID = mob->playerID;
     spawn->id = ++battle.lastMobID;
