@@ -14,7 +14,7 @@ float MobType_GetRadius(MobType type)
             return 50.0f / SIZE_SCALE;
             break;
         case MOB_TYPE_FIGHTER:
-            return 10.0f / SIZE_SCALE;
+            return 5.0f / SIZE_SCALE;
             break;
         case MOB_TYPE_MISSILE:
             return 3.0f / SIZE_SCALE;
@@ -85,6 +85,30 @@ uint MobType_GetMaxFuel(MobType type)
     }
 
     NOT_REACHED();
+}
+
+void Mob_Init(Mob *mob, MobType t)
+{
+    MBUtil_Zero(mob, sizeof(*mob));
+    mob->alive = TRUE;
+    mob->playerID = PLAYER_ID_INVALID;
+    mob->id = MOB_ID_INVALID;
+    mob->type = t;
+    mob->fuel = MobType_GetMaxFuel(t);
+    mob->cmd.spawn = MOB_TYPE_INVALID;
+}
+
+bool Mob_CheckInvariants(const Mob *m)
+{
+    ASSERT(m != NULL);
+    ASSERT(m->id != MOB_ID_INVALID);
+    ASSERT(m->type != MOB_TYPE_INVALID);
+    ASSERT(m->type >= MOB_TYPE_MIN);
+    ASSERT(m->type < MOB_TYPE_MAX);
+    ASSERT(m->playerID != PLAYER_ID_INVALID);
+    ASSERT(!(m->removeMob && m->alive));
+    ASSERT(m->fuel <= MobType_GetMaxFuel(m->type));
+    return TRUE;
 }
 
 void SensorMob_InitFromMob(SensorMob *sm, const Mob *mob)

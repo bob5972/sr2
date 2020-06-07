@@ -32,17 +32,19 @@ void Battle_Init(const BattleParams *bp)
     ASSERT(bp->numPlayers > 0);
     battle.bp = *bp;
 
+    battle.bs.numPlayers = bp->numPlayers;
+    for (uint32 i = 0; i < bp->numPlayers; i++) {
+        battle.bs.players[i].alive = TRUE;
+    }
+
     MobVector_Create(&battle.mobs, bp->numPlayers, 1024);
 
     for (uint32 i = 0; i < bp->numPlayers; i++) {
         Mob *mob = MobVector_GetPtr(&battle.mobs, i);
 
-        MBUtil_Zero(mob, sizeof(*mob));
-        mob->alive = TRUE;
+        Mob_Init(mob, MOB_TYPE_BASE);
         mob->playerID = i;
         mob->id = ++battle.lastMobID;
-        mob->type = MOB_TYPE_BASE;
-        mob->fuel = MobType_GetMaxFuel(mob->type);
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
 
@@ -62,6 +64,7 @@ void Battle_Exit()
 
 bool BattleCheckMobInvariants(const Mob *mob)
 {
+    ASSERT(Mob_CheckInvariants(mob));
     ASSERT(mob->pos.x >= 0.0f);
     ASSERT(mob->pos.y >= 0.0f);
     ASSERT(mob->pos.x <= (uint32)battle.bp.width);
@@ -71,7 +74,6 @@ bool BattleCheckMobInvariants(const Mob *mob)
     ASSERT(mob->cmd.target.y >= 0.0f);
     ASSERT(mob->cmd.target.x <= (uint32)battle.bp.width);
     ASSERT(mob->cmd.target.y <= (uint32)battle.bp.height);
-    ASSERT(!(mob->removeMob && mob->alive));
 
     return TRUE;
 }
@@ -96,12 +98,9 @@ void BattleDoMobSpawn(Mob *mob)
     size = MobVector_Size(&battle.mobs);
     spawn = MobVector_GetPtr(&battle.mobs, size - 1);
 
-    MBUtil_Zero(spawn, sizeof(*spawn));
-    spawn->alive = TRUE;
+    Mob_Init(spawn, mob->cmd.spawn);
     spawn->playerID = mob->playerID;
     spawn->id = ++battle.lastMobID;
-    spawn->type = mob->cmd.spawn;
-    spawn->fuel = MobType_GetMaxFuel(spawn->type);
     spawn->pos = mob->pos;
     spawn->cmd.target = mob->cmd.target;
 
@@ -279,17 +278,15 @@ void Battle_RunTick()
         }
     }
 
-    // Destroy mobs and check for victory
-    int32 livePlayer = -1;
-    battle.bs.finished = TRUE;
+    // Destroy mobs and track player liveness
+    for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
+        battle.bs.players[i].alive = FALSE;
+    }
     for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
         Mob *mob = MobVector_GetPtr(&battle.mobs, i);
         if (mob->alive) {
-            if (livePlayer == -1) {
-                livePlayer = mob->playerID;
-            } else if (livePlayer != mob->playerID) {
-                battle.bs.finished = FALSE;
-            }
+            PlayerID p = mob->playerID;
+            battle.bs.players[p].alive = TRUE;
         } else {
             /*
              * Keep the mob around for one tick after it dies so the
@@ -306,6 +303,17 @@ void Battle_RunTick()
                 mob->removeMob = TRUE;
             }
         }
+    }
+
+    // Check for victory
+    uint32 livePlayers = 0;
+    for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
+        if (battle.bs.players[i].alive) {
+            livePlayers++;
+        }
+    }
+    if (livePlayers <= 1) {
+        battle.bs.finished = TRUE;
     }
 }
 

@@ -8,7 +8,7 @@
 #include "battle.h"
 
 typedef struct FleetAI {
-    BattlePlayer player;
+    BattlePlayerParams player;
     MobVector mobs;
     SensorMobVector sensors;
 } FleetAI;
@@ -60,7 +60,7 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
     IntMap mobidMap;
 
     IntMap_Create(&mobidMap);
-    IntMap_SetEmptyValue(&mobidMap, MOB_INVALID_ID);
+    IntMap_SetEmptyValue(&mobidMap, MOB_ID_INVALID);
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_MakeEmpty(&fleet.ais[i].mobs);
@@ -114,7 +114,7 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
             ASSERT(mob->playerID == p);
 
             i = IntMap_Get(&mobidMap, mob->id);
-            ASSERT(i != MOB_INVALID_ID);
+            ASSERT(i != MOB_ID_INVALID);
             ASSERT(mobs[i].id == mob->id);
             mobs[i].cmd = mob->cmd;
         }

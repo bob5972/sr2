@@ -8,10 +8,12 @@
 #include "geometry.h"
 #include "MBVector.h"
 
+#define MAX_PLAYERS 8
 typedef uint32 PlayerID;
+#define PLAYER_ID_INVALID ((uint32)-1)
 
 typedef uint32 MobID;
-#define MOB_INVALID_ID ((uint32)-1)
+#define MOB_ID_INVALID ((uint32)-1)
 
 typedef enum MobType {
     MOB_TYPE_INVALID = 0,
@@ -57,6 +59,8 @@ float MobType_GetRadius(MobType type);
 float MobType_GetSensorRadius(MobType type);
 uint MobType_GetMaxFuel(MobType type);
 
+void Mob_Init(Mob *mob, MobType t);
+bool Mob_CheckInvariants(const Mob *mob);
 void Mob_GetSensorCircle(const Mob *mob, FCircle *c);
 void Mob_GetCircle(const Mob *mob, FCircle *c);
 
