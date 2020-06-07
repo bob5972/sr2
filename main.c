@@ -16,6 +16,9 @@
 #include "battle.h"
 #include "fleet.h"
 
+// Poor man's command-line arguments...
+#define USE_DISPLAY TRUE
+
 struct MainData {
     SDL_Thread *engineThread;
     uint32 startTimeMS;
@@ -57,11 +60,13 @@ int Main_EngineThreadMain(void *data)
         Battle_RunTick();
 
         // Draw
-        bMobs = Battle_AcquireMobs(&numMobs);
-        dMobs = Display_AcquireMobs(numMobs);
-        memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
-        Display_ReleaseMobs();
-        Battle_ReleaseMobs();
+        if (USE_DISPLAY) {
+            bMobs = Battle_AcquireMobs(&numMobs);
+            dMobs = Display_AcquireMobs(numMobs);
+            memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
+            Display_ReleaseMobs();
+            Battle_ReleaseMobs();
+        }
 
         bStatus = Battle_AcquireStatus();
         if (bStatus->tick % 200 == 0) {
@@ -101,18 +106,27 @@ int main(void)
 
     Battle_Init(&bp);
     Fleet_Init();
-    Display_Init();
+
+    if (USE_DISPLAY) {
+        Display_Init();
+    }
 
     // Launch Engine Thread
     mainData.engineThread = SDL_CreateThread(Main_EngineThreadMain, "battle",
                                              NULL);
     ASSERT(mainData.engineThread != NULL);
 
-    Display_Main();
+    if (USE_DISPLAY) {
+        Display_Main();
+    }
+
     SDL_WaitThread(mainData.engineThread, NULL);
 
     //Cleanup
-    Display_Exit();
+    if (USE_DISPLAY) {
+        Display_Exit();
+    }
+
     Fleet_Exit();
     Battle_Exit();
     Random_Exit();
