@@ -38,13 +38,7 @@ void Battle_Init(const BattleParams *bp)
         MBUtil_Zero(mob, sizeof(*mob));
 
         mob->alive = TRUE;
-        if (Random_Bit()) {
-            // Force more intra-team collisions for testing.
-            ASSERT(battle.bp.numPlayers >= 2);
-            mob->playerID = i % 2;
-        } else {
-            mob->playerID = i % battle.bp.numPlayers;
-        }
+        mob->playerID = i % battle.bp.numPlayers;
         mob->id = ++battle.lastMobID;
         mob->type = Random_Int(MOB_TYPE_MIN, MOB_TYPE_MAX - 1);
         mob->fuel = MobType_GetMaxFuel(mob->type);
@@ -120,7 +114,6 @@ void BattleDoMobMove(Mob *mob)
     ASSERT(BattleCheckMobInvariants(mob));
     ASSERT(mob->alive);
 
-    //XXX: Should we be using the center of the quad?
     origin.x = mob->pos.x;
     origin.y = mob->pos.y;
     distance = FPoint_Distance(&origin, &mob->cmd.target);

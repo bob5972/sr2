@@ -7,10 +7,18 @@
 
 #include "geometry.h"
 #include "mob.h"
+#include "fleet.h"
 
+#define MAX_PLAYERS 8
 typedef uint32 PlayerID;
 
+typedef struct BattlePlayer {
+    const char *playerName;
+    FleetAIType aiType;
+} BattlePlayer;
+
 typedef struct BattleParams {
+    BattlePlayer players[MAX_PLAYERS];
     uint32 numPlayers;
     uint32 width;
     uint32 height;

@@ -90,6 +90,7 @@ int Main_EngineThreadMain(void *data)
 
 int main(void)
 {
+    uint32 p;
     BattleParams bp;
 
     ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
@@ -101,9 +102,24 @@ int main(void)
     Random_Init();
 
     MBUtil_Zero(&bp, sizeof(bp));
-    bp.numPlayers = 4;
     bp.width = 1600;
     bp.height = 1200;
+
+    p = 0;
+    bp.players[p].playerName = "Player 1";
+    bp.players[p].aiType = FLEET_AI_SIMPLE;
+    p++;
+    bp.players[p].playerName = "Player 2";
+    bp.players[p].aiType = FLEET_AI_SIMPLE;
+    p++;
+    bp.players[p].playerName = "Player 3";
+    bp.players[p].aiType = FLEET_AI_DUMMY;
+    p++;
+    bp.players[p].playerName = "Player 4";
+    bp.players[p].aiType = FLEET_AI_DUMMY;
+    p++;
+    bp.numPlayers = p;
+
 
     Battle_Init(&bp);
     Fleet_Init();
