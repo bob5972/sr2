@@ -16,9 +16,13 @@
 
 #define SHIP_ALPHA 0x88
 
+// Poor mans command-line options...
+#define DRAW_SENSORS TRUE
+
 typedef struct FleetSprites {
     uint32 color;
     SDL_Surface *mobSprites[MOB_TYPE_MAX];
+    SDL_Surface *scanSprites[MOB_TYPE_MAX];
 } FleetSprites;
 
 typedef struct DisplayGlobalData {
@@ -46,6 +50,7 @@ static DisplayGlobalData display;
 static uint32 DisplayGetColor(uint32 index);
 static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
                               const SDL_Point *center, int radius);
+static SDL_Surface *DisplayCreateCircleSprite(uint32 radius, uint32 color);
 
 void Display_Init()
 {
@@ -87,15 +92,12 @@ void Display_Init()
 
         for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
             uint32 radius = (uint32)MobType_GetRadius(t);
-            uint32 d = 2 * radius;
-            SDL_Point cPoint;
-            SDL_Surface *sprite;
-            sprite = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
-                                                    SDL_PIXELFORMAT_BGRA32);
-            display.fleets[x].mobSprites[t] = sprite;
-            cPoint.x = d / 2;
-            cPoint.y = d / 2;
-            DisplayDrawCircle(sprite, color, &cPoint, radius);
+            display.fleets[x].mobSprites[t] =
+                DisplayCreateCircleSprite(radius, color);
+
+            radius = (uint32)MobType_GetSensorRadius(t);
+            display.fleets[x].scanSprites[t] =
+                DisplayCreateCircleSprite(radius, color / 2);
         }
     }
 
@@ -114,6 +116,11 @@ void Display_Exit()
         for (uint i = 0; i < ARRAYSIZE(display.fleets[x].mobSprites); i++) {
             if (display.fleets[x].mobSprites[i] != NULL) {
                 SDL_FreeSurface(display.fleets[x].mobSprites[i]);
+            }
+        }
+        for (uint i = 0; i < ARRAYSIZE(display.fleets[x].scanSprites); i++) {
+            if (display.fleets[x].scanSprites[i] != NULL) {
+                SDL_FreeSurface(display.fleets[x].scanSprites[i]);
             }
         }
     }
@@ -183,6 +190,21 @@ static uint32 DisplayGetColor(uint32 index)
 
     index %= ARRAYSIZE(colors);
     return colors[index] | ((SHIP_ALPHA & 0xFF) << 24);
+}
+
+static SDL_Surface *DisplayCreateCircleSprite(uint32 radius, uint32 color)
+{
+    uint32 d = 2 * radius;
+    SDL_Point cPoint;
+    SDL_Surface *sprite;
+
+    sprite = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
+                                            SDL_PIXELFORMAT_BGRA32);
+    cPoint.x = d / 2;
+    cPoint.y = d / 2;
+    DisplayDrawCircle(sprite, color, &cPoint, radius);
+
+    return sprite;
 }
 
 static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
@@ -259,6 +281,16 @@ static void DisplayDrawFrame()
             sprite = display.fleets[mob->playerID].mobSprites[mob->type];
             ASSERT(sprite != NULL);
             SDL_BlitSurface(sprite, NULL, sdlSurface, &rect);
+
+            if (DRAW_SENSORS) {
+                Mob_GetSensorCircle(mob, &circle);
+                rect.x = (uint32)(circle.center.x - circle.radius);
+                rect.y = (uint32)(circle.center.y - circle.radius);
+                rect.w = (uint32)(2 * circle.radius);
+                rect.h = rect.w;
+                sprite = display.fleets[mob->playerID].scanSprites[mob->type];
+                SDL_BlitSurface(sprite, NULL, sdlSurface, &rect);
+            }
         }
     }
 
