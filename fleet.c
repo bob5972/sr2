@@ -25,6 +25,8 @@ typedef struct FleetGlobalData {
 static FleetGlobalData fleet;
 
 static void FleetRunAI(FleetAI *ai);
+static void SimpleFleetRunAI(FleetAI *ai);
+static void DummyFleetRunAI(FleetAI *ai);
 
 void Fleet_Init()
 {
@@ -151,51 +153,96 @@ static int FleetFindClosestSensor(FleetAI *ai, Mob *m, bool includeMissiles)
 
 static void FleetRunAI(FleetAI *ai)
 {
+    switch(ai->player.aiType) {
+        case FLEET_AI_DUMMY:
+            DummyFleetRunAI(ai);
+            break;
+        case FLEET_AI_SIMPLE:
+            SimpleFleetRunAI(ai);
+            break;
+        default:
+            PANIC("Unknown AI type=%d\n", ai->player.aiType);
+    }
+}
+
+
+static void SimpleFleetRunAI(FleetAI *ai)
+{
     const BattleParams *bp = Battle_GetParams();
 
-    ASSERT(ai->player.aiType == FLEET_AI_DUMMY ||
-           ai->player.aiType == FLEET_AI_SIMPLE);
+    ASSERT(ai->player.aiType == FLEET_AI_SIMPLE);
 
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
 
-        if (ai->player.aiType == FLEET_AI_SIMPLE) {
-            if (SensorMobVector_Size(&ai->sensors) > 0) {
-                if (mob->type == MOB_TYPE_FIGHTER) {
-                    SensorMob *sm;
-                    int s = FleetFindClosestSensor(ai, mob, FALSE);
+        if (SensorMobVector_Size(&ai->sensors) > 0) {
+            if (mob->type == MOB_TYPE_FIGHTER) {
+                SensorMob *sm;
+                int s = FleetFindClosestSensor(ai, mob, FALSE);
 
-                    sm = SensorMobVector_GetPtr(&ai->sensors, s);
-                    mob->cmd.target = sm->pos;
-                    if (Random_Int(0, 20) == 0) {
-                        mob->cmd.spawn = MOB_TYPE_MISSILE;
-                    }
-                } else if (mob->type == MOB_TYPE_MISSILE) {
-                    SensorMob *sm;
-                    int s = FleetFindClosestSensor(ai, mob, TRUE);
-
-                    sm = SensorMobVector_GetPtr(&ai->sensors, s);
-                    mob->cmd.target = sm->pos;
+                sm = SensorMobVector_GetPtr(&ai->sensors, s);
+                mob->cmd.target = sm->pos;
+                if (Random_Int(0, 20) == 0) {
+                    mob->cmd.spawn = MOB_TYPE_MISSILE;
                 }
+            } else if (mob->type == MOB_TYPE_MISSILE) {
+                SensorMob *sm;
+                int s = FleetFindClosestSensor(ai, mob, TRUE);
+
+                sm = SensorMobVector_GetPtr(&ai->sensors, s);
+                mob->cmd.target = sm->pos;
             }
+        }
 
-            if (mob->type == MOB_TYPE_BASE) {
-                if (ai->credits > 200 &&
-                    Random_Int(0, 100) == 0) {
-                    mob->cmd.spawn = MOB_TYPE_FIGHTER;
-                }
-            }
-        } else {
-            ASSERT(ai->player.aiType == FLEET_AI_DUMMY);
-            if (mob->type == MOB_TYPE_BASE) {
-                if (Random_Int(0, 100) == 0) {
-                    mob->cmd.spawn = MOB_TYPE_FIGHTER;
-                }
+        if (mob->type == MOB_TYPE_BASE) {
+            if (ai->credits > 200 &&
+                Random_Int(0, 100) == 0) {
+                mob->cmd.spawn = MOB_TYPE_FIGHTER;
             }
         }
 
         if (mob->pos.x == mob->cmd.target.x &&
             mob->pos.y == mob->cmd.target.y) {
+            if (Random_Bit()) {
+                mob->cmd.target.x = Random_Float(0.0f, bp->width);
+                mob->cmd.target.y = Random_Float(0.0f, bp->height);
+            } else {
+                // Head towards the center more frequently to get more
+                // cross-team collisions for testing.
+                mob->cmd.target.x = bp->width / 2;
+                mob->cmd.target.y = bp->height / 2;
+            }
+        }
+    }
+}
+
+
+static void DummyFleetRunAI(FleetAI *ai)
+{
+    const BattleParams *bp = Battle_GetParams();
+
+    ASSERT(ai->player.aiType == FLEET_AI_DUMMY);
+
+    for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
+        Mob *mob = MobVector_GetPtr(&ai->mobs, m);
+        bool newTarget = FALSE;
+
+        if (mob->type == MOB_TYPE_BASE) {
+            if (Random_Int(0, 100) == 0) {
+                mob->cmd.spawn = MOB_TYPE_FIGHTER;
+            }
+        }
+
+        if (mob->pos.x == mob->cmd.target.x &&
+            mob->pos.y == mob->cmd.target.y) {
+            newTarget = TRUE;
+        }
+        if (mob->type != MOB_TYPE_BASE &&
+            Random_Int(0, 100) == 0) {
+            newTarget = TRUE;
+        }
+
+        if (newTarget) {
             if (Random_Bit()) {
                 mob->cmd.target.x = Random_Float(0.0f, bp->width);
                 mob->cmd.target.y = Random_Float(0.0f, bp->height);
