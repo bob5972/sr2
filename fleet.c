@@ -10,6 +10,7 @@
 typedef struct FleetAI {
     BattlePlayer player;
     MobVector mobs;
+    SensorMobVector sensors;
 } FleetAI;
 
 typedef struct FleetGlobalData {
@@ -35,6 +36,7 @@ void Fleet_Init()
         MBUtil_Zero(&fleet.ais[i], sizeof(fleet.ais[i]));
         fleet.ais[i].player = bp->players[i];
         MobVector_CreateEmpty(&fleet.ais[i].mobs);
+        SensorMobVector_CreateEmpty(&fleet.ais[i].sensors);
     }
 
     fleet.initialized = TRUE;
@@ -46,6 +48,7 @@ void Fleet_Exit()
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_Destroy(&fleet.ais[i].mobs);
+        SensorMobVector_Destroy(&fleet.ais[i].sensors);
     }
 
     free(fleet.ais);
@@ -61,6 +64,7 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_MakeEmpty(&fleet.ais[i].mobs);
+        SensorMobVector_MakeEmpty(&fleet.ais[i].sensors);
     }
 
     /*
@@ -79,6 +83,17 @@ void Fleet_RunTick(Mob *mobs, uint32 numMobs)
             MobVector_GrowBy(&fleet.ais[p].mobs, 1);
             m = MobVector_GetPtr(&fleet.ais[p].mobs, oldSize);
             *m = *mob;
+        }
+
+        if (mob->scannedBy != 0) {
+            for (PlayerID s = 0; s < fleet.numAIs; s++) {
+                if (BitVector_GetRaw(s, &mob->scannedBy)) {
+                    SensorMob *sm;
+                    SensorMobVector_Grow(&fleet.ais[s].sensors);
+                    sm = SensorMobVector_GetLastPtr(&fleet.ais[s].sensors);
+                    SensorMob_InitFromMob(sm, mob);
+                }
+            }
         }
     }
 
@@ -115,7 +130,8 @@ static void FleetRunAI(FleetAI *ai)
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
 
         // Dummy fleet doesn't shoot.
-        if (ai->player.aiType == FLEET_AI_SIMPLE) {
+        if (ai->player.aiType == FLEET_AI_SIMPLE &&
+            SensorMobVector_Size(&ai->sensors) > 0) {
             if (mob->type == MOB_TYPE_FIGHTER) {
                 if (Random_Int(0, 200) == 0) {
                     mob->cmd.spawn = MOB_TYPE_MISSILE;

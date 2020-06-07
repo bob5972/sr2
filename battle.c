@@ -4,6 +4,7 @@
 
 #include "battle.h"
 #include "random.h"
+#include "BitVector.h"
 
 #define MICRON (0.1f)
 
@@ -155,15 +156,40 @@ void BattleDoMobMove(Mob *mob)
 bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
     FCircle lc, rc;
+
     ASSERT(lhs->alive);
     ASSERT(rhs->alive);
+
     if (lhs->playerID == rhs->playerID) {
+        // Players don't collide with themselves...
+        return FALSE;
+    }
+    if (lhs->type != MOB_TYPE_MISSILE &&
+        rhs->type != MOB_TYPE_MISSILE) {
+        // Only missiles can hit things.
         return FALSE;
     }
 
     Mob_GetCircle(lhs, &lc);
     Mob_GetCircle(rhs, &rc);
     return FCircle_Intersect(&lc, &rc);
+}
+
+// Can the scanning mob see the target mob?
+bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
+{
+    FCircle sc, tc;
+
+    ASSERT(scanning->alive);
+
+    if (scanning->playerID == target->playerID) {
+        // Players don't scan themselves...
+        return FALSE;
+    }
+
+    Mob_GetSensorCircle(scanning, &sc);
+    Mob_GetCircle(target, &tc);
+    return FCircle_Intersect(&sc, &tc);
 }
 
 void Battle_RunTick()
@@ -175,6 +201,8 @@ void Battle_RunTick()
     for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
         Mob *mob = MobVector_GetPtr(&battle.mobs, i);
         ASSERT(BattleCheckMobInvariants(mob));
+
+        mob->scannedBy = 0;
 
         if (mob->alive && mob->type == MOB_TYPE_MISSILE) {
             mob->fuel--;
@@ -197,7 +225,7 @@ void Battle_RunTick()
         }
     }
 
-    // Check for collisions
+    // Process collisions
     for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
         Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
 
@@ -220,7 +248,36 @@ void Battle_RunTick()
         }
     }
 
-    // Check for victory!
+    // Process scanning
+    for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
+        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
+
+        for (uint32 inner = outer + 1; inner < MobVector_Size(&battle.mobs);
+            inner++) {
+            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
+
+            if (oMob->alive &&
+                !BitVector_GetRaw(oMob->playerID, &iMob->scannedBy)) {
+
+                if (BattleCheckMobScan(oMob, iMob)) {
+                    ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
+                    BitVector_SetRaw(oMob->playerID, &iMob->scannedBy);
+                    battle.bs.sensorContacts++;
+                }
+            }
+
+            if (iMob->alive &&
+                !BitVector_GetRaw(iMob->playerID, &oMob->scannedBy)) {
+                if (BattleCheckMobScan(iMob, oMob)) {
+                    ASSERT(iMob->playerID < sizeof(oMob->scannedBy) * 8);
+                    BitVector_SetRaw(iMob->playerID, &oMob->scannedBy);
+                    battle.bs.sensorContacts++;
+                }
+            }
+        }
+    }
+
+    // Destroy mobs and check for victory
     int32 livePlayer = -1;
     battle.bs.finished = TRUE;
     for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {

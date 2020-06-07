@@ -34,16 +34,44 @@ typedef struct Mob {
     bool alive;
     bool removeMob;
     FPoint pos;
-    MobCmd cmd;
     int fuel;
+    uint64 scannedBy;
+
+    MobCmd cmd;
 } Mob;
 
-DECLARE_MBVECTOR_TYPE(Mob, MobVector);
+typedef struct SensorMob {
+    MobID mobid;
+    MobType type;
+    PlayerID playerID;
+    bool alive;
+    FPoint pos;
+    int fuel;
+} SensorMob;
 
-void Mob_GetCircle(const Mob *mob, FCircle *q);
-float Mob_GetSpeed(const Mob *mob);
+DECLARE_MBVECTOR_TYPE(Mob, MobVector);
+DECLARE_MBVECTOR_TYPE(SensorMob, SensorMobVector);
+
+float MobType_GetSpeed(MobType type);
 float MobType_GetRadius(MobType type);
-uint Mob_GetMaxFuel(const Mob *mob);
+float MobType_GetSensorRadius(MobType type);
 uint MobType_GetMaxFuel(MobType type);
+
+void Mob_GetSensorCircle(const Mob *mob, FCircle *c);
+void Mob_GetCircle(const Mob *mob, FCircle *c);
+
+void SensorMob_InitFromMob(SensorMob *sm, const Mob *mob);
+
+static inline float Mob_GetSpeed(const Mob *mob)
+{
+    ASSERT(mob != NULL);
+    return MobType_GetSpeed(mob->type);
+}
+
+static inline uint Mob_GetMaxFuel(const Mob *mob)
+{
+    ASSERT(mob != NULL);
+    return MobType_GetMaxFuel(mob->type);
+}
 
 #endif // _MOB_H_202006041753

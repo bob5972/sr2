@@ -27,6 +27,11 @@ float MobType_GetRadius(MobType type)
     NOT_REACHED();
 }
 
+float MobType_GetSensorRadius(MobType type)
+{
+    return 2.0f * MobType_GetRadius(type);
+}
+
 void Mob_GetCircle(const Mob *mob, FCircle *c)
 {
     c->center.x = mob->pos.x;
@@ -34,11 +39,19 @@ void Mob_GetCircle(const Mob *mob, FCircle *c)
     c->radius = MobType_GetRadius(mob->type);
 }
 
-float Mob_GetSpeed(const Mob *mob)
+
+void Mob_GetSensorCircle(const Mob *mob, FCircle *c)
+{
+    c->center.x = mob->pos.x;
+    c->center.y = mob->pos.y;
+    c->radius = MobType_GetSensorRadius(mob->type);
+}
+
+float MobType_GetSpeed(MobType type)
 {
     float speed;
 
-    switch (mob->type) {
+    switch (type) {
         case MOB_TYPE_BASE:
             speed = 1.0f / SPEED_SCALE;
             break;
@@ -49,19 +62,13 @@ float Mob_GetSpeed(const Mob *mob)
             speed = 10.0f / SPEED_SCALE;
             break;
         default:
-            PANIC("Unhandled mob type: %d\n", mob->type);
+            PANIC("Unhandled mob type: %d\n", type);
             break;
     }
 
-    ASSERT(MobType_GetRadius(mob->type) >= SPEED_SCALE);
+    ASSERT(MobType_GetRadius(type) >= SPEED_SCALE);
     return speed;
 }
-
-uint Mob_GetMaxFuel(const Mob *mob)
-{
-    return MobType_GetMaxFuel(mob->type);
-}
-
 
 uint MobType_GetMaxFuel(MobType type)
 {
@@ -80,3 +87,16 @@ uint MobType_GetMaxFuel(MobType type)
     NOT_REACHED();
 }
 
+void SensorMob_InitFromMob(SensorMob *sm, const Mob *mob)
+{
+    ASSERT(sm != NULL);
+    ASSERT(mob != NULL);
+
+    MBUtil_Zero(sm, sizeof(*sm));
+    sm->mobid = mob->id;
+    sm->type = mob->type;
+    sm->playerID = mob->playerID;
+    sm->alive = mob->alive;
+    sm->pos = mob->pos;
+    sm->fuel = mob->fuel;
+}

@@ -31,6 +31,7 @@ void MainPrintBattleStatus(const BattleStatus *bStatus)
 
     Warning("Finished tick %d\n", bStatus->tick);
     Warning("\tcollisions = %d\n", bStatus->collisions);
+    Warning("\tsensor contacts = %d\n", bStatus->sensorContacts);
     Warning("\tspawns = %d\n", bStatus->spawns);
     Warning("\t%d ticks in %d ms\n", bStatus->tick, elapsedMS);
     Warning("\t%.1f ticks/second\n", ((float)bStatus->tick)/elapsedMS * 1000.0f);
