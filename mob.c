@@ -29,7 +29,7 @@ float MobType_GetRadius(MobType type)
 
 float MobType_GetSensorRadius(MobType type)
 {
-    return 2.0f * MobType_GetRadius(type);
+    return 3.0f * MobType_GetRadius(type);
 }
 
 void Mob_GetCircle(const Mob *mob, FCircle *c)
