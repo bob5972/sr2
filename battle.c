@@ -32,16 +32,16 @@ void Battle_Init(const BattleParams *bp)
     ASSERT(bp->numPlayers > 0);
     battle.bp = *bp;
 
-    MobVector_Create(&battle.mobs, 100, 1024);
-    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
+    MobVector_Create(&battle.mobs, bp->numPlayers, 1024);
+
+    for (uint32 i = 0; i < bp->numPlayers; i++) {
         Mob *mob = MobVector_GetPtr(&battle.mobs, i);
 
         MBUtil_Zero(mob, sizeof(*mob));
-
         mob->alive = TRUE;
-        mob->playerID = i % battle.bp.numPlayers;
+        mob->playerID = i;
         mob->id = ++battle.lastMobID;
-        mob->type = Random_Int(MOB_TYPE_MIN, MOB_TYPE_MAX - 1);
+        mob->type = MOB_TYPE_BASE;
         mob->fuel = MobType_GetMaxFuel(mob->type);
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
@@ -88,7 +88,9 @@ void BattleDoMobSpawn(Mob *mob)
     ASSERT(mob->cmd.spawn == MOB_TYPE_INVALID ||
            mob->cmd.spawn >= MOB_TYPE_MIN);
     ASSERT(mob->cmd.spawn < MOB_TYPE_MAX);
-    ASSERT(mob->cmd.spawn == MOB_TYPE_MISSILE);
+    ASSERT(mob->cmd.spawn != MOB_TYPE_BASE);
+    ASSERT(mob->cmd.spawn == MOB_TYPE_MISSILE ||
+           mob->type == MOB_TYPE_BASE);
 
     MobVector_Grow(&battle.mobs);
     size = MobVector_Size(&battle.mobs);

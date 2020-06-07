@@ -172,6 +172,12 @@ static void FleetRunAI(FleetAI *ai)
             }
         }
 
+        if (mob->type == MOB_TYPE_BASE) {
+            if (Random_Int(0, 100) == 0) {
+                mob->cmd.spawn = MOB_TYPE_FIGHTER;
+            }
+        }
+
         if (mob->pos.x == mob->cmd.target.x &&
             mob->pos.y == mob->cmd.target.y) {
             if (Random_Bit()) {
