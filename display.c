@@ -16,15 +16,10 @@
 
 #define SHIP_ALPHA 0x88
 
-typedef struct DisplayShip {
-    bool initialized;
-    MobID mobid;
+typedef struct FleetSprites {
     uint32 color;
-    SDL_Rect rect;
-    SDL_Surface *sprite;
-} DisplayShip;
-
-DECLARE_MBVECTOR_TYPE(DisplayShip, DisplayShipVector);
+    SDL_Surface *mobSprites[MOB_TYPE_MAX];
+} FleetSprites;
 
 typedef struct DisplayGlobalData {
     bool initialized;
@@ -44,10 +39,14 @@ typedef struct DisplayGlobalData {
     Mob *mobs;
     uint32 numMobs;
 
-    DisplayShipVector ships;
+    FleetSprites fleets[8];
 } DisplayGlobalData;
 
 static DisplayGlobalData display;
+
+static uint32 DisplayGetColor(uint32 index);
+static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
+                              const SDL_Point *center, int radius);
 
 void Display_Init()
 {
@@ -58,7 +57,6 @@ void Display_Init()
     display.width = bp->width;
     display.height = bp->height;
 
-    DisplayShipVector_CreateEmpty(&display.ships);
     display.mobGenerationDrawn = 0;
     display.mobGeneration = 1;
 
@@ -83,6 +81,24 @@ void Display_Init()
                  SDL_MapRGB(sdlSurface->format, 0x00, 0x00, 0x00));
     SDL_UpdateWindowSurface(display.sdlWindow);
 
+    ASSERT(bp->numPlayers <= ARRAYSIZE(display.fleets));
+    for (uint x = 0; x < bp->numPlayers; x++) {
+        uint32 color = DisplayGetColor(x);
+        display.fleets[x].color = color;
+
+        for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
+            uint32 radius = (uint32)MobType_GetRadius(t);
+            uint32 d = 2 * radius;
+            SDL_Point cPoint;
+            SDL_Surface *sprite;
+            sprite = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
+                                                    SDL_PIXELFORMAT_BGRA32);
+            display.fleets[x].mobSprites[t] = sprite;
+            cPoint.x = d / 2;
+            cPoint.y = d / 2;
+            DisplayDrawCircle(sprite, color, &cPoint, radius);
+        }
+    }
     display.initialized = TRUE;
 }
 
@@ -90,9 +106,16 @@ void Display_Exit()
 {
     ASSERT(display.initialized);
 
+    for (uint x = 0; x < ARRAYSIZE(display.fleets); x++) {
+        for (uint i = 0; i < ARRAYSIZE(display.fleets[x].mobSprites); i++) {
+            if (display.fleets[x].mobSprites[i] != NULL) {
+                SDL_FreeSurface(display.fleets[x].mobSprites[i]);
+            }
+        }
+    }
+
     free(display.mobs);
     display.mobs = NULL;
-    DisplayShipVector_Destroy(&display.ships);
 
     SDL_DestroyWindow(display.sdlWindow);
     display.sdlWindow = NULL;
@@ -124,15 +147,7 @@ Mob *Display_AcquireMobs(uint32 numMobs)
     }
     display.mainWaiting = FALSE;
 
-    //XXX: We're assuming the caller doesn't re-arrange mobs...
-    ASSERT(DisplayShipVector_Size(&display.ships) == display.numMobs);
     if (numMobs > display.numMobs) {
-        DisplayShipVector_Resize(&display.ships, numMobs);
-        for (uint32 i = display.numMobs; i < numMobs; i++) {
-            DisplayShip *ship = DisplayShipVector_GetPtr(&display.ships, i);
-            ship->initialized = FALSE;
-        }
-
         //XXX: realloc ?
         display.numMobs = numMobs;
         free(display.mobs);
@@ -231,36 +246,25 @@ static void DisplayDrawFrame()
     SDL_FillRect(sdlSurface, NULL,
                  SDL_MapRGB(sdlSurface->format, 0x00, 0x00, 0x00));
 
-    ASSERT(DisplayShipVector_Size(&display.ships) == display.numMobs);
     for (i = 0; i < display.numMobs; i++) {
-        FCircle circle;
-        DisplayShip *ship = DisplayShipVector_GetPtr(&display.ships, i);
         Mob *mob = &display.mobs[i];
 
-        Mob_GetCircle(mob, &circle);
-        ship->rect.x = (uint32)(circle.center.x - circle.radius);
-        ship->rect.y = (uint32)(circle.center.y - circle.radius);
-        ship->rect.w = (uint32)(2 * circle.radius);
-        ship->rect.h = ship->rect.w;
-
-        if (!ship->initialized) {
-            SDL_Point cPoint;
-            ship->mobid = mob->id;
-            ship->color = DisplayGetColor(mob->playerID);
-            ship->sprite = SDL_CreateRGBSurfaceWithFormat(0, ship->rect.w, ship->rect.h,
-                                                          32, SDL_PIXELFORMAT_BGRA32);
-            cPoint.x = ship->rect.w / 2;
-            cPoint.y = ship->rect.h / 2;
-            DisplayDrawCircle(ship->sprite, ship->color, &cPoint, circle.radius);
-            ship->initialized = TRUE;
-
-            //XXX: This is never cleaned up.
-        }
-
-        ASSERT(ship->mobid == mob->id);
-
         if (mob->alive) {
-            SDL_BlitSurface(ship->sprite, NULL, sdlSurface, &ship->rect);
+            FCircle circle;
+            SDL_Surface *sprite;
+            SDL_Rect rect;
+
+            Mob_GetCircle(mob, &circle);
+            rect.x = (uint32)(circle.center.x - circle.radius);
+            rect.y = (uint32)(circle.center.y - circle.radius);
+            rect.w = (uint32)(2 * circle.radius);
+            rect.h = rect.w;
+
+            ASSERT(mob->playerID < ARRAYSIZE(display.fleets));
+            ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
+            sprite = display.fleets[mob->playerID].mobSprites[mob->type];
+            ASSERT(sprite != NULL);
+            SDL_BlitSurface(sprite, NULL, sdlSurface, &rect);
         }
     }
 

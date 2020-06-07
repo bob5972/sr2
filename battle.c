@@ -43,7 +43,7 @@ void Battle_Init(const BattleParams *bp)
         }
         mob->id = ++battle.lastMobID;
         mob->type = Random_Int(MOB_TYPE_MIN, MOB_TYPE_MAX - 1);
-        mob->fuel = Mob_GetMaxFuelForType(mob->type);
+        mob->fuel = MobType_GetMaxFuel(mob->type);
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
 

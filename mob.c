@@ -7,7 +7,7 @@
 #define SPEED_SCALE (2.0f)
 #define SIZE_SCALE (1.0f)
 
-float MobGetRadius(MobType type)
+float MobType_GetRadius(MobType type)
 {
     switch (type) {
         case MOB_TYPE_BASE:
@@ -31,7 +31,7 @@ void Mob_GetCircle(const Mob *mob, FCircle *c)
 {
     c->center.x = mob->pos.x;
     c->center.y = mob->pos.y;
-    c->radius = MobGetRadius(mob->type);
+    c->radius = MobType_GetRadius(mob->type);
 }
 
 float Mob_GetSpeed(const Mob *mob)
@@ -53,17 +53,17 @@ float Mob_GetSpeed(const Mob *mob)
             break;
     }
 
-    ASSERT(MobGetRadius(mob->type) >= SPEED_SCALE);
+    ASSERT(MobType_GetRadius(mob->type) >= SPEED_SCALE);
     return speed;
 }
 
 uint Mob_GetMaxFuel(const Mob *mob)
 {
-    return Mob_GetMaxFuelForType(mob->type);
+    return MobType_GetMaxFuel(mob->type);
 }
 
 
-uint Mob_GetMaxFuelForType(MobType type)
+uint MobType_GetMaxFuel(MobType type)
 {
     switch (type) {
         case MOB_TYPE_BASE:

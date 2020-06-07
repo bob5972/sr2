@@ -8,7 +8,9 @@
 #include "geometry.h"
 
 typedef uint32 PlayerID;
+
 typedef uint32 MobID;
+#define MOB_INVALID_ID ((uint32)-1)
 
 typedef enum MobType {
     MOB_TYPE_INVALID = 0,
@@ -35,7 +37,8 @@ typedef struct Mob {
 
 void Mob_GetCircle(const Mob *mob, FCircle *q);
 float Mob_GetSpeed(const Mob *mob);
+float MobType_GetRadius(MobType type);
 uint Mob_GetMaxFuel(const Mob *mob);
-uint Mob_GetMaxFuelForType(MobType type);
+uint MobType_GetMaxFuel(MobType type);
 
 #endif // _MOB_H_202006041753
