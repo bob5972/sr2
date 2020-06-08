@@ -9,8 +9,20 @@
 
 struct FleetAI;
 
+#define FLEET_SCAN_BASE     (1 << MOB_TYPE_BASE)
+#define FLEET_SCAN_FIGHTER  (1 << MOB_TYPE_FIGHTER)
+#define FLEET_SCAN_MISSILE  (1 << MOB_TYPE_MISSILE)
+#define FLEET_SCAN_LOOT_BOX (1 << MOB_TYPE_LOOT_BOX)
+
+#define FLEET_SCAN_SHIP (FLEET_SCAN_BASE | FLEET_SCAN_FIGHTER)
+#define FLEET_SCAN_ALL (FLEET_SCAN_SHIP |    \
+                        FLEET_SCAN_MISSILE | \
+                        FLEET_SCAN_LOOT_BOX)
+
 typedef struct SimpleFleetData {
     FPoint basePos;
+    SensorMob enemyBase;
+    uint enemyBaseAge;
 } SimpleFleetData;
 
 typedef struct FleetAIOps {
@@ -180,18 +192,19 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
     IntMap_Destroy(&mobidMap);
 }
 
-static int FleetFindClosestSensor(FleetAI *ai, Mob *m, bool includeMissiles)
+static int FleetFindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter)
 {
     float distance;
     int index = -1;
     SensorMob *sm;
 
-    ASSERT(SensorMobVector_Size(&ai->sensors) > 0);
-
     for (uint i = 0; i < SensorMobVector_Size(&ai->sensors); i++) {
-        if (includeMissiles || sm->type != MOB_TYPE_MISSILE) {
-            sm = SensorMobVector_GetPtr(&ai->sensors, i);
-            float curDistance = FPoint_Distance(&m->pos, &sm->pos);
+        sm = SensorMobVector_GetPtr(&ai->sensors, i);
+        if (!sm->alive) {
+            continue;
+        }
+        if (((1 << sm->type) & scanFilter) != 0) {
+            float curDistance = FPoint_Distance(pos, &sm->pos);
             if (index == -1 || curDistance < distance) {
                 distance = curDistance;
                 index = i;
@@ -215,6 +228,7 @@ static void SimpleFleetCreate(FleetAI *ai)
     ASSERT(ai != NULL);
 
     sf = malloc(sizeof(*sf));
+    MBUtil_Zero(sf, sizeof(*sf));
     ai->aiHandle = sf;
 }
 
@@ -233,50 +247,71 @@ static void SimpleFleetRunAI(FleetAI *ai)
 {
     SimpleFleetData *sf = ai->aiHandle;
     const BattleParams *bp = Battle_GetParams();
+    uint targetScanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_LOOT_BOX;
 
     ASSERT(ai->player.aiType == FLEET_AI_SIMPLE);
+
+    // If we've found the enemy base, assume it's still there.
+    int enemyBaseIndex = FleetFindClosestSensor(ai, &sf->basePos, FLEET_SCAN_BASE);
+    if (enemyBaseIndex != -1) {
+        SensorMob *sm = SensorMobVector_GetPtr(&ai->sensors, enemyBaseIndex);
+        ASSERT(sm->type == MOB_TYPE_BASE);
+        sf->enemyBase = *sm;
+        sf->enemyBaseAge = 0;
+    } else if (sf->enemyBase.type == MOB_TYPE_BASE &&
+               sf->enemyBaseAge < 200) {
+        SensorMobVector_Grow(&ai->sensors);
+        SensorMob *sm = SensorMobVector_GetLastPtr(&ai->sensors);
+        *sm = sf->enemyBase;
+        sf->enemyBaseAge++;
+    }
+
+    int targetIndex = FleetFindClosestSensor(ai, &sf->basePos, targetScanFilter);
 
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
 
-        if (mob->type == MOB_TYPE_BASE) {
-            sf->basePos = mob->pos;
-        }
+        if (mob->type == MOB_TYPE_FIGHTER) {
+            if (targetIndex != -1) {
+                    SensorMob *sm;
+                    sm = SensorMobVector_GetPtr(&ai->sensors, targetIndex);
+                    mob->cmd.target = sm->pos;
 
-        if (SensorMobVector_Size(&ai->sensors) > 0) {
-            if (mob->type == MOB_TYPE_FIGHTER) {
-                SensorMob *sm;
-                int s = FleetFindClosestSensor(ai, mob, FALSE);
-
-                sm = SensorMobVector_GetPtr(&ai->sensors, s);
-                mob->cmd.target = sm->pos;
-                if (Random_Int(0, 20) == 0) {
-                    mob->cmd.spawn = MOB_TYPE_MISSILE;
+                    if (Random_Int(0, 20) == 0) {
+                        mob->cmd.spawnType = MOB_TYPE_MISSILE;
+                    }
+            } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+                if (Random_Bit()) {
+                    mob->cmd.target.x = Random_Float(0.0f, bp->width);
+                    mob->cmd.target.y = Random_Float(0.0f, bp->height);
+                } else {
+                    mob->cmd.target = sf->basePos;
                 }
-            } else if (mob->type == MOB_TYPE_MISSILE) {
+            }
+        } else if (mob->type == MOB_TYPE_MISSILE) {
+            uint scanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_MISSILE;
+            int s = FleetFindClosestSensor(ai, &mob->pos, scanFilter);
+            if (s != -1) {
                 SensorMob *sm;
-                int s = FleetFindClosestSensor(ai, mob, TRUE);
-
                 sm = SensorMobVector_GetPtr(&ai->sensors, s);
                 mob->cmd.target = sm->pos;
             }
-        }
+        } else if (mob->type == MOB_TYPE_BASE) {
+            sf->basePos = mob->pos;
 
-        if (mob->type == MOB_TYPE_BASE) {
             if (ai->credits > 200 &&
                 Random_Int(0, 100) == 0) {
-                mob->cmd.spawn = MOB_TYPE_FIGHTER;
+                mob->cmd.spawnType = MOB_TYPE_FIGHTER;
+            } else {
+                mob->cmd.spawnType = MOB_TYPE_INVALID;
             }
-        }
 
-        if (mob->pos.x == mob->cmd.target.x &&
-            mob->pos.y == mob->cmd.target.y) {
-            if (Random_Bit()) {
+            if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 mob->cmd.target.x = Random_Float(0.0f, bp->width);
                 mob->cmd.target.y = Random_Float(0.0f, bp->height);
-            } else {
-                mob->cmd.target = sf->basePos;
             }
+        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+            mob->cmd.target = sf->basePos;
         }
     }
 }
@@ -294,16 +329,18 @@ static void DummyFleetRunAI(FleetAI *ai)
 
         if (mob->type == MOB_TYPE_BASE) {
             if (Random_Int(0, 100) == 0) {
-                mob->cmd.spawn = MOB_TYPE_FIGHTER;
+                mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             }
         }
 
-        if (mob->pos.x == mob->cmd.target.x &&
-            mob->pos.y == mob->cmd.target.y) {
+        if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
             newTarget = TRUE;
         }
         if (mob->type != MOB_TYPE_BASE &&
             Random_Int(0, 100) == 0) {
+            newTarget = TRUE;
+        }
+        if (mob->age == 0) {
             newTarget = TRUE;
         }
 
@@ -311,11 +348,6 @@ static void DummyFleetRunAI(FleetAI *ai)
             if (Random_Bit()) {
                 mob->cmd.target.x = Random_Float(0.0f, bp->width);
                 mob->cmd.target.y = Random_Float(0.0f, bp->height);
-            } else {
-                // Head towards the center more frequently to get more
-                // cross-team collisions for testing.
-                mob->cmd.target.x = bp->width / 2;
-                mob->cmd.target.y = bp->height / 2;
             }
         }
     }

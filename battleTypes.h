@@ -7,6 +7,8 @@
 
 #include "geometry.h"
 
+#define MICRON (0.1f)
+
 typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,
     FLEET_AI_DUMMY   = 1,
@@ -27,6 +29,7 @@ typedef struct BattleParams {
     uint startingCredits;
     uint creditsPerTick;
     uint timeLimit;
+    float lootDropRate;
 } BattleParams;
 
 typedef struct BattlePlayerStatus {

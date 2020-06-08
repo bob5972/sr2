@@ -110,6 +110,7 @@ int main(void)
     bp.startingCredits = 1000;
     bp.creditsPerTick = 1;
     bp.timeLimit = 10 * 1000;
+    bp.lootDropRate = 0.5f;
 
     p = 0;
     bp.players[p].playerName = "Player 1";

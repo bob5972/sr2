@@ -16,17 +16,18 @@ typedef uint32 MobID;
 #define MOB_ID_INVALID ((uint32)-1)
 
 typedef enum MobType {
-    MOB_TYPE_INVALID = 0,
-    MOB_TYPE_BASE    = 1,
-    MOB_TYPE_MIN     = 1,
-    MOB_TYPE_FIGHTER = 2,
-    MOB_TYPE_MISSILE = 3,
+    MOB_TYPE_INVALID  = 0,
+    MOB_TYPE_BASE     = 1,
+    MOB_TYPE_MIN      = 1,
+    MOB_TYPE_FIGHTER  = 2,
+    MOB_TYPE_MISSILE  = 3,
+    MOB_TYPE_LOOT_BOX = 4,
     MOB_TYPE_MAX,
 } MobType;
 
 typedef struct MobCmd {
     FPoint target;
-    MobType spawn;
+    MobType spawnType;
 } MobCmd;
 
 typedef struct Mob {
@@ -38,6 +39,9 @@ typedef struct Mob {
     FPoint pos;
     int fuel;
     int health;
+    int age;
+    int rechargeTime;
+    int lootCredits;
     uint64 scannedBy;
 
     MobCmd cmd;
