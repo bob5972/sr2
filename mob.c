@@ -34,7 +34,7 @@ float MobType_GetSensorRadius(MobType type)
     if (type == MOB_TYPE_BASE) {
         sensorScale = 5.0f;
     } else {
-        sensorScale = 3.0f;
+        sensorScale = 10.0f;
     }
 
     return sensorScale * MobType_GetRadius(type);
@@ -61,7 +61,7 @@ float MobType_GetSpeed(MobType type)
 
     switch (type) {
         case MOB_TYPE_BASE:
-            speed = 1.0f / SPEED_SCALE;
+            speed = 0.5f / SPEED_SCALE;
             break;
         case MOB_TYPE_FIGHTER:
             speed = 5.0f / SPEED_SCALE;

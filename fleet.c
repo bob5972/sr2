@@ -9,6 +9,10 @@
 
 struct FleetAI;
 
+typedef struct SimpleFleetData {
+    FPoint basePos;
+} SimpleFleetData;
+
 typedef struct FleetAIOps {
     void (*create)(struct FleetAI *ai);
     void (*destroy)(struct FleetAI *ai);
@@ -41,6 +45,8 @@ static FleetGlobalData fleet;
 
 static void FleetGetOps(FleetAI *ai);
 static void FleetRunAI(FleetAI *ai);
+static void SimpleFleetCreate(FleetAI *ai);
+static void SimpleFleetDestroy(FleetAI *ai);
 static void SimpleFleetRunAI(FleetAI *ai);
 static void DummyFleetRunAI(FleetAI *ai);
 
@@ -84,6 +90,26 @@ void Fleet_Exit()
     free(fleet.ais);
     fleet.initialized = FALSE;
 }
+
+
+static void FleetGetOps(FleetAI *ai)
+{
+    MBUtil_Zero(&ai->ops, sizeof(ai->ops));
+
+    switch(ai->player.aiType) {
+        case FLEET_AI_DUMMY:
+            ai->ops.runAI = &DummyFleetRunAI;
+            break;
+        case FLEET_AI_SIMPLE:
+            ai->ops.create = &SimpleFleetCreate;
+            ai->ops.destroy = &SimpleFleetDestroy;
+            ai->ops.runAI = &SimpleFleetRunAI;
+            break;
+        default:
+            PANIC("Unknown AI type=%d\n", ai->player.aiType);
+    }
+}
+
 
 void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 {
@@ -176,22 +202,6 @@ static int FleetFindClosestSensor(FleetAI *ai, Mob *m, bool includeMissiles)
     return index;
 }
 
-static void FleetGetOps(FleetAI *ai)
-{
-    MBUtil_Zero(&ai->ops, sizeof(ai->ops));
-
-    switch(ai->player.aiType) {
-        case FLEET_AI_DUMMY:
-            ai->ops.runAI = &DummyFleetRunAI;
-            break;
-        case FLEET_AI_SIMPLE:
-            ai->ops.runAI = &SimpleFleetRunAI;
-            break;
-        default:
-            PANIC("Unknown AI type=%d\n", ai->player.aiType);
-    }
-}
-
 
 static void FleetRunAI(FleetAI *ai)
 {
@@ -199,15 +209,39 @@ static void FleetRunAI(FleetAI *ai)
     ai->ops.runAI(ai);
 }
 
+static void SimpleFleetCreate(FleetAI *ai)
+{
+    SimpleFleetData *sf;
+    ASSERT(ai != NULL);
+
+    sf = malloc(sizeof(*sf));
+    ai->aiHandle = sf;
+}
+
+static void SimpleFleetDestroy(FleetAI *ai)
+{
+    SimpleFleetData *sf;
+    ASSERT(ai != NULL);
+
+    sf = ai->aiHandle;
+    ASSERT(sf != NULL);
+    free(sf);
+    ai->aiHandle = NULL;
+}
 
 static void SimpleFleetRunAI(FleetAI *ai)
 {
+    SimpleFleetData *sf = ai->aiHandle;
     const BattleParams *bp = Battle_GetParams();
 
     ASSERT(ai->player.aiType == FLEET_AI_SIMPLE);
 
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
+
+        if (mob->type == MOB_TYPE_BASE) {
+            sf->basePos = mob->pos;
+        }
 
         if (SensorMobVector_Size(&ai->sensors) > 0) {
             if (mob->type == MOB_TYPE_FIGHTER) {
@@ -241,10 +275,7 @@ static void SimpleFleetRunAI(FleetAI *ai)
                 mob->cmd.target.x = Random_Float(0.0f, bp->width);
                 mob->cmd.target.y = Random_Float(0.0f, bp->height);
             } else {
-                // Head towards the center more frequently to get more
-                // cross-team collisions for testing.
-                mob->cmd.target.x = bp->width / 2;
-                mob->cmd.target.y = bp->height / 2;
+                mob->cmd.target = sf->basePos;
             }
         }
     }
