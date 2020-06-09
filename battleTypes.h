@@ -41,6 +41,39 @@ typedef enum MobType {
     MOB_TYPE_MAX,
 } MobType;
 
+typedef struct MobCmd {
+    FPoint target;
+    MobType spawnType;
+} MobCmd;
+
+typedef struct Mob {
+    MobID id;
+    MobType type;
+    PlayerID playerID;
+    bool alive;
+    bool removeMob;
+    FPoint pos;
+    int fuel;
+    int health;
+    int age;
+    int rechargeTime;
+    int lootCredits;
+    uint64 scannedBy;
+
+    MobCmd cmd;
+} Mob;
+
+typedef struct SensorMob {
+    MobID mobid;
+    MobType type;
+    PlayerID playerID;
+    bool alive;
+    FPoint pos;
+} SensorMob;
+
+DECLARE_MBVECTOR_TYPE(Mob, MobVector);
+DECLARE_MBVECTOR_TYPE(SensorMob, SensorMobVector);
+
 typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,
     FLEET_AI_NEUTRAL = 1,
@@ -48,11 +81,35 @@ typedef enum FleetAIType {
     FLEET_AI_SIMPLE  = 3,
     FLEET_AI_MAX,
 } FleetAIType;
+struct FleetAI;
 
 typedef struct BattlePlayerParams {
     const char *playerName;
     FleetAIType aiType;
 } BattlePlayerParams;
+
+typedef struct FleetAIOps {
+    void (*create)(struct FleetAI *ai);
+    void (*destroy)(struct FleetAI *ai);
+    void (*runAI)(struct FleetAI *ai);
+} FleetAIOps;
+
+typedef struct FleetAI {
+    /*
+     * Filled out by FleetAI controller.
+     */
+    FleetAIOps ops;
+    void *aiHandle;
+
+    /*
+     * Filled out by Fleet
+     */
+    PlayerID id;
+    BattlePlayerParams player;
+    int credits;
+    MobVector mobs;
+    SensorMobVector sensors;
+} FleetAI;
 
 typedef struct BattleParams {
     BattlePlayerParams players[MAX_PLAYERS];

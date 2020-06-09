@@ -39,27 +39,6 @@ typedef struct SimpleFleetData {
     uint enemyBaseAge;
 } SimpleFleetData;
 
-typedef struct FleetAIOps {
-    void (*create)(struct FleetAI *ai);
-    void (*destroy)(struct FleetAI *ai);
-    void (*runAI)(struct FleetAI *ai);
-} FleetAIOps;
-
-typedef struct FleetAI {
-    PlayerID id;
-
-    /*
-     * Filled out by FleetAI controller.
-     */
-    FleetAIOps ops;
-    void *aiHandle;
-
-    BattlePlayerParams player;
-    int credits;
-    MobVector mobs;
-    SensorMobVector sensors;
-} FleetAI;
-
 typedef struct FleetGlobalData {
     bool initialized;
 

@@ -23,39 +23,6 @@
 #include "MBVector.h"
 #include "battleTypes.h"
 
-typedef struct MobCmd {
-    FPoint target;
-    MobType spawnType;
-} MobCmd;
-
-typedef struct Mob {
-    MobID id;
-    MobType type;
-    PlayerID playerID;
-    bool alive;
-    bool removeMob;
-    FPoint pos;
-    int fuel;
-    int health;
-    int age;
-    int rechargeTime;
-    int lootCredits;
-    uint64 scannedBy;
-
-    MobCmd cmd;
-} Mob;
-
-typedef struct SensorMob {
-    MobID mobid;
-    MobType type;
-    PlayerID playerID;
-    bool alive;
-    FPoint pos;
-} SensorMob;
-
-DECLARE_MBVECTOR_TYPE(Mob, MobVector);
-DECLARE_MBVECTOR_TYPE(SensorMob, SensorMobVector);
-
 float MobType_GetSpeed(MobType type);
 float MobType_GetRadius(MobType type);
 float MobType_GetSensorRadius(MobType type);
