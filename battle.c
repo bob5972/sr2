@@ -357,11 +357,14 @@ void Battle_RunTick()
         mob->scannedBy = 0;
         mob->age++;
 
-        if (mob->alive && mob->type == MOB_TYPE_MISSILE) {
-            mob->fuel--;
+        if (mob->alive) {
+            if (mob->type == MOB_TYPE_MISSILE ||
+                mob->type == MOB_TYPE_LOOT_BOX) {
+                mob->fuel--;
 
-            if (mob->fuel <= 0) {
-                mob->alive = FALSE;
+                if (mob->fuel <= 0) {
+                    mob->alive = FALSE;
+                }
             }
         }
 
