@@ -70,10 +70,20 @@ void Fleet_Init()
     fleet.numAIs = bp->numPlayers;
     fleet.ais = malloc(fleet.numAIs * sizeof(fleet.ais[0]));
 
+    // We need at least neutral and two fleets.
+    ASSERT(fleet.numAIs >= 3);
+
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MBUtil_Zero(&fleet.ais[i], sizeof(fleet.ais[i]));
         fleet.ais[i].id = i;
         fleet.ais[i].player = bp->players[i];
+        ASSERT(bp->players[i].aiType < FLEET_AI_MAX);
+        ASSERT(bp->players[i].aiType != FLEET_AI_INVALID);
+        ASSERT(bp->players[i].aiType == FLEET_AI_NEUTRAL ||
+               i != PLAYER_ID_NEUTRAL);
+        ASSERT(bp->players[i].aiType != FLEET_AI_NEUTRAL ||
+               i == PLAYER_ID_NEUTRAL);
+
         MobVector_CreateEmpty(&fleet.ais[i].mobs);
         SensorMobVector_CreateEmpty(&fleet.ais[i].sensors);
 
@@ -109,6 +119,7 @@ static void FleetGetOps(FleetAI *ai)
     MBUtil_Zero(&ai->ops, sizeof(ai->ops));
 
     switch(ai->player.aiType) {
+        case FLEET_AI_NEUTRAL:
         case FLEET_AI_DUMMY:
             ai->ops.runAI = &DummyFleetRunAI;
             break;
@@ -145,8 +156,8 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
         IntMap_Put(&mobidMap, mob->id, i);
 
-        ASSERT(p < fleet.numAIs);
-        if (mob->alive) {
+        ASSERT(p == PLAYER_ID_NEUTRAL || p < fleet.numAIs);
+        if (mob->alive && p != PLAYER_ID_NEUTRAL) {
             Mob *m;
             uint32 oldSize = MobVector_Size(&fleet.ais[p].mobs);
             MobVector_GrowBy(&fleet.ais[p].mobs, 1);
@@ -247,7 +258,10 @@ static void SimpleFleetRunAI(FleetAI *ai)
 {
     SimpleFleetData *sf = ai->aiHandle;
     const BattleParams *bp = Battle_GetParams();
-    uint targetScanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_LOOT_BOX;
+    uint targetScanFilter = FLEET_SCAN_SHIP;
+    IntMap targetMap;
+
+    IntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_SIMPLE);
 
@@ -272,14 +286,32 @@ static void SimpleFleetRunAI(FleetAI *ai)
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
-            if (targetIndex != -1) {
-                    SensorMob *sm;
-                    sm = SensorMobVector_GetPtr(&ai->sensors, targetIndex);
-                    mob->cmd.target = sm->pos;
+            int t = targetIndex;
 
-                    if (Random_Int(0, 20) == 0) {
-                        mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                    }
+            if (t == -1) {
+                /*
+                 * Avoid having all the fighters rush to the same loot box.
+                 */
+                t = FleetFindClosestSensor(ai, &sf->basePos,
+                                           FLEET_SCAN_LOOT_BOX);
+                if (IntMap_Increment(&targetMap, t) > 1) {
+                    /*
+                     * Ideally we find the next best target, but for now just
+                     * go back to random movement.
+                     */
+                    t = -1;
+                }
+            }
+
+            if (t != -1) {
+                SensorMob *sm;
+                sm = SensorMobVector_GetPtr(&ai->sensors, t);
+                mob->cmd.target = sm->pos;
+
+                if (sm->type != MOB_TYPE_LOOT_BOX &&
+                    Random_Int(0, 20) == 0) {
+                    mob->cmd.spawnType = MOB_TYPE_MISSILE;
+                }
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 if (Random_Bit()) {
                     mob->cmd.target.x = Random_Float(0.0f, bp->width);
@@ -314,6 +346,8 @@ static void SimpleFleetRunAI(FleetAI *ai)
             mob->cmd.target = sf->basePos;
         }
     }
+
+    IntMap_Destroy(&targetMap);
 }
 
 
@@ -321,7 +355,12 @@ static void DummyFleetRunAI(FleetAI *ai)
 {
     const BattleParams *bp = Battle_GetParams();
 
-    ASSERT(ai->player.aiType == FLEET_AI_DUMMY);
+    /*
+     * XXX: We use this function for the neutral player, but actually queue any
+     * mobs for them to process.
+     */
+    ASSERT(ai->player.aiType == FLEET_AI_DUMMY ||
+           ai->player.aiType == FLEET_AI_NEUTRAL);
 
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);

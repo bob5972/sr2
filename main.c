@@ -111,15 +111,21 @@ int main(void)
     bp.creditsPerTick = 1;
     bp.timeLimit = 10 * 1000;
     bp.lootDropRate = 0.5f;
+    bp.lootSpawnRate = 1.0f;
+    bp.minLootSpawn = 5;
+    bp.maxLootSpawn = 10;
 
     p = 0;
+    bp.players[p].playerName = "Neutral";
+    bp.players[p].aiType = FLEET_AI_NEUTRAL;
+    p++;
     bp.players[p].playerName = "Player 1";
     bp.players[p].aiType = FLEET_AI_SIMPLE;
     p++;
-    bp.players[p].playerName = "Player 2";
+    bp.players[p].playerName = "Player 0";
     bp.players[p].aiType = FLEET_AI_SIMPLE;
     p++;
-    bp.players[p].playerName = "Player 3";
+    bp.players[p].playerName = "Player 1";
     bp.players[p].aiType = FLEET_AI_DUMMY;
     p++;
     bp.numPlayers = p;

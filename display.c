@@ -178,6 +178,7 @@ void Display_ReleaseMobs()
 static uint32 DisplayGetColor(uint32 index)
 {
     uint32 colors[] = {
+        0x888888, // 0 is NEUTRAL
         0xFF0000,
         0x00FF00,
         0x0000FF,
@@ -185,7 +186,6 @@ static uint32 DisplayGetColor(uint32 index)
         0x800080,
         0x008080,
         0xFFFFFF,
-        0x888888,
     };
 
     index %= ARRAYSIZE(colors);
@@ -276,7 +276,8 @@ static void DisplayDrawFrame()
             rect.w = (uint32)(2 * circle.radius);
             rect.h = rect.w;
 
-            ASSERT(mob->playerID < ARRAYSIZE(display.fleets));
+            ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
+                   mob->playerID < ARRAYSIZE(display.fleets));
             ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
             sprite = display.fleets[mob->playerID].mobSprites[mob->type];
             ASSERT(sprite != NULL);

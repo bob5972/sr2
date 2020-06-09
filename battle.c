@@ -17,6 +17,8 @@ typedef struct BattleGlobalData {
     BattleStatus bs;
     bool statusAcquired;
 
+    float lootSpawnBucket;
+
     MobID lastMobID;
     MobVector mobs;
     bool mobsAcquired;
@@ -31,7 +33,10 @@ void Battle_Init(const BattleParams *bp)
     ASSERT(bp != NULL);
     ASSERT(MBUtil_IsZero(&battle, sizeof(battle)));
 
-    ASSERT(bp->numPlayers > 0);
+    /*
+     * We need Neutral + 2 fleets.
+     */
+    ASSERT(bp->numPlayers > 3);
     battle.bp = *bp;
 
     battle.bs.numPlayers = bp->numPlayers;
@@ -40,11 +45,17 @@ void Battle_Init(const BattleParams *bp)
         battle.bs.players[i].credits = bp->startingCredits;
     }
 
-    MobVector_Create(&battle.mobs, bp->numPlayers, 1024);
+    ASSERT(bp->players[PLAYER_ID_NEUTRAL].aiType == FLEET_AI_NEUTRAL);
+    MobVector_Create(&battle.mobs, 0, 1024);
     MobVector_CreateEmpty(&battle.pendingSpawns);
 
     for (uint32 i = 0; i < bp->numPlayers; i++) {
-        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
+        if (i == PLAYER_ID_NEUTRAL) {
+            continue;
+        }
+
+        MobVector_Grow(&battle.mobs);
+        Mob *mob = MobVector_GetLastPtr(&battle.mobs);
 
         Mob_Init(mob, MOB_TYPE_BASE);
         mob->playerID = i;
@@ -343,6 +354,18 @@ void Battle_RunTick()
         if (mob->alive) {
             BattleRunMobMove(mob);
         }
+    }
+
+    // Spawn loot
+    battle.lootSpawnBucket += battle.bp.lootSpawnRate;
+    while (battle.lootSpawnBucket > battle.bp.minLootSpawn) {
+        FPoint pos;
+        int loot = Random_Int(battle.bp.minLootSpawn, battle.bp.maxLootSpawn);
+        battle.lootSpawnBucket -= loot;
+
+        pos.x = Random_Float(0.0f, battle.bp.width);
+        pos.y = Random_Float(0.0f, battle.bp.height);
+        BattleQueueSpawn(MOB_TYPE_LOOT_BOX, PLAYER_ID_NEUTRAL, &pos);
     }
 
     // Queue spawned things

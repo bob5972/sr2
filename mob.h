@@ -7,23 +7,7 @@
 
 #include "geometry.h"
 #include "MBVector.h"
-
-#define MAX_PLAYERS 8
-typedef uint32 PlayerID;
-#define PLAYER_ID_INVALID ((uint32)-1)
-
-typedef uint32 MobID;
-#define MOB_ID_INVALID ((uint32)-1)
-
-typedef enum MobType {
-    MOB_TYPE_INVALID  = 0,
-    MOB_TYPE_BASE     = 1,
-    MOB_TYPE_MIN      = 1,
-    MOB_TYPE_FIGHTER  = 2,
-    MOB_TYPE_MISSILE  = 3,
-    MOB_TYPE_LOOT_BOX = 4,
-    MOB_TYPE_MAX,
-} MobType;
+#include "battleTypes.h"
 
 typedef struct MobCmd {
     FPoint target;
