@@ -111,7 +111,7 @@ int main(void)
     bp.creditsPerTick = 1;
     bp.timeLimit = 10 * 1000;
     bp.lootDropRate = 0.5f;
-    bp.lootSpawnRate = 1.0f;
+    bp.lootSpawnRate = 0.5f;
     bp.minLootSpawn = 5;
     bp.maxLootSpawn = 10;
 
