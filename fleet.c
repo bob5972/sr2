@@ -93,6 +93,8 @@ static void FleetGetOps(FleetAI *ai)
     switch(ai->player.aiType) {
         case FLEET_AI_NEUTRAL:
         case FLEET_AI_DUMMY:
+            ai->ops.aiName = "DummyFleet";
+            ai->ops.aiAuthor = "Michael Banack";
             ai->ops.runAI = &DummyFleetRunAI;
             break;
         case FLEET_AI_SIMPLE:

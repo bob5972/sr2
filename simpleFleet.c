@@ -36,6 +36,9 @@ void SimpleFleet_GetOps(FleetAIOps *ops)
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));
 
+    ops->aiName = "SimpleFleet";
+    ops->aiAuthor = "Michael Banack";
+
     ops->create = &SimpleFleetCreate;
     ops->destroy = &SimpleFleetDestroy;
     ops->runAI = &SimpleFleetRunAI;
