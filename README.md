@@ -15,4 +15,12 @@ SDL can be obtained online at https://www.libsdl.org/ .
 
 ----------------------------------------------------------------------
 
+How to add a new fleet:
+<ol>
+<li>battleTypes.h: Add a new enum value to FleetAIType</li>
+<li>fleet.h: Declare your GetOps function</li>
+<li>fleet.c: Call your new GetOps function in FleetGetOps</li>
+<li>Makefile: Add your new fleet to the C_SOURCES/CPP_SOURCES list</li>
+</ol>
+
 This is still a work in progress, so better directions and a better interface are yet to come.
