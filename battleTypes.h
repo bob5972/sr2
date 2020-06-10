@@ -81,6 +81,7 @@ typedef enum FleetAIType {
     FLEET_AI_SIMPLE  = 3,
     FLEET_AI_MAX,
 } FleetAIType;
+
 struct FleetAI;
 
 typedef struct BattlePlayerParams {
