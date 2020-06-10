@@ -26,4 +26,17 @@ void Fleet_Init();
 void Fleet_Exit();
 void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs);
 
+#define FLEET_SCAN_BASE     (1 << MOB_TYPE_BASE)
+#define FLEET_SCAN_FIGHTER  (1 << MOB_TYPE_FIGHTER)
+#define FLEET_SCAN_MISSILE  (1 << MOB_TYPE_MISSILE)
+#define FLEET_SCAN_LOOT_BOX (1 << MOB_TYPE_LOOT_BOX)
+
+#define FLEET_SCAN_SHIP (FLEET_SCAN_BASE | FLEET_SCAN_FIGHTER)
+#define FLEET_SCAN_ALL (FLEET_SCAN_SHIP |    \
+                        FLEET_SCAN_MISSILE | \
+                        FLEET_SCAN_LOOT_BOX)
+int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter);
+
+void SimpleFleet_GetOps(FleetAIOps *ops);
+
 #endif // _FLEET_H_202005311442
