@@ -35,7 +35,8 @@ bool Mob_CheckInvariants(const Mob *mob);
 void Mob_GetSensorCircle(const Mob *mob, FCircle *c);
 void Mob_GetCircle(const Mob *mob, FCircle *c);
 
-void SensorMob_InitFromMob(SensorMob *sm, const Mob *mob);
+void Mob_MaskForSensor(Mob *mob);
+void Mob_MaskForAI(Mob *mob);
 
 static inline float Mob_GetSpeed(const Mob *mob)
 {

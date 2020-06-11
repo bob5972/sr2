@@ -161,6 +161,7 @@ int MobType_GetMaxHealth(MobType type)
 void Mob_Init(Mob *mob, MobType t)
 {
     MBUtil_Zero(mob, sizeof(*mob));
+    mob->image = MOB_IMAGE_FULL;
     mob->alive = TRUE;
     mob->playerID = PLAYER_ID_INVALID;
     mob->id = MOB_ID_INVALID;
@@ -184,15 +185,29 @@ bool Mob_CheckInvariants(const Mob *m)
     return TRUE;
 }
 
-void SensorMob_InitFromMob(SensorMob *sm, const Mob *mob)
+void Mob_MaskForAI(Mob *mob)
 {
-    ASSERT(sm != NULL);
     ASSERT(mob != NULL);
 
-    MBUtil_Zero(sm, sizeof(*sm));
-    sm->mobid = mob->id;
-    sm->type = mob->type;
-    sm->playerID = mob->playerID;
-    sm->alive = mob->alive;
-    sm->pos = mob->pos;
+    ASSERT(mob->image == MOB_IMAGE_FULL);
+    mob->image = MOB_IMAGE_AI;
+    mob->removeMob = 0;
+    mob->scannedBy = 0;
+}
+
+void Mob_MaskForSensor(Mob *mob)
+{
+    ASSERT(mob != NULL);
+
+    Mob_MaskForAI(mob);
+
+    ASSERT(mob->image == MOB_IMAGE_AI);
+    mob->image = MOB_IMAGE_SENSOR;
+
+    mob->fuel = 0;
+    mob->health = 0;
+    mob->age = 0;
+    mob->rechargeTime = 0;
+    mob->lootCredits = 0;
+    MBUtil_Zero(&mob->cmd, sizeof(mob->cmd));
 }

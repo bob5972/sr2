@@ -23,7 +23,7 @@
 
 typedef struct SimpleFleetData {
     FPoint basePos;
-    SensorMob enemyBase;
+    Mob enemyBase;
     uint enemyBaseAge;
 } SimpleFleetData;
 
@@ -80,14 +80,14 @@ static void SimpleFleetRunAI(FleetAI *ai)
     int enemyBaseIndex = FleetUtil_FindClosestSensor(ai, &sf->basePos,
                                                      FLEET_SCAN_BASE);
     if (enemyBaseIndex != -1) {
-        SensorMob *sm = SensorMobVector_GetPtr(&ai->sensors, enemyBaseIndex);
+        Mob *sm = MobVector_GetPtr(&ai->sensors, enemyBaseIndex);
         ASSERT(sm->type == MOB_TYPE_BASE);
         sf->enemyBase = *sm;
         sf->enemyBaseAge = 0;
     } else if (sf->enemyBase.type == MOB_TYPE_BASE &&
                sf->enemyBaseAge < 200) {
-        SensorMobVector_Grow(&ai->sensors);
-        SensorMob *sm = SensorMobVector_GetLastPtr(&ai->sensors);
+        MobVector_Grow(&ai->sensors);
+        Mob *sm = MobVector_GetLastPtr(&ai->sensors);
         *sm = sf->enemyBase;
         sf->enemyBaseAge++;
     }
@@ -117,8 +117,8 @@ static void SimpleFleetRunAI(FleetAI *ai)
             }
 
             if (t != -1) {
-                SensorMob *sm;
-                sm = SensorMobVector_GetPtr(&ai->sensors, t);
+                Mob *sm;
+                sm = MobVector_GetPtr(&ai->sensors, t);
                 mob->cmd.target = sm->pos;
 
                 if (sm->type != MOB_TYPE_LOOT_BOX &&
@@ -137,8 +137,8 @@ static void SimpleFleetRunAI(FleetAI *ai)
             uint scanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_MISSILE;
             int s = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
             if (s != -1) {
-                SensorMob *sm;
-                sm = SensorMobVector_GetPtr(&ai->sensors, s);
+                Mob *sm;
+                sm = MobVector_GetPtr(&ai->sensors, s);
                 mob->cmd.target = sm->pos;
             }
         } else if (mob->type == MOB_TYPE_BASE) {

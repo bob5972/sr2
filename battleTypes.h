@@ -46,33 +46,45 @@ typedef struct MobCmd {
     MobType spawnType;
 } MobCmd;
 
+typedef enum MobImageType {
+    MOB_IMAGE_INVALID = 0,
+    MOB_IMAGE_FULL    = 1,
+    MOB_IMAGE_AI      = 2,
+    MOB_IMAGE_SENSOR  = 3,
+    MOB_IMAGE_MAX,
+} MobImageType;
+
 typedef struct Mob {
+    /*
+     * Public fields that show up when a ship is scanned.
+     */
     MobID id;
     MobType type;
+    MobImageType image;
     PlayerID playerID;
     bool alive;
-    bool removeMob;
     FPoint pos;
+
+    /*
+     * Protected fields that are also used by the Fleet AIs.
+     * (See Mob_MaskForSensor)
+     */
     int fuel;
     int health;
     int age;
     int rechargeTime;
     int lootCredits;
-    uint64 scannedBy;
-
     MobCmd cmd;
+
+    /*
+     * Private fields that are used only by the Battle engine.
+     * (See Mob_MaskForAI)
+     */
+    bool removeMob;
+    uint64 scannedBy;
 } Mob;
 
-typedef struct SensorMob {
-    MobID mobid;
-    MobType type;
-    PlayerID playerID;
-    bool alive;
-    FPoint pos;
-} SensorMob;
-
 DECLARE_MBVECTOR_TYPE(Mob, MobVector);
-DECLARE_MBVECTOR_TYPE(SensorMob, SensorMobVector);
 
 typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,
@@ -111,7 +123,7 @@ typedef struct FleetAI {
     BattlePlayerParams player;
     int credits;
     MobVector mobs;
-    SensorMobVector sensors;
+    MobVector sensors;
 } FleetAI;
 
 typedef struct BattleParams {

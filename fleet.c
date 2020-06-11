@@ -57,7 +57,7 @@ void Fleet_Init()
                i == PLAYER_ID_NEUTRAL);
 
         MobVector_CreateEmpty(&fleet.ais[i].mobs);
-        SensorMobVector_CreateEmpty(&fleet.ais[i].sensors);
+        MobVector_CreateEmpty(&fleet.ais[i].sensors);
 
         FleetGetOps(&fleet.ais[i]);
         if (fleet.ais[i].ops.create != NULL) {
@@ -74,7 +74,7 @@ void Fleet_Exit()
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_Destroy(&fleet.ais[i].mobs);
-        SensorMobVector_Destroy(&fleet.ais[i].sensors);
+        MobVector_Destroy(&fleet.ais[i].sensors);
 
         if (fleet.ais[i].ops.destroy != NULL) {
             fleet.ais[i].ops.destroy(&fleet.ais[i]);
@@ -115,7 +115,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobVector_MakeEmpty(&fleet.ais[i].mobs);
-        SensorMobVector_MakeEmpty(&fleet.ais[i].sensors);
+        MobVector_MakeEmpty(&fleet.ais[i].sensors);
         fleet.ais[i].credits = bs->players[i].credits;
     }
 
@@ -135,15 +135,17 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
             MobVector_GrowBy(&fleet.ais[p].mobs, 1);
             m = MobVector_GetPtr(&fleet.ais[p].mobs, oldSize);
             *m = *mob;
+            Mob_MaskForAI(m);
         }
 
         if (mob->scannedBy != 0) {
             for (PlayerID s = 0; s < fleet.numAIs; s++) {
                 if (BitVector_GetRaw(s, &mob->scannedBy)) {
-                    SensorMob *sm;
-                    SensorMobVector_Grow(&fleet.ais[s].sensors);
-                    sm = SensorMobVector_GetLastPtr(&fleet.ais[s].sensors);
-                    SensorMob_InitFromMob(sm, mob);
+                    Mob *sm;
+                    MobVector_Grow(&fleet.ais[s].sensors);
+                    sm = MobVector_GetLastPtr(&fleet.ais[s].sensors);
+                    *sm = *mob;
+                    Mob_MaskForSensor(sm);
                 }
             }
         }
@@ -179,10 +181,10 @@ int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter)
 {
     float distance;
     int index = -1;
-    SensorMob *sm;
+    Mob *sm;
 
-    for (uint i = 0; i < SensorMobVector_Size(&ai->sensors); i++) {
-        sm = SensorMobVector_GetPtr(&ai->sensors, i);
+    for (uint i = 0; i < MobVector_Size(&ai->sensors); i++) {
+        sm = MobVector_GetPtr(&ai->sensors, i);
         if (!sm->alive) {
             continue;
         }
