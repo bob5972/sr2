@@ -146,6 +146,7 @@ typedef struct BattleParams {
 } BattleParams;
 
 typedef struct BattlePlayerStatus {
+    const char *playerName;
     bool alive;
     int credits;
 } BattlePlayerStatus;
@@ -156,6 +157,7 @@ typedef struct BattleStatus {
 
     BattlePlayerStatus players[MAX_PLAYERS];
     uint numPlayers;
+    PlayerID winner;
 
     int collisions;
     int sensorContacts;

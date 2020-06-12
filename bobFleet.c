@@ -266,10 +266,12 @@ static void BobFleetRunAI(FleetAI *ai)
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 if (s->gov == BOB_GOV_GUARD) {
                     float guardRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-                    mob->cmd.target.x = Random_Float(sf->basePos.x - guardRadius,
-                                                     sf->basePos.x + guardRadius);
-                    mob->cmd.target.y = Random_Float(sf->basePos.y - guardRadius,
-                                                     sf->basePos.y + guardRadius);
+                    mob->cmd.target.x =
+                        Random_Float(MAX(0, sf->basePos.x - guardRadius),
+                                     sf->basePos.x + guardRadius);
+                    mob->cmd.target.y =
+                        Random_Float(MAX(0, sf->basePos.y - guardRadius),
+                                     sf->basePos.y + guardRadius);
                 } else {
                     mob->cmd.target.x = Random_Float(0.0f, bp->width);
                     mob->cmd.target.y = Random_Float(0.0f, bp->height);

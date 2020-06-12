@@ -50,6 +50,11 @@ void MainPrintBattleStatus(const BattleStatus *bStatus)
     Warning("\t%d ticks in %d ms\n", bStatus->tick, elapsedMS);
     Warning("\t%.1f ticks/second\n", ((float)bStatus->tick)/elapsedMS * 1000.0f);
     Warning("\n");
+
+    if (bStatus->finished) {
+        ASSERT(bStatus->winner < ARRAYSIZE(bStatus->players));
+        Warning("Winner: %s\n", bStatus->players[bStatus->winner].playerName);
+    }
 }
 
 int Main_EngineThreadMain(void *data)
@@ -133,10 +138,10 @@ int main(void)
     bp.players[p].playerName = "Neutral";
     bp.players[p].aiType = FLEET_AI_NEUTRAL;
     p++;
-    bp.players[p].playerName = "Player 1";
+    bp.players[p].playerName = "SimpleFleet";
     bp.players[p].aiType = FLEET_AI_SIMPLE;
     p++;
-    bp.players[p].playerName = "Player 2";
+    bp.players[p].playerName = "BobFleet";
     bp.players[p].aiType = FLEET_AI_BOB;
     p++;
     //bp.players[p].playerName = "Player 3";

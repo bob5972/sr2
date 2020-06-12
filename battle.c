@@ -55,9 +55,11 @@ void Battle_Init(const BattleParams *bp)
 
     battle.bs.numPlayers = bp->numPlayers;
     for (uint32 i = 0; i < bp->numPlayers; i++) {
+        battle.bs.players[i].playerName = bp->players[i].playerName;
         battle.bs.players[i].alive = TRUE;
         battle.bs.players[i].credits = bp->startingCredits;
     }
+    battle.bs.winner = PLAYER_ID_NEUTRAL;
 
     ASSERT(bp->players[PLAYER_ID_NEUTRAL].aiType == FLEET_AI_NEUTRAL);
     MobVector_Create(&battle.mobs, 0, 1024);
@@ -477,8 +479,17 @@ void Battle_RunTick()
             battle.bs.players[i].credits += battle.bp.creditsPerTick;
         }
     }
-    if (livePlayers <= 1 ||
-        battle.bs.tick >= battle.bp.timeLimit) {
+    if (livePlayers <= 1) {
+        battle.bs.finished = TRUE;
+
+        for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
+            if (battle.bs.players[i].alive) {
+                battle.bs.winner = i;
+            }
+        }
+    }
+
+    if(battle.bs.tick >= battle.bp.timeLimit) {
         battle.bs.finished = TRUE;
     }
 }
