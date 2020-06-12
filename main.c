@@ -110,10 +110,16 @@ int Main_EngineThreadMain(void *data)
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--headless", "Run headless", },
+        { "-h", "--help",     "Print help text" },
+        { "-H", "--headless", "Run headless",   },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
+
+    if (MBOpt_IsPresent("help")) {
+        MBOpt_PrintHelpText();
+        exit(1);
+    }
 }
 
 int main(int argc, char **argv)
