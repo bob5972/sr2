@@ -58,7 +58,7 @@ typedef struct Mob {
     /*
      * Public fields that show up when a ship is scanned.
      */
-    MobID id;
+    MobID mobid;
     MobType type;
     MobImageType image;
     PlayerID playerID;
@@ -91,6 +91,7 @@ typedef enum FleetAIType {
     FLEET_AI_NEUTRAL = 1,
     FLEET_AI_DUMMY   = 2,
     FLEET_AI_SIMPLE  = 3,
+    FLEET_AI_BOB     = 4,
     FLEET_AI_MAX,
 } FleetAIType;
 

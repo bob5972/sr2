@@ -137,7 +137,7 @@ int main(void)
     bp.players[p].aiType = FLEET_AI_SIMPLE;
     p++;
     bp.players[p].playerName = "Player 2";
-    bp.players[p].aiType = FLEET_AI_SIMPLE;
+    bp.players[p].aiType = FLEET_AI_BOB;
     p++;
     bp.players[p].playerName = "Player 3";
     bp.players[p].aiType = FLEET_AI_DUMMY;

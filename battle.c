@@ -73,7 +73,7 @@ void Battle_Init(const BattleParams *bp)
 
         Mob_Init(mob, MOB_TYPE_BASE);
         mob->playerID = i;
-        mob->id = ++battle.lastMobID;
+        mob->mobid = ++battle.lastMobID;
         mob->pos.x = Random_Float(0.0f, battle.bp.width);
         mob->pos.y = Random_Float(0.0f, battle.bp.height);
         mob->cmd.target = mob->pos;
@@ -122,7 +122,7 @@ Mob *BattleQueueSpawn(MobType type, PlayerID p, const FPoint *pos)
 
     Mob_Init(spawn, type);
     spawn->playerID = p;
-    spawn->id = ++battle.lastMobID;
+    spawn->mobid = ++battle.lastMobID;
     spawn->pos = *pos;
     spawn->cmd.target = *pos;
 

@@ -40,6 +40,7 @@ endif
 #No paths. VPATH is assumed
 C_SOURCES = main.c \
             battle.c \
+            bobFleet.c \
             display.c \
             fleet.c \
 	    mob.c \

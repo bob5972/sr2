@@ -100,6 +100,9 @@ static void FleetGetOps(FleetAI *ai)
         case FLEET_AI_SIMPLE:
             SimpleFleet_GetOps(&ai->ops);
             break;
+        case FLEET_AI_BOB:
+            BobFleet_GetOps(&ai->ops);
+            break;
         default:
             PANIC("Unknown AI type=%d\n", ai->player.aiType);
     }
@@ -126,10 +129,10 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
         Mob *mob = &mobs[i];
         PlayerID p = mob->playerID;
 
-        IntMap_Put(&mobidMap, mob->id, i);
+        IntMap_Put(&mobidMap, mob->mobid, i);
 
         ASSERT(p == PLAYER_ID_NEUTRAL || p < fleet.numAIs);
-        if (mob->alive && p != PLAYER_ID_NEUTRAL) {
+        if (p != PLAYER_ID_NEUTRAL) {
             Mob *m;
             uint32 oldSize = MobVector_Size(&fleet.ais[p].mobs);
             MobVector_GrowBy(&fleet.ais[p].mobs, 1);
@@ -167,9 +170,9 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
             Mob *mob = MobVector_GetPtr(&fleet.ais[p].mobs, m);
             ASSERT(mob->playerID == p);
 
-            i = IntMap_Get(&mobidMap, mob->id);
+            i = IntMap_Get(&mobidMap, mob->mobid);
             ASSERT(i != MOB_ID_INVALID);
-            ASSERT(mobs[i].id == mob->id);
+            ASSERT(mobs[i].mobid == mob->mobid);
             mobs[i].cmd = mob->cmd;
         }
     }

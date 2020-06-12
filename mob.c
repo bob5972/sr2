@@ -164,7 +164,7 @@ void Mob_Init(Mob *mob, MobType t)
     mob->image = MOB_IMAGE_FULL;
     mob->alive = TRUE;
     mob->playerID = PLAYER_ID_INVALID;
-    mob->id = MOB_ID_INVALID;
+    mob->mobid = MOB_ID_INVALID;
     mob->type = t;
     mob->fuel = MobType_GetMaxFuel(t);
     mob->health = MobType_GetMaxHealth(t);
@@ -174,7 +174,7 @@ void Mob_Init(Mob *mob, MobType t)
 bool Mob_CheckInvariants(const Mob *m)
 {
     ASSERT(m != NULL);
-    ASSERT(m->id != MOB_ID_INVALID);
+    ASSERT(m->mobid != MOB_ID_INVALID);
     ASSERT(m->type != MOB_TYPE_INVALID);
     ASSERT(m->type >= MOB_TYPE_MIN);
     ASSERT(m->type < MOB_TYPE_MAX);
