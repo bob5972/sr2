@@ -89,7 +89,8 @@ int Main_EngineThreadMain(void *data)
         }
 
         bStatus = Battle_AcquireStatus();
-        if (bStatus->tick % 1000 == 0) {
+        if (!MBOpt_IsPresent("headless") &&
+            bStatus->tick % 1000 == 0) {
             MainPrintBattleStatus(bStatus);
         }
         if (bStatus->finished) {
