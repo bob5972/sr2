@@ -21,8 +21,18 @@
 #include "IntMap.h"
 #include "battle.h"
 
+typedef enum BobGovernor {
+    BOB_GOV_INVALID = 0,
+    BOB_GOV_GUARD   = 1,
+    BOB_GOV_MIN     = 1,
+    BOB_GOV_SCOUT   = 2,
+    BOB_GOV_ATTACK  = 3,
+    BOB_GOV_MAX,
+} BobGovernor;
+
 typedef struct BobShipData {
     MobID mobid;
+    BobGovernor gov;
 } BobShipData;
 
 DECLARE_MBVECTOR_TYPE(BobShipData, ShipVector);
@@ -84,6 +94,13 @@ static void BobFleetDestroy(FleetAI *ai)
     ai->aiHandle = NULL;
 }
 
+static void BobFleetInitShip(BobShipData *ship, MobID mobid)
+{
+    MBUtil_Zero(ship, sizeof(*ship));
+    ship->mobid = mobid;
+    ship->gov = Random_Int(BOB_GOV_MIN, BOB_GOV_MAX - 1);
+}
+
 static BobShipData *BobFleetGetShip(BobFleetData *sf, MobID mobid)
 {
     int i = IntMap_Get(&sf->shipMap, mobid);
@@ -95,7 +112,7 @@ static BobShipData *BobFleetGetShip(BobFleetData *sf, MobID mobid)
         ShipVector_Grow(&sf->ships);
         s = ShipVector_GetLastPtr(&sf->ships);
 
-        s->mobid = mobid;
+        BobFleetInitShip(s, mobid);
 
         i = ShipVector_Size(&sf->ships) - 1;
         IntMap_Put(&sf->shipMap, mobid, i);
@@ -137,6 +154,8 @@ static void BobFleetRunAI(FleetAI *ai)
     const BattleParams *bp = Battle_GetParams();
     uint targetScanFilter = FLEET_SCAN_SHIP;
     IntMap targetMap;
+    float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
+                        MobType_GetMaxFuel(MOB_TYPE_MISSILE);
 
     IntMap_Create(&targetMap);
 
@@ -158,8 +177,8 @@ static void BobFleetRunAI(FleetAI *ai)
         sf->enemyBaseAge++;
     }
 
-    int targetIndex = FleetUtil_FindClosestSensor(ai, &sf->basePos,
-                                                  targetScanFilter);
+    int groupTargetIndex = FleetUtil_FindClosestSensor(ai, &sf->basePos,
+                                                       targetScanFilter);
 
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
@@ -170,20 +189,73 @@ static void BobFleetRunAI(FleetAI *ai)
         if (!mob->alive) {
             BobFleetDestroyShip(sf, mob->mobid);
         } else if (mob->type == MOB_TYPE_FIGHTER) {
-            int t = targetIndex;
+            int t = -1;
+
+            if (s->gov == BOB_GOV_SCOUT) {
+                /*
+                 * Just run the shared random/loot-box code.
+                 */
+            } else if (s->gov == BOB_GOV_ATTACK) {
+                t = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                targetScanFilter);
+            } else if (s->gov == BOB_GOV_GUARD) {
+                Mob *sm;
+
+                t = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                targetScanFilter);
+                if (t != -1) {
+                    sm = MobVector_GetPtr(&ai->sensors, t);
+                    if (FPoint_Distance(&sm->pos, &sf->basePos) >
+                        MobType_GetSensorRadius(MOB_TYPE_BASE)) {
+                        t = -1;
+                    }
+                }
+
+                t = groupTargetIndex;
+                if (t != -1) {
+                    sm = MobVector_GetPtr(&ai->sensors, t);
+                    if (FPoint_Distance(&sm->pos, &sf->basePos) >
+                        MobType_GetSensorRadius(MOB_TYPE_BASE)) {
+                        t = -1;
+                    }
+                }
+            }
 
             if (t == -1) {
                 /*
-                 * Avoid having all the fighters rush to the same loot box.
-                 */
-                t = FleetUtil_FindClosestSensor(ai, &sf->basePos,
+                * Avoid having all the fighters rush to the same loot box.
+                */
+                t = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                                 FLEET_SCAN_LOOT_BOX);
-                if (IntMap_Increment(&targetMap, t) > 1) {
+                if (t != -1 && IntMap_Increment(&targetMap, t) > 1) {
                     /*
                      * Ideally we find the next best target, but for now just
                      * go back to random movement.
                      */
                     t = -1;
+                }
+
+                if (s->gov == BOB_GOV_GUARD && t != -1) {
+                    Mob *sm;
+                    sm = MobVector_GetPtr(&ai->sensors, t);
+                    if (FPoint_Distance(&sm->pos, &sf->basePos) >
+                        MobType_GetSensorRadius(MOB_TYPE_BASE)) {
+                        t = -1;
+                    }
+                }
+            }
+
+            {
+                int ct = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                     targetScanFilter);
+                if (ct != -1) {
+                    Mob *sm;
+                    sm = MobVector_GetPtr(&ai->sensors, ct);
+
+                    if (Random_Int(0, 10) == 0 &&
+                        FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
+                        mob->cmd.spawnType = MOB_TYPE_MISSILE;
+                    }
                 }
             }
 
@@ -191,17 +263,16 @@ static void BobFleetRunAI(FleetAI *ai)
                 Mob *sm;
                 sm = MobVector_GetPtr(&ai->sensors, t);
                 mob->cmd.target = sm->pos;
-
-                if (sm->type != MOB_TYPE_LOOT_BOX &&
-                    Random_Int(0, 20) == 0) {
-                    mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                }
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                if (Random_Bit()) {
+                if (s->gov == BOB_GOV_GUARD) {
+                    float guardRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+                    mob->cmd.target.x = Random_Float(sf->basePos.x - guardRadius,
+                                                     sf->basePos.x + guardRadius);
+                    mob->cmd.target.y = Random_Float(sf->basePos.y - guardRadius,
+                                                     sf->basePos.y + guardRadius);
+                } else {
                     mob->cmd.target.x = Random_Float(0.0f, bp->width);
                     mob->cmd.target.y = Random_Float(0.0f, bp->height);
-                } else {
-                    mob->cmd.target = sf->basePos;
                 }
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {

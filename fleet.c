@@ -112,6 +112,7 @@ static void FleetGetOps(FleetAI *ai)
 void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 {
     IntMap mobidMap;
+    const BattleParams *bp = Battle_GetParams();
 
     IntMap_Create(&mobidMap);
     IntMap_SetEmptyValue(&mobidMap, MOB_ID_INVALID);
@@ -173,6 +174,8 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
             i = IntMap_Get(&mobidMap, mob->mobid);
             ASSERT(i != MOB_ID_INVALID);
             ASSERT(mobs[i].mobid == mob->mobid);
+
+            FPoint_Clamp(&mob->cmd.target, 0.0f, bp->width, 0.0f, bp->height);
             mobs[i].cmd = mob->cmd;
         }
     }

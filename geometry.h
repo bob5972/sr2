@@ -49,6 +49,25 @@ typedef struct FQuad {
     float h;
 } FQuad;
 
+static inline void FPoint_Clamp(FPoint *p, float xMin, float xMax,
+                                float yMin, float yMax)
+{
+    ASSERT(xMin <= xMax);
+    ASSERT(yMin <= yMax);
+
+    if (p->x < xMin) {
+        p->x = xMin;
+    } else if (p->x > xMax) {
+        p->x = xMax;
+    }
+
+    if (p->y < yMin) {
+        p->y = yMin;
+    } else if (p->y > yMax) {
+        p->y = yMax;
+    }
+}
+
 static inline float FPoint_Distance(const FPoint *a, const FPoint *b)
 {
     float dx = (b->x - a->x);

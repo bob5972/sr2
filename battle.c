@@ -50,7 +50,7 @@ void Battle_Init(const BattleParams *bp)
     /*
      * We need Neutral + 2 fleets.
      */
-    ASSERT(bp->numPlayers > 3);
+    ASSERT(bp->numPlayers >= 3);
     battle.bp = *bp;
 
     battle.bs.numPlayers = bp->numPlayers;
