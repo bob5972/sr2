@@ -37,7 +37,7 @@ static void DummyFleetRunAI(FleetAI *ai);
 void Fleet_Init()
 {
     const BattleParams *bp = Battle_GetParams();
-    ASSERT(MBUtil_IsZero(&fleet, sizeof(fleet)));
+    MBUtil_Zero(&fleet, sizeof(fleet));
 
     fleet.numAIs = bp->numPlayers;
     fleet.ais = malloc(fleet.numAIs * sizeof(fleet.ais[0]));

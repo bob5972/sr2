@@ -32,8 +32,12 @@
 #include "MBOpt.h"
 
 struct MainData {
+    bool headless;
+    int loop;
     SDL_Thread *engineThread;
     uint32 startTimeMS;
+    BattleParams bp;
+    int winners[MAX_PLAYERS];
 } mainData;
 
 void MainPrintBattleStatus(const BattleStatus *bStatus)
@@ -55,10 +59,35 @@ void MainPrintBattleStatus(const BattleStatus *bStatus)
     }
 }
 
+void MainPrintWinners(void)
+{
+    uint32 totalBattles = 0;
+
+    Warning("\n");
+    Warning("Summary:\n");
+
+    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
+        totalBattles += mainData.winners[i];
+    }
+
+    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
+        int wins = mainData.winners[i];
+        int losses = totalBattles - wins;
+        float percent = 100.0f * wins / (float)totalBattles;
+
+        Warning("Fleet: %s\n", mainData.bp.players[i].playerName);
+        Warning("\t%d wins, %d losses: %0.1f\%\n", wins, losses, percent);
+    }
+
+    Warning("Total Battles: %d\n", totalBattles);
+}
+
 int Main_EngineThreadMain(void *data)
 {
     bool finished = FALSE;
     const BattleStatus *bStatus;
+
+    Warning("Starting Battle ...\n");
 
     mainData.startTimeMS = SDL_GetTicks();
 
@@ -80,7 +109,7 @@ int Main_EngineThreadMain(void *data)
         Battle_RunTick();
 
         // Draw
-        if (!MBOpt_IsPresent("headless")) {
+        if (!mainData.headless) {
             bMobs = Battle_AcquireMobs(&numMobs);
             dMobs = Display_AcquireMobs(numMobs);
             memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
@@ -89,8 +118,7 @@ int Main_EngineThreadMain(void *data)
         }
 
         bStatus = Battle_AcquireStatus();
-        if (!MBOpt_IsPresent("headless") &&
-            bStatus->tick % 1000 == 0) {
+        if (bStatus->tick % 1000 == 0) {
             MainPrintBattleStatus(bStatus);
         }
         if (bStatus->finished) {
@@ -101,9 +129,12 @@ int Main_EngineThreadMain(void *data)
 
     bStatus = Battle_AcquireStatus();
     MainPrintBattleStatus(bStatus);
+    ASSERT(bStatus->winner < ARRAYSIZE(mainData.winners));
+    mainData.winners[bStatus->winner]++;
     Battle_ReleaseStatus();
 
     Warning("Battle Finished!\n");
+    Warning("\n");
 
     return 0;
 }
@@ -111,8 +142,9 @@ int Main_EngineThreadMain(void *data)
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",     "Print help text" },
-        { "-H", "--headless", "Run headless",   },
+        { "-h", "--help",     FALSE, "Print help text"  },
+        { "-H", "--headless", FALSE, "Run headless",    },
+        { "-l", "--loop",     TRUE,  "Loop <arg> times" },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -121,12 +153,19 @@ void MainParseCmdLine(int argc, char **argv)
         MBOpt_PrintHelpText();
         exit(1);
     }
+
+    mainData.headless = MBOpt_IsPresent("headless");
+
+    if (MBOpt_IsPresent("loop")) {
+        mainData.loop = MBOpt_GetInt("loop");
+    } else {
+        mainData.loop = 1;
+    }
 }
 
 int main(int argc, char **argv)
 {
     uint32 p;
-    BattleParams bp;
 
     ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
     MainParseCmdLine(argc, argv);
@@ -134,60 +173,64 @@ int main(int argc, char **argv)
     // Setup
     Warning("Starting SpaceRobots2 ...\n");
     Warning("\n");
-    SDL_Init(MBOpt_IsPresent("headless") ? 0 : SDL_INIT_VIDEO);
+    SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
     Random_Init();
 
-    MBUtil_Zero(&bp, sizeof(bp));
-    bp.width = 1600;
-    bp.height = 1200;
-    bp.startingCredits = 1000;
-    bp.creditsPerTick = 1;
-    bp.timeLimit = 1000 * 1000;
-    bp.lootDropRate = 0.5f;
-    bp.lootSpawnRate = 0.5f;
-    bp.minLootSpawn = 5;
-    bp.maxLootSpawn = 10;
+    mainData.bp.width = 1600;
+    mainData.bp.height = 1200;
+    mainData.bp.startingCredits = 1000;
+    mainData.bp.creditsPerTick = 1;
+    mainData.bp.timeLimit = 1000 * 1000;
+    mainData.bp.lootDropRate = 0.5f;
+    mainData.bp.lootSpawnRate = 0.5f;
+    mainData.bp.minLootSpawn = 5;
+    mainData.bp.maxLootSpawn = 10;
 
     p = 0;
-    bp.players[p].playerName = "Neutral";
-    bp.players[p].aiType = FLEET_AI_NEUTRAL;
+    mainData.bp.players[p].playerName = "Neutral";
+    mainData.bp.players[p].aiType = FLEET_AI_NEUTRAL;
     p++;
-    bp.players[p].playerName = "SimpleFleet";
-    bp.players[p].aiType = FLEET_AI_SIMPLE;
+    mainData.bp.players[p].playerName = "SimpleFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
     p++;
-    bp.players[p].playerName = "BobFleet";
-    bp.players[p].aiType = FLEET_AI_BOB;
+    mainData.bp.players[p].playerName = "BobFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_BOB;
     p++;
-    //bp.players[p].playerName = "Player 3";
-    //bp.players[p].aiType = FLEET_AI_DUMMY;
+    //mainData.bp.players[p].playerName = "Player 3";
+    //mainData.bp.players[p].aiType = FLEET_AI_DUMMY;
     //p++;
-    bp.numPlayers = p;
+    mainData.bp.numPlayers = p;
 
-    Battle_Init(&bp);
-    Fleet_Init();
+    for (uint32 i = 0; i < mainData.loop; i++) {
+        Battle_Init(&mainData.bp);
+        Fleet_Init();
 
-    if (!MBOpt_IsPresent("headless")) {
-        Display_Init();
+        if (!mainData.headless) {
+            Display_Init();
+        }
+
+        // Launch Engine Thread
+        mainData.engineThread = SDL_CreateThread(Main_EngineThreadMain,
+                                                 "battle", NULL);
+        ASSERT(mainData.engineThread != NULL);
+
+        if (!mainData.headless) {
+            Display_Main();
+        }
+
+        SDL_WaitThread(mainData.engineThread, NULL);
+
+        //Cleanup
+        if (!mainData.headless) {
+            Display_Exit();
+        }
+
+        Fleet_Exit();
+        Battle_Exit();
     }
 
-    // Launch Engine Thread
-    mainData.engineThread = SDL_CreateThread(Main_EngineThreadMain, "battle",
-                                             NULL);
-    ASSERT(mainData.engineThread != NULL);
+    MainPrintWinners();
 
-    if (!MBOpt_IsPresent("headless")) {
-        Display_Main();
-    }
-
-    SDL_WaitThread(mainData.engineThread, NULL);
-
-    //Cleanup
-    if (!MBOpt_IsPresent("headless")) {
-        Display_Exit();
-    }
-
-    Fleet_Exit();
-    Battle_Exit();
     Random_Exit();
     SDL_Quit();
     MBOpt_Exit();

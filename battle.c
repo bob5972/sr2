@@ -45,7 +45,7 @@ static BattleGlobalData battle;
 void Battle_Init(const BattleParams *bp)
 {
     ASSERT(bp != NULL);
-    ASSERT(MBUtil_IsZero(&battle, sizeof(battle)));
+    MBUtil_Zero(&battle, sizeof(battle));
 
     /*
      * We need Neutral + 2 fleets.
