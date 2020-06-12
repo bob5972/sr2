@@ -29,9 +29,7 @@
 #include "geometry.h"
 #include "battle.h"
 #include "fleet.h"
-
-// Poor man's command-line arguments...
-#define USE_DISPLAY TRUE
+#include "MBOpt.h"
 
 struct MainData {
     SDL_Thread *engineThread;
@@ -62,7 +60,6 @@ int Main_EngineThreadMain(void *data)
     bool finished = FALSE;
     const BattleStatus *bStatus;
 
-
     mainData.startTimeMS = SDL_GetTicks();
 
     ASSERT(data == NULL);
@@ -83,7 +80,7 @@ int Main_EngineThreadMain(void *data)
         Battle_RunTick();
 
         // Draw
-        if (USE_DISPLAY) {
+        if (!MBOpt_IsPresent("headless")) {
             bMobs = Battle_AcquireMobs(&numMobs);
             dMobs = Display_AcquireMobs(numMobs);
             memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
@@ -110,12 +107,22 @@ int Main_EngineThreadMain(void *data)
     return 0;
 }
 
-int main(void)
+void MainParseCmdLine(int argc, char **argv)
+{
+    MBOption opts[] = {
+        { "-h", "--headless", "Run headless", },
+    };
+
+    MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
+}
+
+int main(int argc, char **argv)
 {
     uint32 p;
     BattleParams bp;
 
     ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
+    MainParseCmdLine(argc, argv);
 
     // Setup
     Warning("Starting SpaceRobots2 ...\n");
@@ -149,11 +156,10 @@ int main(void)
     //p++;
     bp.numPlayers = p;
 
-
     Battle_Init(&bp);
     Fleet_Init();
 
-    if (USE_DISPLAY) {
+    if (!MBOpt_IsPresent("headless")) {
         Display_Init();
     }
 
@@ -162,14 +168,14 @@ int main(void)
                                              NULL);
     ASSERT(mainData.engineThread != NULL);
 
-    if (USE_DISPLAY) {
+    if (!MBOpt_IsPresent("headless")) {
         Display_Main();
     }
 
     SDL_WaitThread(mainData.engineThread, NULL);
 
     //Cleanup
-    if (USE_DISPLAY) {
+    if (!MBOpt_IsPresent("headless")) {
         Display_Exit();
     }
 
@@ -177,6 +183,8 @@ int main(void)
     Battle_Exit();
     Random_Exit();
     SDL_Quit();
+    MBOpt_Exit();
+
     Warning("Done!\n");
     return 0;
 }

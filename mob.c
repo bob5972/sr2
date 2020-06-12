@@ -129,7 +129,7 @@ int MobType_GetMaxFuel(MobType type)
         case MOB_TYPE_MISSILE:
             return 50;
         case MOB_TYPE_LOOT_BOX:
-            return 1000;
+            return 4 * 1000;
         default:
             PANIC("Unhandled mob type: %d\n", type);
             break;
