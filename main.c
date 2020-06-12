@@ -89,7 +89,7 @@ int Main_EngineThreadMain(void *data)
         }
 
         bStatus = Battle_AcquireStatus();
-        if (bStatus->tick % 200 == 0) {
+        if (bStatus->tick % 1000 == 0) {
             MainPrintBattleStatus(bStatus);
         }
         if (bStatus->finished) {
