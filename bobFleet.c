@@ -156,6 +156,7 @@ static void BobFleetRunAI(FleetAI *ai)
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
+    uint32 numGuard = 0;
 
     IntMap_Create(&targetMap);
 
@@ -170,7 +171,7 @@ static void BobFleetRunAI(FleetAI *ai)
         sf->enemyBase = *sm;
         sf->enemyBaseAge = 0;
     } else if (sf->enemyBase.type == MOB_TYPE_BASE &&
-               sf->enemyBaseAge < 200) {
+               sf->enemyBaseAge < 1000) {
         MobVector_Grow(&ai->sensors);
         Mob *sm = MobVector_GetLastPtr(&ai->sensors);
         *sm = sf->enemyBase;
@@ -200,6 +201,11 @@ static void BobFleetRunAI(FleetAI *ai)
                                                 targetScanFilter);
             } else if (s->gov == BOB_GOV_GUARD) {
                 Mob *sm;
+
+                numGuard++;
+                if (numGuard >= 5) {
+                    s->gov = BOB_GOV_ATTACK;
+                }
 
                 t = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                                 targetScanFilter);
@@ -300,7 +306,17 @@ static void BobFleetRunAI(FleetAI *ai)
                 mob->cmd.target.y = Random_Float(0.0f, bp->height);
             }
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+            Mob *sm;
+
             mob->cmd.target = sf->basePos;
+
+            /*
+             * Add our own loot box to the sensor targets so that we'll
+             * steer towards them.
+             */
+            MobVector_Grow(&ai->sensors);
+            sm = MobVector_GetLastPtr(&ai->sensors);
+            *sm = *mob;
         }
     }
 

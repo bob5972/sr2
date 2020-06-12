@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     // Setup
     Warning("Starting SpaceRobots2 ...\n");
     Warning("\n");
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(MBOpt_IsPresent("headless") ? 0 : SDL_INIT_VIDEO);
     Random_Init();
 
     MBUtil_Zero(&bp, sizeof(bp));
