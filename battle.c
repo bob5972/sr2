@@ -92,7 +92,7 @@ void Battle_Exit()
     battle.initialized = FALSE;
 }
 
-bool BattleCheckMobInvariants(const Mob *mob)
+static bool BattleCheckMobInvariants(const Mob *mob)
 {
     ASSERT(Mob_CheckInvariants(mob));
     ASSERT(mob->pos.x >= 0.0f);
@@ -108,13 +108,13 @@ bool BattleCheckMobInvariants(const Mob *mob)
     return TRUE;
 }
 
-int BattleCalcLootCredits(const Mob *m)
+static int BattleCalcLootCredits(const Mob *m)
 {
     int loot = MobType_GetCost(m->type);
     return (int)(battle.bp.lootDropRate * loot);
 }
 
-Mob *BattleQueueSpawn(MobType type, PlayerID p, const FPoint *pos)
+static Mob *BattleQueueSpawn(MobType type, PlayerID p, const FPoint *pos)
 {
     Mob *spawn;
 
@@ -133,7 +133,7 @@ Mob *BattleQueueSpawn(MobType type, PlayerID p, const FPoint *pos)
     return spawn;
 }
 
-void BattleRunMobSpawn(Mob *mob)
+static void BattleRunMobSpawn(Mob *mob)
 {
     Mob *spawn;
     MobType mobType = mob->type;
@@ -181,7 +181,7 @@ void BattleRunMobSpawn(Mob *mob)
     mob->cmd.spawnType = MOB_TYPE_INVALID;
 }
 
-void BattleRunMobMove(Mob *mob)
+static void BattleRunMobMove(Mob *mob)
 {
     FPoint origin;
     float distance;
@@ -226,38 +226,26 @@ void BattleRunMobMove(Mob *mob)
 }
 
 
-bool BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
+static bool BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 {
-    if (lhsType == MOB_TYPE_MISSILE &&
-        rhsType == MOB_TYPE_LOOT_BOX) {
-        return FALSE;
-    }
-    if (rhsType == MOB_TYPE_MISSILE &&
-        lhsType == MOB_TYPE_LOOT_BOX) {
-        return FALSE;
-    }
     if (lhsType == MOB_TYPE_MISSILE) {
-        ASSERT(rhsType != MOB_TYPE_LOOT_BOX);
-        return TRUE;
+        return rhsType != MOB_TYPE_LOOT_BOX;
     }
     if (rhsType == MOB_TYPE_MISSILE) {
-        ASSERT(lhsType != MOB_TYPE_LOOT_BOX);
-        return TRUE;
+        return lhsType != MOB_TYPE_LOOT_BOX;
     }
-    if (lhsType == MOB_TYPE_LOOT_BOX &&
-        rhsType != MOB_TYPE_LOOT_BOX) {
+    if (lhsType == MOB_TYPE_LOOT_BOX) {
         ASSERT(rhsType != MOB_TYPE_MISSILE);
-        return TRUE;
+        return rhsType != MOB_TYPE_LOOT_BOX;
     }
-    if (rhsType == MOB_TYPE_LOOT_BOX &&
-        lhsType != MOB_TYPE_LOOT_BOX) {
+    if (rhsType == MOB_TYPE_LOOT_BOX) {
         ASSERT(lhsType != MOB_TYPE_MISSILE);
-        return TRUE;
+        return lhsType != MOB_TYPE_LOOT_BOX;
     }
     return FALSE;
 }
 
-bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
+static bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
     FCircle lc, rc;
 
@@ -280,7 +268,7 @@ bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 }
 
 
-void BattleRunMobCollision(Mob *oMob, Mob *iMob)
+static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
 {
     if (!oMob->alive || !iMob->alive) {
         return;
@@ -326,7 +314,7 @@ void BattleRunMobCollision(Mob *oMob, Mob *iMob)
 }
 
 // Can the scanning mob see the target mob?
-bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
+static bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
 {
     FCircle sc, tc;
 
