@@ -52,9 +52,9 @@ void CloudFleet_GetOps(FleetAIOps *ops)
     ops->aiName = "CloudFleet";
     ops->aiAuthor = "Michael Banack";
 
-    ops->create = &CloudFleetCreate;
-    ops->destroy = &CloudFleetDestroy;
-    ops->runAI = &CloudFleetRunAI;
+    ops->createFleet = &CloudFleetCreate;
+    ops->destroyFleet = &CloudFleetDestroy;
+    ops->runAITick = &CloudFleetRunAI;
 }
 
 static void CloudFleetCreate(FleetAI *ai)

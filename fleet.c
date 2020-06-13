@@ -31,8 +31,8 @@ typedef struct FleetGlobalData {
 static FleetGlobalData fleet;
 
 static void FleetGetOps(FleetAI *ai);
-static void FleetRunAI(FleetAI *ai);
-static void DummyFleetRunAI(FleetAI *ai);
+static void FleetRunAITick(FleetAI *ai);
+static void DummyFleetRunAITick(FleetAI *ai);
 
 void Fleet_Init()
 {
@@ -60,8 +60,8 @@ void Fleet_Init()
         MobVector_CreateEmpty(&fleet.ais[i].sensors);
 
         FleetGetOps(&fleet.ais[i]);
-        if (fleet.ais[i].ops.create != NULL) {
-            fleet.ais[i].ops.create(&fleet.ais[i]);
+        if (fleet.ais[i].ops.createFleet != NULL) {
+            fleet.ais[i].ops.createFleet(&fleet.ais[i]);
         }
     }
 
@@ -76,8 +76,8 @@ void Fleet_Exit()
         MobVector_Destroy(&fleet.ais[i].mobs);
         MobVector_Destroy(&fleet.ais[i].sensors);
 
-        if (fleet.ais[i].ops.destroy != NULL) {
-            fleet.ais[i].ops.destroy(&fleet.ais[i]);
+        if (fleet.ais[i].ops.destroyFleet != NULL) {
+            fleet.ais[i].ops.destroyFleet(&fleet.ais[i]);
         }
     }
 
@@ -95,7 +95,7 @@ static void FleetGetOps(FleetAI *ai)
         case FLEET_AI_DUMMY:
             ai->ops.aiName = "DummyFleet";
             ai->ops.aiAuthor = "Michael Banack";
-            ai->ops.runAI = &DummyFleetRunAI;
+            ai->ops.runAITick = &DummyFleetRunAITick;
             break;
         case FLEET_AI_SIMPLE:
             SimpleFleet_GetOps(&ai->ops);
@@ -165,7 +165,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
      * Run the AI for all the players.
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
-        FleetRunAI(&fleet.ais[p]);
+        FleetRunAITick(&fleet.ais[p]);
     }
 
     /*
@@ -249,13 +249,13 @@ void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
     p->y = Random_Float(MAX(0, center->y - radius), center->y + radius);
 }
 
-static void FleetRunAI(FleetAI *ai)
+static void FleetRunAITick(FleetAI *ai)
 {
-    ASSERT(ai->ops.runAI != NULL);
-    ai->ops.runAI(ai);
+    ASSERT(ai->ops.runAITick != NULL);
+    ai->ops.runAITick(ai);
 }
 
-static void DummyFleetRunAI(FleetAI *ai)
+static void DummyFleetRunAITick(FleetAI *ai)
 {
     const BattleParams *bp = Battle_GetParams();
 

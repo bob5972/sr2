@@ -60,9 +60,9 @@ void BobFleet_GetOps(FleetAIOps *ops)
     ops->aiName = "BobFleet";
     ops->aiAuthor = "Michael Banack";
 
-    ops->create = &BobFleetCreate;
-    ops->destroy = &BobFleetDestroy;
-    ops->runAI = &BobFleetRunAI;
+    ops->createFleet = &BobFleetCreate;
+    ops->destroyFleet = &BobFleetDestroy;
+    ops->runAITick = &BobFleetRunAI;
 }
 
 static void BobFleetCreate(FleetAI *ai)

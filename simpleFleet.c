@@ -39,9 +39,9 @@ void SimpleFleet_GetOps(FleetAIOps *ops)
     ops->aiName = "SimpleFleet";
     ops->aiAuthor = "Michael Banack";
 
-    ops->create = &SimpleFleetCreate;
-    ops->destroy = &SimpleFleetDestroy;
-    ops->runAI = &SimpleFleetRunAI;
+    ops->createFleet = &SimpleFleetCreate;
+    ops->destroyFleet = &SimpleFleetDestroy;
+    ops->runAITick = &SimpleFleetRunAI;
 }
 
 static void SimpleFleetCreate(FleetAI *ai)

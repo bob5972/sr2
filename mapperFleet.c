@@ -83,9 +83,9 @@ void MapperFleet_GetOps(FleetAIOps *ops)
     ops->aiName = "MapperFleet";
     ops->aiAuthor = "Michael Banack";
 
-    ops->create = &MapperFleetCreate;
-    ops->destroy = &MapperFleetDestroy;
-    ops->runAI = &MapperFleetRunAI;
+    ops->createFleet = &MapperFleetCreate;
+    ops->destroyFleet = &MapperFleetDestroy;
+    ops->runAITick = &MapperFleetRunAI;
 }
 
 static void MapperFleetCreate(FleetAI *ai)
