@@ -121,6 +121,7 @@ static void MapperFleetCreate(FleetAI *ai)
     MBUtil_Zero(sf->tileFlags, sf->numTiles * sizeof(sf->tileFlags[0]));
 
     BitVector_CreateWithSize(&sf->tileBV, sf->numTiles);
+    BitVector_ResetAll(&sf->tileBV);
 }
 
 static void MapperFleetDestroy(FleetAI *ai)
@@ -285,6 +286,13 @@ static uint32 MapperFleetGetNextTile(MapperFleetData *sf)
         }
 
         i++;
+    }
+
+    if (BitVector_Get(&sf->tileBV, bestIndex)) {
+        /*
+         * We presumably had everything already assigned.
+         */
+        BitVector_ResetAll(&sf->tileBV);
     }
 
 found:

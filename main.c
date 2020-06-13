@@ -176,6 +176,10 @@ int main(int argc, char **argv)
     SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
     Random_Init();
 
+
+    /*
+     * Battle Scenario
+     */
     mainData.bp.width = 1600;
     mainData.bp.height = 1200;
     mainData.bp.startingCredits = 1000;
@@ -186,25 +190,36 @@ int main(int argc, char **argv)
     mainData.bp.minLootSpawn = 5;
     mainData.bp.maxLootSpawn = 10;
 
+    /*
+     * The NEUTRAL fleet needs to be there.
+     *
+     * Otherwise these are in rough order of difficulty.
+     */
     p = 0;
     mainData.bp.players[p].playerName = "Neutral";
     mainData.bp.players[p].aiType = FLEET_AI_NEUTRAL;
     p++;
-    mainData.bp.players[p].playerName = "Player 3";
-    mainData.bp.players[p].aiType = FLEET_AI_DUMMY;
-    p++;
-    mainData.bp.players[p].playerName = "SimpleFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
-    p++;
-    mainData.bp.players[p].playerName = "BobFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_BOB;
-    p++;
+
+//     mainData.bp.players[p].playerName = "DummyFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_DUMMY;
+//     p++;
+//
+//     mainData.bp.players[p].playerName = "SimpleFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
+//     p++;
+//
+//     mainData.bp.players[p].playerName = "BobFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_BOB;
+//     p++;
+
     mainData.bp.players[p].playerName = "MapperFleet";
     mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
     p++;
+
     mainData.bp.players[p].playerName = "CloudFleet";
     mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
     p++;
+
     mainData.bp.numPlayers = p;
 
     for (uint32 i = 0; i < mainData.loop; i++) {
