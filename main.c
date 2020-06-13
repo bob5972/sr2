@@ -49,6 +49,7 @@ void MainPrintBattleStatus(const BattleStatus *bStatus)
     Warning("\tcollisions = %d\n", bStatus->collisions);
     Warning("\tsensor contacts = %d\n", bStatus->sensorContacts);
     Warning("\tspawns = %d\n", bStatus->spawns);
+    Warning("\tship spawns = %d\n", bStatus->shipSpawns);
     Warning("\t%d ticks in %d ms\n", bStatus->tick, elapsedMS);
     Warning("\t%.1f ticks/second\n", ((float)bStatus->tick)/elapsedMS * 1000.0f);
     Warning("\n");
@@ -211,13 +212,17 @@ int main(int argc, char **argv)
 //     mainData.bp.players[p].playerName = "BobFleet";
 //     mainData.bp.players[p].aiType = FLEET_AI_BOB;
 //     p++;
-
-    mainData.bp.players[p].playerName = "MapperFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
-    p++;
+//
+//     mainData.bp.players[p].playerName = "MapperFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+//     p++;
 
     mainData.bp.players[p].playerName = "CloudFleet";
     mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
+    p++;
+
+    mainData.bp.players[p].playerName = "GatherFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_GATHER;
     p++;
 
     mainData.bp.numPlayers = p;

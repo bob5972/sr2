@@ -129,6 +129,10 @@ static Mob *BattleQueueSpawn(MobType type, PlayerID p, const FPoint *pos)
     spawn->cmd.target = *pos;
 
     battle.bs.spawns++;
+    if (spawn->type != MOB_TYPE_LOOT_BOX &&
+        spawn->type != MOB_TYPE_MISSILE) {
+        battle.bs.shipSpawns++;
+    }
 
     return spawn;
 }

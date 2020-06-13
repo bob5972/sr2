@@ -38,10 +38,12 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs);
 int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter);
 void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos);
 void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius);
+Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid);
 
 void SimpleFleet_GetOps(FleetAIOps *ops);
 void BobFleet_GetOps(FleetAIOps *ops);
 void MapperFleet_GetOps(FleetAIOps *ops);
 void CloudFleet_GetOps(FleetAIOps *ops);
+void GatherFleet_GetOps(FleetAIOps *ops);
 
 #endif // _FLEET_H_202005311442

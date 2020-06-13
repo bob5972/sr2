@@ -115,6 +115,9 @@ static void FleetGetOps(FleetAI *ai)
         case FLEET_AI_CLOUD:
             CloudFleet_GetOps(&ai->ops);
             break;
+        case FLEET_AI_GATHER:
+            GatherFleet_GetOps(&ai->ops);
+            break;
         default:
             PANIC("Unknown AI type=%d\n", ai->player.aiType);
     }
@@ -171,6 +174,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
      * Run the AI for all the players.
      */
     for (uint32 p = 0; p < fleet.numAIs; p++) {
+        fleet.ais[p].tick = bs->tick;
         FleetRunAITick(&fleet.ais[p]);
     }
 
@@ -189,6 +193,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
             FPoint_Clamp(&mob->cmd.target, 0.0f, bp->width, 0.0f, bp->height);
             mobs[i].cmd = mob->cmd;
+            mobs[i].aiMobHandle = mob->aiMobHandle;
         }
     }
 
@@ -255,16 +260,31 @@ void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
     p->y = Random_Float(MAX(0, center->y - radius), center->y + radius);
 }
 
+Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid)
+{
+    ASSERT(ai != NULL);
+
+    int i = IntMap_Get(&ai->mobMap, mobid);
+    if (i == -1) {
+        return NULL;
+    }
+
+    return MobVector_GetPtr(&ai->mobs, i);
+}
+
 static void FleetRunAITick(FleetAI *ai)
 {
     for (uint32 i = 0; i < MobVector_Size(&ai->mobs); i++) {
         Mob *m = MobVector_GetPtr(&ai->mobs, i);
-        if (!IntMap_ContainsKey(&ai->mobMap, m->mobid)) {
-            if (ai->ops.mobSpawned != NULL) {
+        if (ai->ops.mobSpawned != NULL) {
+            if (!IntMap_ContainsKey(&ai->mobMap, m->mobid)) {
                 m->aiMobHandle = ai->ops.mobSpawned(ai->aiHandle, m);
             }
+        } else {
+            m->aiMobHandle = m;
         }
         IntMap_Put(&ai->mobMap, m->mobid, i);
+        ASSERT(IntMap_ContainsKey(&ai->mobMap, m->mobid));
     }
 
     ASSERT(ai->ops.runAITick != NULL);
@@ -284,8 +304,12 @@ static void FleetRunAITick(FleetAI *ai)
             if (ai->ops.mobDestroyed != NULL) {
                 ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
             }
+
+            IntMap_Remove(&ai->mobMap, m->mobid);
+            ASSERT(!IntMap_ContainsKey(&ai->mobMap, m->mobid));
+
+            m->aiMobHandle = NULL;
         }
-        IntMap_Remove(&ai->mobMap, m->mobid);
     }
 }
 

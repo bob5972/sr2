@@ -96,6 +96,7 @@ typedef enum FleetAIType {
     FLEET_AI_BOB     = 4,
     FLEET_AI_MAPPER  = 5,
     FLEET_AI_CLOUD   = 6,
+    FLEET_AI_GATHER  = 7,
     FLEET_AI_MAX,
 } FleetAIType;
 
@@ -127,6 +128,7 @@ typedef struct FleetAI {
     /*
      * Filled out by Fleet
      */
+    uint tick;
     PlayerID id;
     BattlePlayerParams player;
     int credits;
@@ -170,6 +172,7 @@ typedef struct BattleStatus {
     int collisions;
     int sensorContacts;
     int spawns;
+    int shipSpawns;
 } BattleStatus;
 
 #endif // _BATTLE_TYPES_H_202006071525
