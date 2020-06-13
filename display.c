@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "config.h"
 #include "SDL.h"
@@ -321,15 +322,34 @@ static void DisplayDrawFrame()
     SDL_UnlockMutex(display.mobMutex);
 }
 
+static uint64 DisplayGetTimerUS(void)
+{
+    uint32 retVal;
+    struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    retVal = ts.tv_sec * 1000 * 1000;
+    retVal += ts.tv_nsec / 1000;
+
+    return retVal;
+}
+
 void Display_Main(void)
 {
     SDL_Event event;
     int done = 0;
 
+    uint32 targetFPS = 102;
+    uint64 targetUSPerFrame = (1000 * 1000) / targetFPS;
+    uint64 startTimeUS;
+    uint64 endTimeUS;
+
     ASSERT(display.initialized);
     display.inMain = TRUE;
 
     while (!done) {
+        startTimeUS = DisplayGetTimerUS();
+
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_QUIT:
@@ -344,7 +364,10 @@ void Display_Main(void)
         }
 
         DisplayDrawFrame();
-        usleep(1000);
+        endTimeUS = DisplayGetTimerUS();
+        if (endTimeUS - startTimeUS < targetUSPerFrame) {
+            usleep(targetUSPerFrame - (endTimeUS - startTimeUS));
+        }
     }
 
     /*
