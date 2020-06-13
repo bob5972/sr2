@@ -367,23 +367,28 @@ static void MapperFleetRunAI(FleetAI *ai)
         }
     }
 
-    MapperFleetStartTileSearch(sf);
-    FleetUtil_SortMobsByDistance(&ai->mobs, &sf->basePos);
-    uint32 i = MobVector_Size(&ai->mobs) - 1;
-    while (i > 0) {
-        Mob *mob = MobVector_GetPtr(&ai->mobs, i);
-        if (mob->type == MOB_TYPE_FIGHTER) {
-            MapperShipData *s = MapperFleetGetShip(sf, mob->mobid);
-            ASSERT(s != NULL);
-            ASSERT(s->mobid == mob->mobid);
+    /*
+     * Assign tiles to scouts.
+     */
+    {
+        MapperFleetStartTileSearch(sf);
+        FleetUtil_SortMobsByDistance(&ai->mobs, &sf->basePos);
+        int i = MobVector_Size(&ai->mobs) - 1;
+        while (i >= 0) {
+            Mob *mob = MobVector_GetPtr(&ai->mobs, i);
+            if (mob->type == MOB_TYPE_FIGHTER) {
+                MapperShipData *s = MapperFleetGetShip(sf, mob->mobid);
+                ASSERT(s != NULL);
+                ASSERT(s->mobid == mob->mobid);
 
-            if (s->gov == MAPPER_GOV_SCOUT &&
-                s->assignedTile == -1) {
-                uint32 tileIndex = MapperFleetGetNextTile(sf);
-                s->assignedTile = tileIndex;
+                if (s->gov == MAPPER_GOV_SCOUT &&
+                    s->assignedTile == -1) {
+                    uint32 tileIndex = MapperFleetGetNextTile(sf);
+                    s->assignedTile = tileIndex;
+                }
             }
+            i--;
         }
-        i--;
     }
 
     /*
