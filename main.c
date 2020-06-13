@@ -171,7 +171,7 @@ int main(int argc, char **argv)
     MainParseCmdLine(argc, argv);
 
     // Setup
-    Warning("Starting SpaceRobots2 ...\n");
+    Warning("Starting SpaceRobots2 %s...\n", DEBUG ? "(debug enabled)" : "");
     Warning("\n");
     SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
     Random_Init();
@@ -196,11 +196,14 @@ int main(int argc, char **argv)
     //mainData.bp.players[p].playerName = "SimpleFleet";
     //mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
     //p++;
-    mainData.bp.players[p].playerName = "BobFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_BOB;
-    p++;
+    //mainData.bp.players[p].playerName = "BobFleet";
+    //mainData.bp.players[p].aiType = FLEET_AI_BOB;
+    //p++;
     mainData.bp.players[p].playerName = "MapperFleet";
     mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    p++;
+    mainData.bp.players[p].playerName = "CloudFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
     p++;
     mainData.bp.numPlayers = p;
 

@@ -41,6 +41,7 @@ endif
 C_SOURCES = main.c \
             battle.c \
             bobFleet.c \
+            cloudFleet.c \
             display.c \
             fleet.c \
             mapperFleet.c \

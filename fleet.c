@@ -106,6 +106,9 @@ static void FleetGetOps(FleetAI *ai)
         case FLEET_AI_MAPPER:
             MapperFleet_GetOps(&ai->ops);
             break;
+        case FLEET_AI_CLOUD:
+            CloudFleet_GetOps(&ai->ops);
+            break;
         default:
             PANIC("Unknown AI type=%d\n", ai->player.aiType);
     }
@@ -235,6 +238,15 @@ void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos)
             }
         }
     }
+}
+
+void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
+{
+    ASSERT(p != NULL);
+    ASSERT(center != NULL);
+
+    p->x = Random_Float(MAX(0, center->x - radius), center->x + radius);
+    p->y = Random_Float(MAX(0, center->y - radius), center->y + radius);
 }
 
 static void FleetRunAI(FleetAI *ai)

@@ -526,12 +526,8 @@ static void MapperFleetRunAI(FleetAI *ai)
                         NOT_REACHED();
                 }
 
-                mob->cmd.target.x =
-                    Random_Float(MAX(0, moveCenter.x - moveRadius),
-                                 moveCenter.x + moveRadius);
-                mob->cmd.target.y =
-                    Random_Float(MAX(0, moveCenter.y - moveRadius),
-                                 moveCenter.y + moveRadius);
+                FleetUtil_RandomPointInRange(&mob->cmd.target,
+                                             &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_MISSILE;
