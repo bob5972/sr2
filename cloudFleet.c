@@ -228,8 +228,12 @@ static void CloudFleetRunAITick(void *aiHandle)
                 Mob *sm;
                 sm = MobVector_GetPtr(&ai->sensors, t);
 
-                FleetUtil_RandomPointInRange(&mob->cmd.target,
-                                             &sm->pos, moveRadius);
+                if (sm->type != MOB_TYPE_LOOT_BOX) {
+                    FleetUtil_RandomPointInRange(&mob->cmd.target,
+                                                &sm->pos, moveRadius);
+                } else {
+                    mob->cmd.target = sm->pos;
+                }
             }
 
             if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {

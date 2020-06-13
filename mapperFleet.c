@@ -531,6 +531,7 @@ static void MapperFleetRunAITick(void *aiHandle)
                     case MAPPER_GOV_ATTACK:
                         moveRadius = firingRange;
                         if (sf->tick - sf->lastShipLostTick < 1000) {
+                            moveRadius *= 3.0f;
                             moveCenter = sf->lastShipLost;
                         } else if (sf->enemyBase.type == MOB_TYPE_BASE) {
                             moveCenter = sf->enemyBase.pos;
