@@ -190,15 +190,18 @@ int main(int argc, char **argv)
     mainData.bp.players[p].playerName = "Neutral";
     mainData.bp.players[p].aiType = FLEET_AI_NEUTRAL;
     p++;
-    mainData.bp.players[p].playerName = "SimpleFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
-    p++;
-    mainData.bp.players[p].playerName = "BobFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_BOB;
-    p++;
     //mainData.bp.players[p].playerName = "Player 3";
     //mainData.bp.players[p].aiType = FLEET_AI_DUMMY;
     //p++;
+    mainData.bp.players[p].playerName = "SimpleFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
+    p++;
+    //mainData.bp.players[p].playerName = "BobFleet";
+    //mainData.bp.players[p].aiType = FLEET_AI_BOB;
+    //p++;
+    mainData.bp.players[p].playerName = "MapperFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    p++;
     mainData.bp.numPlayers = p;
 
     for (uint32 i = 0; i < mainData.loop; i++) {

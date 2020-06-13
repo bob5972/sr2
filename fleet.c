@@ -103,6 +103,9 @@ static void FleetGetOps(FleetAI *ai)
         case FLEET_AI_BOB:
             BobFleet_GetOps(&ai->ops);
             break;
+        case FLEET_AI_MAPPER:
+            MapperFleet_GetOps(&ai->ops);
+            break;
         default:
             PANIC("Unknown AI type=%d\n", ai->player.aiType);
     }
@@ -206,6 +209,33 @@ int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter)
     return index;
 }
 
+void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos)
+{
+    if (MobVector_Size(mobs) <= 1) {
+        return;
+    }
+
+    for (int i = 1; i < MobVector_Size(mobs); i++) {
+        Mob *iMob = MobVector_GetPtr(mobs, i);
+        float iDistance = FPoint_Distance(&iMob->pos, pos);
+
+        for (int n = i - 1; n >= 0; n--) {
+            Mob *nMob = MobVector_GetPtr(mobs, n);
+            float nDistance = FPoint_Distance(&nMob->pos, pos);
+
+            if (nDistance > iDistance) {
+                Mob tMob = *iMob;
+                *iMob = *nMob;
+                *nMob = tMob;
+
+                iMob = nMob;
+                iDistance = nDistance;
+            } else {
+                break;
+            }
+        }
+    }
+}
 
 static void FleetRunAI(FleetAI *ai)
 {

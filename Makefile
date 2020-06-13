@@ -43,8 +43,9 @@ C_SOURCES = main.c \
             bobFleet.c \
             display.c \
             fleet.c \
-	    mob.c \
-	    simpleFleet.c
+            mapperFleet.c \
+            mob.c \
+            simpleFleet.c
 CPP_SOURCES =
 
 #For reasons I cannot fathom, MBLIB_OBJ has to be last

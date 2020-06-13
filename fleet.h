@@ -36,8 +36,10 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs);
                         FLEET_SCAN_MISSILE | \
                         FLEET_SCAN_LOOT_BOX)
 int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter);
+void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos);
 
 void SimpleFleet_GetOps(FleetAIOps *ops);
 void BobFleet_GetOps(FleetAIOps *ops);
+void MapperFleet_GetOps(FleetAIOps *ops);
 
 #endif // _FLEET_H_202005311442
