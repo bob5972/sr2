@@ -44,9 +44,6 @@ static BattleGlobalData battle;
 
 void Battle_Init(const BattleParams *bp)
 {
-    uint quadWidth;
-    uint quadHeight;
-
     ASSERT(bp != NULL);
     MBUtil_Zero(&battle, sizeof(battle));
 

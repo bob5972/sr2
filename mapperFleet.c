@@ -214,6 +214,16 @@ static void MapperFleetGetTileCoord(MapperFleetData *sf, const FPoint *pos,
 
     *x = pos->x / sf->mapTileWidth;
     *y = pos->y / sf->mapTileHeight;
+
+    if (*x >= sf->mapWidthInTiles) {
+        *x = sf->mapWidthInTiles - 1;
+    }
+    if (*y >= sf->mapHeightInTiles) {
+        *y = sf->mapHeightInTiles - 1;
+    }
+
+    ASSERT(*x < sf->mapWidthInTiles);
+    ASSERT(*y < sf->mapHeightInTiles);
 }
 
 static void MapperFleetGetTileIndex(MapperFleetData *sf, const FPoint *pos,
@@ -252,6 +262,7 @@ static uint32 MapperFleetGetNextTile(MapperFleetData *sf)
     uint32 i;
 
     i = bestIndex;
+    ASSERT(i < sf->numTiles);
     if (!BitVector_Get(&sf->tileBV, i) && sf->tileFlags[i] == MAP_TILE_EMPTY) {
         goto found;
     }
@@ -308,6 +319,7 @@ static void MapperFleetRunAI(FleetAI *ai)
             mob->type == MOB_TYPE_BASE) {
             uint32 i;
             MapperFleetGetTileIndex(sf, &mob->pos, &i);
+            ASSERT(i < sf->numTiles);
             sf->tileScanTicks[i] = sf->tick;
             sf->tileFlags[i] = MAP_TILE_SCANNED;
         }
@@ -334,6 +346,7 @@ static void MapperFleetRunAI(FleetAI *ai)
         }
 
         MapperFleetGetTileIndex(sf, &sm->pos, &i);
+        ASSERT(i < sf->numTiles);
         sf->tileFlags[i] |= f;
     }
 
@@ -344,6 +357,7 @@ static void MapperFleetRunAI(FleetAI *ai)
         uint32 tileIndex;
         MapperFleetGetTileIndex(sf, &sf->enemyBase.pos, &tileIndex);
 
+        ASSERT(tileIndex < sf->numTiles);
         if ((sf->tileFlags[tileIndex] & MAP_TILE_ENEMY_BASE) == 0) {
             sf->enemyBase.type = MOB_TYPE_INVALID;
         } else {

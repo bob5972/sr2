@@ -193,12 +193,12 @@ int main(int argc, char **argv)
     //mainData.bp.players[p].playerName = "Player 3";
     //mainData.bp.players[p].aiType = FLEET_AI_DUMMY;
     //p++;
-    mainData.bp.players[p].playerName = "SimpleFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
-    p++;
-    //mainData.bp.players[p].playerName = "BobFleet";
-    //mainData.bp.players[p].aiType = FLEET_AI_BOB;
+    //mainData.bp.players[p].playerName = "SimpleFleet";
+    //mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
     //p++;
+    mainData.bp.players[p].playerName = "BobFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_BOB;
+    p++;
     mainData.bp.players[p].playerName = "MapperFleet";
     mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
     p++;
