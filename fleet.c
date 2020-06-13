@@ -56,6 +56,9 @@ void Fleet_Init()
         ASSERT(bp->players[i].aiType != FLEET_AI_NEUTRAL ||
                i == PLAYER_ID_NEUTRAL);
 
+        IntMap_Create(&fleet.ais[i].mobMap);
+        IntMap_SetEmptyValue(&fleet.ais[i].mobMap, -1);
+
         MobVector_CreateEmpty(&fleet.ais[i].mobs);
         MobVector_CreateEmpty(&fleet.ais[i].sensors);
 
@@ -79,6 +82,7 @@ void Fleet_Exit()
             fleet.ais[i].ops.destroyFleet(fleet.ais[i].aiHandle);
         }
 
+        IntMap_Destroy(&fleet.ais[i].mobMap);
         MobVector_Destroy(&fleet.ais[i].mobs);
         MobVector_Destroy(&fleet.ais[i].sensors);
     }
@@ -253,8 +257,36 @@ void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
 
 static void FleetRunAITick(FleetAI *ai)
 {
+    for (uint32 i = 0; i < MobVector_Size(&ai->mobs); i++) {
+        Mob *m = MobVector_GetPtr(&ai->mobs, i);
+        if (!IntMap_ContainsKey(&ai->mobMap, m->mobid)) {
+            if (ai->ops.mobSpawned != NULL) {
+                m->aiMobHandle = ai->ops.mobSpawned(ai->aiHandle, m);
+            }
+        }
+        IntMap_Put(&ai->mobMap, m->mobid, i);
+    }
+
     ASSERT(ai->ops.runAITick != NULL);
     ai->ops.runAITick(ai->aiHandle);
+
+    if (ai->ops.runAIMob != NULL) {
+        for (uint32 i = 0; i < MobVector_Size(&ai->mobs); i++) {
+            Mob *m = MobVector_GetPtr(&ai->mobs, i);
+            ai->ops.runAIMob(ai->aiHandle, m->aiMobHandle);
+        }
+    }
+
+    for (uint32 i = 0; i < MobVector_Size(&ai->mobs); i++) {
+        Mob *m = MobVector_GetPtr(&ai->mobs, i);
+
+        if (!m->alive) {
+            if (ai->ops.mobDestroyed != NULL) {
+                ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
+            }
+        }
+        IntMap_Remove(&ai->mobMap, m->mobid);
+    }
 }
 
 static void DummyFleetRunAITick(void *handle)

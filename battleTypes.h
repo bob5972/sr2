@@ -20,6 +20,7 @@
 #define _BATTLE_TYPES_H_202006071525
 
 #include "geometry.h"
+#include "IntMap.h"
 
 #define MICRON (0.1f)
 
@@ -69,6 +70,7 @@ typedef struct Mob {
      * Protected fields that are also used by the Fleet AIs.
      * (See Mob_MaskForSensor)
      */
+    void *aiMobHandle;
     int fuel;
     int health;
     int age;
@@ -109,7 +111,10 @@ typedef struct FleetAIOps {
     const char *aiAuthor;
     void *(*createFleet)(struct FleetAI *ai);
     void (*destroyFleet)(void *aiHandle);
+    void *(*mobSpawned)(void *aiHandle, Mob *m);
+    void (*mobDestroyed)(void *aiHandle, void *aiMobHandle);
     void (*runAITick)(void *aiHandle);
+    void (*runAIMob)(void *aiHandle, void *aiMobHandle);
 } FleetAIOps;
 
 typedef struct FleetAI {
@@ -125,6 +130,7 @@ typedef struct FleetAI {
     PlayerID id;
     BattlePlayerParams player;
     int credits;
+    IntMap mobMap;
     MobVector mobs;
     MobVector sensors;
 } FleetAI;
