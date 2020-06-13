@@ -107,9 +107,9 @@ typedef struct BattlePlayerParams {
 typedef struct FleetAIOps {
     const char *aiName;
     const char *aiAuthor;
-    void (*createFleet)(struct FleetAI *ai);
-    void (*destroyFleet)(struct FleetAI *ai);
-    void (*runAITick)(struct FleetAI *ai);
+    void *(*createFleet)(struct FleetAI *ai);
+    void (*destroyFleet)(void *aiHandle);
+    void (*runAITick)(void *aiHandle);
 } FleetAIOps;
 
 typedef struct FleetAI {

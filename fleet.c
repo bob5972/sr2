@@ -32,7 +32,7 @@ static FleetGlobalData fleet;
 
 static void FleetGetOps(FleetAI *ai);
 static void FleetRunAITick(FleetAI *ai);
-static void DummyFleetRunAITick(FleetAI *ai);
+static void DummyFleetRunAITick(void *aiHandle);
 
 void Fleet_Init()
 {
@@ -61,7 +61,9 @@ void Fleet_Init()
 
         FleetGetOps(&fleet.ais[i]);
         if (fleet.ais[i].ops.createFleet != NULL) {
-            fleet.ais[i].ops.createFleet(&fleet.ais[i]);
+            fleet.ais[i].aiHandle = fleet.ais[i].ops.createFleet(&fleet.ais[i]);
+        } else {
+            fleet.ais[i].aiHandle = &fleet.ais[i];
         }
     }
 
@@ -73,12 +75,12 @@ void Fleet_Exit()
     ASSERT(fleet.initialized);
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
+        if (fleet.ais[i].ops.destroyFleet != NULL) {
+            fleet.ais[i].ops.destroyFleet(fleet.ais[i].aiHandle);
+        }
+
         MobVector_Destroy(&fleet.ais[i].mobs);
         MobVector_Destroy(&fleet.ais[i].sensors);
-
-        if (fleet.ais[i].ops.destroyFleet != NULL) {
-            fleet.ais[i].ops.destroyFleet(&fleet.ais[i]);
-        }
     }
 
     free(fleet.ais);
@@ -252,15 +254,16 @@ void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
 static void FleetRunAITick(FleetAI *ai)
 {
     ASSERT(ai->ops.runAITick != NULL);
-    ai->ops.runAITick(ai);
+    ai->ops.runAITick(ai->aiHandle);
 }
 
-static void DummyFleetRunAITick(FleetAI *ai)
+static void DummyFleetRunAITick(void *handle)
 {
+    FleetAI *ai = handle;
     const BattleParams *bp = Battle_GetParams();
 
     /*
-     * XXX: We use this function for the neutral player, but actually queue any
+     * We use this function for the neutral player, but don't actually queue any
      * mobs for them to process.
      */
     ASSERT(ai->player.aiType == FLEET_AI_DUMMY ||

@@ -38,6 +38,7 @@ typedef struct BobShipData {
 DECLARE_MBVECTOR_TYPE(BobShipData, ShipVector);
 
 typedef struct BobFleetData {
+    FleetAI *ai;
     FPoint basePos;
     Mob enemyBase;
     uint enemyBaseAge;
@@ -46,9 +47,9 @@ typedef struct BobFleetData {
     IntMap shipMap;
 } BobFleetData;
 
-static void BobFleetCreate(FleetAI *ai);
-static void BobFleetDestroy(FleetAI *ai);
-static void BobFleetRunAI(FleetAI *ai);
+static void *BobFleetCreate(FleetAI *ai);
+static void BobFleetDestroy(void *aiHandle);
+static void BobFleetRunAITick(void *aiHandle);
 static BobShipData *BobFleetGetShip(BobFleetData *sf, MobID mobid);
 static void BobFleetDestroyShip(BobFleetData *sf, MobID mobid);
 
@@ -62,36 +63,33 @@ void BobFleet_GetOps(FleetAIOps *ops)
 
     ops->createFleet = &BobFleetCreate;
     ops->destroyFleet = &BobFleetDestroy;
-    ops->runAITick = &BobFleetRunAI;
+    ops->runAITick = &BobFleetRunAITick;
 }
 
-static void BobFleetCreate(FleetAI *ai)
+static void *BobFleetCreate(FleetAI *ai)
 {
     BobFleetData *sf;
     ASSERT(ai != NULL);
 
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
-    ai->aiHandle = sf;
+    sf->ai = ai;
 
     ShipVector_CreateEmpty(&sf->ships);
     IntMap_Create(&sf->shipMap);
     IntMap_SetEmptyValue(&sf->shipMap, MOB_ID_INVALID);
+    return sf;
 }
 
-static void BobFleetDestroy(FleetAI *ai)
+static void BobFleetDestroy(void *handle)
 {
-    BobFleetData *sf;
-    ASSERT(ai != NULL);
-
-    sf = ai->aiHandle;
+    BobFleetData *sf = handle;
     ASSERT(sf != NULL);
 
     IntMap_Destroy(&sf->shipMap);
     ShipVector_Destroy(&sf->ships);
 
     free(sf);
-    ai->aiHandle = NULL;
 }
 
 static void BobFleetInitShip(BobShipData *ship, MobID mobid)
@@ -148,9 +146,10 @@ static void BobFleetDestroyShip(BobFleetData *sf, MobID mobid)
     ShipVector_Shrink(&sf->ships);
 }
 
-static void BobFleetRunAI(FleetAI *ai)
+static void BobFleetRunAITick(void *aiHandle)
 {
-    BobFleetData *sf = ai->aiHandle;
+    BobFleetData *sf = aiHandle;
+    FleetAI *ai = sf->ai;
     const BattleParams *bp = Battle_GetParams();
     uint targetScanFilter = FLEET_SCAN_SHIP;
     IntMap targetMap;

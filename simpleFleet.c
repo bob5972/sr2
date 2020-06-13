@@ -22,14 +22,15 @@
 #include "battle.h"
 
 typedef struct SimpleFleetData {
+    FleetAI *ai;
     FPoint basePos;
     Mob enemyBase;
     uint enemyBaseAge;
 } SimpleFleetData;
 
-static void SimpleFleetCreate(FleetAI *ai);
-static void SimpleFleetDestroy(FleetAI *ai);
-static void SimpleFleetRunAI(FleetAI *ai);
+static void *SimpleFleetCreate(FleetAI *ai);
+static void SimpleFleetDestroy(void *aiHandle);
+static void SimpleFleetRunAI(void *aiHandle);
 
 void SimpleFleet_GetOps(FleetAIOps *ops)
 {
@@ -44,30 +45,29 @@ void SimpleFleet_GetOps(FleetAIOps *ops)
     ops->runAITick = &SimpleFleetRunAI;
 }
 
-static void SimpleFleetCreate(FleetAI *ai)
+static void *SimpleFleetCreate(FleetAI *ai)
 {
     SimpleFleetData *sf;
     ASSERT(ai != NULL);
 
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
-    ai->aiHandle = sf;
+    sf->ai = ai;
+
+    return sf;
 }
 
-static void SimpleFleetDestroy(FleetAI *ai)
+static void SimpleFleetDestroy(void *handle)
 {
-    SimpleFleetData *sf;
-    ASSERT(ai != NULL);
-
-    sf = ai->aiHandle;
+    SimpleFleetData *sf = handle;
     ASSERT(sf != NULL);
     free(sf);
-    ai->aiHandle = NULL;
 }
 
-static void SimpleFleetRunAI(FleetAI *ai)
+static void SimpleFleetRunAI(void *handle)
 {
-    SimpleFleetData *sf = ai->aiHandle;
+    SimpleFleetData *sf = handle;
+    FleetAI *ai = sf->ai;
     const BattleParams *bp = Battle_GetParams();
     uint targetScanFilter = FLEET_SCAN_SHIP;
     IntMap targetMap;

@@ -47,6 +47,8 @@ typedef struct MapperShipData {
 DECLARE_MBVECTOR_TYPE(MapperShipData, ShipVector);
 
 typedef struct MapperFleetData {
+    FleetAI *ai;
+
     FPoint basePos;
     Mob enemyBase;
     FPoint lastShipLost;
@@ -69,9 +71,9 @@ typedef struct MapperFleetData {
     IntMap shipMap;
 } MapperFleetData;
 
-static void MapperFleetCreate(FleetAI *ai);
-static void MapperFleetDestroy(FleetAI *ai);
-static void MapperFleetRunAI(FleetAI *ai);
+static void *MapperFleetCreate(FleetAI *ai);
+static void MapperFleetDestroy(void *aiHandle);
+static void MapperFleetRunAITick(void *aiHandle);
 static MapperShipData *MapperFleetGetShip(MapperFleetData *sf, MobID mobid);
 static void MapperFleetDestroyShip(MapperFleetData *sf, MobID mobid);
 
@@ -85,10 +87,10 @@ void MapperFleet_GetOps(FleetAIOps *ops)
 
     ops->createFleet = &MapperFleetCreate;
     ops->destroyFleet = &MapperFleetDestroy;
-    ops->runAITick = &MapperFleetRunAI;
+    ops->runAITick = &MapperFleetRunAITick;
 }
 
-static void MapperFleetCreate(FleetAI *ai)
+static void *MapperFleetCreate(FleetAI *ai)
 {
     const BattleParams *bp = Battle_GetParams();
 
@@ -97,7 +99,7 @@ static void MapperFleetCreate(FleetAI *ai)
 
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
-    ai->aiHandle = sf;
+    sf->ai = ai;
 
     ShipVector_CreateEmpty(&sf->ships);
     IntMap_Create(&sf->shipMap);
@@ -122,14 +124,13 @@ static void MapperFleetCreate(FleetAI *ai)
 
     BitVector_CreateWithSize(&sf->tileBV, sf->numTiles);
     BitVector_ResetAll(&sf->tileBV);
+
+    return sf;
 }
 
-static void MapperFleetDestroy(FleetAI *ai)
+static void MapperFleetDestroy(void *aiHandle)
 {
-    MapperFleetData *sf;
-    ASSERT(ai != NULL);
-
-    sf = ai->aiHandle;
+    MapperFleetData *sf = aiHandle;
     ASSERT(sf != NULL);
 
     BitVector_Destroy(&sf->tileBV);
@@ -140,7 +141,6 @@ static void MapperFleetDestroy(FleetAI *ai)
     ShipVector_Destroy(&sf->ships);
 
     free(sf);
-    ai->aiHandle = NULL;
 }
 
 static void MapperFleetInitShip(MapperFleetData *sf,
@@ -301,9 +301,10 @@ found:
 }
 
 
-static void MapperFleetRunAI(FleetAI *ai)
+static void MapperFleetRunAITick(void *aiHandle)
 {
-    MapperFleetData *sf = ai->aiHandle;
+    MapperFleetData *sf = aiHandle;
+    FleetAI *ai = sf->ai;
     const BattleParams *bp = Battle_GetParams();
     uint targetScanFilter = FLEET_SCAN_SHIP;
     IntMap targetMap;

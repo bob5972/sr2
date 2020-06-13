@@ -30,6 +30,8 @@ typedef struct CloudShipData {
 DECLARE_MBVECTOR_TYPE(CloudShipData, ShipVector);
 
 typedef struct CloudFleetData {
+    FleetAI *ai;
+
     FPoint basePos;
     uint numGuard;
 
@@ -38,9 +40,9 @@ typedef struct CloudFleetData {
     IntMap shipMap;
 } CloudFleetData;
 
-static void CloudFleetCreate(FleetAI *ai);
-static void CloudFleetDestroy(FleetAI *ai);
-static void CloudFleetRunAI(FleetAI *ai);
+static void *CloudFleetCreate(FleetAI *ai);
+static void CloudFleetDestroy(void *aiHandle);
+static void CloudFleetRunAITick(void *aiHandle);
 static CloudShipData *CloudFleetGetShip(CloudFleetData *sf, MobID mobid);
 static void CloudFleetDestroyShip(CloudFleetData *sf, MobID mobid);
 
@@ -54,36 +56,34 @@ void CloudFleet_GetOps(FleetAIOps *ops)
 
     ops->createFleet = &CloudFleetCreate;
     ops->destroyFleet = &CloudFleetDestroy;
-    ops->runAITick = &CloudFleetRunAI;
+    ops->runAITick = &CloudFleetRunAITick;
 }
 
-static void CloudFleetCreate(FleetAI *ai)
+static void *CloudFleetCreate(FleetAI *ai)
 {
     CloudFleetData *sf;
     ASSERT(ai != NULL);
 
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
-    ai->aiHandle = sf;
+    sf->ai = ai;
 
     ShipVector_CreateEmpty(&sf->ships);
     IntMap_Create(&sf->shipMap);
     IntMap_SetEmptyValue(&sf->shipMap, MOB_ID_INVALID);
+
+    return sf;
 }
 
-static void CloudFleetDestroy(FleetAI *ai)
+static void CloudFleetDestroy(void *aiHandle)
 {
-    CloudFleetData *sf;
-    ASSERT(ai != NULL);
-
-    sf = ai->aiHandle;
+    CloudFleetData *sf = aiHandle;
     ASSERT(sf != NULL);
 
     IntMap_Destroy(&sf->shipMap);
     ShipVector_Destroy(&sf->ships);
 
     free(sf);
-    ai->aiHandle = NULL;
 }
 
 static void CloudFleetInitShip(CloudFleetData *sf,
@@ -140,9 +140,10 @@ static void CloudFleetDestroyShip(CloudFleetData *sf, MobID mobid)
     ShipVector_Shrink(&sf->ships);
 }
 
-static void CloudFleetRunAI(FleetAI *ai)
+static void CloudFleetRunAITick(void *aiHandle)
 {
-    CloudFleetData *sf = ai->aiHandle;
+    CloudFleetData *sf = aiHandle;
+    FleetAI *ai = sf->ai;
     const BattleParams *bp = Battle_GetParams();
     uint targetScanFilter = FLEET_SCAN_SHIP;
     IntMap targetMap;
