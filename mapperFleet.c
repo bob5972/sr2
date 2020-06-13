@@ -397,6 +397,8 @@ static void MapperFleetRunAI(FleetAI *ai)
 
         if (mob->type == MOB_TYPE_FIGHTER && s->gov == MAPPER_GOV_INVALID) {
             sf->spawnCount++;
+            mob->cmd.target = sf->basePos;
+
             if (sf->numGuard < 1) {
                 s->gov = MAPPER_GOV_GUARD;
             } else {
