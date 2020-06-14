@@ -70,7 +70,8 @@ static void *CloudFleetCreate(FleetAI *ai)
     sf->ai = ai;
 
     if (sf->ai->player.mreg != NULL) {
-        if (MBRegistry_GetBool(sf->ai->player.mreg, "KamikazeMissiles")) {
+        if (MBRegistry_GetBoolD(sf->ai->player.mreg, "KamikazeMissiles",
+                                FALSE)) {
             sf->kamikazeMissiles = TRUE;
         }
     }
