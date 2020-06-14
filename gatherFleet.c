@@ -177,7 +177,8 @@ static void GatherFleetRunAITick(void *aiHandle)
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
                        (1.0f + sf->numGuard / 10.0f + sf->numScout / 20.0f);
 //     float fighterScanRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
-//     float baseScanRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
+    float baseScanRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
+    float scoutActivationRange = baseScanRange;
 
     ASSERT(ai->player.aiType == FLEET_AI_GATHER);
     IntMap_Create(&targetMap);
@@ -238,6 +239,10 @@ static void GatherFleetRunAITick(void *aiHandle)
                     FPoint_Distance(&tMob->pos, &mob->pos) > firingRange) {
                     tMob = NULL;
                 }
+                if (ship->gov == GATHER_GOV_GUARD &&
+                    FPoint_Distance(&tMob->pos, &sf->basePos) > guardRange) {
+                    tMob = NULL;
+                }
             }
 
             if (tMob == NULL) {
@@ -262,11 +267,16 @@ static void GatherFleetRunAITick(void *aiHandle)
                         if (t != -1) {
                             Mob *f = MobPVec_GetValue(&sf->fighters, t);
                             if (f->mobid == mob->mobid) {
-                                // This is the cloest mob.... claim it anyway.
+                                // This is the closest mob.... claim it anyway.
                                 forceClaim = TRUE;
+                            } else if (FPoint_Distance(&tMob->pos, &mob->pos) >
+                                       scoutActivationRange) {
+                                tMob = NULL;
                             }
                         }
+                    }
 
+                    if (tMob != NULL) {
                         if (IntMap_Increment(&targetMap, tMob->mobid) == 1 ||
                             forceClaim) {
                             // Claim the target so nobody else will go there.
@@ -293,14 +303,7 @@ static void GatherFleetRunAITick(void *aiHandle)
             }
 
             if (tMob != NULL) {
-                float moveRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
-
-                if (tMob->type != MOB_TYPE_LOOT_BOX) {
-                    FleetUtil_RandomPointInRange(&mob->cmd.target,
-                                                 &tMob->pos, moveRadius);
-                } else {
-                    mob->cmd.target = tMob->pos;
-                }
+                mob->cmd.target = tMob->pos;
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 if (ship->gov == GATHER_GOV_GUARD) {
                     float moveRadius = guardRange;
