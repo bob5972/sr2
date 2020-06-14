@@ -127,12 +127,9 @@ static void CloudFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static CloudShip *CloudFleetGetShip(CloudFleetData *sf, MobID mobid)
 {
-    CloudShip *s = FleetUtil_GetMob(sf->ai, mobid)->aiMobHandle;
-
-    if (s != NULL) {
-        ASSERT(s->mobid == mobid);
-    }
-
+    CloudShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    ASSERT(s != NULL);
+    ASSERT(s->mobid == mobid);
     return s;
 }
 
@@ -141,7 +138,7 @@ static void CloudFleetRunAITick(void *aiHandle)
 {
     CloudFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
-    uint targetScanFilter = FLEET_SCAN_SHIP;
+    uint targetScanFilter = MOB_FLAG_SHIP;
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
@@ -155,65 +152,60 @@ static void CloudFleetRunAITick(void *aiHandle)
     /*
      * Main Mob processing loop.
      */
-    for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
-        Mob *mob = MobVector_GetPtr(&ai->mobs, m);
+    MobIt mit;
+    MobIt_Start(&ai->mobs, &mit);
+    while (MobIt_HasNext(&mit)) {
+        Mob *mob = MobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             CloudShip *ship = CloudFleetGetShip(sf, mob->mobid);
-            int t = -1;
+            Mob *target = NULL;
 
             ASSERT(ship != NULL);
             ASSERT(ship->mobid == mob->mobid);
 
-            t = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                            targetScanFilter);
+            target = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                 targetScanFilter);
 
-            if (t == -1) {
+            if (target == NULL) {
                 /*
                 * Avoid having all the fighters rush to the same loot box.
                 */
-                t = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                FLEET_SCAN_LOOT_BOX);
-                if (t != -1) {
-                    Mob *sm;
-                    sm = MobVector_GetPtr(&ai->sensors, t);
-                    if (FPoint_Distance(&sm->pos, &mob->pos) > firingRange) {
-                        t = -1;
+                target = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                     MOB_FLAG_LOOT_BOX);
+                if (target != NULL) {
+                    if (FPoint_Distance(&target->pos, &mob->pos) > firingRange) {
+                        target = NULL;
                     }
                 }
 
-                if (t != -1 && IntMap_Increment(&targetMap, t) > 1) {
+                if (target != NULL &&
+                    IntMap_Increment(&targetMap, target->mobid) > 1) {
                     /*
                      * Ideally we find the next best target, but for now just
                      * go back to random movement.
                      */
-                    t = -1;
+                    target = NULL;
                 }
             }
 
             {
-                int ct = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                     targetScanFilter);
-                if (ct != -1) {
-                    Mob *sm;
-                    sm = MobVector_GetPtr(&ai->sensors, ct);
-
-                    if (FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
+                Mob *ctMob = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                         targetScanFilter);
+                if (ctMob != NULL) {
+                    if (FPoint_Distance(&mob->pos, &ctMob->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
                     }
                 }
             }
 
-            if (t != -1) {
+            if (target != NULL) {
                 float moveRadius = 2 * MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
-                Mob *sm;
-                sm = MobVector_GetPtr(&ai->sensors, t);
-
-                if (sm->type != MOB_TYPE_LOOT_BOX) {
+                if (target->type != MOB_TYPE_LOOT_BOX) {
                     FleetUtil_RandomPointInRange(&mob->cmd.target,
-                                                &sm->pos, moveRadius);
+                                                 &target->pos, moveRadius);
                 } else {
-                    mob->cmd.target = sm->pos;
+                    mob->cmd.target = target->pos;
                 }
             }
 
@@ -224,12 +216,10 @@ static void CloudFleetRunAITick(void *aiHandle)
                                              &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
-            uint scanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_MISSILE;
-            int s = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
-            if (s != -1) {
-                Mob *sm;
-                sm = MobVector_GetPtr(&ai->sensors, s);
-                mob->cmd.target = sm->pos;
+            uint scanFilter = MOB_FLAG_SHIP | MOB_FLAG_MISSILE;
+            Mob *target = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
+            if (target != NULL) {
+                mob->cmd.target = target->pos;
             } else if (sf->kamikazeMissiles &&
                        FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 float moveRadius = firingRange;
@@ -249,17 +239,12 @@ static void CloudFleetRunAITick(void *aiHandle)
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
-            Mob *sm;
-
-            mob->cmd.target = sf->basePos;
-
             /*
-             * Add our own loot box to the sensor targets so that we'll
-             * steer towards them.
+             * Add this mob to the sensor list so that we'll
+             * steer towards it.
              */
-            MobVector_Grow(&ai->sensors);
-            sm = MobVector_GetLastPtr(&ai->sensors);
-            *sm = *mob;
+            mob->cmd.target = sf->basePos;
+            MobSet_Add(&ai->sensors, mob);
         }
     }
 

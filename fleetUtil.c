@@ -21,49 +21,34 @@
 #include "IntMap.h"
 #include "battle.h"
 
-int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter)
+Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter)
 {
-    return FleetUtil_FindClosestMob(&ai->sensors, pos, scanFilter);
+    return FleetUtil_FindClosestMob(&ai->sensors, pos, filter);
 }
 
-int FleetUtil_FindClosestMob(MobVector *mobs, const FPoint *pos, uint scanFilter)
+Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter)
 {
+    MobIt mit;
     float distance;
-    int index = -1;
+    Mob *best = NULL;
 
-    for (uint i = 0; i < MobVector_Size(mobs); i++) {
-        Mob *m = MobVector_GetPtr(mobs, i);
+    MobIt_Start(ms, &mit);
+    while (MobIt_HasNext(&mit)) {
+        Mob *m = MobIt_Next(&mit);
+
         if (!m->alive) {
             continue;
         }
-        if (((1 << m->type) & scanFilter) != 0) {
+        if (((1 << m->type) & filter) != 0) {
             float curDistance = FPoint_Distance(pos, &m->pos);
-            if (index == -1 || curDistance < distance) {
+            if (best == NULL || curDistance < distance) {
                 distance = curDistance;
-                index = i;
+                best = m;
             }
         }
     }
 
-    return index;
-}
-
-MobPVec *FleetUtil_AllocMobPVec(MobVector *mobs)
-{
-    MobPVec *mobps = malloc(sizeof(*mobps));
-    MobPVec_CreateWithSize(mobps, MobVector_Size(mobs));
-
-    for (uint i = 0; i < MobVector_Size(mobs); i++) {
-        Mob *mp = MobVector_GetPtr(mobs, i);
-        MobPVec_PutValue(mobps, i, mp);
-    }
-
-    return mobps;
-}
-void FleetUtil_FreeMobPVec(MobPVec *mobps)
-{
-    MobPVec_Destroy(mobps);
-    free(mobps);
+    return best;
 }
 
 int FleetUtil_FindNthClosestMobP(MobPVec *mobps, const FPoint *pos, int n)
@@ -137,34 +122,6 @@ void FleetUtil_SortMobPByDistance(MobPVec *mobps, const FPoint *pos)
     }
 }
 
-void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos)
-{
-    if (MobVector_Size(mobs) <= 1) {
-        return;
-    }
-
-    for (int i = 1; i < MobVector_Size(mobs); i++) {
-        Mob *iMob = MobVector_GetPtr(mobs, i);
-        float iDistance = FPoint_Distance(&iMob->pos, pos);
-
-        for (int n = i - 1; n >= 0; n--) {
-            Mob *nMob = MobVector_GetPtr(mobs, n);
-            float nDistance = FPoint_Distance(&nMob->pos, pos);
-
-            if (nDistance > iDistance) {
-                Mob tMob = *iMob;
-                *iMob = *nMob;
-                *nMob = tMob;
-
-                iMob = nMob;
-                iDistance = nDistance;
-            } else {
-                break;
-            }
-        }
-    }
-}
-
 void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
 {
     ASSERT(p != NULL);
@@ -172,48 +129,4 @@ void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
 
     p->x = Random_Float(MAX(0, center->x - radius), center->x + radius);
     p->y = Random_Float(MAX(0, center->y - radius), center->y + radius);
-}
-
-Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid)
-{
-    Mob *m;
-    ASSERT(ai != NULL);
-
-    int i = IntMap_Get(&ai->mobMap, mobid);
-    if (i == -1) {
-        return NULL;
-    }
-
-    m = MobVector_GetPtr(&ai->mobs, i);
-    if (m->mobid == mobid) {
-        return m;
-    }
-
-    if (DEBUG) {
-        /*
-        * XXX: If the fleet sorted their mob vector, then the mobMap is
-        * all mis-aligned... There isn't an obviously better way to handle
-        * this than using pointers, or some other abstraction?
-        */
-        for (i = 0; i < MobVector_Size(&ai->mobs); i++) {
-            m = MobVector_GetPtr(&ai->mobs, i);
-            if (m->mobid == mobid) {
-                PANIC("Fleet mobMap invalidated without call to "
-                      "FleetUtil_UpdateMobMap\n");
-            }
-        }
-    }
-
-    return NULL;
-}
-
-void FleetUtil_UpdateMobMap(FleetAI *ai)
-{
-    IntMap_MakeEmpty(&ai->mobMap);
-
-    for (uint32 i = 0; i < MobVector_Size(&ai->mobs); i++) {
-        Mob *m = MobVector_GetPtr(&ai->mobs, i);
-        IntMap_Put(&ai->mobMap, m->mobid, i);
-        ASSERT(IntMap_ContainsKey(&ai->mobMap, m->mobid));
-    }
 }

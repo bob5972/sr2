@@ -26,32 +26,9 @@ void Fleet_Init();
 void Fleet_Exit();
 void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs);
 
-
-#define MOB_FILTER_BASE     (1 << MOB_TYPE_BASE)
-#define MOB_FILTER_FIGHTER  (1 << MOB_TYPE_FIGHTER)
-#define MOB_FILTER_MISSILE  (1 << MOB_TYPE_MISSILE)
-#define MOB_FILTER_LOOT_BOX (1 << MOB_TYPE_LOOT_BOX)
-#define MOB_FILTER_SHIP (MOB_FILTER_BASE | MOB_FILTER_FIGHTER)
-#define MOB_FILTER_ALL (MOB_FILTER_SHIP |    \
-                        MOB_FILTER_MISSILE | \
-                        MOB_FILTER_LOOT_BOX)
-
-// Deprecated: use MOB_FILTER defines
-#define FLEET_SCAN_BASE     MOB_FILTER_BASE
-#define FLEET_SCAN_FIGHTER  MOB_FILTER_FIGHTER
-#define FLEET_SCAN_MISSILE  MOB_FILTER_MISSILE
-#define FLEET_SCAN_LOOT_BOX MOB_FILTER_LOOT_BOX
-#define FLEET_SCAN_SHIP     MOB_FILTER_SHIP
-#define FLEET_SCAN_ALL      MOB_FILTER_ALL
-
-int FleetUtil_FindClosestMob(MobVector *mobs, const FPoint *pos, uint filter);
-int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter);
-void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos);
+Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter);
+Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter);
 void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius);
-Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid);
-void FleetUtil_UpdateMobMap(FleetAI *ai);
-MobPVec *FleetUtil_AllocMobPVec(MobVector *mobs);
-void FleetUtil_FreeMobPVec(MobPVec *mobps);
 void FleetUtil_SortMobPByDistance(MobPVec *mobs, const FPoint *pos);
 int FleetUtil_FindNthClosestMobP(MobPVec *mobps, const FPoint *pos, int n);
 

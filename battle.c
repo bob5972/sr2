@@ -140,6 +140,7 @@ static Mob *BattleQueueSpawn(MobType type, PlayerID p, const FPoint *pos)
     spawn->mobid = ++battle.lastMobID;
     spawn->pos = *pos;
     spawn->cmd.target = *pos;
+    spawn->birthTick = battle.bs.tick;
 
     battle.bs.spawns++;
     if (spawn->type != MOB_TYPE_LOOT_BOX &&
@@ -362,7 +363,6 @@ void Battle_RunTick()
         ASSERT(BattleCheckMobInvariants(mob));
 
         mob->scannedBy = 0;
-        mob->age++;
 
         if (mob->alive) {
             if (mob->type == MOB_TYPE_MISSILE ||

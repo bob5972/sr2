@@ -212,8 +212,90 @@ void Mob_MaskForSensor(Mob *mob)
 
     mob->fuel = 0;
     mob->health = 0;
-    mob->age = 0;
+    mob->birthTick = 0;
     mob->rechargeTime = 0;
     mob->lootCredits = 0;
     MBUtil_Zero(&mob->cmd, sizeof(mob->cmd));
+}
+
+void MobSet_Create(MobSet *ms)
+{
+    ASSERT(ms != NULL);
+    IntMap_Create(&ms->map);
+    IntMap_SetEmptyValue(&ms->map, -1);
+    MobPVec_CreateEmpty(&ms->pv);
+}
+
+void MobSet_Destroy(MobSet *ms)
+{
+    ASSERT(ms != NULL);
+    IntMap_Destroy(&ms->map);
+    MobPVec_Destroy(&ms->pv);
+}
+
+void MobSet_MakeEmpty(MobSet *ms)
+{
+    ASSERT(ms != NULL);
+    IntMap_MakeEmpty(&ms->map);
+    MobPVec_MakeEmpty(&ms->pv);
+}
+
+void MobSet_Add(MobSet *ms, Mob *mob)
+{
+    ASSERT(mob != NULL);
+
+    int oldIndex = IntMap_Get(&ms->map, mob->mobid);
+    if (oldIndex == -1) {
+        int oldSize = MobPVec_Size(&ms->pv);
+        MobPVec_Grow(&ms->pv);
+        oldIndex = oldSize;
+        IntMap_Put(&ms->map, mob->mobid, oldIndex);
+    }
+    MobPVec_PutValue(&ms->pv, oldIndex, mob);
+}
+
+Mob *MobSet_Get(MobSet *ms, MobID mobid)
+{
+    int index = IntMap_Get(&ms->map, mobid);
+    if (index == -1) {
+        return NULL;
+    }
+    return MobPVec_GetValue(&ms->pv, index);
+}
+
+void MobSet_Remove(MobSet *ms, MobID mobid)
+{
+    int index = IntMap_Get(&ms->map, mobid);
+    if (index == -1) {
+        return;
+    }
+
+    int size = MobPVec_Size(&ms->pv);
+    Mob *last = MobPVec_GetValue(&ms->pv, size - 1);
+    MobPVec_PutValue(&ms->pv, index, last);
+    IntMap_Remove(&ms->map, mobid);
+}
+
+int MobSet_Size(MobSet *ms)
+{
+    return MobPVec_Size(&ms->pv);
+}
+
+void MobIt_Start(MobSet *ms, MobIt *mit)
+{
+    MBUtil_Zero(mit, sizeof(*mit));
+    mit->ms = ms;
+    mit->i = 0;
+}
+
+bool MobIt_HasNext(MobIt *mit)
+{
+    ASSERT(mit != NULL);
+    return mit->i < MobPVec_Size(&mit->ms->pv);
+}
+
+Mob *MobIt_Next(MobIt *mit)
+{
+    ASSERT(MobIt_HasNext(mit));
+    return MobPVec_GetValue(&mit->ms->pv, mit->i++);
 }

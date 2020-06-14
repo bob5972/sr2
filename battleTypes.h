@@ -43,6 +43,13 @@ typedef enum MobType {
     MOB_TYPE_MAX,
 } MobType;
 
+#define MOB_FLAG_BASE     (1 << MOB_TYPE_BASE)
+#define MOB_FLAG_FIGHTER  (1 << MOB_TYPE_FIGHTER)
+#define MOB_FLAG_MISSILE  (1 << MOB_TYPE_MISSILE)
+#define MOB_FLAG_LOOT_BOX (1 << MOB_TYPE_LOOT_BOX)
+#define MOB_FLAG_SHIP     (MOB_FLAG_BASE | MOB_FLAG_FIGHTER)
+#define MOB_FLAG_ALL      (MOB_FLAG_SHIP | MOB_FLAG_MISSILE | MOB_FLAG_LOOT_BOX)
+
 typedef struct MobCmd {
     FPoint target;
     MobType spawnType;
@@ -74,7 +81,7 @@ typedef struct Mob {
     void *aiMobHandle;
     int fuel;
     int health;
-    int age;
+    uint birthTick;
     int rechargeTime;
     int lootCredits;
     MobCmd cmd;
@@ -89,6 +96,16 @@ typedef struct Mob {
 
 DECLARE_MBVECTOR_TYPE(Mob, MobVector);
 DECLARE_MBVECTOR_TYPE(Mob *, MobPVec);
+
+typedef struct MobSet {
+    IntMap map;
+    MobPVec pv;
+} MobSet;
+
+typedef struct MobIt {
+    MobSet *ms;
+    int i;
+} MobIt;
 
 typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,
@@ -135,9 +152,8 @@ typedef struct FleetAI {
     PlayerID id;
     BattlePlayerParams player;
     int credits;
-    IntMap mobMap;
-    MobVector mobs;
-    MobVector sensors;
+    MobSet mobs;
+    MobSet sensors;
 } FleetAI;
 
 typedef struct BattleParams {

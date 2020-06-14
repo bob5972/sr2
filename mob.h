@@ -30,6 +30,18 @@ int MobType_GetMaxFuel(MobType type);
 int MobType_GetMaxHealth(MobType type);
 int MobType_GetCost(MobType type);
 
+void MobSet_Create(MobSet *ms);
+void MobSet_Destroy(MobSet *ms);
+void MobSet_MakeEmpty(MobSet *ms);
+void MobSet_Add(MobSet *ms, Mob *mob);
+Mob *MobSet_Get(MobSet *ms, MobID mobid);
+void MobSet_Remove(MobSet *ms, MobID mobid);
+int MobSet_Size(MobSet *ms);
+
+void MobIt_Start(MobSet *ms, MobIt *mit);
+bool MobIt_HasNext(MobIt *mit);
+Mob *MobIt_Next(MobIt *mit);
+
 void Mob_Init(Mob *mob, MobType t);
 bool Mob_CheckInvariants(const Mob *mob);
 void Mob_GetSensorCircle(const Mob *mob, FCircle *c);

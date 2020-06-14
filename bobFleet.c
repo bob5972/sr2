@@ -121,12 +121,10 @@ static void BobFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid)
 {
-    BobShip *s = FleetUtil_GetMob(sf->ai, mobid)->aiMobHandle;
+    BobShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
-    if (s != NULL) {
-        ASSERT(s->mobid == mobid);
-    }
-
+    ASSERT(s != NULL);
+    ASSERT(s->mobid == mobid);
     return s;
 }
 
@@ -136,7 +134,7 @@ static void BobFleetRunAITick(void *aiHandle)
     BobFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = Battle_GetParams();
-    uint targetScanFilter = FLEET_SCAN_SHIP;
+    uint targetScanFilter = MOB_FLAG_SHIP;
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
@@ -147,30 +145,29 @@ static void BobFleetRunAITick(void *aiHandle)
     ASSERT(ai->player.aiType == FLEET_AI_BOB);
 
     // If we've found the enemy base, assume it's still there.
-    int enemyBaseIndex = FleetUtil_FindClosestSensor(ai, &sf->basePos,
-                                                     FLEET_SCAN_BASE);
-    if (enemyBaseIndex != -1) {
-        Mob *sm = MobVector_GetPtr(&ai->sensors, enemyBaseIndex);
-        ASSERT(sm->type == MOB_TYPE_BASE);
-        sf->enemyBase = *sm;
+    Mob *enemyBase = FleetUtil_FindClosestSensor(ai, &sf->basePos, MOB_FLAG_BASE);
+
+    if (enemyBase != NULL) {
+        ASSERT(enemyBase->type == MOB_TYPE_BASE);
+        sf->enemyBase = *enemyBase;
         sf->enemyBaseAge = 0;
     } else if (sf->enemyBase.type == MOB_TYPE_BASE &&
                sf->enemyBaseAge < 1000) {
-        MobVector_Grow(&ai->sensors);
-        Mob *sm = MobVector_GetLastPtr(&ai->sensors);
-        *sm = sf->enemyBase;
+        MobSet_Add(&ai->sensors, &sf->enemyBase);
         sf->enemyBaseAge++;
     }
 
-    int groupTargetIndex = FleetUtil_FindClosestSensor(ai, &sf->basePos,
-                                                       targetScanFilter);
+    Mob *groupTarget = FleetUtil_FindClosestSensor(ai, &sf->basePos,
+                                                   targetScanFilter);
 
-    for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
-        Mob *mob = MobVector_GetPtr(&ai->mobs, m);
+    MobIt mit;
+    MobIt_Start(&ai->mobs, &mit);
+    while (MobIt_HasNext(&mit)) {
+        Mob *mob = MobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             BobShip *ship = BobFleetGetShip(sf, mob->mobid);
-            int t = -1;
+            Mob *target = NULL;
 
             ASSERT(ship != NULL);
             ASSERT(ship->mobid == mob->mobid);
@@ -180,78 +177,67 @@ static void BobFleetRunAITick(void *aiHandle)
                  * Just run the shared random/loot-box code.
                  */
             } else if (ship->gov == BOB_GOV_ATTACK) {
-                t = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                targetScanFilter);
+                target = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                     targetScanFilter);
             } else if (ship->gov == BOB_GOV_GUARD) {
-                Mob *sm;
-
                 numGuard++;
                 if (numGuard >= 5) {
                     ship->gov = BOB_GOV_ATTACK;
                 }
 
-                t = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                targetScanFilter);
-                if (t != -1) {
-                    sm = MobVector_GetPtr(&ai->sensors, t);
-                    if (FPoint_Distance(&sm->pos, &sf->basePos) >
+                target = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                     targetScanFilter);
+                if (target != NULL) {
+                    if (FPoint_Distance(&target->pos, &sf->basePos) >
                         MobType_GetSensorRadius(MOB_TYPE_BASE)) {
-                        t = -1;
+                        target = NULL;
                     }
                 }
 
-                t = groupTargetIndex;
-                if (t != -1) {
-                    sm = MobVector_GetPtr(&ai->sensors, t);
-                    if (FPoint_Distance(&sm->pos, &sf->basePos) >
+                target = groupTarget;
+                if (target != NULL) {
+                    if (FPoint_Distance(&target->pos, &sf->basePos) >
                         MobType_GetSensorRadius(MOB_TYPE_BASE)) {
-                        t = -1;
+                        target = NULL;
                     }
                 }
             }
 
-            if (t == -1) {
+            if (target == NULL) {
                 /*
                 * Avoid having all the fighters rush to the same loot box.
                 */
-                t = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                FLEET_SCAN_LOOT_BOX);
-                if (t != -1 && IntMap_Increment(&targetMap, t) > 1) {
+                target = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                     MOB_FLAG_LOOT_BOX);
+                if (target != NULL &&
+                    IntMap_Increment(&targetMap, target->mobid) > 1) {
                     /*
                      * Ideally we find the next best target, but for now just
                      * go back to random movement.
                      */
-                    t = -1;
+                    target = NULL;
                 }
 
-                if (ship->gov == BOB_GOV_GUARD && t != -1) {
-                    Mob *sm;
-                    sm = MobVector_GetPtr(&ai->sensors, t);
-                    if (FPoint_Distance(&sm->pos, &sf->basePos) >
+                if (ship->gov == BOB_GOV_GUARD && target != NULL) {
+                    if (FPoint_Distance(&target->pos, &sf->basePos) >
                         MobType_GetSensorRadius(MOB_TYPE_BASE)) {
-                        t = -1;
+                        target = NULL;
                     }
                 }
             }
 
             {
-                int ct = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                     targetScanFilter);
-                if (ct != -1) {
-                    Mob *sm;
-                    sm = MobVector_GetPtr(&ai->sensors, ct);
-
-                    if (Random_Int(0, 10) == 0 &&
-                        FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
+                Mob *closeTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                               targetScanFilter);
+                if (closeTarget != NULL) {
+                    if (FPoint_Distance(&mob->pos, &closeTarget->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
                     }
                 }
             }
 
-            if (t != -1) {
-                Mob *sm;
-                sm = MobVector_GetPtr(&ai->sensors, t);
-                mob->cmd.target = sm->pos;
+            if (target != NULL) {
+                mob->cmd.target = target->pos;
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 if (ship->gov == BOB_GOV_GUARD) {
                     float guardRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
@@ -267,18 +253,15 @@ static void BobFleetRunAITick(void *aiHandle)
                 }
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
-            uint scanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_MISSILE;
-            int s = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
-            if (s != -1) {
-                Mob *sm;
-                sm = MobVector_GetPtr(&ai->sensors, s);
-                mob->cmd.target = sm->pos;
+            uint scanFilter = MOB_FLAG_SHIP | MOB_FLAG_MISSILE;
+            Mob *target = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
+            if (target != NULL) {
+                mob->cmd.target = target->pos;
             }
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
 
-            if (ai->credits > 200 &&
-                Random_Int(0, 100) == 0) {
+            if (ai->credits > 200 && Random_Int(0, 20) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;
@@ -286,17 +269,12 @@ static void BobFleetRunAITick(void *aiHandle)
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
-            Mob *sm;
-
-            mob->cmd.target = sf->basePos;
-
             /*
-             * Add our own loot box to the sensor targets so that we'll
-             * steer towards them.
+             * Add this mob to the sensor list so that we'll
+             * steer towards it.
              */
-            MobVector_Grow(&ai->sensors);
-            sm = MobVector_GetLastPtr(&ai->sensors);
-            *sm = *mob;
+            mob->cmd.target = sf->basePos;
+            MobSet_Add(&ai->sensors, mob);
         }
     }
 
