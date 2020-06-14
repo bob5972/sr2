@@ -21,6 +21,7 @@
 
 #include "geometry.h"
 #include "IntMap.h"
+#include "MBRegistry.h"
 
 #define MICRON (0.1f)
 
@@ -105,6 +106,7 @@ struct FleetAI;
 typedef struct BattlePlayerParams {
     const char *playerName;
     FleetAIType aiType;
+    MBRegistry *mreg;
 } BattlePlayerParams;
 
 typedef struct FleetAIOps {

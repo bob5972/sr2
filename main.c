@@ -221,9 +221,15 @@ int main(int argc, char **argv)
     mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
     p++;
 
-    mainData.bp.players[p].playerName = "GatherFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_GATHER;
+    mainData.bp.players[p].playerName = "CloudFleet_Kamikaze";
+    mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
+    mainData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.bp.players[p].mreg, "KamikazeMissiles", "TRUE");
     p++;
+
+//     mainData.bp.players[p].playerName = "GatherFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_GATHER;
+//     p++;
 
     mainData.bp.numPlayers = p;
 
@@ -256,6 +262,12 @@ int main(int argc, char **argv)
     }
 
     MainPrintWinners();
+
+    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
+        if (mainData.bp.players[i].mreg != NULL) {
+            MBRegistry_Free(mainData.bp.players[i].mreg);
+        }
+    }
 
     Random_Exit();
     SDL_Quit();

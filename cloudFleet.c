@@ -31,6 +31,7 @@ DECLARE_MBVECTOR_TYPE(CloudShipData, ShipVector);
 
 typedef struct CloudFleetData {
     FleetAI *ai;
+    bool kamikazeMissiles;
 
     FPoint basePos;
     uint numGuard;
@@ -67,6 +68,12 @@ static void *CloudFleetCreate(FleetAI *ai)
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
     sf->ai = ai;
+
+    if (sf->ai->player.mreg != NULL) {
+        if (MBRegistry_GetBool(sf->ai->player.mreg, "KamikazeMissiles")) {
+            sf->kamikazeMissiles = TRUE;
+        }
+    }
 
     ShipVector_CreateEmpty(&sf->ships);
     IntMap_Create(&sf->shipMap);
@@ -249,6 +256,12 @@ static void CloudFleetRunAITick(void *aiHandle)
                 Mob *sm;
                 sm = MobVector_GetPtr(&ai->sensors, s);
                 mob->cmd.target = sm->pos;
+            } else if (sf->kamikazeMissiles &&
+                       FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+                float moveRadius = firingRange;
+                FPoint moveCenter = mob->pos;
+                FleetUtil_RandomPointInRange(&mob->cmd.target,
+                                             &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
