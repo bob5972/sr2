@@ -118,6 +118,11 @@ static bool BattleCheckMobInvariants(const Mob *mob)
 
 static int BattleCalcLootCredits(const Mob *m)
 {
+    if (m->type == MOB_TYPE_MISSILE ||
+        m->type == MOB_TYPE_LOOT_BOX) {
+        return 0;
+    }
+
     int loot = MobType_GetCost(m->type);
     return (int)(battle.bp.lootDropRate * loot);
 }
@@ -384,7 +389,8 @@ void Battle_RunTick()
 
         pos.x = Random_Float(0.0f, battle.bp.width);
         pos.y = Random_Float(0.0f, battle.bp.height);
-        BattleQueueSpawn(MOB_TYPE_LOOT_BOX, PLAYER_ID_NEUTRAL, &pos);
+        Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX, PLAYER_ID_NEUTRAL, &pos);
+        spawn->lootCredits = loot;
     }
 
     // Queue spawned things

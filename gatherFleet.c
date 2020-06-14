@@ -175,7 +175,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
-                       (1.0f + sf->numGuard / 10 + sf->numScout / 20);
+                       (1.0f + sf->numGuard / 10.0f + sf->numScout / 20.0f);
 //     float fighterScanRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
 //     float baseScanRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
 
