@@ -202,17 +202,21 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
 int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter)
 {
+    return FleetUtil_FindClosestMob(&ai->sensors, pos, scanFilter);
+}
+
+int FleetUtil_FindClosestMob(MobVector *mobs, const FPoint *pos, uint scanFilter)
+{
     float distance;
     int index = -1;
-    Mob *sm;
 
-    for (uint i = 0; i < MobVector_Size(&ai->sensors); i++) {
-        sm = MobVector_GetPtr(&ai->sensors, i);
-        if (!sm->alive) {
+    for (uint i = 0; i < MobVector_Size(mobs); i++) {
+        Mob *m = MobVector_GetPtr(mobs, i);
+        if (!m->alive) {
             continue;
         }
-        if (((1 << sm->type) & scanFilter) != 0) {
-            float curDistance = FPoint_Distance(pos, &sm->pos);
+        if (((1 << m->type) & scanFilter) != 0) {
+            float curDistance = FPoint_Distance(pos, &m->pos);
             if (index == -1 || curDistance < distance) {
                 distance = curDistance;
                 index = i;

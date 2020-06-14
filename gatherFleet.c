@@ -21,9 +21,19 @@
 #include "IntMap.h"
 #include "battle.h"
 
+typedef enum GatherGovernor {
+    GATHER_GOV_INVALID = 0,
+    GATHER_GOV_GUARD = 1,
+    GATHER_GOV_MIN   = 1,
+    GATHER_GOV_SCOUT = 2,
+    GATHER_GOV_MAX,
+} GatherGovernor;
+
 typedef struct GatherShip {
     MobID mobid;
+    MobID targetIndex;
     uint lastFiredTick;
+    GatherGovernor gov;
     bool initialized;
 } GatherShip;
 
@@ -60,8 +70,7 @@ static void *GatherFleetCreate(FleetAI *ai)
     GatherFleetData *sf;
     ASSERT(ai != NULL);
 
-    sf = malloc(sizeof(*sf));
-    MBUtil_Zero(sf, sizeof(*sf));
+    sf = MBUtil_ZAlloc(sizeof(*sf));
     sf->ai = ai;
 
     return sf;
@@ -85,6 +94,8 @@ static void *GatherFleetMobSpawned(void *aiHandle, Mob *m)
         GatherShip *ship;
         ship = MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
+        ship->targetIndex = -1;
+        ship->gov = Random_Int(GATHER_GOV_MIN, GATHER_GOV_MAX - 1);
 
         sf->numGuard++;
         m->cmd.target = sf->basePos;
@@ -139,11 +150,62 @@ static void GatherFleetRunAITick(void *aiHandle)
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
-                       (1.0f + sf->numGuard / 10);
-
+                       (1.0f + sf->numGuard / 8);
+    float scanRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+    ASSERT(ai->player.aiType == FLEET_AI_GATHER);
     IntMap_Create(&targetMap);
 
-    ASSERT(ai->player.aiType == FLEET_AI_GATHER);
+    //XXX breaks the FleetUtil look-up.
+    //FleetUtil_SortMobsByDistance(&ai->mobs, &sf->basePos);
+
+    /*
+     * Clear mob state
+     */
+    for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
+        Mob *mob = MobVector_GetPtr(&ai->mobs, m);
+
+        if (mob->type == MOB_TYPE_FIGHTER) {
+            GatherShip *ship = mob->aiMobHandle;
+            ASSERT(ship != NULL);
+            ASSERT(GatherFleetGetShip(sf, mob->mobid) == ship);
+            ship->targetIndex = -1;
+        }
+    }
+
+    /*
+     * Process sensor data.
+     */
+    for (uint32 si = 0; si < MobVector_Size(&ai->sensors); si++) {
+        Mob *sm = MobVector_GetPtr(&ai->sensors, si);
+        uint32 mi;
+        Mob *m;
+        GatherShip *ship;
+
+        if (sm->type != MOB_TYPE_LOOT_BOX) {
+            continue;
+        }
+
+        mi = FleetUtil_FindClosestMob(&ai->mobs, &sm->pos,
+                                      FLEET_SCAN_FIGHTER);
+        if (mi == -1) {
+            /*
+            * We ran out of mobs.
+            */
+            break;
+        }
+
+        m = MobVector_GetPtr(&ai->mobs, mi);
+        ship = m->aiMobHandle;
+
+        if (ship->targetIndex == -1) {
+            ship->targetIndex = si;
+            IntMap_Increment(&targetMap, sm->mobid);
+        } else {
+            /*
+             * Otherwise we'll do a second pass below?
+             */
+        }
+    }
 
     /*
      * Main Mob processing loop.
@@ -154,27 +216,31 @@ static void GatherFleetRunAITick(void *aiHandle)
         if (mob->type == MOB_TYPE_FIGHTER) {
             GatherShip *ship = mob->aiMobHandle;
             int t = -1;
+            int ct;
 
             ASSERT(ship != NULL);
             ASSERT(GatherFleetGetShip(sf, mob->mobid) == ship);
 
-            t = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                            targetScanFilter);
+            ct = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                             targetScanFilter);
+            t = ct;
+            if (t != -1) {
+                Mob *sm = MobVector_GetPtr(&ai->sensors, t);
+                if (ship->gov == GATHER_GOV_SCOUT &&
+                    FPoint_Distance(&sm->pos, &mob->pos) > firingRange) {
+                    t = -1;
+                }
+            }
 
-            if (t == -1) {
+            if (t == -1 && ship->targetIndex != -1) {
+                t = ship->targetIndex;
+            } else if (t == -1) {
                 /*
-                * Avoid having all the fighters rush to the same loot box.
-                */
+                 * Generally avoid having all the fighters rush to the same
+                 * loot box.
+                 */
                 t = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                                 FLEET_SCAN_LOOT_BOX);
-                if (t != -1) {
-                    Mob *sm;
-                    sm = MobVector_GetPtr(&ai->sensors, t);
-                    if (FPoint_Distance(&sm->pos, &mob->pos) > firingRange) {
-                        t = -1;
-                    }
-                }
-
                 if (t != -1 && IntMap_Increment(&targetMap, t) > 1) {
                     /*
                      * Ideally we find the next best target, but for now just
@@ -185,8 +251,6 @@ static void GatherFleetRunAITick(void *aiHandle)
             }
 
             {
-                int ct = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                     targetScanFilter);
                 if (ct != -1) {
                     Mob *sm;
                     sm = MobVector_GetPtr(&ai->sensors, ct);
@@ -206,17 +270,27 @@ static void GatherFleetRunAITick(void *aiHandle)
 
                 if (sm->type != MOB_TYPE_LOOT_BOX) {
                     FleetUtil_RandomPointInRange(&mob->cmd.target,
-                                                &sm->pos, moveRadius);
+                                                 &sm->pos, moveRadius);
                 } else {
                     mob->cmd.target = sm->pos;
                 }
             }
 
             if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                float moveRadius = guardRange;
-                FPoint moveCenter = sf->basePos;
-                FleetUtil_RandomPointInRange(&mob->cmd.target,
-                                             &moveCenter, moveRadius);
+                if (ship->gov == GATHER_GOV_GUARD) {
+                    float moveRadius = guardRange;
+                    FPoint moveCenter = sf->basePos;
+                    FleetUtil_RandomPointInRange(&mob->cmd.target,
+                                                    &moveCenter, moveRadius);
+                } else {
+                    float moveRadius = 3 * scanRange;
+                    FPoint moveCenter = mob->pos;
+                    do {
+                        FleetUtil_RandomPointInRange(&mob->cmd.target,
+                                                     &moveCenter, moveRadius);
+                    } while (FPoint_Distance(&moveCenter, &mob->cmd.target) <
+                             scanRange);
+                }
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = FLEET_SCAN_SHIP | FLEET_SCAN_MISSILE;
@@ -225,6 +299,11 @@ static void GatherFleetRunAITick(void *aiHandle)
                 Mob *sm;
                 sm = MobVector_GetPtr(&ai->sensors, s);
                 mob->cmd.target = sm->pos;
+            } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+                float moveRadius = firingRange;
+                FPoint moveCenter = mob->pos;
+                FleetUtil_RandomPointInRange(&mob->cmd.target,
+                                             &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;

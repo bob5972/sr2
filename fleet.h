@@ -35,6 +35,8 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs);
 #define FLEET_SCAN_ALL (FLEET_SCAN_SHIP |    \
                         FLEET_SCAN_MISSILE | \
                         FLEET_SCAN_LOOT_BOX)
+
+int FleetUtil_FindClosestMob(MobVector *mobs, const FPoint *pos, uint scanFilter);
 int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter);
 void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos);
 void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius);

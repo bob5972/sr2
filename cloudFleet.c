@@ -224,7 +224,7 @@ static void CloudFleetRunAITick(void *aiHandle)
             }
 
             if (t != -1) {
-                float moveRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+                float moveRadius = 2 * MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
                 Mob *sm;
                 sm = MobVector_GetPtr(&ai->sensors, t);
 
