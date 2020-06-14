@@ -30,28 +30,24 @@ typedef enum BobGovernor {
     BOB_GOV_MAX,
 } BobGovernor;
 
-typedef struct BobShipData {
+typedef struct BobShip {
     MobID mobid;
     BobGovernor gov;
-} BobShipData;
-
-DECLARE_MBVECTOR_TYPE(BobShipData, ShipVector);
+} BobShip;
 
 typedef struct BobFleetData {
     FleetAI *ai;
     FPoint basePos;
     Mob enemyBase;
     uint enemyBaseAge;
-
-    ShipVector ships;
-    IntMap shipMap;
 } BobFleetData;
 
 static void *BobFleetCreate(FleetAI *ai);
 static void BobFleetDestroy(void *aiHandle);
 static void BobFleetRunAITick(void *aiHandle);
-static BobShipData *BobFleetGetShip(BobFleetData *sf, MobID mobid);
-static void BobFleetDestroyShip(BobFleetData *sf, MobID mobid);
+static void *BobFleetMobSpawned(void *aiHandle, Mob *m);
+static void BobFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid);
 
 void BobFleet_GetOps(FleetAIOps *ops)
 {
@@ -64,6 +60,8 @@ void BobFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &BobFleetCreate;
     ops->destroyFleet = &BobFleetDestroy;
     ops->runAITick = &BobFleetRunAITick;
+    ops->mobSpawned = BobFleetMobSpawned;
+    ops->mobDestroyed = BobFleetMobDestroyed;
 }
 
 static void *BobFleetCreate(FleetAI *ai)
@@ -71,13 +69,8 @@ static void *BobFleetCreate(FleetAI *ai)
     BobFleetData *sf;
     ASSERT(ai != NULL);
 
-    sf = malloc(sizeof(*sf));
-    MBUtil_Zero(sf, sizeof(*sf));
+    sf = MBUtil_ZAlloc(sizeof(*sf));
     sf->ai = ai;
-
-    ShipVector_CreateEmpty(&sf->ships);
-    IntMap_Create(&sf->shipMap);
-    IntMap_SetEmptyValue(&sf->shipMap, MOB_ID_INVALID);
     return sf;
 }
 
@@ -85,66 +78,58 @@ static void BobFleetDestroy(void *handle)
 {
     BobFleetData *sf = handle;
     ASSERT(sf != NULL);
-
-    IntMap_Destroy(&sf->shipMap);
-    ShipVector_Destroy(&sf->ships);
-
     free(sf);
 }
 
-static void BobFleetInitShip(BobShipData *ship, MobID mobid)
+static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    MBUtil_Zero(ship, sizeof(*ship));
-    ship->mobid = mobid;
-    ship->gov = Random_Int(BOB_GOV_MIN, BOB_GOV_MAX - 1);
-}
+    BobFleetData *sf = aiHandle;
 
-static BobShipData *BobFleetGetShip(BobFleetData *sf, MobID mobid)
-{
-    int i = IntMap_Get(&sf->shipMap, mobid);
+    ASSERT(sf != NULL);
+    ASSERT(m != NULL);
 
-    if (i != MOB_ID_INVALID) {
-        return ShipVector_GetPtr(&sf->ships, i);
+    if (m->type == MOB_TYPE_FIGHTER) {
+        BobShip *ship;
+        ship = MBUtil_ZAlloc(sizeof(*ship));
+        ship->mobid = m->mobid;
+        m->cmd.target = sf->basePos;
+        ship->gov = Random_Int(BOB_GOV_MIN, BOB_GOV_MAX - 1);
+        return ship;
     } else {
-        BobShipData *s;
-        ShipVector_Grow(&sf->ships);
-        s = ShipVector_GetLastPtr(&sf->ships);
-
-        BobFleetInitShip(s, mobid);
-
-        i = ShipVector_Size(&sf->ships) - 1;
-        IntMap_Put(&sf->shipMap, mobid, i);
-        ASSERT(IntMap_Get(&sf->shipMap, mobid) == i);
-        return s;
+        /*
+         * We don't track anything else.
+         */
+        return NULL;
     }
 }
 
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void BobFleetDestroyShip(BobFleetData *sf, MobID mobid)
+static void BobFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 {
-    BobShipData *s;
-    int i = IntMap_Get(&sf->shipMap, mobid);
-
-    ASSERT(i != -1);
-
-    IntMap_Remove(&sf->shipMap, mobid);
-
-    if (i != ShipVector_Size(&sf->ships) - 1) {
-        ASSERT(i < ShipVector_Size(&sf->ships));
-        s = ShipVector_GetLastPtr(&sf->ships);
-
-        ShipVector_PutValue(&sf->ships, i, *s);
-        ASSERT(IntMap_Get(&sf->shipMap, s->mobid) ==
-               ShipVector_Size(&sf->ships) - 1);
-
-        IntMap_Put(&sf->shipMap, s->mobid, i);
-        ASSERT(IntMap_Get(&sf->shipMap, s->mobid) == i);
+    if (aiMobHandle == NULL) {
+        return;
     }
 
-    ShipVector_Shrink(&sf->ships);
+    BobFleetData *sf = aiHandle;
+    BobShip *ship = aiMobHandle;
+
+    ASSERT(sf != NULL);
+    free(ship);
 }
+
+static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid)
+{
+    BobShip *s = FleetUtil_GetMob(sf->ai, mobid)->aiMobHandle;
+
+    if (s != NULL) {
+        ASSERT(s->mobid == mobid);
+    }
+
+    return s;
+}
+
 
 static void BobFleetRunAITick(void *aiHandle)
 {
@@ -182,28 +167,27 @@ static void BobFleetRunAITick(void *aiHandle)
 
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
-        BobShipData *s = BobFleetGetShip(sf, mob->mobid);
-        ASSERT(s != NULL);
-        ASSERT(s->mobid == mob->mobid);
 
-        if (!mob->alive) {
-            BobFleetDestroyShip(sf, mob->mobid);
-        } else if (mob->type == MOB_TYPE_FIGHTER) {
+        if (mob->type == MOB_TYPE_FIGHTER) {
+            BobShip *ship = BobFleetGetShip(sf, mob->mobid);
             int t = -1;
 
-            if (s->gov == BOB_GOV_SCOUT) {
+            ASSERT(ship != NULL);
+            ASSERT(ship->mobid == mob->mobid);
+
+            if (ship->gov == BOB_GOV_SCOUT) {
                 /*
                  * Just run the shared random/loot-box code.
                  */
-            } else if (s->gov == BOB_GOV_ATTACK) {
+            } else if (ship->gov == BOB_GOV_ATTACK) {
                 t = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                                 targetScanFilter);
-            } else if (s->gov == BOB_GOV_GUARD) {
+            } else if (ship->gov == BOB_GOV_GUARD) {
                 Mob *sm;
 
                 numGuard++;
                 if (numGuard >= 5) {
-                    s->gov = BOB_GOV_ATTACK;
+                    ship->gov = BOB_GOV_ATTACK;
                 }
 
                 t = FleetUtil_FindClosestSensor(ai, &mob->pos,
@@ -240,7 +224,7 @@ static void BobFleetRunAITick(void *aiHandle)
                     t = -1;
                 }
 
-                if (s->gov == BOB_GOV_GUARD && t != -1) {
+                if (ship->gov == BOB_GOV_GUARD && t != -1) {
                     Mob *sm;
                     sm = MobVector_GetPtr(&ai->sensors, t);
                     if (FPoint_Distance(&sm->pos, &sf->basePos) >
@@ -269,7 +253,7 @@ static void BobFleetRunAITick(void *aiHandle)
                 sm = MobVector_GetPtr(&ai->sensors, t);
                 mob->cmd.target = sm->pos;
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                if (s->gov == BOB_GOV_GUARD) {
+                if (ship->gov == BOB_GOV_GUARD) {
                     float guardRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
                     mob->cmd.target.x =
                         Random_Float(MAX(0, sf->basePos.x - guardRadius),
@@ -300,10 +284,7 @@ static void BobFleetRunAITick(void *aiHandle)
                 mob->cmd.spawnType = MOB_TYPE_INVALID;
             }
 
-            if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                mob->cmd.target.y = Random_Float(0.0f, bp->height);
-            }
+            ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
             Mob *sm;
 
