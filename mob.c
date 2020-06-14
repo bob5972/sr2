@@ -133,7 +133,7 @@ int MobType_GetMaxFuel(MobType type)
         case MOB_TYPE_FIGHTER:
             return -1;
         case MOB_TYPE_MISSILE:
-            return 13;
+            return 14;
         case MOB_TYPE_LOOT_BOX:
             return 4 * 1000;
         default:

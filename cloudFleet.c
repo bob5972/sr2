@@ -23,7 +23,6 @@
 
 typedef struct CloudShip {
     MobID mobid;
-    uint lastFiredTick;
     bool initialized;
 } CloudShip;
 
@@ -199,10 +198,8 @@ static void CloudFleetRunAITick(void *aiHandle)
                     Mob *sm;
                     sm = MobVector_GetPtr(&ai->sensors, ct);
 
-                    if ((sf->ai->tick - ship->lastFiredTick) > 20 &&
-                        FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
+                    if (FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                        ship->lastFiredTick = sf->ai->tick;
                     }
                 }
             }

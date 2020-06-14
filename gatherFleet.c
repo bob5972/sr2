@@ -31,8 +31,6 @@ typedef enum GatherGovernor {
 
 typedef struct GatherShip {
     MobID mobid;
-
-    uint lastFiredTick;
     GatherGovernor gov;
     bool initialized;
 } GatherShip;
@@ -288,10 +286,8 @@ static void GatherFleetRunAITick(void *aiHandle)
                     Mob *sm;
                     sm = MobVector_GetPtr(&ai->sensors, ct);
 
-                    if ((sf->ai->tick - ship->lastFiredTick) > 20 &&
-                        FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
+                    if (FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                        ship->lastFiredTick = sf->ai->tick;
                     }
                 }
             }
