@@ -41,6 +41,7 @@ int FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint scanFilter)
 void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos);
 void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius);
 Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid);
+void FleetUtil_UpdateMobMap(FleetAI *ai);
 
 void SimpleFleet_GetOps(FleetAIOps *ops);
 void BobFleet_GetOps(FleetAIOps *ops);

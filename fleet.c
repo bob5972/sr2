@@ -279,19 +279,33 @@ Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid)
         return m;
     }
 
-    /*
-     * XXX: If the fleet sorted their mob vector, then the mobMap is
-     * all mis-aligned... There isn't an obviously better way to handle
-     * this than using pointers, or some other abstraction?
-     */
-    for (i = 0; i < MobVector_Size(&ai->mobs); i++) {
-        m = MobVector_GetPtr(&ai->mobs, i);
-        if (m->mobid == mobid) {
-            return m;
+    if (DEBUG) {
+        /*
+        * XXX: If the fleet sorted their mob vector, then the mobMap is
+        * all mis-aligned... There isn't an obviously better way to handle
+        * this than using pointers, or some other abstraction?
+        */
+        for (i = 0; i < MobVector_Size(&ai->mobs); i++) {
+            m = MobVector_GetPtr(&ai->mobs, i);
+            if (m->mobid == mobid) {
+                PANIC("Fleet mobMap invalidated without call to "
+                      "FleetUtil_UpdateMobMap\n");
+            }
         }
     }
 
     return NULL;
+}
+
+void FleetUtil_UpdateMobMap(FleetAI *ai)
+{
+    IntMap_MakeEmpty(&ai->mobMap);
+
+    for (uint32 i = 0; i < MobVector_Size(&ai->mobs); i++) {
+        Mob *m = MobVector_GetPtr(&ai->mobs, i);
+        IntMap_Put(&ai->mobMap, m->mobid, i);
+        ASSERT(IntMap_ContainsKey(&ai->mobMap, m->mobid));
+    }
 }
 
 static void FleetRunAITick(FleetAI *ai)
@@ -305,9 +319,9 @@ static void FleetRunAITick(FleetAI *ai)
         } else {
             m->aiMobHandle = m;
         }
-        IntMap_Put(&ai->mobMap, m->mobid, i);
-        ASSERT(IntMap_ContainsKey(&ai->mobMap, m->mobid));
     }
+
+    FleetUtil_UpdateMobMap(ai);
 
     ASSERT(ai->ops.runAITick != NULL);
     ai->ops.runAITick(ai->aiHandle);

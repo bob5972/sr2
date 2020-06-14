@@ -156,6 +156,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     IntMap_Create(&targetMap);
 
     FleetUtil_SortMobsByDistance(&ai->mobs, &sf->basePos);
+    FleetUtil_UpdateMobMap(ai);
 
     /*
      * Clear mob state

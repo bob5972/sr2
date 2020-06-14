@@ -21,13 +21,11 @@
 #include "IntMap.h"
 #include "battle.h"
 
-typedef struct CloudShipData {
+typedef struct CloudShip {
     MobID mobid;
     uint lastFiredTick;
     bool initialized;
-} CloudShipData;
-
-DECLARE_MBVECTOR_TYPE(CloudShipData, ShipVector);
+} CloudShip;
 
 typedef struct CloudFleetData {
     FleetAI *ai;
@@ -35,17 +33,14 @@ typedef struct CloudFleetData {
 
     FPoint basePos;
     uint numGuard;
-
-    uint tick;
-    ShipVector ships;
-    IntMap shipMap;
 } CloudFleetData;
 
 static void *CloudFleetCreate(FleetAI *ai);
 static void CloudFleetDestroy(void *aiHandle);
 static void CloudFleetRunAITick(void *aiHandle);
-static CloudShipData *CloudFleetGetShip(CloudFleetData *sf, MobID mobid);
-static void CloudFleetDestroyShip(CloudFleetData *sf, MobID mobid);
+static void *CloudFleetMobSpawned(void *aiHandle, Mob *m);
+static void CloudFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static CloudShip *CloudFleetGetShip(CloudFleetData *sf, MobID mobid);
 
 void CloudFleet_GetOps(FleetAIOps *ops)
 {
@@ -58,6 +53,8 @@ void CloudFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &CloudFleetCreate;
     ops->destroyFleet = &CloudFleetDestroy;
     ops->runAITick = &CloudFleetRunAITick;
+    ops->mobSpawned = &CloudFleetMobSpawned;
+    ops->mobDestroyed = &CloudFleetMobDestroyed;
 }
 
 static void *CloudFleetCreate(FleetAI *ai)
@@ -65,8 +62,7 @@ static void *CloudFleetCreate(FleetAI *ai)
     CloudFleetData *sf;
     ASSERT(ai != NULL);
 
-    sf = malloc(sizeof(*sf));
-    MBUtil_Zero(sf, sizeof(*sf));
+    sf = MBUtil_ZAlloc(sizeof(*sf));
     sf->ai = ai;
 
     if (sf->ai->player.mreg != NULL) {
@@ -76,10 +72,6 @@ static void *CloudFleetCreate(FleetAI *ai)
         }
     }
 
-    ShipVector_CreateEmpty(&sf->ships);
-    IntMap_Create(&sf->shipMap);
-    IntMap_SetEmptyValue(&sf->shipMap, MOB_ID_INVALID);
-
     return sf;
 }
 
@@ -88,71 +80,68 @@ static void CloudFleetDestroy(void *aiHandle)
     CloudFleetData *sf = aiHandle;
     ASSERT(sf != NULL);
 
-    IntMap_Destroy(&sf->shipMap);
-    ShipVector_Destroy(&sf->ships);
-
     free(sf);
 }
 
-static void CloudFleetInitShip(CloudFleetData *sf,
-                                CloudShipData *ship, MobID mobid)
+static void *CloudFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    MBUtil_Zero(ship, sizeof(*ship));
-    ship->mobid = mobid;
-}
+    CloudFleetData *sf = aiHandle;
 
-static CloudShipData *CloudFleetGetShip(CloudFleetData *sf, MobID mobid)
-{
-    int i = IntMap_Get(&sf->shipMap, mobid);
+    ASSERT(sf != NULL);
+    ASSERT(m != NULL);
 
-    if (i != MOB_ID_INVALID) {
-        return ShipVector_GetPtr(&sf->ships, i);
+    if (m->type == MOB_TYPE_FIGHTER) {
+        CloudShip *ship;
+        ship = MBUtil_ZAlloc(sizeof(*ship));
+        ship->mobid = m->mobid;
+        m->cmd.target = sf->basePos;
+        ship->initialized = TRUE;
+        sf->numGuard++;
+        return ship;
     } else {
-        CloudShipData *s;
-        ShipVector_Grow(&sf->ships);
-        s = ShipVector_GetLastPtr(&sf->ships);
-
-        CloudFleetInitShip(sf, s, mobid);
-
-        i = ShipVector_Size(&sf->ships) - 1;
-        IntMap_Put(&sf->shipMap, mobid, i);
-        ASSERT(IntMap_Get(&sf->shipMap, mobid) == i);
-        return s;
+        /*
+         * We don't track anything else.
+         */
+        return NULL;
     }
 }
+
 
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void CloudFleetDestroyShip(CloudFleetData *sf, MobID mobid)
+static void CloudFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 {
-    CloudShipData *s;
-    int i = IntMap_Get(&sf->shipMap, mobid);
-
-    ASSERT(i != -1);
-
-    IntMap_Remove(&sf->shipMap, mobid);
-
-    if (i != ShipVector_Size(&sf->ships) - 1) {
-        ASSERT(i < ShipVector_Size(&sf->ships));
-        s = ShipVector_GetLastPtr(&sf->ships);
-
-        ShipVector_PutValue(&sf->ships, i, *s);
-        ASSERT(IntMap_Get(&sf->shipMap, s->mobid) ==
-               ShipVector_Size(&sf->ships) - 1);
-
-        IntMap_Put(&sf->shipMap, s->mobid, i);
-        ASSERT(IntMap_Get(&sf->shipMap, s->mobid) == i);
+    if (aiMobHandle == NULL) {
+        return;
     }
 
-    ShipVector_Shrink(&sf->ships);
+    CloudFleetData *sf = aiHandle;
+    CloudShip *ship = aiMobHandle;
+
+    ASSERT(sf != NULL);
+    ASSERT(sf->numGuard > 0);
+    sf->numGuard--;
+    free(ship);
 }
+
+
+static CloudShip *CloudFleetGetShip(CloudFleetData *sf, MobID mobid)
+{
+    CloudShip *s = FleetUtil_GetMob(sf->ai, mobid)->aiMobHandle;
+
+    if (s != NULL) {
+        ASSERT(s->mobid == mobid);
+    }
+
+    return s;
+}
+
 
 static void CloudFleetRunAITick(void *aiHandle)
 {
     CloudFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
-    const BattleParams *bp = Battle_GetParams();
     uint targetScanFilter = FLEET_SCAN_SHIP;
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
@@ -163,32 +152,19 @@ static void CloudFleetRunAITick(void *aiHandle)
     IntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_CLOUD);
-    sf->tick++;
 
     /*
      * Main Mob processing loop.
      */
     for (uint32 m = 0; m < MobVector_Size(&ai->mobs); m++) {
         Mob *mob = MobVector_GetPtr(&ai->mobs, m);
-        CloudShipData *s = CloudFleetGetShip(sf, mob->mobid);
-        ASSERT(s != NULL);
-        ASSERT(s->mobid == mob->mobid);
 
-        if (!s->initialized) {
-            s->initialized = TRUE;
-            if (mob->type == MOB_TYPE_FIGHTER) {
-                sf->numGuard++;
-            }
-            mob->cmd.target = sf->basePos;
-        }
-
-        if (!mob->alive) {
-            if (mob->type == MOB_TYPE_FIGHTER) {
-                sf->numGuard--;
-            }
-            CloudFleetDestroyShip(sf, mob->mobid);
-        } else if (mob->type == MOB_TYPE_FIGHTER) {
+        if (mob->type == MOB_TYPE_FIGHTER) {
+            CloudShip *ship = CloudFleetGetShip(sf, mob->mobid);
             int t = -1;
+
+            ASSERT(ship != NULL);
+            ASSERT(ship->mobid == mob->mobid);
 
             t = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                             targetScanFilter);
@@ -223,10 +199,10 @@ static void CloudFleetRunAITick(void *aiHandle)
                     Mob *sm;
                     sm = MobVector_GetPtr(&ai->sensors, ct);
 
-                    if ((sf->tick - s->lastFiredTick) > 20 &&
+                    if ((sf->ai->tick - ship->lastFiredTick) > 20 &&
                         FPoint_Distance(&mob->pos, &sm->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                        s->lastFiredTick = sf->tick;
+                        ship->lastFiredTick = sf->ai->tick;
                     }
                 }
             }
@@ -274,10 +250,7 @@ static void CloudFleetRunAITick(void *aiHandle)
                 mob->cmd.spawnType = MOB_TYPE_INVALID;
             }
 
-            if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                mob->cmd.target.y = Random_Float(0.0f, bp->height);
-            }
+            ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
             Mob *sm;
 
