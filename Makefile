@@ -44,6 +44,7 @@ C_SOURCES = main.c \
             cloudFleet.c \
             display.c \
             fleet.c \
+            fleetUtil.c \
             gatherFleet.c \
             mapperFleet.c \
             mob.c \
