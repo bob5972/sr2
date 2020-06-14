@@ -266,6 +266,7 @@ void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
 
 Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid)
 {
+    Mob *m;
     ASSERT(ai != NULL);
 
     int i = IntMap_Get(&ai->mobMap, mobid);
@@ -273,7 +274,24 @@ Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid)
         return NULL;
     }
 
-    return MobVector_GetPtr(&ai->mobs, i);
+    m = MobVector_GetPtr(&ai->mobs, i);
+    if (m->mobid == mobid) {
+        return m;
+    }
+
+    /*
+     * XXX: If the fleet sorted their mob vector, then the mobMap is
+     * all mis-aligned... There isn't an obviously better way to handle
+     * this than using pointers, or some other abstraction?
+     */
+    for (i = 0; i < MobVector_Size(&ai->mobs); i++) {
+        m = MobVector_GetPtr(&ai->mobs, i);
+        if (m->mobid == mobid) {
+            return m;
+        }
+    }
+
+    return NULL;
 }
 
 static void FleetRunAITick(FleetAI *ai)

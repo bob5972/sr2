@@ -155,8 +155,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     ASSERT(ai->player.aiType == FLEET_AI_GATHER);
     IntMap_Create(&targetMap);
 
-    //XXX breaks the FleetUtil look-up.
-    //FleetUtil_SortMobsByDistance(&ai->mobs, &sf->basePos);
+    FleetUtil_SortMobsByDistance(&ai->mobs, &sf->basePos);
 
     /*
      * Clear mob state
