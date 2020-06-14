@@ -88,7 +88,7 @@ typedef struct Mob {
 } Mob;
 
 DECLARE_MBVECTOR_TYPE(Mob, MobVector);
-//DECLARE_MBVECTOR_TYPE(Mob *, MobPVector);
+DECLARE_MBVECTOR_TYPE(Mob *, MobPVec);
 
 typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,

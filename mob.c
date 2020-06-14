@@ -18,7 +18,7 @@
 
 #include "mob.h"
 
-#define SPEED_SCALE (0.5f)
+#define SPEED_SCALE (1.0f)
 #define SIZE_SCALE (1.0f)
 
 float MobType_GetRadius(MobType type)
@@ -46,17 +46,23 @@ float MobType_GetRadius(MobType type)
 
 float MobType_GetSensorRadius(MobType type)
 {
-    float sensorScale;
-
-    if (type == MOB_TYPE_BASE) {
-        sensorScale = 5.0f;
-    } else if (type == MOB_TYPE_LOOT_BOX) {
-        sensorScale = 0.0f;
-    } else {
-        sensorScale = 10.0f;
+    switch (type) {
+        case MOB_TYPE_BASE:
+            return 250.0f * SIZE_SCALE;
+            break;
+        case MOB_TYPE_FIGHTER:
+            return 50.0f * SIZE_SCALE;
+            break;
+        case MOB_TYPE_MISSILE:
+            return 30.0f * SIZE_SCALE;
+            break;
+        case MOB_TYPE_LOOT_BOX:
+            return 0.0f * SIZE_SCALE;
+            break;
+        default:
+            PANIC("Unhandled mob type: %d\n", type);
+            break;
     }
-
-    return sensorScale * MobType_GetRadius(type);
 }
 
 void Mob_GetCircle(const Mob *mob, FCircle *c)
@@ -83,13 +89,13 @@ float MobType_GetSpeed(MobType type)
             speed = 0.0f * SPEED_SCALE;
             break;
         case MOB_TYPE_FIGHTER:
-            speed = 5.0f * SPEED_SCALE;
+            speed = 2.5f * SPEED_SCALE;
             break;
         case MOB_TYPE_MISSILE:
-            speed = 10.0f * SPEED_SCALE;
+            speed = 5.0f * SPEED_SCALE;
             break;
         case MOB_TYPE_LOOT_BOX:
-            speed = 1.0f * SPEED_SCALE;
+            speed = 0.5f * SPEED_SCALE;
             break;
         default:
             PANIC("Unhandled mob type: %d\n", type);
@@ -127,7 +133,7 @@ int MobType_GetMaxFuel(MobType type)
         case MOB_TYPE_FIGHTER:
             return -1;
         case MOB_TYPE_MISSILE:
-            return 50;
+            return 13;
         case MOB_TYPE_LOOT_BOX:
             return 4 * 1000;
         default:
