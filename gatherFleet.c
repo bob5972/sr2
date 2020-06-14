@@ -21,6 +21,12 @@
 #include "IntMap.h"
 #include "battle.h"
 
+typedef struct Contact {
+    MobType type;
+    FPoint pos;
+    uint tick;
+} Contact;
+
 typedef enum GatherGovernor {
     GATHER_GOV_INVALID = 0,
     GATHER_GOV_GUARD = 1,
@@ -38,10 +44,12 @@ typedef struct GatherShip {
 typedef struct GatherFleetData {
     FleetAI *ai;
     FPoint basePos;
-    uint numGuard;
-    uint numScout;
+    uint lostShipTick;
+    uint numGuards;
+    uint numScouts;
     MobPVec fighters;
     MobPVec targets;
+    MBVector contacts;
 } GatherFleetData;
 
 static void *GatherFleetCreate(FleetAI *ai);
@@ -75,6 +83,7 @@ static void *GatherFleetCreate(FleetAI *ai)
     sf->ai = ai;
     MobPVec_CreateEmpty(&sf->fighters);
     MobPVec_CreateEmpty(&sf->targets);
+    MBVector_CreateEmpty(&sf->contacts, sizeof(Contact));
 
     return sf;
 }
@@ -85,6 +94,7 @@ static void GatherFleetDestroy(void *aiHandle)
     ASSERT(sf != NULL);
     MobPVec_Destroy(&sf->fighters);
     MobPVec_Destroy(&sf->targets);
+    MBVector_Destroy(&sf->contacts);
     free(sf);
 }
 
@@ -100,21 +110,21 @@ static void *GatherFleetMobSpawned(void *aiHandle, Mob *m)
         ship = MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
 
-        if (sf->numGuard < 1) {
+        if (sf->ai->tick - sf->lostShipTick < 200) {
             ship->gov = GATHER_GOV_GUARD;
-        } else if (sf->numScout < 1) {
-            ship->gov = GATHER_GOV_SCOUT;
-        } else if (sf->numGuard > sf->numScout) {
+        } else if (sf->numGuards < 1) {
+            ship->gov = GATHER_GOV_GUARD;
+        } else if (sf->numScouts < 1) {
             ship->gov = GATHER_GOV_SCOUT;
         } else {
             ship->gov = Random_Int(GATHER_GOV_MIN, GATHER_GOV_MAX - 1);
         }
 
         if (ship->gov == GATHER_GOV_GUARD) {
-            sf->numGuard++;
+            sf->numGuards++;
         } else {
             ASSERT(ship->gov == GATHER_GOV_SCOUT);
-            sf->numScout++;
+            sf->numScouts++;
         }
 
         m->cmd.target = sf->basePos;
@@ -144,12 +154,13 @@ static void GatherFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
     ASSERT(sf != NULL);
 
     if (ship->gov == GATHER_GOV_GUARD) {
-        ASSERT(sf->numGuard > 0);
-        sf->numGuard--;
+        ASSERT(sf->numGuards > 0);
+        sf->numGuards--;
+        sf->lostShipTick = sf->ai->tick;
     } else {
         ASSERT(ship->gov == GATHER_GOV_SCOUT);
-        ASSERT(sf->numScout > 0);
-        sf->numScout--;
+        ASSERT(sf->numScouts > 0);
+        sf->numScouts--;
     }
 
     free(ship);
@@ -166,6 +177,85 @@ static GatherShip *GatherFleetGetShip(GatherFleetData *sf, MobID mobid)
     return s;
 }
 
+static void GatherFleetAgeContacts(GatherFleetData *sf)
+{
+    for (uint i = 0; i < MBVector_Size(&sf->contacts); i++) {
+        uint ageLimit;
+
+        Contact *c = MBVector_GetPtr(&sf->contacts, i);
+        switch (c->type) {
+            case MOB_TYPE_BASE:
+                ageLimit = 1000;
+                break;
+            case MOB_TYPE_FIGHTER:
+                ageLimit = 500;
+                break;
+            case MOB_TYPE_MISSILE:
+                ageLimit = 100;
+                break;
+            default:
+                NOT_REACHED();
+        }
+
+        if (sf->ai->tick - c->tick > ageLimit) {
+            Contact *last = MBVector_GetLastPtr(&sf->contacts);
+            *c = *last;
+            i--;
+            MBVector_Shrink(&sf->contacts);
+        }
+    }
+}
+
+static void GatherFleetAddContact(GatherFleetData *sf, Mob *sm)
+{
+    if (sm->type == MOB_TYPE_LOOT_BOX) {
+        return;
+    }
+
+    for (uint i = 0; i < MBVector_Size(&sf->contacts); i++) {
+        Contact *c = MBVector_GetPtr(&sf->contacts, i);
+        if (FPoint_Distance(&c->pos, &sm->pos) < MobType_GetSensorRadius(c->type)) {
+            if (MobType_GetSensorRadius(c->type) < MobType_GetSensorRadius(sm->type)) {
+                c->type = sm->type;
+            }
+            c->tick = sf->ai->tick;
+            return;
+        }
+    }
+
+    MBVector_Grow(&sf->contacts);
+    Contact *c = MBVector_GetLastPtr(&sf->contacts);
+    MBUtil_Zero(c, sizeof(*c));
+    c->type = sm->type;
+    c->pos = sm->pos;
+    c->tick = sf->ai->tick;
+}
+
+static bool GatherFleetInConflictZone(GatherFleetData *sf, const FPoint *pos,
+                                      const FPoint *target)
+{
+    for (uint i = 0; i < MBVector_Size(&sf->contacts); i++) {
+        Contact *c = MBVector_GetPtr(&sf->contacts, i);
+        if (FPoint_Distance(&c->pos, target) < MobType_GetSensorRadius(c->type)) {
+            return TRUE;
+        }
+    }
+
+    if (FPoint_Distance(target, pos) > MobType_GetSensorRadius(MOB_TYPE_BASE)) {
+        FPoint m;
+        FPoint_Midpoint(&m, pos, target);
+        return GatherFleetInConflictZone(sf, pos, &m) ||
+               GatherFleetInConflictZone(sf, &m, target);
+    }
+
+    return FALSE;
+}
+
+static float GatherFleetBaseDistance(GatherFleetData *sf, const FPoint *pos)
+{
+    return FPoint_Distance(pos, &sf->basePos);
+}
+
 static void GatherFleetRunAITick(void *aiHandle)
 {
     GatherFleetData *sf = aiHandle;
@@ -175,7 +265,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
-                       (1.0f + sf->numGuard / 10.0f + sf->numScout / 20.0f);
+                       (1.0f + sf->numGuards / 10.0f + sf->numScouts / 20.0f);
 //     float fighterScanRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
     float baseScanRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
     float scoutActivationRange = baseScanRange;
@@ -206,6 +296,8 @@ static void GatherFleetRunAITick(void *aiHandle)
         }
     }
 
+    GatherFleetAgeContacts(sf);
+
     /*
      * Initialize target state
      */
@@ -216,6 +308,8 @@ static void GatherFleetRunAITick(void *aiHandle)
             MobPVec_Grow(&sf->targets);
             *MobPVec_GetLastPtr(&sf->targets) = sm;
         }
+
+        GatherFleetAddContact(sf, sm);
     }
 
     /*
@@ -255,10 +349,17 @@ static void GatherFleetRunAITick(void *aiHandle)
 
                     tMob = MobPVec_GetValue(&sf->targets, t);
 
-                    if (tMob->type != MOB_TYPE_LOOT_BOX &&
-                        ship->gov == GATHER_GOV_SCOUT &&
-                        FPoint_Distance(&tMob->pos, &mob->pos) > firingRange) {
-                        tMob = NULL;
+                    if (ship->gov == GATHER_GOV_SCOUT) {
+                        if (FPoint_Distance(&tMob->pos, &mob->pos) >
+                            scoutActivationRange) {
+                            tMob = NULL;
+                        }
+                    } else {
+                        ASSERT(ship->gov == GATHER_GOV_GUARD);
+                        if (FPoint_Distance(&tMob->pos, &sf->basePos) >
+                            guardRange) {
+                            tMob = NULL;
+                        }
                     }
 
                     if (tMob != NULL) {
@@ -269,15 +370,16 @@ static void GatherFleetRunAITick(void *aiHandle)
                             if (f->mobid == mob->mobid) {
                                 // This is the closest mob.... claim it anyway.
                                 forceClaim = TRUE;
-                            } else if (FPoint_Distance(&tMob->pos, &mob->pos) >
-                                       scoutActivationRange) {
-                                tMob = NULL;
                             }
                         }
                     }
 
                     if (tMob != NULL) {
-                        if (IntMap_Increment(&targetMap, tMob->mobid) == 1 ||
+                        uint claimLimit = 1;
+                        if (ship->gov == GATHER_GOV_SCOUT) {
+                            claimLimit = 1 + (sf->numScouts / 4);
+                        }
+                        if (IntMap_Increment(&targetMap, tMob->mobid) <= claimLimit ||
                             forceClaim) {
                             // Claim the target so nobody else will go there.
                         } else {
@@ -304,15 +406,45 @@ static void GatherFleetRunAITick(void *aiHandle)
 
             if (tMob != NULL) {
                 mob->cmd.target = tMob->pos;
-            } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+            } else if ((ship->gov == GATHER_GOV_SCOUT &&
+                        GatherFleetInConflictZone(sf, &mob->pos, &mob->cmd.target)) ||
+                       FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+                if (ship->gov == GATHER_GOV_SCOUT) {
+                    int i = 0;
+                    bool conflict;
+                    do {
+                        mob->cmd.target.x = Random_Float(0.0f, bp->width);
+                        mob->cmd.target.y = Random_Float(0.0f, bp->height);
+                        i++;
+                        conflict = GatherFleetInConflictZone(sf, &mob->pos,
+                                                             &mob->cmd.target);
+                    } while (i < 10 && conflict);
+                    if (i == 10) {
+                        /*
+                         * If we couldn't find somewhere conflict-free,
+                         * become a guard.
+                         */
+                        ship->gov = GATHER_GOV_GUARD;
+                        sf->numGuards++;
+                        ASSERT(sf->numScouts > 0);
+                        sf->numScouts--;
+                    }
+                }
                 if (ship->gov == GATHER_GOV_GUARD) {
                     float moveRadius = guardRange;
                     FPoint moveCenter = sf->basePos;
-                    FleetUtil_RandomPointInRange(&mob->cmd.target,
-                                                 &moveCenter, moveRadius);
-                } else {
-                    mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                    mob->cmd.target.y = Random_Float(0.0f, bp->height);
+                    int i = 0;
+                    bool tooClose;
+                    do {
+                        FleetUtil_RandomPointInRange(&mob->cmd.target,
+                                                    &moveCenter, moveRadius);
+                        i++;
+                        tooClose = FALSE;
+                        if (GatherFleetBaseDistance(sf, &mob->cmd.target) <
+                            guardRange / 2.0f) {
+                            tooClose = TRUE;
+                        }
+                    } while (i < 2 && tooClose);
                 }
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {

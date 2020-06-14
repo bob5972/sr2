@@ -78,6 +78,12 @@ static inline float FPoint_Distance(const FPoint *a, const FPoint *b)
     return sqrt(d);
 }
 
+static inline void FPoint_Midpoint(FPoint *m, const FPoint *a, const FPoint *b)
+{
+    m->x = (a->x + b->x) / 2.0f;
+    m->y = (a->y + b->y) / 2.0f;
+}
+
 static inline bool FQuad_Intersect(const FQuad *a, const FQuad *b)
 {
     if (a->x + a->w <= b->x) {
