@@ -190,6 +190,7 @@ int main(int argc, char **argv)
     mainData.bp.lootSpawnRate = 0.5f;
     mainData.bp.minLootSpawn = 5;
     mainData.bp.maxLootSpawn = 10;
+    mainData.bp.restrictedStart = TRUE;
 
     /*
      * The NEUTRAL fleet needs to be there.

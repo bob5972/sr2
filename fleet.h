@@ -42,6 +42,8 @@ void FleetUtil_SortMobsByDistance(MobVector *mobs, const FPoint *pos);
 void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius);
 Mob *FleetUtil_GetMob(FleetAI *ai, MobID mobid);
 void FleetUtil_UpdateMobMap(FleetAI *ai);
+//MobPVector *FleetUtil_AllocMobPVector(MobVector *mobs);
+//void FleetUtil_SortMobPByDistance(MobPVector *mobs, const FPoint *pos);
 
 void SimpleFleet_GetOps(FleetAIOps *ops);
 void BobFleet_GetOps(FleetAIOps *ops);

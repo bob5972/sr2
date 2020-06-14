@@ -76,8 +76,16 @@ void Battle_Init(const BattleParams *bp)
         Mob_Init(mob, MOB_TYPE_BASE);
         mob->playerID = i;
         mob->mobid = ++battle.lastMobID;
-        mob->pos.x = Random_Float(0.0f, battle.bp.width);
-        mob->pos.y = Random_Float(0.0f, battle.bp.height);
+        if (battle.bp.restrictedStart) {
+            // account for NEUTRAL
+            uint p = i - 1;
+            float slotW = battle.bp.width / (bp->numPlayers - 1);
+            mob->pos.x = Random_Float(p * slotW, (p + 1) * slotW);
+            mob->pos.y = Random_Float(0.0f, battle.bp.height);
+        } else {
+            mob->pos.x = Random_Float(0.0f, battle.bp.width);
+            mob->pos.y = Random_Float(0.0f, battle.bp.height);
+        }
         mob->cmd.target = mob->pos;
     }
 

@@ -65,7 +65,7 @@ else
 fi;
 
 if [ "$DEBUG" == "" ]; then
-	DEBUG=1;
+	DEBUG="1";
 fi;
 
 echo '#define DEBUG ' $DEBUG >> $CONFIG_H
@@ -78,4 +78,3 @@ else
 fi;
 
 echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
-

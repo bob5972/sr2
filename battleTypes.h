@@ -88,6 +88,7 @@ typedef struct Mob {
 } Mob;
 
 DECLARE_MBVECTOR_TYPE(Mob, MobVector);
+//DECLARE_MBVECTOR_TYPE(Mob *, MobPVector);
 
 typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,
@@ -147,6 +148,7 @@ typedef struct BattleParams {
     uint startingCredits;
     uint creditsPerTick;
     uint timeLimit;
+    bool restrictedStart;
 
     // Factor of cost that gets dropped when a mob is destroyed.
     float lootDropRate;
