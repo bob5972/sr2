@@ -233,17 +233,13 @@ int main(int argc, char **argv)
 //     mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
 //     p++;
 
-//     mainData.bp.players[p].playerName = "CloudFleet";
-//     mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
-//     mainData.bp.players[p].mreg = MBRegistry_Alloc();
-//     MBRegistry_Put(mainData.bp.players[p].mreg, "KamikazeMissiles", "FALSE");
-//     p++;
-
-    mainData.bp.players[p].playerName = "GatherFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_GATHER;
+    mainData.bp.players[p].playerName = "CloudFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
+    mainData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.bp.players[p].mreg, "KamikazeMissiles", "FALSE");
     p++;
 
-    mainData.bp.players[p].playerName = "GatherFleet2";
+    mainData.bp.players[p].playerName = "GatherFleet";
     mainData.bp.players[p].aiType = FLEET_AI_GATHER;
     p++;
 
