@@ -58,6 +58,7 @@ typedef struct MobCmd {
 typedef enum MobImageType {
     MOB_IMAGE_INVALID = 0,
     MOB_IMAGE_FULL    = 1,
+    MOB_IMAGE_MIN     = 1,
     MOB_IMAGE_AI      = 2,
     MOB_IMAGE_SENSOR  = 3,
     MOB_IMAGE_MAX,
@@ -78,6 +79,7 @@ typedef struct Mob {
      * Protected fields that are also used by the Fleet AIs.
      * (See Mob_MaskForSensor)
      */
+    char protectedFields;
     void *aiMobHandle;
     int fuel;
     int health;
@@ -90,6 +92,7 @@ typedef struct Mob {
      * Private fields that are used only by the Battle engine.
      * (See Mob_MaskForAI)
      */
+    char privateFields;
     bool removeMob;
     uint64 scannedBy;
 } Mob;

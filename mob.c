@@ -179,15 +179,32 @@ void Mob_Init(Mob *mob, MobType t)
 
 bool Mob_CheckInvariants(const Mob *m)
 {
-    ASSERT(m != NULL);
-    ASSERT(m->mobid != MOB_ID_INVALID);
-    ASSERT(m->type != MOB_TYPE_INVALID);
-    ASSERT(m->type >= MOB_TYPE_MIN);
-    ASSERT(m->type < MOB_TYPE_MAX);
-    ASSERT(m->playerID != PLAYER_ID_INVALID);
-    ASSERT(!(m->removeMob && m->alive));
-    ASSERT(m->fuel <= MobType_GetMaxFuel(m->type));
-    ASSERT(m->health <= MobType_GetMaxHealth(m->type));
+    if (DEBUG) {
+        ASSERT(m != NULL);
+
+        ASSERT(m->mobid != MOB_ID_INVALID);
+
+        ASSERT(m->type != MOB_TYPE_INVALID);
+        ASSERT(m->type >= MOB_TYPE_MIN);
+        ASSERT(m->type < MOB_TYPE_MAX);
+
+        ASSERT(m->image != MOB_IMAGE_INVALID);
+        ASSERT(m->image >= MOB_IMAGE_MIN);
+        ASSERT(m->image < MOB_IMAGE_MAX);
+
+        ASSERT(m->playerID != PLAYER_ID_INVALID);
+
+        if (m->image == MOB_IMAGE_FULL) {
+            ASSERT(!(m->removeMob && m->alive));
+        }
+
+        if (m->image == MOB_IMAGE_FULL ||
+            m->image == MOB_IMAGE_AI) {
+            ASSERT(m->fuel <= MobType_GetMaxFuel(m->type));
+            ASSERT(m->health <= MobType_GetMaxHealth(m->type));
+        }
+    }
+
     return TRUE;
 }
 
@@ -197,8 +214,11 @@ void Mob_MaskForAI(Mob *mob)
 
     ASSERT(mob->image == MOB_IMAGE_FULL);
     mob->image = MOB_IMAGE_AI;
-    mob->removeMob = 0;
-    mob->scannedBy = 0;
+
+    MBUtil_Zero(&mob->privateFields,
+                sizeof(*mob) - OFFSETOF(Mob, privateFields));
+    ASSERT(mob->removeMob == 0);
+    ASSERT(mob->scannedBy == 0);
 }
 
 void Mob_MaskForSensor(Mob *mob)
@@ -210,12 +230,15 @@ void Mob_MaskForSensor(Mob *mob)
     ASSERT(mob->image == MOB_IMAGE_AI);
     mob->image = MOB_IMAGE_SENSOR;
 
-    mob->fuel = 0;
-    mob->health = 0;
-    mob->birthTick = 0;
-    mob->rechargeTime = 0;
-    mob->lootCredits = 0;
-    MBUtil_Zero(&mob->cmd, sizeof(mob->cmd));
+    MBUtil_Zero(&mob->protectedFields,
+                sizeof(*mob) - OFFSETOF(Mob, protectedFields));
+
+    ASSERT(mob->fuel == 0);
+    ASSERT(mob->health == 0);
+    ASSERT(mob->birthTick == 0);
+    ASSERT(mob->rechargeTime == 0);
+    ASSERT(mob->lootCredits == 0);
+    ASSERT(MBUtil_IsZero(&mob->cmd, sizeof(mob->cmd)));
 }
 
 void MobSet_Create(MobSet *ms)
