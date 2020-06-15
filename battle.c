@@ -411,6 +411,14 @@ void Battle_RunTick()
         for (uint32 inner = outer + 1; inner < MobVector_Size(&battle.mobs);
             inner++) {
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
+
+            if (oMob->playerID == PLAYER_ID_NEUTRAL &&
+                iMob->playerID == PLAYER_ID_NEUTRAL) {
+                ASSERT(oMob->type == MOB_TYPE_LOOT_BOX);
+                ASSERT(iMob->type == MOB_TYPE_LOOT_BOX);
+                continue;
+            }
+
             BattleRunMobCollision(oMob, iMob);
         }
     }
