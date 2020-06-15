@@ -38,6 +38,7 @@ struct MainData {
     uint32 startTimeMS;
     BattleParams bp;
     int winners[MAX_PLAYERS];
+    uint64 seed;
 } mainData;
 
 void MainPrintBattleStatus(const BattleStatus *bStatus)
@@ -146,6 +147,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-h", "--help",     FALSE, "Print help text"  },
         { "-H", "--headless", FALSE, "Run headless",    },
         { "-l", "--loop",     TRUE,  "Loop <arg> times" },
+        { "-s", "--seed",     TRUE,  "Set random seed"  },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -162,6 +164,8 @@ void MainParseCmdLine(int argc, char **argv)
     } else {
         mainData.loop = 1;
     }
+
+    mainData.seed = MBOpt_GetInt("seed");
 }
 
 int main(int argc, char **argv)
@@ -175,8 +179,12 @@ int main(int argc, char **argv)
     Warning("Starting SpaceRobots2 %s...\n", DEBUG ? "(debug enabled)" : "");
     Warning("\n");
     SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
-    Random_Init();
 
+    if (mainData.seed != 0) {
+        Random_SetSeed(mainData.seed);
+    }
+    Random_Init();
+    DebugPrint("Random seed: 0x%llX\n", Random_GetSeed());
 
     /*
      * Battle Scenario

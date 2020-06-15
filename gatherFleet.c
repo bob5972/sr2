@@ -104,6 +104,7 @@ static void *GatherFleetMobSpawned(void *aiHandle, Mob *m)
 
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
+    ASSERT(Mob_CheckInvariants(m));
 
     if (m->type == MOB_TYPE_FIGHTER) {
         GatherShip *ship;
@@ -279,6 +280,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     MobIt_Start(&ai->mobs, &mit);
     while (MobIt_HasNext(&mit)) {
         Mob *mob = MobIt_Next(&mit);
+        ASSERT(Mob_CheckInvariants(mob));
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             MobPVec_Grow(&sf->fighters);
@@ -297,6 +299,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     MobIt_Start(&ai->sensors, &mit);
     while (MobIt_HasNext(&mit)) {
         Mob *sm = MobIt_Next(&mit);
+        ASSERT(Mob_CheckInvariants(sm));
 
         if (sm->type != MOB_TYPE_MISSILE) {
             MobPVec_Grow(&sf->targets);

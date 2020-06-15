@@ -140,6 +140,8 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
     MobVector_MakeEmpty(&fleet.aiSensors);
     MobVector_EnsureCapacity(&fleet.aiMobs, numMobs);
     MobVector_EnsureCapacity(&fleet.aiSensors, numMobs * fleet.numAIs);
+    MobVector_Pin(&fleet.aiMobs);
+    MobVector_Pin(&fleet.aiSensors);
 
     for (uint32 i = 0; i < fleet.numAIs; i++) {
         MobSet_MakeEmpty(&fleet.ais[i].mobs);
@@ -155,6 +157,8 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
         Mob *m;
         PlayerID p = mob->playerID;
 
+        ASSERT(Mob_CheckInvariants(mob));
+
         MobVector_Grow(&fleet.aiMobs);
         m = MobVector_GetLastPtr(&fleet.aiMobs);
         *m = *mob;
@@ -162,6 +166,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
         ASSERT(p == PLAYER_ID_NEUTRAL || p < fleet.numAIs);
         if (p != PLAYER_ID_NEUTRAL) {
+            ASSERT(Mob_CheckInvariants(m));
             MobSet_Add(&fleet.ais[p].mobs, m);
         }
 
@@ -172,6 +177,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
                     m = MobVector_GetLastPtr(&fleet.aiSensors);
                     *m = *mob;
                     Mob_MaskForSensor(m);
+                    ASSERT(Mob_CheckInvariants(m));
                     MobSet_Add(&fleet.ais[s].sensors, m);
                 }
             }
@@ -193,6 +199,9 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
         Mob *mob = &mobs[i];
         Mob *m = MobVector_GetPtr(&fleet.aiMobs, i);
 
+        ASSERT(Mob_CheckInvariants(mob));
+        ASSERT(Mob_CheckInvariants(m));
+
         if (mob->mobid != m->mobid) {
             PANIC("Fleet mob list corruption!\n");
         }
@@ -201,6 +210,9 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
         mob->cmd = m->cmd;
         mob->aiMobHandle = m->aiMobHandle;
     }
+
+    MobVector_Unpin(&fleet.aiMobs);
+    MobVector_Unpin(&fleet.aiSensors);
 }
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
@@ -213,6 +225,7 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
         MobIt_Start(&ai->mobs, &mit);
         while (MobIt_HasNext(&mit)) {
             Mob *m = MobIt_Next(&mit);
+            ASSERT(Mob_CheckInvariants(m));
             if (m->birthTick == bs->tick) {
                 if (ai->ops.mobSpawned != NULL) {
                     m->aiMobHandle = ai->ops.mobSpawned(ai->aiHandle, m);
