@@ -528,6 +528,7 @@ Mob *Battle_AcquireMobs(uint32 *numMobs)
     battle.mobsAcquired = TRUE;
 
     *numMobs = MobVector_Size(&battle.mobs);
+    MobVector_Pin(&battle.mobs);
     return MobVector_GetCArray(&battle.mobs);
 }
 
@@ -535,6 +536,7 @@ void Battle_ReleaseMobs()
 {
     ASSERT(battle.initialized);
     ASSERT(battle.mobsAcquired);
+    MobVector_Unpin(&battle.mobs);
     battle.mobsAcquired = FALSE;
 }
 

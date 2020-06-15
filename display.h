@@ -24,7 +24,7 @@
 
 void Display_Init();
 void Display_Exit();
-Mob *Display_AcquireMobs(uint32 numMobs);
+Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip);
 void Display_ReleaseMobs();
 void Display_Main();
 

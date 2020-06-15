@@ -33,6 +33,8 @@
 
 struct MainData {
     bool headless;
+    bool frameSkip;
+    uint displayFrames;
     int loop;
     SDL_Thread *engineThread;
     uint32 startTimeMS;
@@ -40,6 +42,7 @@ struct MainData {
     int winners[MAX_PLAYERS];
     uint64 seed;
     uint timeLimit;
+    volatile bool asyncExit;
 } mainData;
 
 void MainPrintBattleStatus(const BattleStatus *bStatus)
@@ -53,7 +56,14 @@ void MainPrintBattleStatus(const BattleStatus *bStatus)
     Warning("\tspawns = %d\n", bStatus->spawns);
     Warning("\tship spawns = %d\n", bStatus->shipSpawns);
     Warning("\t%d ticks in %d ms\n", bStatus->tick, elapsedMS);
-    Warning("\t%.1f ticks/second\n", ((float)bStatus->tick)/elapsedMS * 1000.0f);
+    Warning("\tavg %.1f ticks/second\n", ((float)bStatus->tick)/elapsedMS * 1000.0f);
+
+    if (mainData.displayFrames > 0) {
+        float fps = ((float)mainData.displayFrames)/(elapsedMS / 1000.0f);
+        Warning("\t%d frames in %d ms\n", mainData.displayFrames, elapsedMS);
+        Warning("\tavg %.1f frames/second\n", fps);
+    }
+
     Warning("\n");
 
     if (bStatus->finished) {
@@ -96,10 +106,9 @@ int Main_EngineThreadMain(void *data)
 
     ASSERT(data == NULL);
 
-    while (!finished) {
+    while (!finished && !mainData.asyncExit) {
         Mob *bMobs;
         uint32 numMobs;
-        Mob *dMobs;
 
         // Run the AI
         bMobs = Battle_AcquireMobs(&numMobs);
@@ -114,9 +123,12 @@ int Main_EngineThreadMain(void *data)
         // Draw
         if (!mainData.headless) {
             bMobs = Battle_AcquireMobs(&numMobs);
-            dMobs = Display_AcquireMobs(numMobs);
-            memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
-            Display_ReleaseMobs();
+            Mob *dMobs = Display_AcquireMobs(numMobs, mainData.frameSkip);
+            if (dMobs != NULL) {
+                mainData.displayFrames++;
+                memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
+                Display_ReleaseMobs();
+            }
             Battle_ReleaseMobs();
         }
 
@@ -136,7 +148,7 @@ int Main_EngineThreadMain(void *data)
     mainData.winners[bStatus->winner]++;
     Battle_ReleaseStatus();
 
-    Warning("Battle Finished!\n");
+    Warning("Battle %s!\n", finished ? "Finished" : "Aborted");
     Warning("\n");
 
     return 0;
@@ -145,11 +157,12 @@ int Main_EngineThreadMain(void *data)
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",      FALSE, "Print help text"     },
-        { "-H", "--headless",  FALSE, "Run headless",       },
-        { "-l", "--loop",      TRUE,  "Loop <arg> times"    },
-        { "-s", "--seed",      TRUE,  "Set random seed"     },
-        { "-L", "--timeLimit", TRUE,  "Time limit in ticks" },
+        { "-h", "--help",      FALSE, "Print help text"       },
+        { "-H", "--headless",  FALSE, "Run headless",         },
+        { "-F", "--frameSkip", FALSE, "Allow frame skipping", },
+        { "-l", "--loop",      TRUE,  "Loop <arg> times"      },
+        { "-s", "--seed",      TRUE,  "Set random seed"       },
+        { "-L", "--timeLimit", TRUE,  "Time limit in ticks"   },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -159,7 +172,8 @@ void MainParseCmdLine(int argc, char **argv)
         exit(1);
     }
 
-    mainData.headless = MBOpt_IsPresent("headless");
+    mainData.headless = MBOpt_GetBool("headless");
+    mainData.frameSkip = MBOpt_GetBool("frameSkip");
 
     if (MBOpt_IsPresent("loop")) {
         mainData.loop = MBOpt_GetInt("loop");
@@ -169,6 +183,7 @@ void MainParseCmdLine(int argc, char **argv)
 
     mainData.seed = MBOpt_GetInt("seed");
     mainData.timeLimit = MBOpt_GetInt("timeLimit");
+
 }
 
 int main(int argc, char **argv)
@@ -261,6 +276,7 @@ int main(int argc, char **argv)
 
         if (!mainData.headless) {
             Display_Main();
+            mainData.asyncExit = TRUE;
         }
 
         SDL_WaitThread(mainData.engineThread, NULL);

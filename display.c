@@ -152,25 +152,35 @@ void Display_Exit()
 }
 
 
-Mob *Display_AcquireMobs(uint32 numMobs)
+Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip)
 {
     SDL_LockMutex(display.mobMutex);
     ASSERT(!display.mobsAcquired);
 
-    while (display.mobGenerationDrawn != display.mobGeneration) {
-        // We haven't drawn the last frame yet.
-        display.mainWaiting = TRUE;
-        SDL_UnlockMutex(display.mobMutex);
-        SDL_SemWait(display.mainSignal);
-        SDL_LockMutex(display.mobMutex);
+    ASSERT(!display.mainWaiting);
 
-        if (!display.inMain) {
-            PANIC("display thread quit\n");
+    if (frameSkip) {
+        if (display.mobGenerationDrawn != display.mobGeneration) {
+            SDL_UnlockMutex(display.mobMutex);
+            return NULL;
         }
+    } else {
+        while (display.mobGenerationDrawn != display.mobGeneration) {
+            // We haven't drawn the last frame yet.
+            display.mainWaiting = TRUE;
+            SDL_UnlockMutex(display.mobMutex);
+            SDL_SemWait(display.mainSignal);
+            SDL_LockMutex(display.mobMutex);
+
+            if (!display.inMain) {
+                PANIC("display thread quit\n");
+            }
+        }
+        display.mainWaiting = FALSE;
     }
-    display.mainWaiting = FALSE;
 
     MobVector_Resize(&display.mobs, numMobs);
+    MobVector_Pin(&display.mobs);
     display.mobsAcquired = TRUE;
 
     /*
@@ -185,6 +195,7 @@ void Display_ReleaseMobs()
      * We acquired the lock in Display_AcquireMobs.
      */
     ASSERT(display.mobsAcquired);
+    MobVector_Unpin(&display.mobs);
     display.mobsAcquired = FALSE;
     display.mobGeneration++;
     SDL_UnlockMutex(display.mobMutex);
@@ -341,8 +352,7 @@ void Display_Main(void)
 
     uint32 targetFPS = 102;
     uint64 targetUSPerFrame = (1000 * 1000) / targetFPS;
-    uint64 startTimeUS;
-    uint64 endTimeUS;
+    uint64 startTimeUS, endTimeUS;
 
     ASSERT(display.initialized);
     display.inMain = TRUE;
