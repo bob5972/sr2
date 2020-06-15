@@ -193,7 +193,7 @@ int main(int argc, char **argv)
     mainData.bp.height = 1200;
     mainData.bp.startingCredits = 1000;
     mainData.bp.creditsPerTick = 1;
-    mainData.bp.timeLimit = 1000 * 1000;
+    mainData.bp.timeLimit = 100 * 1000;
     mainData.bp.lootDropRate = 0.25f;
     mainData.bp.lootSpawnRate = 2.0f;
     mainData.bp.minLootSpawn = 10;

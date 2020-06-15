@@ -43,9 +43,6 @@ bool MobIt_HasNext(MobIt *mit);
 Mob *MobIt_Next(MobIt *mit);
 
 void Mob_Init(Mob *mob, MobType t);
-bool Mob_CheckInvariants(const Mob *mob);
-void Mob_GetSensorCircle(const Mob *mob, FCircle *c);
-void Mob_GetCircle(const Mob *mob, FCircle *c);
 
 void Mob_MaskForSensor(Mob *mob);
 void Mob_MaskForAI(Mob *mob);
@@ -60,6 +57,53 @@ static inline uint Mob_GetMaxFuel(const Mob *mob)
 {
     ASSERT(mob != NULL);
     return MobType_GetMaxFuel(mob->type);
+}
+
+static inline void Mob_GetCircle(const Mob *mob, FCircle *c)
+{
+    c->center.x = mob->pos.x;
+    c->center.y = mob->pos.y;
+    c->radius = MobType_GetRadius(mob->type);
+}
+
+
+static inline void Mob_GetSensorCircle(const Mob *mob, FCircle *c)
+{
+    c->center.x = mob->pos.x;
+    c->center.y = mob->pos.y;
+    c->radius = MobType_GetSensorRadius(mob->type);
+}
+
+
+static inline bool Mob_CheckInvariants(const Mob *m)
+{
+    if (DEBUG) {
+        ASSERT(m != NULL);
+
+        ASSERT(m->mobid != MOB_ID_INVALID);
+
+        ASSERT(m->type != MOB_TYPE_INVALID);
+        ASSERT(m->type >= MOB_TYPE_MIN);
+        ASSERT(m->type < MOB_TYPE_MAX);
+
+        ASSERT(m->image != MOB_IMAGE_INVALID);
+        ASSERT(m->image >= MOB_IMAGE_MIN);
+        ASSERT(m->image < MOB_IMAGE_MAX);
+
+        ASSERT(m->playerID != PLAYER_ID_INVALID);
+
+        if (m->image == MOB_IMAGE_FULL) {
+            ASSERT(!(m->removeMob && m->alive));
+        }
+
+        if (m->image == MOB_IMAGE_FULL ||
+            m->image == MOB_IMAGE_AI) {
+            ASSERT(m->fuel <= MobType_GetMaxFuel(m->type));
+            ASSERT(m->health <= MobType_GetMaxHealth(m->type));
+        }
+    }
+
+    return TRUE;
 }
 
 #endif // _MOB_H_202006041753

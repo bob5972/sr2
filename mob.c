@@ -18,150 +18,125 @@
 
 #include "mob.h"
 
-#define SPEED_SCALE (1.0f)
-#define SIZE_SCALE (1.0f)
-
 float MobType_GetRadius(MobType type)
 {
-    switch (type) {
-        case MOB_TYPE_BASE:
-            return 50.0f * SIZE_SCALE;
-            break;
-        case MOB_TYPE_FIGHTER:
-            return 5.0f * SIZE_SCALE;
-            break;
-        case MOB_TYPE_MISSILE:
-            return 3.0f * SIZE_SCALE;
-            break;
-        case MOB_TYPE_LOOT_BOX:
-            return 2.0f * SIZE_SCALE;
-            break;
-        default:
-            PANIC("Unhandled mob type: %d\n", type);
-            break;
-    }
+    static struct {
+        MobType type;
+        float radius;
+    } v[] = {
+        { MOB_TYPE_INVALID,    0.0f, },
+        { MOB_TYPE_BASE,      50.0f, },
+        { MOB_TYPE_FIGHTER,    5.0f, },
+        { MOB_TYPE_MISSILE,    3.0f, },
+        { MOB_TYPE_LOOT_BOX ,  2.0f, },
+    };
 
-    NOT_REACHED();
+    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(v));
+    ASSERT(type == v[type].type);
+    return v[type].radius;
 }
 
 float MobType_GetSensorRadius(MobType type)
 {
-    switch (type) {
-        case MOB_TYPE_BASE:
-            return 250.0f * SIZE_SCALE;
-            break;
-        case MOB_TYPE_FIGHTER:
-            return 50.0f * SIZE_SCALE;
-            break;
-        case MOB_TYPE_MISSILE:
-            return 30.0f * SIZE_SCALE;
-            break;
-        case MOB_TYPE_LOOT_BOX:
-            return 0.0f * SIZE_SCALE;
-            break;
-        default:
-            PANIC("Unhandled mob type: %d\n", type);
-            break;
-    }
-}
+    static struct {
+        MobType type;
+        float sensorRadius;
+    } v[] = {
+        { MOB_TYPE_INVALID,    0.0f, },
+        { MOB_TYPE_BASE,     250.0f, },
+        { MOB_TYPE_FIGHTER,   50.0f, },
+        { MOB_TYPE_MISSILE,   30.0f, },
+        { MOB_TYPE_LOOT_BOX ,  0.0f, },
+    };
 
-void Mob_GetCircle(const Mob *mob, FCircle *c)
-{
-    c->center.x = mob->pos.x;
-    c->center.y = mob->pos.y;
-    c->radius = MobType_GetRadius(mob->type);
-}
-
-
-void Mob_GetSensorCircle(const Mob *mob, FCircle *c)
-{
-    c->center.x = mob->pos.x;
-    c->center.y = mob->pos.y;
-    c->radius = MobType_GetSensorRadius(mob->type);
+    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(v));
+    ASSERT(type == v[type].type);
+    return v[type].sensorRadius;
 }
 
 float MobType_GetSpeed(MobType type)
 {
-    float speed;
+    static struct {
+        MobType type;
+        float speed;
+    } v[] = {
+        { MOB_TYPE_INVALID,    0.0f, },
+        { MOB_TYPE_BASE,       0.0f, },
+        { MOB_TYPE_FIGHTER,    2.5f, },
+        { MOB_TYPE_MISSILE,    5.0f, },
+        { MOB_TYPE_LOOT_BOX ,  0.5f, },
+    };
 
-    switch (type) {
-        case MOB_TYPE_BASE:
-            speed = 0.0f * SPEED_SCALE;
-            break;
-        case MOB_TYPE_FIGHTER:
-            speed = 2.5f * SPEED_SCALE;
-            break;
-        case MOB_TYPE_MISSILE:
-            speed = 5.0f * SPEED_SCALE;
-            break;
-        case MOB_TYPE_LOOT_BOX:
-            speed = 0.5f * SPEED_SCALE;
-            break;
-        default:
-            PANIC("Unhandled mob type: %d\n", type);
-            break;
-    }
-
-    ASSERT(MobType_GetRadius(type) >= SPEED_SCALE);
-    return speed;
+    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(v));
+    ASSERT(type == v[type].type);
+    return v[type].speed;
 }
 
 int MobType_GetCost(MobType type)
 {
-    switch (type) {
-        case MOB_TYPE_BASE:
-            return -1;
-        case MOB_TYPE_FIGHTER:
-            return 100;
-        case MOB_TYPE_MISSILE:
-            return 1;
-        case MOB_TYPE_LOOT_BOX:
-            return -1;
-        default:
-            PANIC("Unhandled mob type: %d\n", type);
-            break;
-    }
+    static struct {
+        MobType type;
+        int cost;
+    } v[] = {
+        { MOB_TYPE_INVALID,    -1, },
+        { MOB_TYPE_BASE,       -1, },
+        { MOB_TYPE_FIGHTER,   100, },
+        { MOB_TYPE_MISSILE,     1, },
+        { MOB_TYPE_LOOT_BOX ,  -1, },
+    };
 
-    NOT_REACHED();
+    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(v));
+    ASSERT(type == v[type].type);
+    return v[type].cost;
 }
 
 int MobType_GetMaxFuel(MobType type)
 {
-    switch (type) {
-        case MOB_TYPE_BASE:
-            return -1;
-        case MOB_TYPE_FIGHTER:
-            return -1;
-        case MOB_TYPE_MISSILE:
-            return 14;
-        case MOB_TYPE_LOOT_BOX:
-            return 4 * 1000;
-        default:
-            PANIC("Unhandled mob type: %d\n", type);
-            break;
-    }
+    static struct {
+        MobType type;
+        int fuel;
+    } v[] = {
+        { MOB_TYPE_INVALID,      -1, },
+        { MOB_TYPE_BASE,         -1, },
+        { MOB_TYPE_FIGHTER,      -1, },
+        { MOB_TYPE_MISSILE,      14, },
+        { MOB_TYPE_LOOT_BOX ,  4000, },
+    };
 
-    NOT_REACHED();
+    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(v));
+    ASSERT(type == v[type].type);
+    return v[type].fuel;
 }
 
 
 int MobType_GetMaxHealth(MobType type)
 {
-    switch (type) {
-        case MOB_TYPE_BASE:
-            return 50;
-        case MOB_TYPE_FIGHTER:
-            return 1;
-        case MOB_TYPE_MISSILE:
-            return 1;
-        case MOB_TYPE_LOOT_BOX:
-            return 1;
-        default:
-            PANIC("Unhandled mob type: %d\n", type);
-            break;
-    }
+    static struct {
+        MobType type;
+        int health;
+    } v[] = {
+        { MOB_TYPE_INVALID,      -1, },
+        { MOB_TYPE_BASE,         50, },
+        { MOB_TYPE_FIGHTER,       1, },
+        { MOB_TYPE_MISSILE,       1, },
+        { MOB_TYPE_LOOT_BOX ,     1, },
+    };
 
-    NOT_REACHED();
+    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(v));
+    ASSERT(type == v[type].fuel);
+    return v[type].health;
 }
 
 void Mob_Init(Mob *mob, MobType t)
@@ -175,37 +150,6 @@ void Mob_Init(Mob *mob, MobType t)
     mob->fuel = MobType_GetMaxFuel(t);
     mob->health = MobType_GetMaxHealth(t);
     mob->cmd.spawnType = MOB_TYPE_INVALID;
-}
-
-bool Mob_CheckInvariants(const Mob *m)
-{
-    if (DEBUG) {
-        ASSERT(m != NULL);
-
-        ASSERT(m->mobid != MOB_ID_INVALID);
-
-        ASSERT(m->type != MOB_TYPE_INVALID);
-        ASSERT(m->type >= MOB_TYPE_MIN);
-        ASSERT(m->type < MOB_TYPE_MAX);
-
-        ASSERT(m->image != MOB_IMAGE_INVALID);
-        ASSERT(m->image >= MOB_IMAGE_MIN);
-        ASSERT(m->image < MOB_IMAGE_MAX);
-
-        ASSERT(m->playerID != PLAYER_ID_INVALID);
-
-        if (m->image == MOB_IMAGE_FULL) {
-            ASSERT(!(m->removeMob && m->alive));
-        }
-
-        if (m->image == MOB_IMAGE_FULL ||
-            m->image == MOB_IMAGE_AI) {
-            ASSERT(m->fuel <= MobType_GetMaxFuel(m->type));
-            ASSERT(m->health <= MobType_GetMaxHealth(m->type));
-        }
-    }
-
-    return TRUE;
 }
 
 void Mob_MaskForAI(Mob *mob)
