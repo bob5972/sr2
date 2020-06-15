@@ -135,7 +135,7 @@ int MobType_GetMaxHealth(MobType type)
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
     ASSERT(type != MOB_TYPE_INVALID);
     ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].fuel);
+    ASSERT(type == v[type].type);
     return v[type].health;
 }
 

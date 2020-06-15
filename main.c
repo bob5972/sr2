@@ -39,6 +39,7 @@ struct MainData {
     BattleParams bp;
     int winners[MAX_PLAYERS];
     uint64 seed;
+    uint timeLimit;
 } mainData;
 
 void MainPrintBattleStatus(const BattleStatus *bStatus)
@@ -144,10 +145,11 @@ int Main_EngineThreadMain(void *data)
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",     FALSE, "Print help text"  },
-        { "-H", "--headless", FALSE, "Run headless",    },
-        { "-l", "--loop",     TRUE,  "Loop <arg> times" },
-        { "-s", "--seed",     TRUE,  "Set random seed"  },
+        { "-h", "--help",      FALSE, "Print help text"     },
+        { "-H", "--headless",  FALSE, "Run headless",       },
+        { "-l", "--loop",      TRUE,  "Loop <arg> times"    },
+        { "-s", "--seed",      TRUE,  "Set random seed"     },
+        { "-L", "--timeLimit", TRUE,  "Time limit in ticks" },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -166,6 +168,7 @@ void MainParseCmdLine(int argc, char **argv)
     }
 
     mainData.seed = MBOpt_GetInt("seed");
+    mainData.timeLimit = MBOpt_GetInt("timeLimit");
 }
 
 int main(int argc, char **argv)
@@ -193,7 +196,11 @@ int main(int argc, char **argv)
     mainData.bp.height = 1200;
     mainData.bp.startingCredits = 1000;
     mainData.bp.creditsPerTick = 1;
-    mainData.bp.timeLimit = 100 * 1000;
+    if (mainData.timeLimit != 0) {
+        mainData.bp.timeLimit = mainData.timeLimit;
+    } else{
+        mainData.bp.timeLimit = 100 * 1000;
+    }
     mainData.bp.lootDropRate = 0.25f;
     mainData.bp.lootSpawnRate = 2.0f;
     mainData.bp.minLootSpawn = 10;

@@ -68,13 +68,18 @@ if [ "$DEBUG" == "" ]; then
 	DEBUG="1";
 fi;
 
+POPTS=""
+if [ "$PROFILE" == "1" ]; then
+   POPTS="-pg"
+fi;
+
 echo '#define DEBUG ' $DEBUG >> $CONFIG_H
 echo DEBUG=$DEBUG >> $CONFIG_MK;
 
 if [ "$DEBUG" != "0" ]; then
-	DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -Werror -Wall -g"
+	DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -Werror -Wall -g $POPTS"
 else
-	DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -O2 -fomit-frame-pointer"
+	DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -O2 $POPTS"
 fi;
 
 echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
