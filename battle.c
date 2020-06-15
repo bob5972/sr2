@@ -432,6 +432,13 @@ void Battle_RunTick()
             inner++) {
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
 
+            if (oMob->playerID == PLAYER_ID_NEUTRAL &&
+                iMob->playerID == PLAYER_ID_NEUTRAL) {
+                ASSERT(oMob->type == MOB_TYPE_LOOT_BOX);
+                ASSERT(iMob->type == MOB_TYPE_LOOT_BOX);
+                continue;
+            }
+
             if (oMob->alive &&
                 !BitVector_GetRaw(oMob->playerID, &iMob->scannedBy)) {
                 if (BattleCheckMobScan(oMob, iMob)) {
