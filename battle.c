@@ -343,6 +343,11 @@ static bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
         return FALSE;
     }
 
+    if (scanning->type == MOB_TYPE_LOOT_BOX) {
+        ASSERT(MobType_GetSensorRadius(MOB_TYPE_LOOT_BOX) == 0.0f);
+        return FALSE;
+    }
+
     Mob_GetSensorCircle(scanning, &sc);
     Mob_GetCircle(target, &tc);
 
@@ -429,7 +434,6 @@ void Battle_RunTick()
 
             if (oMob->alive &&
                 !BitVector_GetRaw(oMob->playerID, &iMob->scannedBy)) {
-
                 if (BattleCheckMobScan(oMob, iMob)) {
                     ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
                     BitVector_SetRaw(oMob->playerID, &iMob->scannedBy);
