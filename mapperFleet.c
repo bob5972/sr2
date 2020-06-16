@@ -37,13 +37,11 @@ typedef enum MapperGovernor {
     MAPPER_GOV_MAX,
 } MapperGovernor;
 
-typedef struct MapperShipData {
+typedef struct MapperShip {
     MobID mobid;
     MapperGovernor gov;
     int assignedTile;
-} MapperShipData;
-
-DECLARE_MBVECTOR_TYPE(MapperShipData, ShipVector);
+} MapperShip;
 
 typedef struct MapperFleetData {
     FleetAI *ai;
@@ -53,8 +51,6 @@ typedef struct MapperFleetData {
     FPoint lastShipLost;
     uint lastShipLostTick;
 
-    uint tick;
-    uint spawnCount;
     uint numGuard;
 
     uint mapTileWidth;
@@ -65,16 +61,14 @@ typedef struct MapperFleetData {
     uint *tileScanTicks;
     MapTileFlags *tileFlags;
     BitVector tileBV;
-
-    ShipVector ships;
-    IntMap shipMap;
 } MapperFleetData;
 
 static void *MapperFleetCreate(FleetAI *ai);
 static void MapperFleetDestroy(void *aiHandle);
 static void MapperFleetRunAITick(void *aiHandle);
-static MapperShipData *MapperFleetGetShip(MapperFleetData *sf, MobID mobid);
-static void MapperFleetDestroyShip(MapperFleetData *sf, MobID mobid);
+static void *MapperFleetMobSpawned(void *aiHandle, Mob *m);
+static void MapperFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static MapperShip *MapperFleetGetShip(MapperFleetData *sf, MobID mobid);
 
 void MapperFleet_GetOps(FleetAIOps *ops)
 {
@@ -87,6 +81,8 @@ void MapperFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &MapperFleetCreate;
     ops->destroyFleet = &MapperFleetDestroy;
     ops->runAITick = &MapperFleetRunAITick;
+    ops->mobSpawned = &MapperFleetMobSpawned;
+    ops->mobDestroyed = &MapperFleetMobDestroyed;
 }
 
 static void *MapperFleetCreate(FleetAI *ai)
@@ -99,10 +95,6 @@ static void *MapperFleetCreate(FleetAI *ai)
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
     sf->ai = ai;
-
-    ShipVector_CreateEmpty(&sf->ships);
-    IntMap_Create(&sf->shipMap);
-    IntMap_SetEmptyValue(&sf->shipMap, MOB_ID_INVALID);
 
     /*
      * Use quarter-circle sized tiles, so that if the ship is
@@ -136,73 +128,74 @@ static void MapperFleetDestroy(void *aiHandle)
     free(sf->tileScanTicks);
     free(sf->tileFlags);
 
-    IntMap_Destroy(&sf->shipMap);
-    ShipVector_Destroy(&sf->ships);
-
     free(sf);
 }
 
-static void MapperFleetInitShip(MapperFleetData *sf,
-                                MapperShipData *ship, MobID mobid)
+static void *MapperFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    MBUtil_Zero(ship, sizeof(*ship));
-    ship->mobid = mobid;
-    ship->assignedTile = -1;
-    ship->gov = MAPPER_GOV_INVALID;
-}
+    MapperFleetData *sf = aiHandle;
 
-static MapperShipData *MapperFleetGetShip(MapperFleetData *sf, MobID mobid)
-{
-    int i = IntMap_Get(&sf->shipMap, mobid);
+    ASSERT(sf != NULL);
+    ASSERT(m != NULL);
 
-    if (i != MOB_ID_INVALID) {
-        return ShipVector_GetPtr(&sf->ships, i);
-    } else {
-        MapperShipData *s;
-        ShipVector_Grow(&sf->ships);
-        s = ShipVector_GetLastPtr(&sf->ships);
+    if (m->type == MOB_TYPE_FIGHTER) {
+        MapperShip *ship;
+        ship = MBUtil_ZAlloc(sizeof(*ship));
+        ship->mobid = m->mobid;
+        ship->assignedTile = -1;
 
-        MapperFleetInitShip(sf, s, mobid);
-
-        i = ShipVector_Size(&sf->ships) - 1;
-        IntMap_Put(&sf->shipMap, mobid, i);
-        ASSERT(IntMap_Get(&sf->shipMap, mobid) == i);
-        return s;
-    }
-}
-
-/*
- * Potentially invalidates any outstanding ship references.
- */
-static void MapperFleetDestroyShip(MapperFleetData *sf, MobID mobid)
-{
-    MapperShipData *s;
-    int i = IntMap_Get(&sf->shipMap, mobid);
-
-    ASSERT(i != -1);
-
-    IntMap_Remove(&sf->shipMap, mobid);
-
-    if (i != ShipVector_Size(&sf->ships) - 1) {
-        ASSERT(i < ShipVector_Size(&sf->ships));
-        s = ShipVector_GetPtr(&sf->ships, i);
-        if (s->gov == MAPPER_GOV_GUARD) {
-            ASSERT(sf->numGuard > 0);
-            sf->numGuard--;
+        if (sf->numGuard < 1) {
+            ship->gov = MAPPER_GOV_GUARD;
+        } else {
+            EnumDistribution dist[] = {
+                { MAPPER_GOV_SCOUT,  0.50 },
+                { MAPPER_GOV_GUARD,  0.50 },
+                { MAPPER_GOV_ATTACK, 0.00 },
+            };
+            ship->gov = Random_Enum(dist, ARRAYSIZE(dist));
         }
 
-        s = ShipVector_GetLastPtr(&sf->ships);
+        if (ship->gov == MAPPER_GOV_GUARD) {
+            sf->numGuard++;
+        }
 
-        ShipVector_PutValue(&sf->ships, i, *s);
-        ASSERT(IntMap_Get(&sf->shipMap, s->mobid) ==
-               ShipVector_Size(&sf->ships) - 1);
+        m->cmd.target = sf->basePos;
+        return ship;
+    } else {
+        /*
+         * We don't track anything else.
+         */
+        return NULL;
+    }
+}
 
-        IntMap_Put(&sf->shipMap, s->mobid, i);
-        ASSERT(IntMap_Get(&sf->shipMap, s->mobid) == i);
+static void MapperFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
+{
+    if (aiMobHandle == NULL) {
+        return;
     }
 
-    ShipVector_Shrink(&sf->ships);
+    MapperFleetData *sf = aiHandle;
+    MapperShip *ship = aiMobHandle;
+    ASSERT(sf != NULL);
+
+    if (ship->gov == MAPPER_GOV_GUARD) {
+        ASSERT(sf->numGuard > 0);
+        sf->numGuard--;
+    }
+
+    free(ship);
 }
+
+
+static MapperShip *MapperFleetGetShip(MapperFleetData *sf, MobID mobid)
+{
+    MapperShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    ASSERT(s != NULL);
+    ASSERT(s->mobid == mobid);
+    return s;
+}
+
 
 static void MapperFleetGetTileCoord(MapperFleetData *sf, const FPoint *pos,
                                     uint32 *x, uint32 *y)
@@ -312,13 +305,12 @@ static void MapperFleetRunAITick(void *aiHandle)
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
-    float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
-                       (1.0f + sf->numGuard / 10.0f);
+    float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
+    float baseScanRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
 
     IntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_MAPPER);
-    sf->tick++;
 
     /*
      * Analyze our sensor data.
@@ -328,17 +320,20 @@ static void MapperFleetRunAITick(void *aiHandle)
     while (MobIt_HasNext(&mit)) {
         Mob *mob = MobIt_Next(&mit);
 
-        if (mob->type == MOB_TYPE_FIGHTER ||
-            mob->type == MOB_TYPE_BASE) {
+        if (mob->type == MOB_TYPE_FIGHTER) {
             uint32 i;
             MapperFleetGetTileIndex(sf, &mob->pos, &i);
             ASSERT(i < sf->numTiles);
-            sf->tileScanTicks[i] = sf->tick;
+            sf->tileScanTicks[i] = sf->ai->tick;
             sf->tileFlags[i] = MAP_TILE_SCANNED;
-        }
-
-        if (mob->type == MOB_TYPE_BASE) {
+        } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
+        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+            /*
+             * Add this mob to the sensor list so that we'll
+             * steer towards it.
+             */
+            MobSet_Add(&ai->sensors, mob);
         }
     }
 
@@ -381,18 +376,30 @@ static void MapperFleetRunAITick(void *aiHandle)
     }
 
     /*
-     * Assign tiles to scouts.
+     * Assign tiles to fighters.
      */
     {
+        bool formAttackForce = sf->numGuard >= 10;
+
         MapperFleetStartTileSearch(sf);
         MobIt mit;
         MobIt_Start(&ai->mobs, &mit);
         while (MobIt_HasNext(&mit)) {
             Mob *mob = MobIt_Next(&mit);
             if (mob->type == MOB_TYPE_FIGHTER) {
-                MapperShipData *s = MapperFleetGetShip(sf, mob->mobid);
+                MapperShip *s = MapperFleetGetShip(sf, mob->mobid);
                 ASSERT(s != NULL);
                 ASSERT(s->mobid == mob->mobid);
+
+                if (s->gov == MAPPER_GOV_GUARD) {
+                    if (formAttackForce) {
+                        if (Random_Bit()) {
+                            ASSERT(sf->numGuard > 0);
+                            sf->numGuard--;
+                            s->gov = MAPPER_GOV_ATTACK;
+                        }
+                    }
+                }
 
                 if (s->assignedTile == -1) {
                     uint tileFilter = 0;
@@ -417,37 +424,18 @@ static void MapperFleetRunAITick(void *aiHandle)
     MobIt_Start(&ai->mobs, &mit);
     while (MobIt_HasNext(&mit)) {
         Mob *mob = MobIt_Next(&mit);
-        MapperShipData *s = MapperFleetGetShip(sf, mob->mobid);
-        ASSERT(s != NULL);
-        ASSERT(s->mobid == mob->mobid);
 
-        if (mob->type == MOB_TYPE_FIGHTER && s->gov == MAPPER_GOV_INVALID) {
-            sf->spawnCount++;
-            mob->cmd.target = sf->basePos;
-
-            if (sf->numGuard < 1) {
-                s->gov = MAPPER_GOV_GUARD;
-            } else {
-                EnumDistribution dist[] = {
-                    { MAPPER_GOV_SCOUT,  0.30 },
-                    { MAPPER_GOV_GUARD,  0.40 },
-                    { MAPPER_GOV_ATTACK, 0.30 },
-                };
-                s->gov = Random_Enum(dist, ARRAYSIZE(dist));
-            }
-            if (s->gov == MAPPER_GOV_GUARD) {
-                sf->numGuard++;
-            }
-        }
-
-        if (!mob->alive) {
-            if (mob->type == MOB_TYPE_FIGHTER) {
-                sf->lastShipLost = mob->pos;
-                sf->lastShipLostTick = sf->tick;
-            }
-            MapperFleetDestroyShip(sf, mob->mobid);
-        } else if (mob->type == MOB_TYPE_FIGHTER) {
+        if (mob->type == MOB_TYPE_FIGHTER) {
+            MapperShip *s = MapperFleetGetShip(sf, mob->mobid);
             Mob *target = NULL;
+
+            ASSERT(s != NULL);
+            ASSERT(s->mobid == mob->mobid);
+
+            if (!mob->alive) {
+                sf->lastShipLost = mob->pos;
+                sf->lastShipLostTick = sf->ai->tick;
+            }
 
             if (s->gov == MAPPER_GOV_SCOUT) {
                 /*
@@ -477,7 +465,7 @@ static void MapperFleetRunAITick(void *aiHandle)
                         if (FPoint_Distance(&target->pos, &sf->basePos) > guardRange) {
                             target = NULL;
                         }
-                    } else {
+                    } else if (s->gov == MAPPER_GOV_SCOUT) {
                         if (FPoint_Distance(&target->pos, &mob->pos) > firingRange) {
                             target =  NULL;
                         }
@@ -528,7 +516,7 @@ static void MapperFleetRunAITick(void *aiHandle)
                         break;
                     case MAPPER_GOV_ATTACK:
                         moveRadius = firingRange;
-                        if (sf->tick - sf->lastShipLostTick < 1000) {
+                        if (sf->ai->tick - sf->lastShipLostTick < 1000) {
                             moveRadius *= 3.0f;
                             moveCenter = sf->lastShipLost;
                         } else if (sf->enemyBase.type == MOB_TYPE_BASE) {
@@ -551,8 +539,6 @@ static void MapperFleetRunAITick(void *aiHandle)
                 mob->cmd.target = target->pos;
             }
         } else if (mob->type == MOB_TYPE_BASE) {
-            sf->basePos = mob->pos;
-
             if (ai->credits > 200 && Random_Int(0, 20) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
@@ -561,12 +547,17 @@ static void MapperFleetRunAITick(void *aiHandle)
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
-            /*
-             * Add this mob to the sensor list so that we'll
-             * steer towards it.
-             */
-            mob->cmd.target = sf->basePos;
-            MobSet_Add(&ai->sensors, mob);
+            if (FPoint_Distance(&mob->pos, &sf->basePos) <= baseScanRange) {
+                mob->cmd.target = sf->basePos;
+            } else {
+                Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
+                                                       MOB_FLAG_FIGHTER);
+                if (friend != NULL) {
+                    mob->cmd.target = friend->pos;
+                } else {
+                    mob->cmd.target = sf->basePos;
+                }
+            }
         }
     }
 
