@@ -337,13 +337,13 @@ static bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
 
     ASSERT(scanning->alive);
 
-    if (scanning->playerID == target->playerID) {
-        // Players don't scan themselves...
+    if (scanning->type == MOB_TYPE_LOOT_BOX) {
+        ASSERT(MobType_GetSensorRadius(MOB_TYPE_LOOT_BOX) == 0.0f);
         return FALSE;
     }
 
-    if (scanning->type == MOB_TYPE_LOOT_BOX) {
-        ASSERT(MobType_GetSensorRadius(MOB_TYPE_LOOT_BOX) == 0.0f);
+    if (scanning->playerID == target->playerID) {
+        // Players don't scan themselves...
         return FALSE;
     }
 
