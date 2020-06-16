@@ -87,7 +87,7 @@ int MobType_GetCost(MobType type)
         { MOB_TYPE_INVALID,    -1, },
         { MOB_TYPE_BASE,       -1, },
         { MOB_TYPE_FIGHTER,   100, },
-        { MOB_TYPE_MISSILE,     1, },
+        { MOB_TYPE_MISSILE,     5, },
         { MOB_TYPE_LOOT_BOX ,  -1, },
     };
 
