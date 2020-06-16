@@ -309,7 +309,7 @@ static void MapperFleetRunAITick(void *aiHandle)
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
-                       (1.0f + sf->numGuard / 10);
+                       (1.0f + sf->numGuard / 10.0f);
 
     IntMap_Create(&targetMap);
 
