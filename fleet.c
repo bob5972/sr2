@@ -166,7 +166,6 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
         ASSERT(p == PLAYER_ID_NEUTRAL || p < fleet.numAIs);
         if (p != PLAYER_ID_NEUTRAL) {
-            ASSERT(Mob_CheckInvariants(m));
             MobSet_Add(&fleet.ais[p].mobs, m);
         }
 
@@ -199,8 +198,6 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
         Mob *mob = &mobs[i];
         Mob *m = MobVector_GetPtr(&fleet.aiMobs, i);
 
-        ASSERT(Mob_CheckInvariants(mob));
-        ASSERT(Mob_CheckInvariants(m));
 
         if (mob->mobid != m->mobid) {
             PANIC("Fleet mob list corruption!\n");
