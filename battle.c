@@ -203,8 +203,16 @@ static void BattleRunMobMove(Mob *mob)
     FPoint origin;
     float distance;
     float speed;
-    ASSERT(BattleCheckMobInvariants(mob));
+
     ASSERT(mob->alive);
+
+    if (mob->playerID == PLAYER_ID_NEUTRAL) {
+        /*
+         * The neutral player never moves today.
+         */
+        ASSERT(mob->type == MOB_TYPE_LOOT_BOX);
+        return;
+    }
 
     origin.x = mob->pos.x;
     origin.y = mob->pos.y;
