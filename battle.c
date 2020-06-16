@@ -253,28 +253,14 @@ static void BattleRunMobMove(Mob *mob)
 
 static bool BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 {
-    if (lhsType == MOB_TYPE_LOOT_BOX &&
-        rhsType == MOB_TYPE_LOOT_BOX) {
-        /*
-         * With all the neutral loot spawns, this is by the far
-         * the most common scenario being tested.  Checking this first
-         * is a measurable speed-up.
-         */
-        return FALSE;
+    uint lhsFlag = (1 << lhsType);
+    uint rhsFlag = (1 << rhsType);
+
+    if ((MOB_FLAG_AMMO & lhsFlag) != 0) {
+        return (MOB_FLAG_SHIP & rhsFlag) != 0;
     }
-    if (lhsType == MOB_TYPE_MISSILE) {
-        return rhsType != MOB_TYPE_LOOT_BOX;
-    }
-    if (rhsType == MOB_TYPE_MISSILE) {
-        return lhsType != MOB_TYPE_LOOT_BOX;
-    }
-    if (lhsType == MOB_TYPE_LOOT_BOX) {
-        ASSERT(rhsType != MOB_TYPE_MISSILE);
-        return rhsType != MOB_TYPE_LOOT_BOX;
-    }
-    if (rhsType == MOB_TYPE_LOOT_BOX) {
-        ASSERT(lhsType != MOB_TYPE_MISSILE);
-        return lhsType != MOB_TYPE_LOOT_BOX;
+    if ((MOB_FLAG_AMMO & rhsFlag) != 0) {
+        return (MOB_FLAG_SHIP & lhsFlag) != 0;
     }
     return FALSE;
 }

@@ -253,7 +253,7 @@ static void BobFleetRunAITick(void *aiHandle)
                 }
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
-            uint scanFilter = MOB_FLAG_SHIP | MOB_FLAG_MISSILE;
+            uint scanFilter = MOB_FLAG_SHIP;
             Mob *target = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
             if (target != NULL) {
                 mob->cmd.target = target->pos;
