@@ -162,14 +162,13 @@ static void BattleRunMobSpawn(Mob *mob)
            spawnType >= MOB_TYPE_MIN);
     ASSERT(spawnType < MOB_TYPE_MAX);
 
-    if (mobType != MOB_TYPE_BASE &&
-        mobType != MOB_TYPE_FIGHTER) {
-        ASSERT(spawnType == MOB_TYPE_INVALID);
-        return;
-    }
     if (spawnType == MOB_TYPE_INVALID) {
         return;
     }
+
+    ASSERT(mobType == MOB_TYPE_BASE ||
+           mobType == MOB_TYPE_FIGHTER);
+
     if (!mob->alive) {
         return;
     }
