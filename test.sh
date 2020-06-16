@@ -1,11 +1,5 @@
 #!/bin/bash
 
-if [ "$1" != "" ]; then
-    LOOP="$1";
-else
-    LOOP=1
-fi;
-
 if [ ! -f config.mk ]; then
     CLEAN=1;
 else
@@ -19,4 +13,4 @@ if [ "$CLEAN" != "" ]; then
     DEBUG=1 ./configure && make clean;
 fi;
 
-make -j 8 && build/sr2
+make -j 8 && build/sr2 "$@"
