@@ -245,6 +245,15 @@ static void BattleRunMobMove(Mob *mob)
 
 static bool BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 {
+    if (lhsType == MOB_TYPE_LOOT_BOX &&
+        rhsType == MOB_TYPE_LOOT_BOX) {
+        /*
+         * With all the neutral loot spawns, this is by the far
+         * the most common scenario being tested.  Checking this first
+         * is a measurable speed-up.
+         */
+        return FALSE;
+    }
     if (lhsType == MOB_TYPE_MISSILE) {
         return rhsType != MOB_TYPE_LOOT_BOX;
     }
@@ -266,10 +275,10 @@ static bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
     FCircle lc, rc;
 
-    ASSERT(lhs->alive);
-    ASSERT(rhs->alive);
-
     if (!BattleCanMobTypesCollide(lhs->type, rhs->type)) {
+        return FALSE;
+    }
+    if (!lhs->alive || !rhs->alive) {
         return FALSE;
     }
     if (lhs->type != MOB_TYPE_LOOT_BOX &&
@@ -287,10 +296,6 @@ static bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 
 static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
 {
-    if (!oMob->alive || !iMob->alive) {
-        return;
-    }
-
     if (BattleCheckMobCollision(oMob, iMob)) {
         battle.bs.collisions++;
 
@@ -410,14 +415,6 @@ void Battle_RunTick()
         for (uint32 inner = outer + 1; inner < MobVector_Size(&battle.mobs);
             inner++) {
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
-
-            if (oMob->playerID == PLAYER_ID_NEUTRAL &&
-                iMob->playerID == PLAYER_ID_NEUTRAL) {
-                ASSERT(oMob->type == MOB_TYPE_LOOT_BOX);
-                ASSERT(iMob->type == MOB_TYPE_LOOT_BOX);
-                continue;
-            }
-
             BattleRunMobCollision(oMob, iMob);
         }
     }
