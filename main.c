@@ -240,23 +240,23 @@ int main(int argc, char **argv)
 //     mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
 //     p++;
 
-    mainData.bp.players[p].playerName = "BobFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_BOB;
-    p++;
+//     mainData.bp.players[p].playerName = "BobFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_BOB;
+//     p++;
 
-    mainData.bp.players[p].playerName = "MapperFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    mainData.bp.players[p].playerName = "GatherFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_GATHER;
     p++;
 
 //     mainData.bp.players[p].playerName = "CloudFleet";
 //     mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
 //     mainData.bp.players[p].mreg = MBRegistry_Alloc();
-//     MBRegistry_Put(mainData.bp.players[p].mreg, "KamikazeMissiles", "FALSE");
+//     MBRegistry_Put(mainData.bp.players[p].mreg, "KamikazeMissiles", "TRUE");
 //     p++;
 
-//     mainData.bp.players[p].playerName = "GatherFleet";
-//     mainData.bp.players[p].aiType = FLEET_AI_GATHER;
-//     p++;
+    mainData.bp.players[p].playerName = "MapperFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    p++;
 
     ASSERT(p <= ARRAYSIZE(mainData.bp.players));
     mainData.bp.numPlayers = p;
