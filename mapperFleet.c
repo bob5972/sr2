@@ -256,10 +256,12 @@ static void MapperFleetStartTileSearch(MapperFleetData *sf)
     BitVector_ResetAll(&sf->tileBV);
 }
 
-static uint32 MapperFleetGetNextTile(MapperFleetData *sf)
+static uint32 MapperFleetGetNextTile(MapperFleetData *sf, uint tileFilter)
 {
-    uint32 bestIndex = Random_Int(0, sf->numTiles - 1);
+    uint32 offset = Random_Int(0, sf->numTiles - 1);
+    uint32 bestIndex = offset;
     uint32 i;
+
 
     i = bestIndex;
     ASSERT(i < sf->numTiles);
@@ -267,20 +269,22 @@ static uint32 MapperFleetGetNextTile(MapperFleetData *sf)
         goto found;
     }
 
+
     i = 0;
     while (i < sf->numTiles) {
-        if (BitVector_Get(&sf->tileBV, i)) {
+        uint32 t = (i + offset) % sf->numTiles;
+        if (BitVector_Get(&sf->tileBV, t)) {
             // Someone else already claimed this tile...
         } else {
-            if (!BitVector_Get(&sf->tileBV, i) &&
-                sf->tileFlags[i] == MAP_TILE_EMPTY) {
-                bestIndex = i;
-                goto found;
-            }
-            if (sf->tileScanTicks[i] < sf->tileScanTicks[bestIndex]) {
-                if ((sf->tileFlags[bestIndex] & ~MAP_TILE_SCANNED) == 0) {
-                    bestIndex = i;
+            if (!BitVector_Get(&sf->tileBV, t)) {
+                if (sf->tileFlags[t] == MAP_TILE_EMPTY ||
+                    (sf->tileFlags[t] & tileFilter) != 0) {
+                    bestIndex = t;
+                    goto found;
                 }
+            }
+            if (sf->tileScanTicks[t] < sf->tileScanTicks[bestIndex]) {
+                bestIndex = t;
             }
         }
 
@@ -390,10 +394,18 @@ static void MapperFleetRunAITick(void *aiHandle)
                 ASSERT(s != NULL);
                 ASSERT(s->mobid == mob->mobid);
 
-                if (s->gov == MAPPER_GOV_SCOUT &&
-                    s->assignedTile == -1) {
-                    uint32 tileIndex = MapperFleetGetNextTile(sf);
-                    s->assignedTile = tileIndex;
+                if (s->assignedTile == -1) {
+                    uint tileFilter = 0;
+                    if (s->gov == MAPPER_GOV_SCOUT) {
+                        tileFilter = MAP_TILE_LOOT;
+                    } else if (s->gov == MAPPER_GOV_ATTACK) {
+                        tileFilter = MAP_TILE_ENEMY | MAP_TILE_ENEMY_BASE;
+                    }
+
+                    if (tileFilter != 0) {
+                        uint32 tileIndex = MapperFleetGetNextTile(sf, tileFilter);
+                        s->assignedTile = tileIndex;
+                    }
                 }
             }
         }
@@ -417,9 +429,9 @@ static void MapperFleetRunAITick(void *aiHandle)
                 s->gov = MAPPER_GOV_GUARD;
             } else {
                 EnumDistribution dist[] = {
-                    { MAPPER_GOV_SCOUT,  0.50 },
-                    { MAPPER_GOV_GUARD,  0.25 },
-                    { MAPPER_GOV_ATTACK, 0.25 },
+                    { MAPPER_GOV_SCOUT,  0.30 },
+                    { MAPPER_GOV_GUARD,  0.40 },
+                    { MAPPER_GOV_ATTACK, 0.30 },
                 };
                 s->gov = Random_Enum(dist, ARRAYSIZE(dist));
             }
@@ -494,8 +506,7 @@ static void MapperFleetRunAITick(void *aiHandle)
 
             if (target != NULL) {
                 mob->cmd.target = target->pos;
-            } else if (s->gov == MAPPER_GOV_SCOUT &&
-                       s->assignedTile != -1) {
+            } else if (s->assignedTile != -1) {
                 MapperFleetGetPosFromIndex(sf, s->assignedTile,
                                            &mob->cmd.target);
             }
