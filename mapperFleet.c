@@ -51,6 +51,10 @@ typedef struct MapperFleetData {
     FPoint lastShipLost;
     uint lastShipLostTick;
 
+    uint waveSizeIncrement;
+    uint startingWaveSize;
+    uint waveSize;
+
     uint numGuard;
 
     uint mapTileWidth;
@@ -95,6 +99,18 @@ static void *MapperFleetCreate(FleetAI *ai)
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
     sf->ai = ai;
+
+    sf->startingWaveSize = 5;
+    sf->waveSizeIncrement = 0;
+    if (sf->ai->player.mreg != NULL) {
+        sf->startingWaveSize =
+            MBRegistry_GetIntD(sf->ai->player.mreg, "StartingWaveSize",
+                               sf->startingWaveSize);
+        sf->waveSizeIncrement =
+            MBRegistry_GetIntD(sf->ai->player.mreg, "WaveSizeIncrement",
+                               sf->waveSizeIncrement);
+    }
+    sf->waveSize = sf->startingWaveSize;
 
     /*
      * Use quarter-circle sized tiles, so that if the ship is
@@ -379,7 +395,10 @@ static void MapperFleetRunAITick(void *aiHandle)
      * Assign tiles to fighters.
      */
     {
-        bool formAttackForce = sf->numGuard >= 10;
+        bool formAttackForce = sf->numGuard >= sf->waveSize * 2;
+        if (formAttackForce) {
+            sf->waveSize += sf->waveSizeIncrement;
+        }
 
         MapperFleetStartTileSearch(sf);
         MobIt mit;

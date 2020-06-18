@@ -244,9 +244,9 @@ int main(int argc, char **argv)
 //     mainData.bp.players[p].aiType = FLEET_AI_BOB;
 //     p++;
 
-    mainData.bp.players[p].playerName = "GatherFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_GATHER;
-    p++;
+//     mainData.bp.players[p].playerName = "GatherFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_GATHER;
+//     p++;
 
 //     mainData.bp.players[p].playerName = "CloudFleet";
 //     mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
@@ -256,6 +256,13 @@ int main(int argc, char **argv)
 
     mainData.bp.players[p].playerName = "MapperFleet";
     mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    p++;
+
+    mainData.bp.players[p].playerName = "MapperFleet2";
+    mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    mainData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.bp.players[p].mreg, "StartingWaveSize", "5");
+    MBRegistry_Put(mainData.bp.players[p].mreg, "WaveSizeIncrement", "1");
     p++;
 
     ASSERT(p <= ARRAYSIZE(mainData.bp.players));
