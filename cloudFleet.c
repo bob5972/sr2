@@ -28,7 +28,7 @@ typedef struct CloudShip {
 
 typedef struct CloudFleetData {
     FleetAI *ai;
-    bool kamikazeMissiles;
+    bool crazyMissiles;
 
     FPoint basePos;
     uint numGuard;
@@ -65,9 +65,9 @@ static void *CloudFleetCreate(FleetAI *ai)
     sf->ai = ai;
 
     if (sf->ai->player.mreg != NULL) {
-        if (MBRegistry_GetBoolD(sf->ai->player.mreg, "KamikazeMissiles",
+        if (MBRegistry_GetBoolD(sf->ai->player.mreg, "CrazyMissiles",
                                 FALSE)) {
-            sf->kamikazeMissiles = TRUE;
+            sf->crazyMissiles = TRUE;
         }
     }
 
@@ -220,7 +220,7 @@ static void CloudFleetRunAITick(void *aiHandle)
             Mob *target = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
             if (target != NULL) {
                 mob->cmd.target = target->pos;
-            } else if (sf->kamikazeMissiles &&
+            } else if (sf->crazyMissiles &&
                        FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 float moveRadius = firingRange;
                 FPoint moveCenter = mob->pos;
