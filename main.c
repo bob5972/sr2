@@ -255,6 +255,8 @@ int main(int argc, char **argv)
 //     p++;
 
     mainData.bp.players[p].playerName = "MapperFleet";
+    mainData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.bp.players[p].mreg, "RandomWaves", "TRUE");
     mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
     p++;
 
@@ -263,6 +265,7 @@ int main(int argc, char **argv)
     mainData.bp.players[p].mreg = MBRegistry_Alloc();
     MBRegistry_Put(mainData.bp.players[p].mreg, "StartingWaveSize", "5");
     MBRegistry_Put(mainData.bp.players[p].mreg, "WaveSizeIncrement", "1");
+    MBRegistry_Put(mainData.bp.players[p].mreg, "RandomWaves", "FALSE");
     p++;
 
     ASSERT(p <= ARRAYSIZE(mainData.bp.players));

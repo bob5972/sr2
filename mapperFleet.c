@@ -51,9 +51,11 @@ typedef struct MapperFleetData {
     FPoint lastShipLost;
     uint lastShipLostTick;
 
+    bool randomWaves;
     uint waveSizeIncrement;
     uint startingWaveSize;
-    uint waveSize;
+    uint nextWaveSize;
+    uint curWaveSize;
 
     uint numGuard;
 
@@ -102,6 +104,7 @@ static void *MapperFleetCreate(FleetAI *ai)
 
     sf->startingWaveSize = 5;
     sf->waveSizeIncrement = 0;
+    sf->randomWaves = FALSE;
     if (sf->ai->player.mreg != NULL) {
         sf->startingWaveSize =
             MBRegistry_GetIntD(sf->ai->player.mreg, "StartingWaveSize",
@@ -109,8 +112,11 @@ static void *MapperFleetCreate(FleetAI *ai)
         sf->waveSizeIncrement =
             MBRegistry_GetIntD(sf->ai->player.mreg, "WaveSizeIncrement",
                                sf->waveSizeIncrement);
+        sf->randomWaves =
+            MBRegistry_GetIntD(sf->ai->player.mreg, "RandomWaves",
+                               sf->randomWaves);
     }
-    sf->waveSize = sf->startingWaveSize;
+    sf->nextWaveSize = sf->startingWaveSize;
 
     /*
      * Use quarter-circle sized tiles, so that if the ship is
@@ -395,9 +401,9 @@ static void MapperFleetRunAITick(void *aiHandle)
      * Assign tiles to fighters.
      */
     {
-        bool formAttackForce = sf->numGuard >= sf->waveSize * 2;
-        if (formAttackForce) {
-            sf->waveSize += sf->waveSizeIncrement;
+        if (sf->numGuard >= sf->nextWaveSize * 2) {
+            sf->curWaveSize = sf->nextWaveSize;
+            sf->nextWaveSize += sf->waveSizeIncrement;
         }
 
         MapperFleetStartTileSearch(sf);
@@ -411,10 +417,11 @@ static void MapperFleetRunAITick(void *aiHandle)
                 ASSERT(s->mobid == mob->mobid);
 
                 if (s->gov == MAPPER_GOV_GUARD) {
-                    if (formAttackForce) {
-                        if (Random_Bit()) {
+                    if (sf->curWaveSize > 0) {
+                        if (!sf->randomWaves || Random_Bit()) {
                             ASSERT(sf->numGuard > 0);
                             sf->numGuard--;
+                            sf->curWaveSize--;
                             s->gov = MAPPER_GOV_ATTACK;
                         }
                     }
