@@ -54,6 +54,13 @@ static inline float Mob_GetRadius(const Mob *mob)
     return mob->radius;
 }
 
+static inline float Mob_GetSensorRadius(const Mob *mob)
+{
+    ASSERT(mob != NULL);
+    ASSERT(mob->sensorRadius == MobType_GetSensorRadius(mob->type));
+    return mob->sensorRadius;
+}
+
 static inline float Mob_GetSpeed(const Mob *mob)
 {
     ASSERT(mob != NULL);

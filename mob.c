@@ -151,6 +151,7 @@ void Mob_Init(Mob *mob, MobType t)
     mob->health = MobType_GetMaxHealth(t);
     mob->cmd.spawnType = MOB_TYPE_INVALID;
     mob->radius = MobType_GetRadius(t);
+    mob->sensorRadius = MobType_GetSensorRadius(t);
 }
 
 void Mob_MaskForAI(Mob *mob)
