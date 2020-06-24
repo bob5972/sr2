@@ -25,6 +25,7 @@
 
 float MobType_GetSpeed(MobType type);
 float MobType_GetSensorRadius(MobType type);
+float MobType_GetRadius(MobType type);
 int MobType_GetMaxFuel(MobType type);
 int MobType_GetMaxHealth(MobType type);
 int MobType_GetCost(MobType type);
@@ -46,24 +47,11 @@ void Mob_Init(Mob *mob, MobType t);
 void Mob_MaskForSensor(Mob *mob);
 void Mob_MaskForAI(Mob *mob);
 
-static inline float MobType_GetRadius(MobType type)
+static inline float Mob_GetRadius(const Mob *mob)
 {
-    static struct {
-        MobType type;
-        float radius;
-    } v[] = {
-        { MOB_TYPE_INVALID,    0.0f, },
-        { MOB_TYPE_BASE,      50.0f, },
-        { MOB_TYPE_FIGHTER,    5.0f, },
-        { MOB_TYPE_MISSILE,    3.0f, },
-        { MOB_TYPE_LOOT_BOX ,  2.0f, },
-    };
-
-    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
-    ASSERT(type != MOB_TYPE_INVALID);
-    ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].type);
-    return v[type].radius;
+    ASSERT(mob != NULL);
+    ASSERT(mob->radius == MobType_GetRadius(mob->type));
+    return mob->radius;
 }
 
 static inline float Mob_GetSpeed(const Mob *mob)
@@ -82,7 +70,7 @@ static inline void Mob_GetCircle(const Mob *mob, FCircle *c)
 {
     c->center.x = mob->pos.x;
     c->center.y = mob->pos.y;
-    c->radius = MobType_GetRadius(mob->type);
+    c->radius = Mob_GetRadius(mob);
 }
 
 

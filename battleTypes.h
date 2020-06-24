@@ -75,6 +75,7 @@ typedef struct Mob {
     PlayerID playerID;
     bool alive;
     FPoint pos;
+    float radius;
 
     /*
      * Protected fields that are also used by the Fleet AIs.

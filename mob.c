@@ -18,6 +18,26 @@
 
 #include "mob.h"
 
+float MobType_GetRadius(MobType type)
+{
+    static struct {
+        MobType type;
+        float radius;
+    } v[] = {
+        { MOB_TYPE_INVALID,    0.0f, },
+        { MOB_TYPE_BASE,      50.0f, },
+        { MOB_TYPE_FIGHTER,    5.0f, },
+        { MOB_TYPE_MISSILE,    3.0f, },
+        { MOB_TYPE_LOOT_BOX ,  2.0f, },
+    };
+
+    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(v));
+    ASSERT(type == v[type].type);
+    return v[type].radius;
+}
+
 float MobType_GetSensorRadius(MobType type)
 {
     static struct {
@@ -130,6 +150,7 @@ void Mob_Init(Mob *mob, MobType t)
     mob->fuel = MobType_GetMaxFuel(t);
     mob->health = MobType_GetMaxHealth(t);
     mob->cmd.spawnType = MOB_TYPE_INVALID;
+    mob->radius = MobType_GetRadius(t);
 }
 
 void Mob_MaskForAI(Mob *mob)
