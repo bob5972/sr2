@@ -329,20 +329,34 @@ static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
     }
 }
 
+// Is the scanning mob allowed to scan anything?
+static bool BattleCanMobScan(const Mob *scanning)
+{
+    if (scanning->type == MOB_TYPE_LOOT_BOX) {
+        ASSERT(MobType_GetSensorRadius(MOB_TYPE_LOOT_BOX) == 0.0f);
+        return FALSE;
+    }
+    ASSERT(scanning->playerID != PLAYER_ID_NEUTRAL);
+    if (!scanning->alive) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
 // Can the scanning mob see the target mob?
 static bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
 {
     FCircle sc, tc;
 
-    ASSERT(scanning->alive);
+    ASSERT(BattleCanMobScan(scanning));
 
     if (scanning->playerID == target->playerID) {
         // Players don't scan themselves...
         return FALSE;
     }
-
-    if (scanning->type == MOB_TYPE_LOOT_BOX) {
-        ASSERT(MobType_GetSensorRadius(MOB_TYPE_LOOT_BOX) == 0.0f);
+    if (BitVector_GetRaw(scanning->playerID, &target->scannedBy)) {
+        // This target was already seen by the player, so this isn't
+        // a new scan.
         return FALSE;
     }
 
@@ -425,7 +439,7 @@ void Battle_RunTick()
     // Process scanning
     for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
         Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
-        if (oMob->type == MOB_TYPE_LOOT_BOX) {
+        if (!BattleCanMobScan(oMob)) {
             continue;
         }
 
@@ -433,14 +447,11 @@ void Battle_RunTick()
              inner++) {
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
 
-            if (oMob->alive &&
-                !BitVector_GetRaw(oMob->playerID, &iMob->scannedBy)) {
-                if (BattleCheckMobScan(oMob, iMob)) {
-                    ASSERT(outer != inner);
-                    ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
-                    BitVector_SetRaw(oMob->playerID, &iMob->scannedBy);
-                    battle.bs.sensorContacts++;
-                }
+            if (BattleCheckMobScan(oMob, iMob)) {
+                ASSERT(outer != inner);
+                ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
+                BitVector_SetRaw(oMob->playerID, &iMob->scannedBy);
+                battle.bs.sensorContacts++;
             }
         }
     }
