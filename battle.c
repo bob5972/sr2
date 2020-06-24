@@ -344,9 +344,9 @@ static bool BattleCanMobScan(const Mob *scanning)
 }
 
 // Can the scanning mob see the target mob?
-static bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
+static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc, const Mob *target)
 {
-    FCircle sc, tc;
+    FCircle tc;
 
     ASSERT(BattleCanMobScan(scanning));
 
@@ -360,13 +360,36 @@ static bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
         return FALSE;
     }
 
-    Mob_GetSensorCircle(scanning, &sc);
     Mob_GetCircle(target, &tc);
 
-    if (FCircle_Intersect(&sc, &tc)) {
+    if (FCircle_Intersect(sc, &tc)) {
         return TRUE;
     }
     return FALSE;
+}
+
+static void BattleProcessScanning(void)
+{
+    for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
+        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
+        FCircle sc;
+        if (!BattleCanMobScan(oMob)) {
+            continue;
+        }
+
+        Mob_GetSensorCircle(oMob, &sc);
+
+        for (uint32 inner = 0; inner < MobVector_Size(&battle.mobs); inner++) {
+            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
+
+            if (BattleCheckMobScan(oMob, &sc, iMob)) {
+                ASSERT(outer != inner);
+                ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
+                BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
+                battle.bs.sensorContacts++;
+            }
+        }
+    }
 }
 
 void Battle_RunTick()
@@ -437,24 +460,7 @@ void Battle_RunTick()
     MobVector_MakeEmpty(&battle.pendingSpawns);
 
     // Process scanning
-    for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
-        if (!BattleCanMobScan(oMob)) {
-            continue;
-        }
-
-        for (uint32 inner = 0; inner < MobVector_Size(&battle.mobs);
-             inner++) {
-            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
-
-            if (BattleCheckMobScan(oMob, iMob)) {
-                ASSERT(outer != inner);
-                ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
-                BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
-                battle.bs.sensorContacts++;
-            }
-        }
-    }
+    BattleProcessScanning();
 
     // Destroy mobs and track player liveness
     for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
