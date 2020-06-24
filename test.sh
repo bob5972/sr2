@@ -13,4 +13,4 @@ if [ "$CLEAN" != "" ]; then
     DEBUG=1 ./configure && make clean;
 fi;
 
-make -j 8 && build/sr2 "$@"
+make -j 20 && build/sr2 "$@"

@@ -19,4 +19,4 @@ if [ "$CLEAN" != "" ]; then
     DEBUG=0 ./configure && make clean;
 fi;
 
-make -j 8 && build/sr2 -H -l $LOOP
+make -j 20 && build/sr2 -H -l $LOOP
