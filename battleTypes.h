@@ -95,7 +95,7 @@ typedef struct Mob {
      */
     char privateFields;
     bool removeMob;
-    uint64 scannedBy;
+    uint32 scannedBy;
 } Mob;
 
 DECLARE_MBVECTOR_TYPE(Mob, MobVector);

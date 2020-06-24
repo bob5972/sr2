@@ -354,7 +354,7 @@ static bool BattleCheckMobScan(const Mob *scanning, const Mob *target)
         // Players don't scan themselves...
         return FALSE;
     }
-    if (BitVector_GetRaw(scanning->playerID, &target->scannedBy)) {
+    if (BitVector_GetRaw32(scanning->playerID, target->scannedBy)) {
         // This target was already seen by the player, so this isn't
         // a new scan.
         return FALSE;
@@ -450,7 +450,7 @@ void Battle_RunTick()
             if (BattleCheckMobScan(oMob, iMob)) {
                 ASSERT(outer != inner);
                 ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
-                BitVector_SetRaw(oMob->playerID, &iMob->scannedBy);
+                BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
                 battle.bs.sensorContacts++;
             }
         }

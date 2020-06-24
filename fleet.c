@@ -171,7 +171,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
         if (mob->scannedBy != 0) {
             for (PlayerID s = 0; s < fleet.numAIs; s++) {
-                if (BitVector_GetRaw(s, &mob->scannedBy)) {
+                if (BitVector_GetRaw32(s, mob->scannedBy)) {
                     MobVector_Grow(&fleet.aiSensors);
                     m = MobVector_GetLastPtr(&fleet.aiSensors);
                     *m = *mob;
