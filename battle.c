@@ -19,8 +19,51 @@
 #include "battle.h"
 #include "random.h"
 #include "BitVector.h"
+#include "SDL_thread.h"
+#include "workQueue.h"
 
 #define SPAWN_RECHARGE_TICKS 5
+
+typedef enum BattleWorkType {
+    BATTLE_WORK_TYPE_INVALID = 0,
+    BATTLE_WORK_TYPE_EXIT = 1,
+    BATTLE_WORK_TYPE_SCAN = 2,
+    BATTLE_WORK_TYPE_MAX,
+} BattleWorkType;
+
+typedef struct BattleWorkUnit {
+    BattleWorkType type;
+
+    union {
+        struct {
+            uint firstIndex;
+            uint lastIndex;
+        } scan;
+    };
+} BattleWorkUnit;
+
+typedef enum BattleResultType {
+    BATTLE_RESULT_TYPE_INVALID = 0,
+    BATTLE_RESULT_TYPE_SCAN = 1,
+    BATTLE_RESULT_TYPE_MAX,
+} BattleResultType;
+
+typedef struct BattleWorkResult {
+    BattleResultType type;
+
+    union {
+        struct {
+            uint scanningMobIndex;
+            uint targetMobIndex;
+        } scan;
+    };
+} BattleWorkResult;
+
+typedef struct BattleWorkerThreadData {
+    uint id;
+    char name[8];
+    SDL_Thread *sdlThread;
+} BattleWorkerThreadData;
 
 typedef struct BattleGlobalData {
     bool initialized;
@@ -38,9 +81,15 @@ typedef struct BattleGlobalData {
     bool mobsAcquired;
 
     MobVector pendingSpawns;
+
+    BattleWorkerThreadData workerThreads[8];
+    WorkQueue workQueue;
+    WorkQueue resultQueue;
 } BattleGlobalData;
 
 static BattleGlobalData battle;
+static int BattleWorkerThreadMain(void *data);
+static void BattleProcessScanning(uint firstIndex, uint lastIndex);
 
 void Battle_Init(const BattleParams *bp)
 {
@@ -65,7 +114,7 @@ void Battle_Init(const BattleParams *bp)
     MobVector_Create(&battle.mobs, 0, 1024);
     MobVector_CreateEmpty(&battle.pendingSpawns);
 
-    for (uint32 i = 0; i < bp->numPlayers; i++) {
+    for (uint i = 0; i < bp->numPlayers; i++) {
         if (i == PLAYER_ID_NEUTRAL) {
             continue;
         }
@@ -89,15 +138,68 @@ void Battle_Init(const BattleParams *bp)
         mob->cmd.target = mob->pos;
     }
 
+    WorkQueue_Create(&battle.resultQueue, sizeof(BattleWorkResult));
+    WorkQueue_Create(&battle.workQueue, sizeof(BattleWorkUnit));
+
+    for (uint i = 0; i < ARRAYSIZE(battle.workerThreads); i++) {
+        BattleWorkerThreadData *tData = &battle.workerThreads[i];
+
+        MBUtil_Zero(tData, sizeof(*tData));
+        tData->id = i;
+        snprintf(&tData->name[0], ARRAYSIZE(tData->name), "worker%d", i);
+        tData->sdlThread = SDL_CreateThread(BattleWorkerThreadMain,
+                                            tData->name, tData);
+    }
+
     battle.initialized = TRUE;
 }
 
 void Battle_Exit()
 {
     ASSERT(battle.initialized);
+
+    for (uint i = 0; i < ARRAYSIZE(battle.workerThreads); i++) {
+        BattleWorkUnit wu;
+        wu.type = BATTLE_WORK_TYPE_EXIT;
+        WorkQueue_QueueItem(&battle.workQueue, &wu, sizeof(wu));
+    }
+
+    for (uint i = 0; i < ARRAYSIZE(battle.workerThreads); i++) {
+        BattleWorkerThreadData *tData = &battle.workerThreads[i];
+        SDL_WaitThread(tData->sdlThread, NULL);
+
+    }
+    WorkQueue_Destroy(&battle.resultQueue);
+    WorkQueue_Destroy(&battle.workQueue);
+
     MobVector_Destroy(&battle.mobs);
     MobVector_Destroy(&battle.pendingSpawns);
     battle.initialized = FALSE;
+}
+
+int BattleWorkerThreadMain(void *data)
+{
+    //BattleWorkerThreadData *tData = data;
+
+    while (TRUE) {
+        BattleWorkUnit wu;
+
+        WorkQueue_WaitForItem(&battle.workQueue, &wu, sizeof(wu));
+        ASSERT(wu.type != BATTLE_WORK_TYPE_INVALID);
+        ASSERT(wu.type < BATTLE_WORK_TYPE_MAX);
+
+        if (wu.type == BATTLE_WORK_TYPE_SCAN) {
+            BattleProcessScanning(wu.scan.firstIndex, wu.scan.lastIndex);
+        } else if (wu.type == BATTLE_WORK_TYPE_EXIT) {
+            return 0;
+        } else {
+            NOT_IMPLEMENTED();
+        }
+
+        WorkQueue_FinishItem(&battle.workQueue);
+    }
+
+    NOT_REACHED();
 }
 
 static bool BattleCheckMobInvariants(const Mob *mob)
@@ -368,9 +470,10 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc, const Mob
     return FALSE;
 }
 
-static void BattleProcessScanning(void)
+static void BattleProcessScanning(uint firstIndex, uint lastIndex)
 {
-    for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
+    ASSERT(lastIndex < MobVector_Size(&battle.mobs));
+    for (uint32 outer = firstIndex; outer <= lastIndex ; outer++) {
         Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
         FCircle sc;
         if (!BattleCanMobScan(oMob)) {
@@ -383,13 +486,53 @@ static void BattleProcessScanning(void)
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
 
             if (BattleCheckMobScan(oMob, &sc, iMob)) {
-                ASSERT(outer != inner);
-                ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
-                BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
-                battle.bs.sensorContacts++;
+                BattleWorkResult wr;
+                wr.type = BATTLE_RESULT_TYPE_SCAN;
+                wr.scan.scanningMobIndex = outer;
+                wr.scan.targetMobIndex = inner;
+                WorkQueue_QueueItem(&battle.resultQueue, &wr, sizeof(wr));
             }
         }
     }
+}
+
+static void BattleRunScanning(void)
+{
+    uint i = 0;
+    int size = MobVector_Size(&battle.mobs);
+    int batches;
+    int unitSize;
+
+    batches = ARRAYSIZE(battle.workerThreads);
+    unitSize = 1 + (size / batches);
+    unitSize = MAX(8, unitSize);
+
+    while (i < size) {
+        BattleWorkUnit wu;
+        wu.type = BATTLE_WORK_TYPE_SCAN;
+        wu.scan.firstIndex = i;
+        wu.scan.lastIndex = MIN(i + unitSize, size - 1);
+
+        WorkQueue_QueueItem(&battle.workQueue, &wu, sizeof(wu));
+
+        i = wu.scan.lastIndex + 1;
+    }
+
+    WorkQueue_WaitForAllFinished(&battle.workQueue);
+
+    size = WorkQueue_QueueSize(&battle.resultQueue);
+    for (uint i = 0; i < size; i++) {
+        BattleWorkResult wr;
+        WorkQueue_WaitForItem(&battle.resultQueue, &wr, sizeof(wr));
+        ASSERT(wr.type == BATTLE_RESULT_TYPE_SCAN);
+
+        Mob *oMob = MobVector_GetPtr(&battle.mobs, wr.scan.scanningMobIndex);
+        Mob *iMob = MobVector_GetPtr(&battle.mobs, wr.scan.targetMobIndex);
+        ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
+        BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
+        battle.bs.sensorContacts++;
+    }
+    ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
 }
 
 void Battle_RunTick()
@@ -459,8 +602,8 @@ void Battle_RunTick()
     }
     MobVector_MakeEmpty(&battle.pendingSpawns);
 
-    // Process scanning
-    BattleProcessScanning();
+    // Scanning
+    BattleRunScanning();
 
     // Destroy mobs and track player liveness
     for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
