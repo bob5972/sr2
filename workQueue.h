@@ -43,7 +43,14 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_FinishItem(WorkQueue *wq);
 void WorkQueue_WaitForAllFinished(WorkQueue *wq);
 
+void WorkQueue_Lock(WorkQueue *wq);
+void WorkQueue_Unlock(WorkQueue *wq);
+
+void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize);
+void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize);
+
 int WorkQueue_QueueSize(WorkQueue *wq);
+int WorkQueue_QueueSizeLocked(WorkQueue *wq);
 bool WorkQueue_IsEmpty(WorkQueue *wq);
 
 

@@ -92,7 +92,7 @@ typedef struct BattleGlobalData {
 
     MobVector pendingSpawns;
 
-    BattleWorkerThreadData workerThreads[8];
+    BattleWorkerThreadData workerThreads[4];
     WorkQueue workQueue;
     WorkQueue resultQueue;
 } BattleGlobalData;
@@ -477,29 +477,33 @@ static void BattleRunCollisions(void)
     unitSize = 1 + (size / batches);
     unitSize = MAX(2, unitSize);
 
+    WorkQueue_Lock(&battle.workQueue);
     while (i < size) {
         BattleWorkUnit wu;
         wu.type = BATTLE_WORK_TYPE_COLLISION;
         wu.scan.firstIndex = i;
         wu.scan.lastIndex = MIN(i + unitSize, size - 1);
 
-        WorkQueue_QueueItem(&battle.workQueue, &wu, sizeof(wu));
+        WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
 
         i = wu.scan.lastIndex + 1;
     }
+    WorkQueue_Unlock(&battle.workQueue);
 
     WorkQueue_WaitForAllFinished(&battle.workQueue);
 
-    size = WorkQueue_QueueSize(&battle.resultQueue);
+    WorkQueue_Lock(&battle.resultQueue);
+    size = WorkQueue_QueueSizeLocked(&battle.resultQueue);
     for (uint i = 0; i < size; i++) {
         BattleWorkResult wr;
-        WorkQueue_WaitForItem(&battle.resultQueue, &wr, sizeof(wr));
+        WorkQueue_GetItemLocked(&battle.resultQueue, &wr, sizeof(wr));
         ASSERT(wr.type == BATTLE_RESULT_TYPE_COLLISION);
 
         Mob *oMob = MobVector_GetPtr(&battle.mobs, wr.collision.lhsMobIndex);
         Mob *iMob = MobVector_GetPtr(&battle.mobs, wr.collision.rhsMobIndex);
         BattleRunMobCollision(oMob, iMob);
     }
+    WorkQueue_Unlock(&battle.resultQueue);
     ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
 }
 
@@ -579,23 +583,26 @@ static void BattleRunScanning(void)
     unitSize = 1 + (size / batches);
     unitSize = MAX(8, unitSize);
 
+    WorkQueue_Lock(&battle.workQueue);
     while (i < size) {
         BattleWorkUnit wu;
         wu.type = BATTLE_WORK_TYPE_SCAN;
         wu.scan.firstIndex = i;
         wu.scan.lastIndex = MIN(i + unitSize, size - 1);
 
-        WorkQueue_QueueItem(&battle.workQueue, &wu, sizeof(wu));
+        WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
 
         i = wu.scan.lastIndex + 1;
     }
+    WorkQueue_Unlock(&battle.workQueue);
 
     WorkQueue_WaitForAllFinished(&battle.workQueue);
 
-    size = WorkQueue_QueueSize(&battle.resultQueue);
+    WorkQueue_Lock(&battle.resultQueue);
+    size = WorkQueue_QueueSizeLocked(&battle.resultQueue);
     for (uint i = 0; i < size; i++) {
         BattleWorkResult wr;
-        WorkQueue_WaitForItem(&battle.resultQueue, &wr, sizeof(wr));
+        WorkQueue_GetItemLocked(&battle.resultQueue, &wr, sizeof(wr));
         ASSERT(wr.type == BATTLE_RESULT_TYPE_SCAN);
 
         Mob *oMob = MobVector_GetPtr(&battle.mobs, wr.scan.scanningMobIndex);
@@ -604,6 +611,7 @@ static void BattleRunScanning(void)
         BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
         battle.bs.sensorContacts++;
     }
+    WorkQueue_Unlock(&battle.resultQueue);
     ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
 }
 
