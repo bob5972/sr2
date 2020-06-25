@@ -255,14 +255,22 @@ static bool BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 {
     uint lhsFlag = (1 << lhsType);
     uint rhsFlag = (1 << rhsType);
+    bool lhsAmmo = (MOB_FLAG_AMMO & lhsFlag) != 0;
+    bool rhsAmmo = (MOB_FLAG_AMMO & rhsFlag) != 0;
 
-    if ((MOB_FLAG_AMMO & lhsFlag) != 0) {
-        return (MOB_FLAG_SHIP & rhsFlag) != 0;
+    if (DEBUG) {
+        bool lhsShip = (MOB_FLAG_SHIP & lhsFlag) != 0;
+        bool rhsShip = (MOB_FLAG_SHIP & rhsFlag) != 0;
+        ASSERT(lhsAmmo == !lhsShip);
+        ASSERT(rhsAmmo == !rhsShip);
     }
-    if ((MOB_FLAG_AMMO & rhsFlag) != 0) {
-        return (MOB_FLAG_SHIP & lhsFlag) != 0;
+
+    if (lhsAmmo) {
+        return !rhsAmmo;
+    } else {
+        ASSERT(!lhsAmmo);
+        return rhsAmmo;
     }
-    return FALSE;
 }
 
 static bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
