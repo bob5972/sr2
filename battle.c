@@ -501,7 +501,14 @@ static void BattleRunCollisions(void)
 
         Mob *oMob = MobVector_GetPtr(&battle.mobs, wr.collision.lhsMobIndex);
         Mob *iMob = MobVector_GetPtr(&battle.mobs, wr.collision.rhsMobIndex);
-        BattleRunMobCollision(oMob, iMob);
+
+        /*
+         * The death of an earlier mob might make this collision no longer
+         * happen.
+         */
+        if (BattleCheckMobCollision(oMob, iMob)) {
+            BattleRunMobCollision(oMob, iMob);
+        }
     }
     WorkQueue_Unlock(&battle.resultQueue);
     ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
