@@ -25,9 +25,10 @@
 #define SPAWN_RECHARGE_TICKS 5
 
 typedef enum BattleWorkType {
-    BATTLE_WORK_TYPE_INVALID = 0,
-    BATTLE_WORK_TYPE_EXIT = 1,
-    BATTLE_WORK_TYPE_SCAN = 2,
+    BATTLE_WORK_TYPE_INVALID    = 0,
+    BATTLE_WORK_TYPE_EXIT       = 1,
+    BATTLE_WORK_TYPE_SCAN       = 2,
+    BATTLE_WORK_TYPE_COLLISION  = 3,
     BATTLE_WORK_TYPE_MAX,
 } BattleWorkType;
 
@@ -39,12 +40,17 @@ typedef struct BattleWorkUnit {
             uint firstIndex;
             uint lastIndex;
         } scan;
+         struct {
+            uint firstIndex;
+            uint lastIndex;
+        } collision;
     };
 } BattleWorkUnit;
 
 typedef enum BattleResultType {
-    BATTLE_RESULT_TYPE_INVALID = 0,
-    BATTLE_RESULT_TYPE_SCAN = 1,
+    BATTLE_RESULT_TYPE_INVALID   = 0,
+    BATTLE_RESULT_TYPE_SCAN      = 1,
+    BATTLE_RESULT_TYPE_COLLISION = 2,
     BATTLE_RESULT_TYPE_MAX,
 } BattleResultType;
 
@@ -56,6 +62,10 @@ typedef struct BattleWorkResult {
             uint scanningMobIndex;
             uint targetMobIndex;
         } scan;
+        struct {
+            uint lhsMobIndex;
+            uint rhsMobIndex;
+        } collision;
     };
 } BattleWorkResult;
 
@@ -90,6 +100,7 @@ typedef struct BattleGlobalData {
 static BattleGlobalData battle;
 static int BattleWorkerThreadMain(void *data);
 static void BattleProcessScanning(uint firstIndex, uint lastIndex);
+static void BattleProcessCollisions(uint firstIndex, uint lastIndex);
 
 void Battle_Init(const BattleParams *bp)
 {
@@ -190,6 +201,9 @@ int BattleWorkerThreadMain(void *data)
 
         if (wu.type == BATTLE_WORK_TYPE_SCAN) {
             BattleProcessScanning(wu.scan.firstIndex, wu.scan.lastIndex);
+        } else if (wu.type == BATTLE_WORK_TYPE_COLLISION) {
+           BattleProcessCollisions(wu.collision.firstIndex,
+                                   wu.collision.lastIndex);
         } else if (wu.type == BATTLE_WORK_TYPE_EXIT) {
             return 0;
         } else {
@@ -392,43 +406,101 @@ static bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 
 static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
 {
-    if (BattleCheckMobCollision(oMob, iMob)) {
-        battle.bs.collisions++;
+    ASSERT(BattleCheckMobCollision(oMob, iMob));
 
-        if (oMob->type == MOB_TYPE_LOOT_BOX) {
-            ASSERT(iMob->type != MOB_TYPE_LOOT_BOX);
-            ASSERT(iMob->playerID < ARRAYSIZE(battle.bs.players));
-            battle.bs.players[iMob->playerID].credits += oMob->lootCredits;
+    battle.bs.collisions++;
+
+    if (oMob->type == MOB_TYPE_LOOT_BOX) {
+        ASSERT(iMob->type != MOB_TYPE_LOOT_BOX);
+        ASSERT(iMob->playerID < ARRAYSIZE(battle.bs.players));
+        battle.bs.players[iMob->playerID].credits += oMob->lootCredits;
+        oMob->alive = FALSE;
+    } else if (iMob->type == MOB_TYPE_LOOT_BOX) {
+        ASSERT(oMob->type != MOB_TYPE_LOOT_BOX);
+        ASSERT(oMob->playerID < ARRAYSIZE(battle.bs.players));
+        battle.bs.players[oMob->playerID].credits += iMob->lootCredits;
+        iMob->alive = FALSE;
+    } else {
+        oMob->health -= MobType_GetMaxHealth(iMob->type);
+        iMob->health -= MobType_GetMaxHealth(oMob->type);
+
+        if (oMob->health <= 0) {
             oMob->alive = FALSE;
-        } else if (iMob->type == MOB_TYPE_LOOT_BOX) {
-            ASSERT(oMob->type != MOB_TYPE_LOOT_BOX);
-            ASSERT(oMob->playerID < ARRAYSIZE(battle.bs.players));
-            battle.bs.players[oMob->playerID].credits += iMob->lootCredits;
-            iMob->alive = FALSE;
-        } else {
-            oMob->health -= MobType_GetMaxHealth(iMob->type);
-            iMob->health -= MobType_GetMaxHealth(oMob->type);
-
-            if (oMob->health <= 0) {
-                oMob->alive = FALSE;
-                int lootCredits = BattleCalcLootCredits(oMob);
-                if (lootCredits > 0) {
-                    Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX,
-                                                  oMob->playerID, &oMob->pos);
-                    spawn->lootCredits = lootCredits;
-                }
+            int lootCredits = BattleCalcLootCredits(oMob);
+            if (lootCredits > 0) {
+                Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX,
+                                                oMob->playerID, &oMob->pos);
+                spawn->lootCredits = lootCredits;
             }
-            if (iMob->health <= 0) {
-                iMob->alive = FALSE;
-                int lootCredits = BattleCalcLootCredits(iMob);
-                if (lootCredits > 0) {
-                    Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX,
-                                                  iMob->playerID, &iMob->pos);
-                    spawn->lootCredits = lootCredits;
-                }
+        }
+        if (iMob->health <= 0) {
+            iMob->alive = FALSE;
+            int lootCredits = BattleCalcLootCredits(iMob);
+            if (lootCredits > 0) {
+                Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX,
+                                                iMob->playerID, &iMob->pos);
+                spawn->lootCredits = lootCredits;
             }
         }
     }
+}
+
+
+static void BattleProcessCollisions(uint firstIndex, uint lastIndex)
+{
+    ASSERT(lastIndex < MobVector_Size(&battle.mobs));
+    for (uint32 outer = firstIndex; outer <= lastIndex ; outer++) {
+        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
+
+        for (uint32 inner = outer + 1; inner < MobVector_Size(&battle.mobs);
+             inner++) {
+            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
+            if (BattleCheckMobCollision(oMob, iMob)) {
+                BattleWorkResult wr;
+                wr.type = BATTLE_RESULT_TYPE_COLLISION;
+                wr.collision.lhsMobIndex = outer;
+                wr.collision.rhsMobIndex = inner;
+                WorkQueue_QueueItem(&battle.resultQueue, &wr, sizeof(wr));
+            }
+        }
+    }
+}
+
+static void BattleRunCollisions(void)
+{
+    uint i = 0;
+    int size = MobVector_Size(&battle.mobs);
+    int batches;
+    int unitSize;
+
+    batches = 2 * ARRAYSIZE(battle.workerThreads);
+    unitSize = 1 + (size / batches);
+    unitSize = MAX(2, unitSize);
+
+    while (i < size) {
+        BattleWorkUnit wu;
+        wu.type = BATTLE_WORK_TYPE_COLLISION;
+        wu.scan.firstIndex = i;
+        wu.scan.lastIndex = MIN(i + unitSize, size - 1);
+
+        WorkQueue_QueueItem(&battle.workQueue, &wu, sizeof(wu));
+
+        i = wu.scan.lastIndex + 1;
+    }
+
+    WorkQueue_WaitForAllFinished(&battle.workQueue);
+
+    size = WorkQueue_QueueSize(&battle.resultQueue);
+    for (uint i = 0; i < size; i++) {
+        BattleWorkResult wr;
+        WorkQueue_WaitForItem(&battle.resultQueue, &wr, sizeof(wr));
+        ASSERT(wr.type == BATTLE_RESULT_TYPE_COLLISION);
+
+        Mob *oMob = MobVector_GetPtr(&battle.mobs, wr.collision.lhsMobIndex);
+        Mob *iMob = MobVector_GetPtr(&battle.mobs, wr.collision.rhsMobIndex);
+        BattleRunMobCollision(oMob, iMob);
+    }
+    ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
 }
 
 // Is the scanning mob allowed to scan anything?
@@ -535,6 +607,7 @@ static void BattleRunScanning(void)
     ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
 }
 
+
 void Battle_RunTick()
 {
     ASSERT(battle.bs.tick < MAX_UINT32);
@@ -583,15 +656,7 @@ void Battle_RunTick()
     }
 
     // Process collisions
-    for (uint32 outer = 0; outer < MobVector_Size(&battle.mobs); outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
-
-        for (uint32 inner = outer + 1; inner < MobVector_Size(&battle.mobs);
-            inner++) {
-            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
-            BattleRunMobCollision(oMob, iMob);
-        }
-    }
+    BattleRunCollisions();
 
     // Create spawned things (after collisions)
     for (uint32 i = 0; i < MobVector_Size(&battle.pendingSpawns); i++) {
@@ -602,7 +667,7 @@ void Battle_RunTick()
     }
     MobVector_MakeEmpty(&battle.pendingSpawns);
 
-    // Scanning
+    // Process Scanning
     BattleRunScanning();
 
     // Destroy mobs and track player liveness
