@@ -396,13 +396,13 @@ static bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
     if (!BattleCanMobTypesCollide(lhs->type, rhs->type)) {
         return FALSE;
     }
-    if (!lhs->alive || !rhs->alive) {
-        return FALSE;
-    }
     if (lhs->type != MOB_TYPE_LOOT_BOX &&
         rhs->type != MOB_TYPE_LOOT_BOX &&
         lhs->playerID == rhs->playerID) {
         // Players generally don't collide with themselves...
+        return FALSE;
+    }
+    if (!lhs->alive || !rhs->alive) {
         return FALSE;
     }
 
