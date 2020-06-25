@@ -103,6 +103,7 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
     wq->numQueued++;
 
     if (wq->workerWaitingCount > 0) {
+        wq->workerWaitingCount--;
         SDL_SemPost(wq->workerSignal);
     }
 }
@@ -134,14 +135,12 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
     ASSERT(wq->itemSize == itemSize);
     ASSERT(wq->numQueued + wq->nextItem <= MBVector_Size(&wq->items));
 
-    wq->workerWaitingCount++;
     while (wq->numQueued == 0) {
+        wq->workerWaitingCount++;
         WorkQueue_Unlock(wq);
         SDL_SemWait(wq->workerSignal);
         WorkQueue_Lock(wq);
     }
-    ASSERT(wq->workerWaitingCount > 0);
-    wq->workerWaitingCount--;
 
     WorkQueue_GetItemLocked(wq, item, itemSize);
 
@@ -154,11 +153,11 @@ void WorkQueue_FinishItem(WorkQueue *wq)
     ASSERT(wq->numInProgress > 0);
     wq->numInProgress--;
 
-    if (wq->finishWaitingCount > 0) {
-        if (wq->numQueued == 0 && wq->numInProgress == 0) {
-            for (int i = 0; i < wq->finishWaitingCount; i++) {
-                SDL_SemPost(wq->finishSignal);
-            }
+    if (wq->numQueued == 0 && wq->numInProgress == 0) {
+        while (wq->finishWaitingCount > 0) {
+            ASSERT(wq->finishWaitingCount > 0);
+            wq->finishWaitingCount--;
+            SDL_SemPost(wq->finishSignal);
         }
     }
 
@@ -178,8 +177,6 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq)
         WorkQueue_Unlock(wq);
         SDL_SemWait(wq->finishSignal);
         WorkQueue_Lock(wq);
-        ASSERT(wq->finishWaitingCount > 0);
-        wq->finishWaitingCount--;
     }
 
     WorkQueue_Unlock(wq);
