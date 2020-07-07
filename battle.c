@@ -24,6 +24,10 @@
 
 #define SPAWN_RECHARGE_TICKS 5
 
+#define BATTLE_NUM_THREADS 1
+#define BATTLE_COLLISION_MIN_BATCH 4
+#define BATTLE_SCANNING_MIN_BATCH  8
+
 typedef enum BattleWorkType {
     BATTLE_WORK_TYPE_INVALID    = 0,
     BATTLE_WORK_TYPE_EXIT       = 1,
@@ -92,7 +96,7 @@ typedef struct BattleGlobalData {
 
     MobVector pendingSpawns;
 
-    BattleWorkerThreadData workerThreads[32];
+    BattleWorkerThreadData workerThreads[BATTLE_NUM_THREADS];
     WorkQueue workQueue;
     WorkQueue resultQueue;
 } BattleGlobalData;
@@ -483,7 +487,7 @@ static void BattleRunCollisions(void)
 
     batches = 2 * ARRAYSIZE(battle.workerThreads);
     unitSize = 1 + (size / batches);
-    unitSize = MAX(4, unitSize);
+    unitSize = MAX(BATTLE_COLLISION_MIN_BATCH, unitSize);
 
     WorkQueue_Lock(&battle.workQueue);
     while (i < size) {
@@ -596,7 +600,7 @@ static void BattleRunScanning(void)
 
     batches = 2 * ARRAYSIZE(battle.workerThreads);
     unitSize = 1 + (size / batches);
-    unitSize = MAX(8, unitSize);
+    unitSize = MAX(BATTLE_SCANNING_MIN_BATCH, unitSize);
 
     WorkQueue_Lock(&battle.workQueue);
     while (i < size) {
