@@ -35,8 +35,8 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     MBVector_CreateEmpty(&wq->items, itemSize);
 
     wq->lock = SDL_CreateMutex();
-    wq->workerSignal = SDL_CreateSemaphore(0);
-    wq->finishSignal = SDL_CreateSemaphore(0);
+    wq->workerSignal = SDL_CreateCond();
+    wq->finishSignal = SDL_CreateCond();
 }
 
 void WorkQueue_Destroy(WorkQueue *wq)
@@ -47,8 +47,8 @@ void WorkQueue_Destroy(WorkQueue *wq)
 
     MBVector_Destroy(&wq->items);
     SDL_DestroyMutex(wq->lock);
-    SDL_DestroySemaphore(wq->workerSignal);
-    SDL_DestroySemaphore(wq->finishSignal);
+    SDL_DestroyCond(wq->workerSignal);
+    SDL_DestroyCond(wq->finishSignal);
 
     wq->lock = NULL;
     wq->workerSignal = NULL;
@@ -104,7 +104,7 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
 
     if (wq->workerWaitingCount > 0) {
         wq->workerWaitingCount--;
-        SDL_SemPost(wq->workerSignal);
+        SDL_CondSignal(wq->workerSignal);
     }
 }
 
@@ -137,9 +137,7 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
 
     while (wq->numQueued == 0) {
         wq->workerWaitingCount++;
-        WorkQueue_Unlock(wq);
-        SDL_SemWait(wq->workerSignal);
-        WorkQueue_Lock(wq);
+        SDL_CondWait(wq->workerSignal, wq->lock);
     }
 
     WorkQueue_GetItemLocked(wq, item, itemSize);
@@ -154,10 +152,9 @@ void WorkQueue_FinishItem(WorkQueue *wq)
     wq->numInProgress--;
 
     if (wq->numQueued == 0 && wq->numInProgress == 0) {
-        while (wq->finishWaitingCount > 0) {
-            ASSERT(wq->finishWaitingCount > 0);
-            wq->finishWaitingCount--;
-            SDL_SemPost(wq->finishSignal);
+        if (wq->finishWaitingCount > 0) {
+            wq->finishWaitingCount = 0;
+            SDL_CondBroadcast(wq->finishSignal);
         }
     }
 
@@ -174,9 +171,7 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq)
      */
     while (wq->numQueued > 0 || wq->numInProgress > 0) {
         wq->finishWaitingCount++;
-        WorkQueue_Unlock(wq);
-        SDL_SemWait(wq->finishSignal);
-        WorkQueue_Lock(wq);
+        SDL_CondWait(wq->finishSignal, wq->lock);
     }
 
     WorkQueue_Unlock(wq);

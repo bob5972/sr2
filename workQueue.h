@@ -31,8 +31,8 @@ typedef struct WorkQueue {
     int finishWaitingCount;
     MBVector items;
     SDL_mutex *lock;
-    SDL_sem *workerSignal;
-    SDL_sem *finishSignal;
+    SDL_cond *workerSignal;
+    SDL_cond *finishSignal;
 } WorkQueue;
 
 void WorkQueue_Create(WorkQueue *wq, uint itemSize);
