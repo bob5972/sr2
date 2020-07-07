@@ -12,7 +12,7 @@ if [ ! -f config.mk ]; then
     CLEAN=1;
 else
     cat config.mk | grep DEBUG=1 > /dev/null
-    if [ "$?" == "1" ]; then
+    if [ "$?" == "0" ]; then
         export DEBUG=1;
     else
         export DEBUG=0;
