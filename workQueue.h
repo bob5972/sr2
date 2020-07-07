@@ -21,12 +21,13 @@
 
 #include "MBVector.h"
 #include "SDL_mutex.h"
+#include "SDL_atomic.h"
 
 typedef struct WorkQueue {
     uint itemSize;
     int nextItem;
     int numQueued;
-    int numInProgress;
+    SDL_atomic_t numInProgress;
     int workerWaitingCount;
     int finishWaitingCount;
     MBVector items;

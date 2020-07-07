@@ -28,7 +28,7 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     wq->itemSize = itemSize;
     wq->nextItem = 0;
     wq->numQueued = 0;
-    wq->numInProgress = 0;
+    SDL_AtomicSet(&wq->numInProgress, 0);
     wq->workerWaitingCount = 0;
     wq->finishWaitingCount = 0;
 
@@ -125,7 +125,7 @@ void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
         wq->nextItem = 0;
     }
 
-    wq->numInProgress++;
+    SDL_AtomicIncRef(&wq->numInProgress);
 }
 
 void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
@@ -147,18 +147,23 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
 
 void WorkQueue_FinishItem(WorkQueue *wq)
 {
-    WorkQueue_Lock(wq);
-    ASSERT(wq->numInProgress > 0);
-    wq->numInProgress--;
+    bool pEmpty;
 
-    if (wq->numQueued == 0 && wq->numInProgress == 0) {
-        if (wq->finishWaitingCount > 0) {
+    pEmpty = SDL_AtomicDecRef(&wq->numInProgress);
+
+    if (pEmpty) {
+        WorkQueue_Lock(wq);
+        ASSERT(SDL_AtomicGet(&wq->numInProgress) >= 0);
+
+        if (wq->numQueued == 0 &&
+            SDL_AtomicGet(&wq->numInProgress) == 0 &&
+            wq->finishWaitingCount > 0) {
             wq->finishWaitingCount = 0;
             SDL_CondBroadcast(wq->finishSignal);
         }
-    }
 
-    WorkQueue_Unlock(wq);
+        WorkQueue_Unlock(wq);
+    }
 }
 
 void WorkQueue_WaitForAllFinished(WorkQueue *wq)
@@ -169,7 +174,8 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq)
      * If we were briefly finished, and then a new work unit
      * gets queued, we might not actually wake-up here.
      */
-    while (wq->numQueued > 0 || wq->numInProgress > 0) {
+    while (wq->numQueued > 0 ||
+           SDL_AtomicGet(&wq->numInProgress) > 0) {
         wq->finishWaitingCount++;
         SDL_CondWait(wq->finishSignal, wq->lock);
     }
