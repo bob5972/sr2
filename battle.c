@@ -24,7 +24,13 @@
 
 #define SPAWN_RECHARGE_TICKS 5
 
+#define BATTLE_USE_THREADS FALSE
+#if BATTLE_USE_THREADS
+#define BATTLE_NUM_THREADS 32
+#else
 #define BATTLE_NUM_THREADS 1
+#endif
+
 #define BATTLE_COLLISION_MIN_BATCH 4
 #define BATTLE_SCANNING_MIN_BATCH  8
 
@@ -485,24 +491,27 @@ static void BattleRunCollisions(void)
     int batches;
     int unitSize;
 
-    batches = 2 * ARRAYSIZE(battle.workerThreads);
-    unitSize = 1 + (size / batches);
-    unitSize = MAX(BATTLE_COLLISION_MIN_BATCH, unitSize);
+    if (BATTLE_USE_THREADS) {
+        batches = 2 * ARRAYSIZE(battle.workerThreads);
+        unitSize = 1 + (size / batches);
+        unitSize = MAX(BATTLE_COLLISION_MIN_BATCH, unitSize);
 
-    WorkQueue_Lock(&battle.workQueue);
-    while (i < size) {
-        BattleWorkUnit wu;
-        wu.type = BATTLE_WORK_TYPE_COLLISION;
-        wu.collision.firstIndex = i;
-        wu.collision.lastIndex = MIN(i + unitSize, size - 1);
+        WorkQueue_Lock(&battle.workQueue);
+        while (i < size) {
+            BattleWorkUnit wu;
+            wu.type = BATTLE_WORK_TYPE_COLLISION;
+            wu.collision.firstIndex = i;
+            wu.collision.lastIndex = MIN(i + unitSize, size - 1);
 
-        WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
+            WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
 
-        i = wu.collision.lastIndex + 1;
+            i = wu.collision.lastIndex + 1;
+        }
+        WorkQueue_Unlock(&battle.workQueue);
+        WorkQueue_WaitForAllFinished(&battle.workQueue);
+    } else {
+        BattleProcessCollisions(0, size - 1);
     }
-    WorkQueue_Unlock(&battle.workQueue);
-
-    WorkQueue_WaitForAllFinished(&battle.workQueue);
 
     WorkQueue_Lock(&battle.resultQueue);
     size = WorkQueue_QueueSizeLocked(&battle.resultQueue);
@@ -598,24 +607,27 @@ static void BattleRunScanning(void)
     int batches;
     int unitSize;
 
-    batches = 2 * ARRAYSIZE(battle.workerThreads);
-    unitSize = 1 + (size / batches);
-    unitSize = MAX(BATTLE_SCANNING_MIN_BATCH, unitSize);
+    if (BATTLE_USE_THREADS) {
+        batches = 2 * ARRAYSIZE(battle.workerThreads);
+        unitSize = 1 + (size / batches);
+        unitSize = MAX(BATTLE_SCANNING_MIN_BATCH, unitSize);
 
-    WorkQueue_Lock(&battle.workQueue);
-    while (i < size) {
-        BattleWorkUnit wu;
-        wu.type = BATTLE_WORK_TYPE_SCAN;
-        wu.scan.firstIndex = i;
-        wu.scan.lastIndex = MIN(i + unitSize, size - 1);
+        WorkQueue_Lock(&battle.workQueue);
+        while (i < size) {
+            BattleWorkUnit wu;
+            wu.type = BATTLE_WORK_TYPE_SCAN;
+            wu.scan.firstIndex = i;
+            wu.scan.lastIndex = MIN(i + unitSize, size - 1);
 
-        WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
+            WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
 
-        i = wu.scan.lastIndex + 1;
+            i = wu.scan.lastIndex + 1;
+        }
+        WorkQueue_Unlock(&battle.workQueue);
+        WorkQueue_WaitForAllFinished(&battle.workQueue);
+    } else {
+        BattleProcessScanning(0, size - 1);
     }
-    WorkQueue_Unlock(&battle.workQueue);
-
-    WorkQueue_WaitForAllFinished(&battle.workQueue);
 
     WorkQueue_Lock(&battle.resultQueue);
     size = WorkQueue_QueueSizeLocked(&battle.resultQueue);
