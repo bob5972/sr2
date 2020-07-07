@@ -10,7 +10,7 @@ else
     exit 1
 fi;
 
-if [ "$1" == "capture" ]; then
+if [ "$ACTION" == "capture" ]; then
     perf record -g build/sr2 -H -l 1 -s 1
 else
     PID=`ps aux |grep sr2 | grep -v grep | awk '{print $2}'`
