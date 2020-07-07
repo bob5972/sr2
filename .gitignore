@@ -2,6 +2,7 @@ build/
 config.mk
 local.mk
 gmon.out
-
+perf.data
+perf.data.old
 .cproject
 .project

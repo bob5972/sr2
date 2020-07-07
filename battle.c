@@ -92,7 +92,7 @@ typedef struct BattleGlobalData {
 
     MobVector pendingSpawns;
 
-    BattleWorkerThreadData workerThreads[4];
+    BattleWorkerThreadData workerThreads[32];
     WorkQueue workQueue;
     WorkQueue resultQueue;
 } BattleGlobalData;
