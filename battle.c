@@ -493,12 +493,12 @@ static void BattleRunCollisions(void)
     while (i < size) {
         BattleWorkUnit wu;
         wu.type = BATTLE_WORK_TYPE_COLLISION;
-        wu.scan.firstIndex = i;
-        wu.scan.lastIndex = MIN(i + unitSize, size - 1);
+        wu.collision.firstIndex = i;
+        wu.collision.lastIndex = MIN(i + unitSize, size - 1);
 
         WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
 
-        i = wu.scan.lastIndex + 1;
+        i = wu.collision.lastIndex + 1;
     }
     WorkQueue_Unlock(&battle.workQueue);
 
