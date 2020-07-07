@@ -483,7 +483,7 @@ static void BattleRunCollisions(void)
 
     batches = 2 * ARRAYSIZE(battle.workerThreads);
     unitSize = 1 + (size / batches);
-    unitSize = MAX(2, unitSize);
+    unitSize = MAX(4, unitSize);
 
     WorkQueue_Lock(&battle.workQueue);
     while (i < size) {
@@ -594,7 +594,7 @@ static void BattleRunScanning(void)
     int batches;
     int unitSize;
 
-    batches = ARRAYSIZE(battle.workerThreads);
+    batches = 2 * ARRAYSIZE(battle.workerThreads);
     unitSize = 1 + (size / batches);
     unitSize = MAX(8, unitSize);
 
