@@ -96,6 +96,7 @@ fi;
 
 if [ "$DEBUG" != "0" ]; then
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Og"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-type-limits"
 else
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -O2"
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-variable"

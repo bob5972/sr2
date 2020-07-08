@@ -17,6 +17,7 @@
  */
 
 #include "battle.h"
+#include "mbbasic.h"
 #include "random.h"
 #include "BitVector.h"
 #include "SDL_thread.h"
@@ -380,7 +381,8 @@ static void BattleRunMobMove(Mob *mob)
 }
 
 
-static bool BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
+static INLINE_ALWAYS bool
+BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 {
     uint lhsFlag = (1 << lhsType);
     uint rhsFlag = (1 << rhsType);
@@ -402,7 +404,8 @@ static bool BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
     }
 }
 
-static bool BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
+static INLINE_ALWAYS bool
+BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
     FCircle lc, rc;
 
