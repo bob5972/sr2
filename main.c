@@ -31,26 +31,32 @@
 #include "fleet.h"
 #include "MBOpt.h"
 
+typedef struct MainEngineThreadData {
+    SDL_Thread *sdlThread;
+    uint32 startTimeMS;
+    BattleParams bp;
+    Battle *battle;
+    Fleet *fleet;
+    int winners[MAX_PLAYERS];
+} MainEngineThreadData;
+
 struct MainData {
     bool headless;
     bool frameSkip;
     uint displayFrames;
     int loop;
-    SDL_Thread *engineThread;
-    uint32 startTimeMS;
-    Battle *battle;
-    BattleParams bp;
-    Fleet *fleet;
-    int winners[MAX_PLAYERS];
-    uint64 seed;
     uint timeLimit;
+    uint64 seed;
+    MainEngineThreadData tData;
     volatile bool asyncExit;
 } mainData;
 
-void MainPrintBattleStatus(const BattleStatus *bStatus)
+static void
+MainPrintBattleStatus(MainEngineThreadData *tData,
+                      const BattleStatus *bStatus)
 {
     uint32 stopTimeMS = SDL_GetTicks();
-    uint32 elapsedMS = stopTimeMS - mainData.startTimeMS;
+    uint32 elapsedMS = stopTimeMS - tData->startTimeMS;
 
     Warning("Finished tick %d\n", bStatus->tick);
     Warning("\tcollisions = %d\n", bStatus->collisions);
@@ -74,23 +80,23 @@ void MainPrintBattleStatus(const BattleStatus *bStatus)
     }
 }
 
-void MainPrintWinners(void)
+static void MainPrintWinners(MainEngineThreadData *tData)
 {
     uint32 totalBattles = 0;
 
     Warning("\n");
     Warning("Summary:\n");
 
-    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
-        totalBattles += mainData.winners[i];
+    for (uint32 i = 0; i < tData->bp.numPlayers; i++) {
+        totalBattles += tData->winners[i];
     }
 
-    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
-        int wins = mainData.winners[i];
+    for (uint32 i = 0; i < tData->bp.numPlayers; i++) {
+        int wins = tData->winners[i];
         int losses = totalBattles - wins;
         float percent = 100.0f * wins / (float)totalBattles;
 
-        Warning("Fleet: %s\n", mainData.bp.players[i].playerName);
+        Warning("Fleet: %s\n", tData->bp.players[i].playerName);
         Warning("\t%d wins, %d losses: %0.1f\%\n", wins, losses, percent);
     }
 
@@ -104,7 +110,7 @@ int Main_EngineThreadMain(void *data)
 
     Warning("Starting Battle ...\n");
 
-    mainData.startTimeMS = SDL_GetTicks();
+    mainData.tData.startTimeMS = SDL_GetTicks();
 
     ASSERT(data == NULL);
 
@@ -113,42 +119,42 @@ int Main_EngineThreadMain(void *data)
         uint32 numMobs;
 
         // Run the AI
-        bMobs = Battle_AcquireMobs(mainData.battle, &numMobs);
-        bStatus = Battle_AcquireStatus(mainData.battle);
-        Fleet_RunTick(mainData.fleet, bStatus, bMobs, numMobs);
-        Battle_ReleaseMobs(mainData.battle);
-        Battle_ReleaseStatus(mainData.battle);
+        bMobs = Battle_AcquireMobs(mainData.tData.battle, &numMobs);
+        bStatus = Battle_AcquireStatus(mainData.tData.battle);
+        Fleet_RunTick(mainData.tData.fleet, bStatus, bMobs, numMobs);
+        Battle_ReleaseMobs(mainData.tData.battle);
+        Battle_ReleaseStatus(mainData.tData.battle);
 
         // Run the Physics
-        Battle_RunTick(mainData.battle);
+        Battle_RunTick(mainData.tData.battle);
 
         // Draw
         if (!mainData.headless) {
-            bMobs = Battle_AcquireMobs(mainData.battle, &numMobs);
+            bMobs = Battle_AcquireMobs(mainData.tData.battle, &numMobs);
             Mob *dMobs = Display_AcquireMobs(numMobs, mainData.frameSkip);
             if (dMobs != NULL) {
                 mainData.displayFrames++;
                 memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
                 Display_ReleaseMobs();
             }
-            Battle_ReleaseMobs(mainData.battle);
+            Battle_ReleaseMobs(mainData.tData.battle);
         }
 
-        bStatus = Battle_AcquireStatus(mainData.battle);
+        bStatus = Battle_AcquireStatus(mainData.tData.battle);
         if (bStatus->tick % 1000 == 0) {
-            MainPrintBattleStatus(bStatus);
+            MainPrintBattleStatus(&mainData.tData, bStatus);
         }
         if (bStatus->finished) {
             finished = TRUE;
         }
-        Battle_ReleaseStatus(mainData.battle);
+        Battle_ReleaseStatus(mainData.tData.battle);
     }
 
-    bStatus = Battle_AcquireStatus(mainData.battle);
-    MainPrintBattleStatus(bStatus);
-    ASSERT(bStatus->winner < ARRAYSIZE(mainData.winners));
-    mainData.winners[bStatus->winner]++;
-    Battle_ReleaseStatus(mainData.battle);
+    bStatus = Battle_AcquireStatus(mainData.tData.battle);
+    MainPrintBattleStatus(&mainData.tData, bStatus);
+    ASSERT(bStatus->winner < ARRAYSIZE(mainData.tData.winners));
+    mainData.tData.winners[bStatus->winner]++;
+    Battle_ReleaseStatus(mainData.tData.battle);
 
     Warning("Battle %s!\n", finished ? "Finished" : "Aborted");
     Warning("\n");
@@ -209,20 +215,20 @@ int main(int argc, char **argv)
     /*
      * Battle Scenario
      */
-    mainData.bp.width = 1600;
-    mainData.bp.height = 1200;
-    mainData.bp.startingCredits = 1000;
-    mainData.bp.creditsPerTick = 1;
+    mainData.tData.bp.width = 1600;
+    mainData.tData.bp.height = 1200;
+    mainData.tData.bp.startingCredits = 1000;
+    mainData.tData.bp.creditsPerTick = 1;
     if (mainData.timeLimit != 0) {
-        mainData.bp.timeLimit = mainData.timeLimit;
+        mainData.tData.bp.timeLimit = mainData.timeLimit;
     } else{
-        mainData.bp.timeLimit = 100 * 1000;
+        mainData.tData.bp.timeLimit = 100 * 1000;
     }
-    mainData.bp.lootDropRate = 0.25f;
-    mainData.bp.lootSpawnRate = 2.0f;
-    mainData.bp.minLootSpawn = 10;
-    mainData.bp.maxLootSpawn = 20;
-    mainData.bp.restrictedStart = TRUE;
+    mainData.tData.bp.lootDropRate = 0.25f;
+    mainData.tData.bp.lootSpawnRate = 2.0f;
+    mainData.tData.bp.minLootSpawn = 10;
+    mainData.tData.bp.maxLootSpawn = 20;
+    mainData.tData.bp.restrictedStart = TRUE;
 
     /*
      * The NEUTRAL fleet needs to be there.
@@ -230,80 +236,80 @@ int main(int argc, char **argv)
      * Otherwise these are in rough order of difficulty.
      */
     p = 0;
-    mainData.bp.players[p].playerName = "Neutral";
-    mainData.bp.players[p].aiType = FLEET_AI_NEUTRAL;
+    mainData.tData.bp.players[p].playerName = "Neutral";
+    mainData.tData.bp.players[p].aiType = FLEET_AI_NEUTRAL;
     p++;
 
-//     mainData.bp.players[p].playerName = "DummyFleet";
-//     mainData.bp.players[p].aiType = FLEET_AI_DUMMY;
+//     mainData.tData.bp.players[p].playerName = "DummyFleet";
+//     mainData.tData.bp.players[p].aiType = FLEET_AI_DUMMY;
 //     p++;
 
-//     mainData.bp.players[p].playerName = "SimpleFleet";
-//     mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
+//     mainData.tData.bp.players[p].playerName = "SimpleFleet";
+//     mainData.tData.bp.players[p].aiType = FLEET_AI_SIMPLE;
 //     p++;
 
-//     mainData.bp.players[p].playerName = "BobFleet";
-//     mainData.bp.players[p].aiType = FLEET_AI_BOB;
+//     mainData.tData.bp.players[p].playerName = "BobFleet";
+//     mainData.tData.bp.players[p].aiType = FLEET_AI_BOB;
 //     p++;
 
-//     mainData.bp.players[p].playerName = "GatherFleet";
-//     mainData.bp.players[p].aiType = FLEET_AI_GATHER;
+//     mainData.tData.bp.players[p].playerName = "GatherFleet";
+//     mainData.tData.bp.players[p].aiType = FLEET_AI_GATHER;
 //     p++;
 
-    mainData.bp.players[p].playerName = "CloudFleet";
-    mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
-    mainData.bp.players[p].mreg = MBRegistry_Alloc();
-    MBRegistry_Put(mainData.bp.players[p].mreg, "CrazyMissiles", "TRUE");
+    mainData.tData.bp.players[p].playerName = "CloudFleet";
+    mainData.tData.bp.players[p].aiType = FLEET_AI_CLOUD;
+    mainData.tData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "CrazyMissiles", "TRUE");
     p++;
 
-    mainData.bp.players[p].playerName = "MapperFleet";
-    mainData.bp.players[p].mreg = MBRegistry_Alloc();
-    MBRegistry_Put(mainData.bp.players[p].mreg, "StartingWaveSize", "5");
-    MBRegistry_Put(mainData.bp.players[p].mreg, "WaveSizeIncrement", "0");
-    MBRegistry_Put(mainData.bp.players[p].mreg, "RandomWaves", "FALSE");
-    mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    mainData.tData.bp.players[p].playerName = "MapperFleet";
+    mainData.tData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "StartingWaveSize", "5");
+    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "WaveSizeIncrement", "0");
+    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "RandomWaves", "FALSE");
+    mainData.tData.bp.players[p].aiType = FLEET_AI_MAPPER;
     p++;
 
-    ASSERT(p <= ARRAYSIZE(mainData.bp.players));
-    mainData.bp.numPlayers = p;
+    ASSERT(p <= ARRAYSIZE(mainData.tData.bp.players));
+    mainData.tData.bp.numPlayers = p;
 
     for (uint32 i = 0; i < mainData.loop; i++) {
-        mainData.battle = Battle_Create(&mainData.bp);
-        mainData.fleet = Fleet_Create(&mainData.bp);
+        mainData.tData.battle = Battle_Create(&mainData.tData.bp);
+        mainData.tData.fleet = Fleet_Create(&mainData.tData.bp);
 
         if (!mainData.headless) {
-            Display_Init(&mainData.bp);
+            Display_Init(&mainData.tData.bp);
         }
 
         // Launch Engine Thread
-        mainData.engineThread = SDL_CreateThread(Main_EngineThreadMain,
+        mainData.tData.sdlThread = SDL_CreateThread(Main_EngineThreadMain,
                                                  "battle", NULL);
-        ASSERT(mainData.engineThread != NULL);
+        ASSERT(mainData.tData.sdlThread != NULL);
 
         if (!mainData.headless) {
             Display_Main();
             mainData.asyncExit = TRUE;
         }
 
-        SDL_WaitThread(mainData.engineThread, NULL);
+        SDL_WaitThread(mainData.tData.sdlThread, NULL);
 
         //Cleanup
         if (!mainData.headless) {
             Display_Exit();
         }
 
-        Fleet_Destroy(mainData.fleet);
-        mainData.fleet = NULL;
+        Fleet_Destroy(mainData.tData.fleet);
+        mainData.tData.fleet = NULL;
 
-        Battle_Destroy(mainData.battle);
-        mainData.battle = NULL;
+        Battle_Destroy(mainData.tData.battle);
+        mainData.tData.battle = NULL;
     }
 
-    MainPrintWinners();
+    MainPrintWinners(&mainData.tData);
 
-    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
-        if (mainData.bp.players[i].mreg != NULL) {
-            MBRegistry_Free(mainData.bp.players[i].mreg);
+    for (uint32 i = 0; i < mainData.tData.bp.numPlayers; i++) {
+        if (mainData.tData.bp.players[i].mreg != NULL) {
+            MBRegistry_Free(mainData.tData.bp.players[i].mreg);
         }
     }
 
