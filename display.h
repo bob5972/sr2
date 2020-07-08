@@ -22,7 +22,7 @@
 #include "battle.h"
 #include "mob.h"
 
-void Display_Init();
+void Display_Init(const BattleParams *bp);
 void Display_Exit();
 Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip);
 void Display_ReleaseMobs();

@@ -68,7 +68,7 @@ static void SimpleFleetRunAI(void *handle)
 {
     SimpleFleetData *sf = handle;
     FleetAI *ai = sf->ai;
-    const BattleParams *bp = Battle_GetParams();
+    const BattleParams *bp = &ai->bp;
     uint targetScanFilter = MOB_FLAG_SHIP;
     IntMap targetMap;
 

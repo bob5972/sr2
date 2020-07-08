@@ -67,10 +67,9 @@ static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
                               const SDL_Point *center, int radius);
 static SDL_Surface *DisplayCreateCircleSprite(uint32 radius, uint32 color);
 
-void Display_Init()
+void Display_Init(const BattleParams *bp)
 {
     SDL_Surface *sdlSurface = NULL;
-    const BattleParams *bp = Battle_GetParams();
 
     ASSERT(MBUtil_IsZero(&display, sizeof(display)));
     display.width = bp->width;

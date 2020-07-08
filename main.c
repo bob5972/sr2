@@ -270,7 +270,7 @@ int main(int argc, char **argv)
         Fleet_Init();
 
         if (!mainData.headless) {
-            Display_Init();
+            Display_Init(&mainData.bp);
         }
 
         // Launch Engine Thread

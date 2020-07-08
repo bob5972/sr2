@@ -133,35 +133,6 @@ typedef struct BattlePlayerParams {
     MBRegistry *mreg;
 } BattlePlayerParams;
 
-typedef struct FleetAIOps {
-    const char *aiName;
-    const char *aiAuthor;
-    void *(*createFleet)(struct FleetAI *ai);
-    void (*destroyFleet)(void *aiHandle);
-    void *(*mobSpawned)(void *aiHandle, Mob *m);
-    void (*mobDestroyed)(void *aiHandle, void *aiMobHandle);
-    void (*runAITick)(void *aiHandle);
-    void (*runAIMob)(void *aiHandle, void *aiMobHandle);
-} FleetAIOps;
-
-typedef struct FleetAI {
-    /*
-     * Filled out by FleetAI controller.
-     */
-    FleetAIOps ops;
-    void *aiHandle;
-
-    /*
-     * Filled out by Fleet
-     */
-    uint tick;
-    PlayerID id;
-    BattlePlayerParams player;
-    int credits;
-    MobSet mobs;
-    MobSet sensors;
-} FleetAI;
-
 typedef struct BattleParams {
     BattlePlayerParams players[MAX_PLAYERS];
     uint numPlayers;
@@ -180,6 +151,30 @@ typedef struct BattleParams {
     int minLootSpawn;
     int maxLootSpawn;
 } BattleParams;
+
+typedef struct FleetAIOps {
+    const char *aiName;
+    const char *aiAuthor;
+    void *(*createFleet)(struct FleetAI *ai);
+    void (*destroyFleet)(void *aiHandle);
+    void *(*mobSpawned)(void *aiHandle, Mob *m);
+    void (*mobDestroyed)(void *aiHandle, void *aiMobHandle);
+    void (*runAITick)(void *aiHandle);
+    void (*runAIMob)(void *aiHandle, void *aiMobHandle);
+} FleetAIOps;
+
+typedef struct FleetAI {
+    FleetAIOps ops;
+    void *aiHandle;
+
+    uint tick;
+    PlayerID id;
+    BattleParams bp;
+    BattlePlayerParams player;
+    int credits;
+    MobSet mobs;
+    MobSet sensors;
+} FleetAI;
 
 typedef struct BattlePlayerStatus {
     const char *playerName;

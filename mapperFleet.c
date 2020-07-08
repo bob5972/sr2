@@ -93,7 +93,7 @@ void MapperFleet_GetOps(FleetAIOps *ops)
 
 static void *MapperFleetCreate(FleetAI *ai)
 {
-    const BattleParams *bp = Battle_GetParams();
+    const BattleParams *bp = &ai->bp;
 
     MapperFleetData *sf;
     ASSERT(ai != NULL);

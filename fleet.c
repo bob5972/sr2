@@ -63,6 +63,8 @@ void Fleet_Init()
         MobSet_Create(&fleet.ais[i].mobs);
         MobSet_Create(&fleet.ais[i].sensors);
 
+        fleet.ais[i].bp = *Battle_GetParams();
+
         FleetGetOps(&fleet.ais[i]);
         if (fleet.ais[i].ops.createFleet != NULL) {
             fleet.ais[i].aiHandle = fleet.ais[i].ops.createFleet(&fleet.ais[i]);

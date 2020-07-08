@@ -257,7 +257,7 @@ static void GatherFleetRunAITick(void *aiHandle)
 {
     GatherFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
-    const BattleParams *bp = Battle_GetParams();
+    const BattleParams *bp = &sf->ai->bp;
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);

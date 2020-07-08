@@ -133,7 +133,7 @@ static void BobFleetRunAITick(void *aiHandle)
 {
     BobFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
-    const BattleParams *bp = Battle_GetParams();
+    const BattleParams *bp = &sf->ai->bp;
     uint targetScanFilter = MOB_FLAG_SHIP;
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
