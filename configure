@@ -87,14 +87,20 @@ echo OPENGL=$OPENGL >> $CONFIG_MK;
 
 DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native"
 
+if [ "$DEVEL" != "0" ]; then
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wall -Wextra -Werror -g"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-parameter"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-sign-compare"
+fi;
+
 if [ "$DEBUG" != "0" ]; then
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Og"
 else
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -O2"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-variable"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-function"
 fi;
 
-if [ "$DEVEL" != "0" ]; then
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Werror -Wall -g"
-fi;
+
 
 echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
