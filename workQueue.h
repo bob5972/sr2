@@ -53,6 +53,7 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize);
 int WorkQueue_QueueSize(WorkQueue *wq);
 int WorkQueue_QueueSizeLocked(WorkQueue *wq);
 bool WorkQueue_IsEmpty(WorkQueue *wq);
+void WorkQueue_MakeEmpty(WorkQueue *wq);
 
 
 #endif // _WORKQUEUE_H_202006241219

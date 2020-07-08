@@ -61,8 +61,9 @@ typedef struct BattleWorkUnit {
 
 typedef enum BattleResultType {
     BATTLE_RESULT_TYPE_INVALID   = 0,
-    BATTLE_RESULT_TYPE_SCAN      = 1,
-    BATTLE_RESULT_TYPE_COLLISION = 2,
+    BATTLE_RESULT_TYPE_NOP       = 1,
+    BATTLE_RESULT_TYPE_SCAN      = 2,
+    BATTLE_RESULT_TYPE_COLLISION = 3,
     BATTLE_RESULT_TYPE_MAX,
 } BattleResultType;
 
@@ -219,7 +220,9 @@ int BattleWorkerThreadMain(void *data)
         } else if (wu.type == BATTLE_WORK_TYPE_EXIT) {
             return 0;
         } else if (wu.type == BATTLE_WORK_TYPE_NOP) {
-            // Do nothing...
+            BattleWorkResult wr;
+            wr.type = BATTLE_RESULT_TYPE_NOP;
+            WorkQueue_QueueItem(&battle.resultQueue, &wr, sizeof(wr));
         } else {
             NOT_IMPLEMENTED();
         }
@@ -493,6 +496,17 @@ static void BattleProcessCollisions(uint firstIndex, uint lastIndex)
 static void BattleRunCollisions(void)
 {
     int size = MobVector_Size(&battle.mobs);
+
+//    //XXX: Perf testing
+//    WorkQueue_Lock(&battle.workQueue);
+//    for (uint i = 0; i < 2 * BATTLE_NUM_THREADS; i++) {
+//        BattleWorkUnit wu;
+//        wu.type = BATTLE_WORK_TYPE_NOP;
+//        WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
+//    }
+//    WorkQueue_Unlock(&battle.workQueue);
+//    WorkQueue_WaitForAllFinished(&battle.workQueue);
+//    WorkQueue_MakeEmpty(&battle.resultQueue);
 
     if (BATTLE_USE_THREADS) {
         uint i = 0;

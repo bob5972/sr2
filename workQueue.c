@@ -202,3 +202,12 @@ bool WorkQueue_IsEmpty(WorkQueue *wq)
 {
     return WorkQueue_QueueSize(wq) == 0;
 }
+
+void WorkQueue_MakeEmpty(WorkQueue *wq)
+{
+    WorkQueue_Lock(wq);
+    SDL_AtomicSet(&wq->numInProgress, 0);
+    wq->numQueued = 0;
+    wq->nextItem = 0;
+    WorkQueue_Unlock(wq);
+}
