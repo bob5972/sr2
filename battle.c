@@ -473,7 +473,8 @@ static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
 }
 
 
-static void BattleProcessCollisions(uint firstIndex, uint lastIndex)
+static void
+BattleProcessCollisions(uint firstIndex, uint lastIndex)
 {
     uint size = MobVector_Size(&battle.mobs);
     ASSERT(lastIndex < size);
