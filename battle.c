@@ -31,14 +31,15 @@
 #define BATTLE_NUM_THREADS 1
 #endif
 
-#define BATTLE_COLLISION_MIN_BATCH 4
+#define BATTLE_COLLISION_MIN_BATCH 2
 #define BATTLE_SCANNING_MIN_BATCH  8
 
 typedef enum BattleWorkType {
     BATTLE_WORK_TYPE_INVALID    = 0,
-    BATTLE_WORK_TYPE_EXIT       = 1,
-    BATTLE_WORK_TYPE_SCAN       = 2,
-    BATTLE_WORK_TYPE_COLLISION  = 3,
+    BATTLE_WORK_TYPE_NOP        = 1,
+    BATTLE_WORK_TYPE_EXIT       = 2,
+    BATTLE_WORK_TYPE_SCAN       = 3,
+    BATTLE_WORK_TYPE_COLLISION  = 4,
     BATTLE_WORK_TYPE_MAX,
 } BattleWorkType;
 
@@ -216,6 +217,8 @@ int BattleWorkerThreadMain(void *data)
                                    wu.collision.lastIndex);
         } else if (wu.type == BATTLE_WORK_TYPE_EXIT) {
             return 0;
+        } else if (wu.type == BATTLE_WORK_TYPE_NOP) {
+            // Do nothing...
         } else {
             NOT_IMPLEMENTED();
         }
@@ -486,12 +489,13 @@ static void BattleProcessCollisions(uint firstIndex, uint lastIndex)
 
 static void BattleRunCollisions(void)
 {
-    uint i = 0;
     int size = MobVector_Size(&battle.mobs);
-    int batches;
-    int unitSize;
 
     if (BATTLE_USE_THREADS) {
+        uint i = 0;
+        int batches;
+        int unitSize;
+
         batches = 2 * ARRAYSIZE(battle.workerThreads);
         unitSize = 1 + (size / batches);
         unitSize = MAX(BATTLE_COLLISION_MIN_BATCH, unitSize);
