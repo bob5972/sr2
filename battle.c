@@ -609,12 +609,13 @@ static void BattleProcessScanning(uint firstIndex, uint lastIndex)
 
 static void BattleRunScanning(void)
 {
-    uint i = 0;
     int size = MobVector_Size(&battle.mobs);
-    int batches;
-    int unitSize;
 
     if (BATTLE_USE_THREADS) {
+        uint i = 0;
+        int batches;
+        int unitSize;
+
         batches = 2 * ARRAYSIZE(battle.workerThreads);
         unitSize = 1 + (size / batches);
         unitSize = MAX(BATTLE_SCANNING_MIN_BATCH, unitSize);
