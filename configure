@@ -72,21 +72,29 @@ if [ "$OPENGL" == "" ]; then
     OPENGL="1";
 fi;
 
-POPTS=""
-if [ "$PROFILE" == "1" ]; then
-    POPTS="-pg"
+if [ "$DEVEL" == "" ]; then
+    DEVEL="1";
 fi;
 
 echo '#define DEBUG ' $DEBUG >> $CONFIG_H
 echo DEBUG=$DEBUG >> $CONFIG_MK;
 
+echo '#define DEVEL ' $DEVEL >> $CONFIG_H
+echo DEVEL=$DEVEL >> $CONFIG_MK;
+
 echo '#define OPENGL ' $OPENGL >> $CONFIG_H
 echo OPENGL=$OPENGL >> $CONFIG_MK;
 
+DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native"
+
 if [ "$DEBUG" != "0" ]; then
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -Werror -Wall -g $POPTS"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Og"
 else
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native -O2 $POPTS"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -O2"
+fi;
+
+if [ "$DEVEL" != "0" ]; then
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Werror -Wall -g"
 fi;
 
 echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
