@@ -466,12 +466,12 @@ static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
 
 static void BattleProcessCollisions(uint firstIndex, uint lastIndex)
 {
-    ASSERT(lastIndex < MobVector_Size(&battle.mobs));
+    uint size = MobVector_Size(&battle.mobs);
+    ASSERT(lastIndex < size);
     for (uint32 outer = firstIndex; outer <= lastIndex ; outer++) {
         Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
 
-        for (uint32 inner = outer + 1; inner < MobVector_Size(&battle.mobs);
-             inner++) {
+        for (uint32 inner = outer + 1; inner < size; inner++) {
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
             if (BattleCheckMobCollision(oMob, iMob)) {
                 BattleWorkResult wr;

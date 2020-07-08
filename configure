@@ -91,6 +91,7 @@ if [ "$DEVEL" != "0" ]; then
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wall -Wextra -Werror -g"
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-parameter"
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-sign-compare"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-format-truncation"
 fi;
 
 if [ "$DEBUG" != "0" ]; then
