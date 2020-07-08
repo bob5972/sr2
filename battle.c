@@ -25,16 +25,6 @@
 
 #define SPAWN_RECHARGE_TICKS 5
 
-#define BATTLE_USE_THREADS FALSE
-#if BATTLE_USE_THREADS
-#define BATTLE_NUM_THREADS 32
-#else
-#define BATTLE_NUM_THREADS 1
-#endif
-
-#define BATTLE_COLLISION_MIN_BATCH 2
-#define BATTLE_SCANNING_MIN_BATCH  8
-
 typedef enum BattleWorkType {
     BATTLE_WORK_TYPE_INVALID    = 0,
     BATTLE_WORK_TYPE_NOP        = 1,
@@ -82,12 +72,6 @@ typedef struct BattleWorkResult {
     };
 } BattleWorkResult;
 
-typedef struct BattleWorkerThreadData {
-    uint id;
-    char name[8];
-    SDL_Thread *sdlThread;
-} BattleWorkerThreadData;
-
 typedef struct BattleGlobalData {
     bool initialized;
 
@@ -104,16 +88,9 @@ typedef struct BattleGlobalData {
     bool mobsAcquired;
 
     MobVector pendingSpawns;
-
-    BattleWorkerThreadData workerThreads[BATTLE_NUM_THREADS];
-    WorkQueue workQueue;
-    WorkQueue resultQueue;
 } BattleGlobalData;
 
 static BattleGlobalData battle;
-static int BattleWorkerThreadMain(void *data);
-static void BattleProcessScanning(uint firstIndex, uint lastIndex);
-static void BattleProcessCollisions(uint firstIndex, uint lastIndex);
 
 void Battle_Init(const BattleParams *bp)
 {
@@ -162,19 +139,6 @@ void Battle_Init(const BattleParams *bp)
         mob->cmd.target = mob->pos;
     }
 
-    WorkQueue_Create(&battle.resultQueue, sizeof(BattleWorkResult));
-    WorkQueue_Create(&battle.workQueue, sizeof(BattleWorkUnit));
-
-    for (uint i = 0; i < ARRAYSIZE(battle.workerThreads); i++) {
-        BattleWorkerThreadData *tData = &battle.workerThreads[i];
-
-        MBUtil_Zero(tData, sizeof(*tData));
-        tData->id = i;
-        snprintf(&tData->name[0], ARRAYSIZE(tData->name), "worker%d", i);
-        tData->sdlThread = SDL_CreateThread(BattleWorkerThreadMain,
-                                            tData->name, tData);
-    }
-
     battle.initialized = TRUE;
 }
 
@@ -182,55 +146,9 @@ void Battle_Exit()
 {
     ASSERT(battle.initialized);
 
-    for (uint i = 0; i < ARRAYSIZE(battle.workerThreads); i++) {
-        BattleWorkUnit wu;
-        wu.type = BATTLE_WORK_TYPE_EXIT;
-        WorkQueue_QueueItem(&battle.workQueue, &wu, sizeof(wu));
-    }
-
-    for (uint i = 0; i < ARRAYSIZE(battle.workerThreads); i++) {
-        BattleWorkerThreadData *tData = &battle.workerThreads[i];
-        SDL_WaitThread(tData->sdlThread, NULL);
-
-    }
-    WorkQueue_Destroy(&battle.resultQueue);
-    WorkQueue_Destroy(&battle.workQueue);
-
     MobVector_Destroy(&battle.mobs);
     MobVector_Destroy(&battle.pendingSpawns);
     battle.initialized = FALSE;
-}
-
-int BattleWorkerThreadMain(void *data)
-{
-    //BattleWorkerThreadData *tData = data;
-
-    while (TRUE) {
-        BattleWorkUnit wu;
-
-        WorkQueue_WaitForItem(&battle.workQueue, &wu, sizeof(wu));
-        ASSERT(wu.type != BATTLE_WORK_TYPE_INVALID);
-        ASSERT(wu.type < BATTLE_WORK_TYPE_MAX);
-
-        if (wu.type == BATTLE_WORK_TYPE_SCAN) {
-            BattleProcessScanning(wu.scan.firstIndex, wu.scan.lastIndex);
-        } else if (wu.type == BATTLE_WORK_TYPE_COLLISION) {
-           BattleProcessCollisions(wu.collision.firstIndex,
-                                   wu.collision.lastIndex);
-        } else if (wu.type == BATTLE_WORK_TYPE_EXIT) {
-            return 0;
-        } else if (wu.type == BATTLE_WORK_TYPE_NOP) {
-            BattleWorkResult wr;
-            wr.type = BATTLE_RESULT_TYPE_NOP;
-            WorkQueue_QueueItem(&battle.resultQueue, &wr, sizeof(wr));
-        } else {
-            NOT_IMPLEMENTED();
-        }
-
-        WorkQueue_FinishItem(&battle.workQueue);
-    }
-
-    NOT_REACHED();
 }
 
 static bool BattleCheckMobInvariants(const Mob *mob)
@@ -472,89 +390,20 @@ static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
     }
 }
 
-
-static void
-BattleProcessCollisions(uint firstIndex, uint lastIndex)
+static void BattleRunCollisions(void)
 {
     uint size = MobVector_Size(&battle.mobs);
-    ASSERT(lastIndex < size);
-    for (uint32 outer = firstIndex; outer <= lastIndex ; outer++) {
+
+    for (uint32 outer = 0; outer < size; outer++) {
         Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
 
         for (uint32 inner = outer + 1; inner < size; inner++) {
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
             if (BattleCheckMobCollision(oMob, iMob)) {
-                BattleWorkResult wr;
-                wr.type = BATTLE_RESULT_TYPE_COLLISION;
-                wr.collision.lhsMobIndex = outer;
-                wr.collision.rhsMobIndex = inner;
-                WorkQueue_QueueItem(&battle.resultQueue, &wr, sizeof(wr));
+                BattleRunMobCollision(oMob, iMob);
             }
         }
     }
-}
-
-static void BattleRunCollisions(void)
-{
-    int size = MobVector_Size(&battle.mobs);
-
-//    //XXX: Perf testing
-//    WorkQueue_Lock(&battle.workQueue);
-//    for (uint i = 0; i < 2 * BATTLE_NUM_THREADS; i++) {
-//        BattleWorkUnit wu;
-//        wu.type = BATTLE_WORK_TYPE_NOP;
-//        WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
-//    }
-//    WorkQueue_Unlock(&battle.workQueue);
-//    WorkQueue_WaitForAllFinished(&battle.workQueue);
-//    WorkQueue_MakeEmpty(&battle.resultQueue);
-
-    if (BATTLE_USE_THREADS) {
-        uint i = 0;
-        int batches;
-        int unitSize;
-
-        batches = 2 * ARRAYSIZE(battle.workerThreads);
-        unitSize = 1 + (size / batches);
-        unitSize = MAX(BATTLE_COLLISION_MIN_BATCH, unitSize);
-
-        WorkQueue_Lock(&battle.workQueue);
-        while (i < size) {
-            BattleWorkUnit wu;
-            wu.type = BATTLE_WORK_TYPE_COLLISION;
-            wu.collision.firstIndex = i;
-            wu.collision.lastIndex = MIN(i + unitSize, size - 1);
-
-            WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
-
-            i = wu.collision.lastIndex + 1;
-        }
-        WorkQueue_Unlock(&battle.workQueue);
-        WorkQueue_WaitForAllFinished(&battle.workQueue);
-    } else {
-        BattleProcessCollisions(0, size - 1);
-    }
-
-    WorkQueue_Lock(&battle.resultQueue);
-    size = WorkQueue_QueueSizeLocked(&battle.resultQueue);
-    for (uint i = 0; i < size; i++) {
-        BattleWorkResult wr;
-        WorkQueue_GetItemLocked(&battle.resultQueue, &wr, sizeof(wr));
-        ASSERT(wr.type == BATTLE_RESULT_TYPE_COLLISION);
-
-        Mob *oMob = MobVector_GetPtr(&battle.mobs, wr.collision.lhsMobIndex);
-        Mob *iMob = MobVector_GetPtr(&battle.mobs, wr.collision.rhsMobIndex);
-
-        /*
-         * The death of an earlier mob might make this collision no longer
-         * happen.
-         */
-        if (BattleCheckMobCollision(oMob, iMob)) {
-            BattleRunMobCollision(oMob, iMob);
-        }
-    }
-    WorkQueue_Unlock(&battle.resultQueue);
-    ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
 }
 
 // Is the scanning mob allowed to scan anything?
@@ -596,10 +445,11 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc, const Mob
     return FALSE;
 }
 
-static void BattleProcessScanning(uint firstIndex, uint lastIndex)
+static void BattleRunScanning(void)
 {
-    ASSERT(lastIndex < MobVector_Size(&battle.mobs));
-    for (uint32 outer = firstIndex; outer <= lastIndex ; outer++) {
+    uint size = MobVector_Size(&battle.mobs);
+
+    for (uint32 outer = 0; outer < size; outer++) {
         Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
         FCircle sc;
         if (!BattleCanMobScan(oMob)) {
@@ -608,65 +458,16 @@ static void BattleProcessScanning(uint firstIndex, uint lastIndex)
 
         Mob_GetSensorCircle(oMob, &sc);
 
-        for (uint32 inner = 0; inner < MobVector_Size(&battle.mobs); inner++) {
+        for (uint32 inner = 0; inner < size; inner++) {
             Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
 
             if (BattleCheckMobScan(oMob, &sc, iMob)) {
-                BattleWorkResult wr;
-                wr.type = BATTLE_RESULT_TYPE_SCAN;
-                wr.scan.scanningMobIndex = outer;
-                wr.scan.targetMobIndex = inner;
-                WorkQueue_QueueItem(&battle.resultQueue, &wr, sizeof(wr));
+                ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
+                BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
+                battle.bs.sensorContacts++;
             }
         }
     }
-}
-
-static void BattleRunScanning(void)
-{
-    int size = MobVector_Size(&battle.mobs);
-
-    if (BATTLE_USE_THREADS) {
-        uint i = 0;
-        int batches;
-        int unitSize;
-
-        batches = 2 * ARRAYSIZE(battle.workerThreads);
-        unitSize = 1 + (size / batches);
-        unitSize = MAX(BATTLE_SCANNING_MIN_BATCH, unitSize);
-
-        WorkQueue_Lock(&battle.workQueue);
-        while (i < size) {
-            BattleWorkUnit wu;
-            wu.type = BATTLE_WORK_TYPE_SCAN;
-            wu.scan.firstIndex = i;
-            wu.scan.lastIndex = MIN(i + unitSize, size - 1);
-
-            WorkQueue_QueueItemLocked(&battle.workQueue, &wu, sizeof(wu));
-
-            i = wu.scan.lastIndex + 1;
-        }
-        WorkQueue_Unlock(&battle.workQueue);
-        WorkQueue_WaitForAllFinished(&battle.workQueue);
-    } else {
-        BattleProcessScanning(0, size - 1);
-    }
-
-    WorkQueue_Lock(&battle.resultQueue);
-    size = WorkQueue_QueueSizeLocked(&battle.resultQueue);
-    for (uint i = 0; i < size; i++) {
-        BattleWorkResult wr;
-        WorkQueue_GetItemLocked(&battle.resultQueue, &wr, sizeof(wr));
-        ASSERT(wr.type == BATTLE_RESULT_TYPE_SCAN);
-
-        Mob *oMob = MobVector_GetPtr(&battle.mobs, wr.scan.scanningMobIndex);
-        Mob *iMob = MobVector_GetPtr(&battle.mobs, wr.scan.targetMobIndex);
-        ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
-        BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
-        battle.bs.sensorContacts++;
-    }
-    WorkQueue_Unlock(&battle.resultQueue);
-    ASSERT(WorkQueue_IsEmpty(&battle.resultQueue));
 }
 
 
