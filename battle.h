@@ -23,14 +23,16 @@
 #include "fleet.h"
 #include "battleTypes.h"
 
-void Battle_Init(const BattleParams *bp);
-void Battle_Exit();
-void Battle_RunTick();
-const BattleParams *Battle_GetParams();
-Mob *Battle_AcquireMobs(uint32 *numMobs);
-void Battle_ReleaseMobs();
-const BattleStatus *Battle_AcquireStatus();
-void Battle_ReleaseStatus();
+struct Battle;
+typedef struct Battle Battle;
 
+Battle *Battle_Create(const BattleParams *bp);
+void Battle_Destroy(Battle *battle);
+void Battle_RunTick(Battle *battle);
+const BattleParams *Battle_GetParams(Battle *battle);
+Mob *Battle_AcquireMobs(Battle *battle, uint32 *numMobs);
+void Battle_ReleaseMobs(Battle *battle);
+const BattleStatus *Battle_AcquireStatus(Battle *battle);
+void Battle_ReleaseStatus(Battle *battle);
 
 #endif // _BATTLE_H_202005310644

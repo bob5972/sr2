@@ -38,6 +38,7 @@ struct MainData {
     int loop;
     SDL_Thread *engineThread;
     uint32 startTimeMS;
+    Battle *battle;
     BattleParams bp;
     int winners[MAX_PLAYERS];
     uint64 seed;
@@ -111,42 +112,42 @@ int Main_EngineThreadMain(void *data)
         uint32 numMobs;
 
         // Run the AI
-        bMobs = Battle_AcquireMobs(&numMobs);
-        bStatus = Battle_AcquireStatus();
+        bMobs = Battle_AcquireMobs(mainData.battle, &numMobs);
+        bStatus = Battle_AcquireStatus(mainData.battle);
         Fleet_RunTick(bStatus, bMobs, numMobs);
-        Battle_ReleaseMobs();
-        Battle_ReleaseStatus();
+        Battle_ReleaseMobs(mainData.battle);
+        Battle_ReleaseStatus(mainData.battle);
 
         // Run the Physics
-        Battle_RunTick();
+        Battle_RunTick(mainData.battle);
 
         // Draw
         if (!mainData.headless) {
-            bMobs = Battle_AcquireMobs(&numMobs);
+            bMobs = Battle_AcquireMobs(mainData.battle, &numMobs);
             Mob *dMobs = Display_AcquireMobs(numMobs, mainData.frameSkip);
             if (dMobs != NULL) {
                 mainData.displayFrames++;
                 memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
                 Display_ReleaseMobs();
             }
-            Battle_ReleaseMobs();
+            Battle_ReleaseMobs(mainData.battle);
         }
 
-        bStatus = Battle_AcquireStatus();
+        bStatus = Battle_AcquireStatus(mainData.battle);
         if (bStatus->tick % 1000 == 0) {
             MainPrintBattleStatus(bStatus);
         }
         if (bStatus->finished) {
             finished = TRUE;
         }
-        Battle_ReleaseStatus();
+        Battle_ReleaseStatus(mainData.battle);
     }
 
-    bStatus = Battle_AcquireStatus();
+    bStatus = Battle_AcquireStatus(mainData.battle);
     MainPrintBattleStatus(bStatus);
     ASSERT(bStatus->winner < ARRAYSIZE(mainData.winners));
     mainData.winners[bStatus->winner]++;
-    Battle_ReleaseStatus();
+    Battle_ReleaseStatus(mainData.battle);
 
     Warning("Battle %s!\n", finished ? "Finished" : "Aborted");
     Warning("\n");
@@ -266,7 +267,7 @@ int main(int argc, char **argv)
     mainData.bp.numPlayers = p;
 
     for (uint32 i = 0; i < mainData.loop; i++) {
-        Battle_Init(&mainData.bp);
+        mainData.battle = Battle_Create(&mainData.bp);
         Fleet_Init();
 
         if (!mainData.headless) {
@@ -291,7 +292,8 @@ int main(int argc, char **argv)
         }
 
         Fleet_Exit();
-        Battle_Exit();
+        Battle_Destroy(mainData.battle);
+        mainData.battle = NULL;
     }
 
     MainPrintWinners();
