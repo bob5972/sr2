@@ -25,7 +25,7 @@
 
 #define SPAWN_RECHARGE_TICKS 5
 
-typedef struct BattleGlobalData {
+typedef struct Battle {
     bool initialized;
 
     BattleParams bp;
@@ -41,86 +41,89 @@ typedef struct BattleGlobalData {
     bool mobsAcquired;
 
     MobVector pendingSpawns;
-} BattleGlobalData;
+} Battle;
 
-static BattleGlobalData battle;
-
-void Battle_Init(const BattleParams *bp)
+Battle *Battle_Create(const BattleParams *bp)
 {
+    Battle *battle;
+
+    battle = malloc(sizeof(*battle));
     ASSERT(bp != NULL);
-    MBUtil_Zero(&battle, sizeof(battle));
+    MBUtil_Zero(battle, sizeof(*battle));
 
     /*
      * We need Neutral + 2 fleets.
      */
     ASSERT(bp->numPlayers >= 3);
-    battle.bp = *bp;
+    battle->bp = *bp;
 
-    battle.bs.numPlayers = bp->numPlayers;
+    battle->bs.numPlayers = bp->numPlayers;
     for (uint32 i = 0; i < bp->numPlayers; i++) {
-        battle.bs.players[i].playerName = bp->players[i].playerName;
-        battle.bs.players[i].alive = TRUE;
-        battle.bs.players[i].credits = bp->startingCredits;
+        battle->bs.players[i].playerName = bp->players[i].playerName;
+        battle->bs.players[i].alive = TRUE;
+        battle->bs.players[i].credits = bp->startingCredits;
     }
-    battle.bs.winner = PLAYER_ID_NEUTRAL;
+    battle->bs.winner = PLAYER_ID_NEUTRAL;
 
     ASSERT(bp->players[PLAYER_ID_NEUTRAL].aiType == FLEET_AI_NEUTRAL);
-    MobVector_Create(&battle.mobs, 0, 1024);
-    MobVector_CreateEmpty(&battle.pendingSpawns);
+    MobVector_Create(&battle->mobs, 0, 1024);
+    MobVector_CreateEmpty(&battle->pendingSpawns);
 
     for (uint i = 0; i < bp->numPlayers; i++) {
         if (i == PLAYER_ID_NEUTRAL) {
             continue;
         }
 
-        MobVector_Grow(&battle.mobs);
-        Mob *mob = MobVector_GetLastPtr(&battle.mobs);
+        MobVector_Grow(&battle->mobs);
+        Mob *mob = MobVector_GetLastPtr(&battle->mobs);
 
         Mob_Init(mob, MOB_TYPE_BASE);
         mob->playerID = i;
-        mob->mobid = ++battle.lastMobID;
-        if (battle.bp.restrictedStart) {
+        mob->mobid = ++battle->lastMobID;
+        if (battle->bp.restrictedStart) {
             // account for NEUTRAL
             uint p = i - 1;
-            float slotW = battle.bp.width / (bp->numPlayers - 1);
+            float slotW = battle->bp.width / (bp->numPlayers - 1);
             mob->pos.x = Random_Float(p * slotW, (p + 1) * slotW);
-            mob->pos.y = Random_Float(0.0f, battle.bp.height);
+            mob->pos.y = Random_Float(0.0f, battle->bp.height);
         } else {
-            mob->pos.x = Random_Float(0.0f, battle.bp.width);
-            mob->pos.y = Random_Float(0.0f, battle.bp.height);
+            mob->pos.x = Random_Float(0.0f, battle->bp.width);
+            mob->pos.y = Random_Float(0.0f, battle->bp.height);
         }
         mob->cmd.target = mob->pos;
     }
 
-    battle.initialized = TRUE;
+    battle->initialized = TRUE;
 }
 
-void Battle_Exit()
+void Battle_Destroy(Battle *battle)
 {
-    ASSERT(battle.initialized);
+    ASSERT(battle != NULL);
+    ASSERT(battle->initialized);
 
-    MobVector_Destroy(&battle.mobs);
-    MobVector_Destroy(&battle.pendingSpawns);
-    battle.initialized = FALSE;
+    MobVector_Destroy(&battle->mobs);
+    MobVector_Destroy(&battle->pendingSpawns);
+    battle->initialized = FALSE;
+    free(battle);
 }
 
-static bool BattleCheckMobInvariants(const Mob *mob)
+static bool BattleCheckMobInvariants(Battle *battle, const Mob *mob)
 {
     ASSERT(Mob_CheckInvariants(mob));
     ASSERT(mob->pos.x >= 0.0f);
     ASSERT(mob->pos.y >= 0.0f);
-    ASSERT(mob->pos.x <= (uint32)battle.bp.width);
-    ASSERT(mob->pos.y <= (uint32)battle.bp.height);
+    ASSERT(mob->pos.x <= (uint32)battle->bp.width);
+    ASSERT(mob->pos.y <= (uint32)battle->bp.height);
 
     ASSERT(mob->cmd.target.x >= 0.0f);
     ASSERT(mob->cmd.target.y >= 0.0f);
-    ASSERT(mob->cmd.target.x <= (uint32)battle.bp.width);
-    ASSERT(mob->cmd.target.y <= (uint32)battle.bp.height);
+    ASSERT(mob->cmd.target.x <= (uint32)battle->bp.width);
+    ASSERT(mob->cmd.target.y <= (uint32)battle->bp.height);
 
     return TRUE;
 }
 
-static int BattleCalcLootCredits(const Mob *m)
+static int BattleCalcLootCredits(Battle *battle, const Mob *m)
 {
     if (m->type == MOB_TYPE_MISSILE ||
         m->type == MOB_TYPE_LOOT_BOX) {
@@ -128,34 +131,35 @@ static int BattleCalcLootCredits(const Mob *m)
     }
 
     int loot = MobType_GetCost(m->type);
-    return (int)(battle.bp.lootDropRate * loot);
+    return (int)(battle->bp.lootDropRate * loot);
 }
 
-static Mob *BattleQueueSpawn(MobType type, PlayerID p, const FPoint *pos)
+static Mob *BattleQueueSpawn(Battle *battle, MobType type,
+                             PlayerID p, const FPoint *pos)
 {
     Mob *spawn;
 
     ASSERT(pos != NULL);
-    MobVector_Grow(&battle.pendingSpawns);
-    spawn = MobVector_GetLastPtr(&battle.pendingSpawns);
+    MobVector_Grow(&battle->pendingSpawns);
+    spawn = MobVector_GetLastPtr(&battle->pendingSpawns);
 
     Mob_Init(spawn, type);
     spawn->playerID = p;
-    spawn->mobid = ++battle.lastMobID;
+    spawn->mobid = ++battle->lastMobID;
     spawn->pos = *pos;
     spawn->cmd.target = *pos;
-    spawn->birthTick = battle.bs.tick;
+    spawn->birthTick = battle->bs.tick;
 
-    battle.bs.spawns++;
+    battle->bs.spawns++;
     if (spawn->type != MOB_TYPE_LOOT_BOX &&
         spawn->type != MOB_TYPE_MISSILE) {
-        battle.bs.shipSpawns++;
+        battle->bs.shipSpawns++;
     }
 
     return spawn;
 }
 
-static void BattleRunMobSpawn(Mob *mob)
+static void BattleRunMobSpawn(Battle *battle, Mob *mob)
 {
     Mob *spawn;
     MobType mobType = mob->type;
@@ -184,8 +188,8 @@ static void BattleRunMobSpawn(Mob *mob)
         ASSERT(spawnType == MOB_TYPE_MISSILE);
     }
 
-    ASSERT(mob->playerID < ARRAYSIZE(battle.bs.players));
-    if (battle.bs.players[mob->playerID].credits <
+    ASSERT(mob->playerID < ARRAYSIZE(battle->bs.players));
+    if (battle->bs.players[mob->playerID].credits <
         MobType_GetCost(mob->cmd.spawnType)) {
         return;
     }
@@ -194,7 +198,7 @@ static void BattleRunMobSpawn(Mob *mob)
         return;
     }
 
-    battle.bs.players[mob->playerID].credits -=
+    battle->bs.players[mob->playerID].credits -=
         MobType_GetCost(mob->cmd.spawnType);
     spawn = BattleQueueSpawn(mob->cmd.spawnType, mob->playerID, &mob->pos);
     spawn->cmd.target = mob->cmd.target;
@@ -202,7 +206,7 @@ static void BattleRunMobSpawn(Mob *mob)
     mob->cmd.spawnType = MOB_TYPE_INVALID;
 }
 
-static void BattleRunMobMove(Mob *mob)
+static void BattleRunMobMove(Battle *battle, Mob *mob)
 {
     FPoint origin;
     float distance;
@@ -302,21 +306,21 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 }
 
 
-static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
+static void BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 {
     ASSERT(BattleCheckMobCollision(oMob, iMob));
 
-    battle.bs.collisions++;
+    battle->bs.collisions++;
 
     if (oMob->type == MOB_TYPE_LOOT_BOX) {
         ASSERT(iMob->type != MOB_TYPE_LOOT_BOX);
-        ASSERT(iMob->playerID < ARRAYSIZE(battle.bs.players));
-        battle.bs.players[iMob->playerID].credits += oMob->lootCredits;
+        ASSERT(iMob->playerID < ARRAYSIZE(battle->bs.players));
+        battle->bs.players[iMob->playerID].credits += oMob->lootCredits;
         oMob->alive = FALSE;
     } else if (iMob->type == MOB_TYPE_LOOT_BOX) {
         ASSERT(oMob->type != MOB_TYPE_LOOT_BOX);
-        ASSERT(oMob->playerID < ARRAYSIZE(battle.bs.players));
-        battle.bs.players[oMob->playerID].credits += iMob->lootCredits;
+        ASSERT(oMob->playerID < ARRAYSIZE(battle->bs.players));
+        battle->bs.players[oMob->playerID].credits += iMob->lootCredits;
         iMob->alive = FALSE;
     } else {
         oMob->health -= MobType_GetMaxHealth(iMob->type);
@@ -343,15 +347,15 @@ static void BattleRunMobCollision(Mob *oMob, Mob *iMob)
     }
 }
 
-static void BattleRunCollisions(void)
+static void BattleRunCollisions(Battle *battle)
 {
-    uint size = MobVector_Size(&battle.mobs);
+    uint size = MobVector_Size(&battle->mobs);
 
     for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
+        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
 
         for (uint32 inner = outer + 1; inner < size; inner++) {
-            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
+            Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
             if (BattleCheckMobCollision(oMob, iMob)) {
                 BattleRunMobCollision(oMob, iMob);
             }
@@ -398,12 +402,12 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc, const Mob
     return FALSE;
 }
 
-static void BattleRunScanning(void)
+static void BattleRunScanning(Battle *battle)
 {
-    uint size = MobVector_Size(&battle.mobs);
+    uint size = MobVector_Size(&battle->mobs);
 
     for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle.mobs, outer);
+        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
         FCircle sc;
         if (!BattleCanMobScan(oMob)) {
             continue;
@@ -412,26 +416,26 @@ static void BattleRunScanning(void)
         Mob_GetSensorCircle(oMob, &sc);
 
         for (uint32 inner = 0; inner < size; inner++) {
-            Mob *iMob = MobVector_GetPtr(&battle.mobs, inner);
+            Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
 
             if (BattleCheckMobScan(oMob, &sc, iMob)) {
                 ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
                 BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
-                battle.bs.sensorContacts++;
+                battle->bs.sensorContacts++;
             }
         }
     }
 }
 
 
-void Battle_RunTick()
+void Battle_RunTick(Battle *battle)
 {
-    ASSERT(battle.bs.tick < MAX_UINT32);
-    battle.bs.tick++;
+    ASSERT(battle->bs.tick < MAX_UINT32);
+    battle->bs.tick++;
 
     // Run Physics
-    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
-        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
+    for (uint32 i = 0; i < MobVector_Size(&battle->mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&battle->mobs, i);
         ASSERT(BattleCheckMobInvariants(mob));
 
         mob->scannedBy = 0;
@@ -453,21 +457,21 @@ void Battle_RunTick()
     }
 
     // Spawn loot
-    battle.lootSpawnBucket += battle.bp.lootSpawnRate;
-    while (battle.lootSpawnBucket > battle.bp.minLootSpawn) {
+    battle->lootSpawnBucket += battle->bp.lootSpawnRate;
+    while (battle->lootSpawnBucket > battle->bp.minLootSpawn) {
         FPoint pos;
-        int loot = Random_Int(battle.bp.minLootSpawn, battle.bp.maxLootSpawn);
-        battle.lootSpawnBucket -= loot;
+        int loot = Random_Int(battle->bp.minLootSpawn, battle->bp.maxLootSpawn);
+        battle->lootSpawnBucket -= loot;
 
-        pos.x = Random_Float(0.0f, battle.bp.width);
-        pos.y = Random_Float(0.0f, battle.bp.height);
+        pos.x = Random_Float(0.0f, battle->bp.width);
+        pos.y = Random_Float(0.0f, battle->bp.height);
         Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX, PLAYER_ID_NEUTRAL, &pos);
         spawn->lootCredits = loot;
     }
 
     // Queue spawned things
-    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
-        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
+    for (uint32 i = 0; i < MobVector_Size(&battle->mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&battle->mobs, i);
         BattleRunMobSpawn(mob);
     }
 
@@ -475,27 +479,27 @@ void Battle_RunTick()
     BattleRunCollisions();
 
     // Create spawned things (after collisions)
-    for (uint32 i = 0; i < MobVector_Size(&battle.pendingSpawns); i++) {
-        Mob *spawn = MobVector_GetPtr(&battle.pendingSpawns, i);
-        MobVector_GrowBy(&battle.mobs, 1);
-        Mob *newMob = MobVector_GetLastPtr(&battle.mobs);
+    for (uint32 i = 0; i < MobVector_Size(&battle->pendingSpawns); i++) {
+        Mob *spawn = MobVector_GetPtr(&battle->pendingSpawns, i);
+        MobVector_GrowBy(&battle->mobs, 1);
+        Mob *newMob = MobVector_GetLastPtr(&battle->mobs);
         *newMob = *spawn;
     }
-    MobVector_MakeEmpty(&battle.pendingSpawns);
+    MobVector_MakeEmpty(&battle->pendingSpawns);
 
     // Process Scanning
     BattleRunScanning();
 
     // Destroy mobs and track player liveness
-    for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
-        battle.bs.players[i].alive = FALSE;
+    for (uint32 i = 0; i < battle->bs.numPlayers; i++) {
+        battle->bs.players[i].alive = FALSE;
     }
-    for (uint32 i = 0; i < MobVector_Size(&battle.mobs); i++) {
-        Mob *mob = MobVector_GetPtr(&battle.mobs, i);
+    for (uint32 i = 0; i < MobVector_Size(&battle->mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&battle->mobs, i);
         if (mob->alive) {
             if (mob->type != MOB_TYPE_LOOT_BOX) {
                 PlayerID p = mob->playerID;
-                battle.bs.players[p].alive = TRUE;
+                battle->bs.players[p].alive = TRUE;
             }
         } else {
             /*
@@ -503,9 +507,9 @@ void Battle_RunTick()
              * fleet AI's can see that it died.
              */
             if (mob->removeMob) {
-                Mob *last = MobVector_GetLastPtr(&battle.mobs);
+                Mob *last = MobVector_GetLastPtr(&battle->mobs);
                 *mob = *last;
-                MobVector_Shrink(&battle.mobs);
+                MobVector_Shrink(&battle->mobs);
 
                 // Redo the current index
                 i--;
@@ -517,70 +521,70 @@ void Battle_RunTick()
 
     // Check for victory, pay the players
     uint32 livePlayers = 0;
-    for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
-        if (battle.bs.players[i].alive) {
+    for (uint32 i = 0; i < battle->bs.numPlayers; i++) {
+        if (battle->bs.players[i].alive) {
             livePlayers++;
-            battle.bs.players[i].credits += battle.bp.creditsPerTick;
+            battle->bs.players[i].credits += battle->bp.creditsPerTick;
         }
     }
     if (livePlayers <= 1) {
-        battle.bs.finished = TRUE;
+        battle->bs.finished = TRUE;
 
-        for (uint32 i = 0; i < battle.bs.numPlayers; i++) {
-            if (battle.bs.players[i].alive) {
-                battle.bs.winner = i;
+        for (uint32 i = 0; i < battle->bs.numPlayers; i++) {
+            if (battle->bs.players[i].alive) {
+                battle->bs.winner = i;
             }
         }
     }
 
-    if(battle.bs.tick >= battle.bp.timeLimit) {
-        battle.bs.finished = TRUE;
+    if(battle->bs.tick >= battle->bp.timeLimit) {
+        battle->bs.finished = TRUE;
     }
 }
 
-Mob *Battle_AcquireMobs(uint32 *numMobs)
+Mob *Battle_AcquireMobs(Battle *battle, uint32 *numMobs)
 {
-    ASSERT(battle.initialized);
+    ASSERT(battle->initialized);
     ASSERT(numMobs != NULL);
-    ASSERT(!battle.mobsAcquired);
+    ASSERT(!battle->mobsAcquired);
 
-    battle.mobsAcquired = TRUE;
+    battle->mobsAcquired = TRUE;
 
-    *numMobs = MobVector_Size(&battle.mobs);
-    MobVector_Pin(&battle.mobs);
-    return MobVector_GetCArray(&battle.mobs);
+    *numMobs = MobVector_Size(&battle->mobs);
+    MobVector_Pin(&battle->mobs);
+    return MobVector_GetCArray(&battle->mobs);
 }
 
-void Battle_ReleaseMobs()
+void Battle_ReleaseMobs(Battle *battle)
 {
-    ASSERT(battle.initialized);
-    ASSERT(battle.mobsAcquired);
-    MobVector_Unpin(&battle.mobs);
-    battle.mobsAcquired = FALSE;
+    ASSERT(battle->initialized);
+    ASSERT(battle->mobsAcquired);
+    MobVector_Unpin(&battle->mobs);
+    battle->mobsAcquired = FALSE;
 }
 
-const BattleStatus *Battle_AcquireStatus()
+const BattleStatus *Battle_AcquireStatus(Battle *battle)
 {
-    ASSERT(battle.initialized);
-    ASSERT(!battle.statusAcquired);
+    ASSERT(battle->initialized);
+    ASSERT(!battle->statusAcquired);
 
-    battle.statusAcquired = TRUE;
-    return &battle.bs;
+    battle->statusAcquired = TRUE;
+    return &battle->bs;
 }
 
-void Battle_ReleaseStatus()
+void Battle_ReleaseStatus(Battle *battle)
 {
-    ASSERT(battle.initialized);
-    ASSERT(battle.statusAcquired);
-    battle.statusAcquired = FALSE;
+    ASSERT(battle->initialized);
+    ASSERT(battle->statusAcquired);
+    battle->statusAcquired = FALSE;
 }
 
-const BattleParams *Battle_GetParams()
+const BattleParams *Battle_GetParams(Battle *battle)
 {
     /*
      * This is called from multiple threads,and is
      * safe safe only because this never changes.
      */
-    ASSERT(battle.initialized);
-    return &battle.bp;
+    ASSERT(battle->initialized);
+    return &battle->bp;
 }
