@@ -103,6 +103,8 @@ else
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-function"
 fi;
 
-
+if [ "$DEVEL" != "0" ]; then
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -fno-omit-frame-pointer"
+fi;
 
 echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
