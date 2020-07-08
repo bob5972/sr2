@@ -25,53 +25,6 @@
 
 #define SPAWN_RECHARGE_TICKS 5
 
-typedef enum BattleWorkType {
-    BATTLE_WORK_TYPE_INVALID    = 0,
-    BATTLE_WORK_TYPE_NOP        = 1,
-    BATTLE_WORK_TYPE_EXIT       = 2,
-    BATTLE_WORK_TYPE_SCAN       = 3,
-    BATTLE_WORK_TYPE_COLLISION  = 4,
-    BATTLE_WORK_TYPE_MAX,
-} BattleWorkType;
-
-typedef struct BattleWorkUnit {
-    BattleWorkType type;
-
-    union {
-        struct {
-            uint firstIndex;
-            uint lastIndex;
-        } scan;
-         struct {
-            uint firstIndex;
-            uint lastIndex;
-        } collision;
-    };
-} BattleWorkUnit;
-
-typedef enum BattleResultType {
-    BATTLE_RESULT_TYPE_INVALID   = 0,
-    BATTLE_RESULT_TYPE_NOP       = 1,
-    BATTLE_RESULT_TYPE_SCAN      = 2,
-    BATTLE_RESULT_TYPE_COLLISION = 3,
-    BATTLE_RESULT_TYPE_MAX,
-} BattleResultType;
-
-typedef struct BattleWorkResult {
-    BattleResultType type;
-
-    union {
-        struct {
-            uint scanningMobIndex;
-            uint targetMobIndex;
-        } scan;
-        struct {
-            uint lhsMobIndex;
-            uint rhsMobIndex;
-        } collision;
-    };
-} BattleWorkResult;
-
 typedef struct BattleGlobalData {
     bool initialized;
 
