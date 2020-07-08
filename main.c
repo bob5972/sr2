@@ -40,6 +40,7 @@ struct MainData {
     uint32 startTimeMS;
     Battle *battle;
     BattleParams bp;
+    Fleet *fleet;
     int winners[MAX_PLAYERS];
     uint64 seed;
     uint timeLimit;
@@ -114,7 +115,7 @@ int Main_EngineThreadMain(void *data)
         // Run the AI
         bMobs = Battle_AcquireMobs(mainData.battle, &numMobs);
         bStatus = Battle_AcquireStatus(mainData.battle);
-        Fleet_RunTick(bStatus, bMobs, numMobs);
+        Fleet_RunTick(mainData.fleet, bStatus, bMobs, numMobs);
         Battle_ReleaseMobs(mainData.battle);
         Battle_ReleaseStatus(mainData.battle);
 
@@ -268,7 +269,7 @@ int main(int argc, char **argv)
 
     for (uint32 i = 0; i < mainData.loop; i++) {
         mainData.battle = Battle_Create(&mainData.bp);
-        Fleet_Init();
+        mainData.fleet = Fleet_Create(&mainData.bp);
 
         if (!mainData.headless) {
             Display_Init(&mainData.bp);
@@ -291,7 +292,9 @@ int main(int argc, char **argv)
             Display_Exit();
         }
 
-        Fleet_Exit();
+        Fleet_Destroy(mainData.fleet);
+        mainData.fleet = NULL;
+
         Battle_Destroy(mainData.battle);
         mainData.battle = NULL;
     }

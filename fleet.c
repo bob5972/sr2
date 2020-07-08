@@ -21,37 +21,41 @@
 #include "IntMap.h"
 #include "battle.h"
 
-typedef struct FleetGlobalData {
+typedef struct Fleet {
     bool initialized;
 
     FleetAI *ais;
     uint32 numAIs;
     MobVector aiMobs;
     MobVector aiSensors;
-} FleetGlobalData;
 
-static FleetGlobalData fleet;
+    BattleParams bp;
+} Fleet;
 
 static void FleetGetOps(FleetAI *ai);
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
 static void DummyFleetRunAITick(void *aiHandle);
 
-void Fleet_Init()
+Fleet *Fleet_Create(const BattleParams *bp)
 {
-    const BattleParams *bp = Battle_GetParams();
-    MBUtil_Zero(&fleet, sizeof(fleet));
+    Fleet *fleet;
 
-    fleet.numAIs = bp->numPlayers;
-    fleet.ais = MBUtil_ZAlloc(fleet.numAIs * sizeof(fleet.ais[0]));
+    fleet = malloc(sizeof(*fleet));
+    MBUtil_Zero(fleet, sizeof(*fleet));
+
+    fleet->bp = *bp;
+
+    fleet->numAIs = bp->numPlayers;
+    fleet->ais = MBUtil_ZAlloc(fleet->numAIs * sizeof(fleet->ais[0]));
 
     // We need at least neutral and two fleets.
-    ASSERT(fleet.numAIs >= 3);
+    ASSERT(fleet->numAIs >= 3);
 
-    for (uint32 i = 0; i < fleet.numAIs; i++) {
-        ASSERT(MBUtil_IsZero(&fleet.ais[i], sizeof(fleet.ais[i])));
+    for (uint32 i = 0; i < fleet->numAIs; i++) {
+        ASSERT(MBUtil_IsZero(&fleet->ais[i], sizeof(fleet->ais[i])));
 
-        fleet.ais[i].id = i;
-        fleet.ais[i].player = bp->players[i];
+        fleet->ais[i].id = i;
+        fleet->ais[i].player = bp->players[i];
 
         ASSERT(bp->players[i].aiType < FLEET_AI_MAX);
         ASSERT(bp->players[i].aiType != FLEET_AI_INVALID);
@@ -60,42 +64,45 @@ void Fleet_Init()
         ASSERT(bp->players[i].aiType != FLEET_AI_NEUTRAL ||
                i == PLAYER_ID_NEUTRAL);
 
-        MobSet_Create(&fleet.ais[i].mobs);
-        MobSet_Create(&fleet.ais[i].sensors);
+        MobSet_Create(&fleet->ais[i].mobs);
+        MobSet_Create(&fleet->ais[i].sensors);
 
-        fleet.ais[i].bp = *Battle_GetParams();
+        fleet->ais[i].bp = fleet->bp;
 
-        FleetGetOps(&fleet.ais[i]);
-        if (fleet.ais[i].ops.createFleet != NULL) {
-            fleet.ais[i].aiHandle = fleet.ais[i].ops.createFleet(&fleet.ais[i]);
+        FleetGetOps(&fleet->ais[i]);
+        if (fleet->ais[i].ops.createFleet != NULL) {
+            fleet->ais[i].aiHandle = fleet->ais[i].ops.createFleet(&fleet->ais[i]);
         } else {
-            fleet.ais[i].aiHandle = &fleet.ais[i];
+            fleet->ais[i].aiHandle = &fleet->ais[i];
         }
     }
 
-    MobVector_CreateEmpty(&fleet.aiMobs);
-    MobVector_CreateEmpty(&fleet.aiSensors);
+    MobVector_CreateEmpty(&fleet->aiMobs);
+    MobVector_CreateEmpty(&fleet->aiSensors);
 
-    fleet.initialized = TRUE;
+    fleet->initialized = TRUE;
+    return fleet;
 }
 
-void Fleet_Exit()
+void Fleet_Destroy(Fleet *fleet)
 {
-    ASSERT(fleet.initialized);
+    ASSERT(fleet != NULL);
+    ASSERT(fleet->initialized);
 
-    for (uint32 i = 0; i < fleet.numAIs; i++) {
-        if (fleet.ais[i].ops.destroyFleet != NULL) {
-            fleet.ais[i].ops.destroyFleet(fleet.ais[i].aiHandle);
+    for (uint32 i = 0; i < fleet->numAIs; i++) {
+        if (fleet->ais[i].ops.destroyFleet != NULL) {
+            fleet->ais[i].ops.destroyFleet(fleet->ais[i].aiHandle);
         }
 
-        MobSet_Destroy(&fleet.ais[i].mobs);
-        MobSet_Destroy(&fleet.ais[i].sensors);
+        MobSet_Destroy(&fleet->ais[i].mobs);
+        MobSet_Destroy(&fleet->ais[i].sensors);
     }
 
-    MobVector_Destroy(&fleet.aiMobs);
-    MobVector_Destroy(&fleet.aiSensors);
-    free(fleet.ais);
-    fleet.initialized = FALSE;
+    MobVector_Destroy(&fleet->aiMobs);
+    MobVector_Destroy(&fleet->aiSensors);
+    free(fleet->ais);
+    fleet->initialized = FALSE;
+    free(fleet);
 }
 
 static void FleetGetOps(FleetAI *ai)
@@ -130,25 +137,26 @@ static void FleetGetOps(FleetAI *ai)
 }
 
 
-void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
+void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
+                   Mob *mobs, uint32 numMobs)
 {
-    const BattleParams *bp = Battle_GetParams();
+    const BattleParams *bp = &fleet->bp;
 
     /*
      * Make sure the vectors are big enough that we don't
      * resize while filling them up.
      */
-    MobVector_MakeEmpty(&fleet.aiMobs);
-    MobVector_MakeEmpty(&fleet.aiSensors);
-    MobVector_EnsureCapacity(&fleet.aiMobs, numMobs);
-    MobVector_EnsureCapacity(&fleet.aiSensors, numMobs * fleet.numAIs);
-    MobVector_Pin(&fleet.aiMobs);
-    MobVector_Pin(&fleet.aiSensors);
+    MobVector_MakeEmpty(&fleet->aiMobs);
+    MobVector_MakeEmpty(&fleet->aiSensors);
+    MobVector_EnsureCapacity(&fleet->aiMobs, numMobs);
+    MobVector_EnsureCapacity(&fleet->aiSensors, numMobs * fleet->numAIs);
+    MobVector_Pin(&fleet->aiMobs);
+    MobVector_Pin(&fleet->aiSensors);
 
-    for (uint32 i = 0; i < fleet.numAIs; i++) {
-        MobSet_MakeEmpty(&fleet.ais[i].mobs);
-        MobSet_MakeEmpty(&fleet.ais[i].sensors);
-        fleet.ais[i].credits = bs->players[i].credits;
+    for (uint32 i = 0; i < fleet->numAIs; i++) {
+        MobSet_MakeEmpty(&fleet->ais[i].mobs);
+        MobSet_MakeEmpty(&fleet->ais[i].sensors);
+        fleet->ais[i].credits = bs->players[i].credits;
     }
 
     /*
@@ -161,25 +169,25 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
 
         ASSERT(Mob_CheckInvariants(mob));
 
-        MobVector_Grow(&fleet.aiMobs);
-        m = MobVector_GetLastPtr(&fleet.aiMobs);
+        MobVector_Grow(&fleet->aiMobs);
+        m = MobVector_GetLastPtr(&fleet->aiMobs);
         *m = *mob;
         Mob_MaskForAI(m);
 
-        ASSERT(p == PLAYER_ID_NEUTRAL || p < fleet.numAIs);
+        ASSERT(p == PLAYER_ID_NEUTRAL || p < fleet->numAIs);
         if (p != PLAYER_ID_NEUTRAL) {
-            MobSet_Add(&fleet.ais[p].mobs, m);
+            MobSet_Add(&fleet->ais[p].mobs, m);
         }
 
         if (mob->scannedBy != 0) {
-            for (PlayerID s = 0; s < fleet.numAIs; s++) {
+            for (PlayerID s = 0; s < fleet->numAIs; s++) {
                 if (BitVector_GetRaw32(s, mob->scannedBy)) {
-                    MobVector_Grow(&fleet.aiSensors);
-                    m = MobVector_GetLastPtr(&fleet.aiSensors);
+                    MobVector_Grow(&fleet->aiSensors);
+                    m = MobVector_GetLastPtr(&fleet->aiSensors);
                     *m = *mob;
                     Mob_MaskForSensor(m);
                     ASSERT(Mob_CheckInvariants(m));
-                    MobSet_Add(&fleet.ais[s].sensors, m);
+                    MobSet_Add(&fleet->ais[s].sensors, m);
                 }
             }
         }
@@ -188,9 +196,9 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
     /*
      * Run the AI for all the players.
      */
-    for (uint32 p = 0; p < fleet.numAIs; p++) {
-        fleet.ais[p].tick = bs->tick;
-        FleetRunAITick(bs, &fleet.ais[p]);
+    for (uint32 p = 0; p < fleet->numAIs; p++) {
+        fleet->ais[p].tick = bs->tick;
+        FleetRunAITick(bs, &fleet->ais[p]);
     }
 
     /*
@@ -198,7 +206,7 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
      */
     for (uint32 i = 0; i < numMobs; i++) {
         Mob *mob = &mobs[i];
-        Mob *m = MobVector_GetPtr(&fleet.aiMobs, i);
+        Mob *m = MobVector_GetPtr(&fleet->aiMobs, i);
 
 
         if (mob->mobid != m->mobid) {
@@ -210,8 +218,8 @@ void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs)
         mob->aiMobHandle = m->aiMobHandle;
     }
 
-    MobVector_Unpin(&fleet.aiMobs);
-    MobVector_Unpin(&fleet.aiSensors);
+    MobVector_Unpin(&fleet->aiMobs);
+    MobVector_Unpin(&fleet->aiSensors);
 }
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
@@ -262,7 +270,7 @@ static void DummyFleetRunAITick(void *handle)
 {
     FleetAI *ai = handle;
     MobIt mit;
-    const BattleParams *bp = Battle_GetParams();
+    const BattleParams *bp = &ai->bp;
 
     /*
      * We use this function for the neutral player, but don't actually queue any

@@ -94,6 +94,7 @@ Battle *Battle_Create(const BattleParams *bp)
     }
 
     battle->initialized = TRUE;
+    return battle;
 }
 
 void Battle_Destroy(Battle *battle)
@@ -200,7 +201,8 @@ static void BattleRunMobSpawn(Battle *battle, Mob *mob)
 
     battle->bs.players[mob->playerID].credits -=
         MobType_GetCost(mob->cmd.spawnType);
-    spawn = BattleQueueSpawn(mob->cmd.spawnType, mob->playerID, &mob->pos);
+    spawn = BattleQueueSpawn(battle, mob->cmd.spawnType,
+                             mob->playerID, &mob->pos);
     spawn->cmd.target = mob->cmd.target;
     mob->rechargeTime = SPAWN_RECHARGE_TICKS;
     mob->cmd.spawnType = MOB_TYPE_INVALID;
@@ -255,7 +257,7 @@ static void BattleRunMobMove(Battle *battle, Mob *mob)
         ASSERT(FPoint_Distance(&newPos, &origin) <= speed + MICRON);
         mob->pos = newPos;
     }
-    ASSERT(BattleCheckMobInvariants(mob));
+    ASSERT(BattleCheckMobInvariants(battle, mob));
 }
 
 
@@ -306,7 +308,8 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 }
 
 
-static void BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
+static void
+BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 {
     ASSERT(BattleCheckMobCollision(oMob, iMob));
 
@@ -328,19 +331,21 @@ static void BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 
         if (oMob->health <= 0) {
             oMob->alive = FALSE;
-            int lootCredits = BattleCalcLootCredits(oMob);
+            int lootCredits = BattleCalcLootCredits(battle, oMob);
             if (lootCredits > 0) {
-                Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX,
-                                                oMob->playerID, &oMob->pos);
+                Mob *spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
+                                              oMob->playerID, &oMob->pos);
                 spawn->lootCredits = lootCredits;
             }
         }
         if (iMob->health <= 0) {
             iMob->alive = FALSE;
-            int lootCredits = BattleCalcLootCredits(iMob);
+            int lootCredits = BattleCalcLootCredits(battle, iMob);
             if (lootCredits > 0) {
-                Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX,
-                                                iMob->playerID, &iMob->pos);
+                Mob *spawn;
+                spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
+                                         iMob->playerID,
+                                         &iMob->pos);
                 spawn->lootCredits = lootCredits;
             }
         }
@@ -357,7 +362,7 @@ static void BattleRunCollisions(Battle *battle)
         for (uint32 inner = outer + 1; inner < size; inner++) {
             Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
             if (BattleCheckMobCollision(oMob, iMob)) {
-                BattleRunMobCollision(oMob, iMob);
+                BattleRunMobCollision(battle, oMob, iMob);
             }
         }
     }
@@ -436,7 +441,7 @@ void Battle_RunTick(Battle *battle)
     // Run Physics
     for (uint32 i = 0; i < MobVector_Size(&battle->mobs); i++) {
         Mob *mob = MobVector_GetPtr(&battle->mobs, i);
-        ASSERT(BattleCheckMobInvariants(mob));
+        ASSERT(BattleCheckMobInvariants(battle, mob));
 
         mob->scannedBy = 0;
 
@@ -452,7 +457,7 @@ void Battle_RunTick(Battle *battle)
         }
 
         if (mob->alive) {
-            BattleRunMobMove(mob);
+            BattleRunMobMove(battle, mob);
         }
     }
 
@@ -465,18 +470,19 @@ void Battle_RunTick(Battle *battle)
 
         pos.x = Random_Float(0.0f, battle->bp.width);
         pos.y = Random_Float(0.0f, battle->bp.height);
-        Mob *spawn = BattleQueueSpawn(MOB_TYPE_LOOT_BOX, PLAYER_ID_NEUTRAL, &pos);
+        Mob *spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
+                                      PLAYER_ID_NEUTRAL, &pos);
         spawn->lootCredits = loot;
     }
 
     // Queue spawned things
     for (uint32 i = 0; i < MobVector_Size(&battle->mobs); i++) {
         Mob *mob = MobVector_GetPtr(&battle->mobs, i);
-        BattleRunMobSpawn(mob);
+        BattleRunMobSpawn(battle, mob);
     }
 
     // Process collisions
-    BattleRunCollisions();
+    BattleRunCollisions(battle);
 
     // Create spawned things (after collisions)
     for (uint32 i = 0; i < MobVector_Size(&battle->pendingSpawns); i++) {
@@ -488,7 +494,7 @@ void Battle_RunTick(Battle *battle)
     MobVector_MakeEmpty(&battle->pendingSpawns);
 
     // Process Scanning
-    BattleRunScanning();
+    BattleRunScanning(battle);
 
     // Destroy mobs and track player liveness
     for (uint32 i = 0; i < battle->bs.numPlayers; i++) {

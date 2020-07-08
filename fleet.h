@@ -22,9 +22,13 @@
 #include "mob.h"
 #include "battleTypes.h"
 
-void Fleet_Init();
-void Fleet_Exit();
-void Fleet_RunTick(const BattleStatus *bs, Mob *mobs, uint32 numMobs);
+struct Fleet;
+typedef struct Fleet Fleet;
+
+Fleet *Fleet_Create(const BattleParams *bp);
+void Fleet_Destroy(Fleet *fleet);
+void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
+                   Mob *mobs, uint32 numMobs);
 
 Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter);
 Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter);
