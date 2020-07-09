@@ -53,9 +53,9 @@ typedef struct MainEngineThreadData {
     uint threadId;
     SDL_Thread *sdlThread;
     char threadName[64];
-    RandomState rs;
     uint32 startTimeMS;
     uint battleId;
+    uint64 seed;
     BattleParams bp;
     Battle *battle;
 } MainEngineThreadData;
@@ -67,6 +67,7 @@ struct MainData {
     int loop;
     uint timeLimit;
 
+    bool reuseSeed;
     uint64 seed;
     RandomState rs;
 
@@ -92,6 +93,8 @@ MainPrintBattleStatus(MainEngineThreadData *tData,
     uint32 elapsedMS = stopTimeMS - tData->startTimeMS;
 
     Warning("Finished tick %d\n", bStatus->tick);
+    Warning("\tbattleId = %d\n", tData->battleId);
+    Warning("\tseed = 0x%llX\n", tData->seed);
     Warning("\tcollisions = %d\n", bStatus->collisions);
     Warning("\tsensor contacts = %d\n", bStatus->sensorContacts);
     Warning("\tspawns = %d\n", bStatus->spawns);
@@ -163,11 +166,9 @@ static void MainRunBattle(MainEngineThreadData *tData,
     const BattleStatus *bStatus;
 
     tData->battleId = wu->battleId;
+    tData->seed = wu->seed;
     tData->bp = wu->bp;
-    RandomState_SetSeed(&tData->rs, wu->seed);
-    uint64 seed = RandomState_Uint64(&tData->rs);
-    tData->battle = Battle_Create(&tData->bp, seed);
-    seed = RandomState_Uint64(&tData->rs);
+    tData->battle = Battle_Create(&tData->bp, wu->seed);
 
     Warning("Starting Battle %d ...\n", tData->battleId);
     Warning("\n");
@@ -293,13 +294,14 @@ void MainConstructScenario(void)
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",       FALSE, "Print help text"          },
-        { "-H", "--headless",   FALSE, "Run headless",            },
-        { "-F", "--frameSkip",  FALSE, "Allow frame skipping",    },
-        { "-l", "--loop",       TRUE,  "Loop <arg> times"         },
-        { "-s", "--seed",       TRUE,  "Set random seed"          },
-        { "-L", "--timeLimit",  TRUE,  "Time limit in ticks"      },
-        { "-t", "--numThreads", TRUE,  "Number of engine threads" },
+        { "-h", "--help",       FALSE, "Print help text"               },
+        { "-H", "--headless",   FALSE, "Run headless",                 },
+        { "-F", "--frameSkip",  FALSE, "Allow frame skipping",         },
+        { "-l", "--loop",       TRUE,  "Loop <arg> times"              },
+        { "-s", "--seed",       TRUE,  "Set random seed"               },
+        { "-L", "--timeLimit",  TRUE,  "Time limit in ticks"           },
+        { "-t", "--numThreads", TRUE,  "Number of engine threads"      },
+        { "-R", "--reuseSeed",  FALSE, "Reuse the seed across battles" },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -319,6 +321,8 @@ void MainParseCmdLine(int argc, char **argv)
     }
 
     mainData.seed = MBOpt_GetUint64("seed");
+    mainData.reuseSeed = MBOpt_GetBool("reuseSeed");
+
     mainData.timeLimit = MBOpt_GetInt("timeLimit");
 
     if (MBOpt_IsPresent("numThreads")) {
@@ -382,7 +386,17 @@ int main(int argc, char **argv)
         MBUtil_Zero(&wu, sizeof(wu));
         wu.type = MAIN_WORK_BATTLE;
         wu.battleId = i;
-        wu.seed = RandomState_Uint64(&mainData.rs);
+
+        if (i == 0 || mainData.reuseSeed) {
+            /*
+             * Use the actual seed for the first battle, so that it's
+             * easy to re-create a single battle from the battle seed
+             * without specifying --reuseSeed.
+             */
+            wu.seed = RandomState_GetSeed(&mainData.rs);
+        } else {
+            wu.seed = RandomState_Uint64(&mainData.rs);
+        }
         wu.bp = mainData.bp;
 
         WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
