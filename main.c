@@ -189,7 +189,7 @@ void MainParseCmdLine(int argc, char **argv)
         mainData.loop = 1;
     }
 
-    mainData.seed = MBOpt_GetInt("seed");
+    mainData.seed = MBOpt_GetUint64("seed");
     mainData.timeLimit = MBOpt_GetInt("timeLimit");
 
 }
