@@ -40,6 +40,7 @@ typedef enum MainEngineWorkType {
 
 typedef struct MainEngineWorkUnit {
     MainEngineWorkType type;
+    uint battleId;
     uint64 seed;
     BattleParams bp;
 } MainEngineWorkUnit;
@@ -54,6 +55,7 @@ typedef struct MainEngineThreadData {
     char threadName[64];
     RandomState rs;
     uint32 startTimeMS;
+    uint battleId;
     BattleParams bp;
     Battle *battle;
     Fleet *fleet;
@@ -161,6 +163,7 @@ static void MainRunBattle(MainEngineThreadData *tData,
     bool finished = FALSE;
     const BattleStatus *bStatus;
 
+    tData->battleId = wu->battleId;
     tData->bp = wu->bp;
     RandomState_SetSeed(&tData->rs, wu->seed);
     uint64 seed = RandomState_Uint64(&tData->rs);
@@ -168,7 +171,8 @@ static void MainRunBattle(MainEngineThreadData *tData,
     seed = RandomState_Uint64(&tData->rs);
     tData->fleet = Fleet_Create(&tData->bp, seed);
 
-    Warning("Starting Battle ...\n");
+    Warning("Starting Battle %d ...\n", tData->battleId);
+    Warning("\n");
 
     tData->startTimeMS = SDL_GetTicks();
 
@@ -222,7 +226,8 @@ static void MainRunBattle(MainEngineThreadData *tData,
         Battle_ReleaseStatus(tData->battle);
     }
 
-    Warning("Battle %s!\n", finished ? "Finished" : "Aborted");
+    Warning("Battle %d %s!\n", tData->battleId,
+            finished ? "Finished" : "Aborted");
     Warning("\n");
 
     Fleet_Destroy(tData->fleet);
@@ -388,6 +393,7 @@ int main(int argc, char **argv)
 
         MBUtil_Zero(&wu, sizeof(wu));
         wu.type = MAIN_WORK_BATTLE;
+        wu.battleId = i;
         wu.seed = RandomState_Uint64(&mainData.rs);
         wu.bp = mainData.bp;
 
