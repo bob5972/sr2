@@ -30,14 +30,33 @@
 #include "battle.h"
 #include "fleet.h"
 #include "MBOpt.h"
+#include "workQueue.h"
+
+typedef enum MainEngineWorkType {
+    MAIN_WORK_INVALID = 0,
+    MAIN_WORK_EXIT    = 1,
+    MAIN_WORK_BATTLE  = 2,
+} MainEngineWorkType;
+
+typedef struct MainEngineWorkUnit {
+    MainEngineWorkType type;
+    uint64 seed;
+    BattleParams bp;
+} MainEngineWorkUnit;
+
+typedef struct MainEngineResultUnit {
+    BattleStatus bs;
+} MainEngineResultUnit;
 
 typedef struct MainEngineThreadData {
+    uint threadId;
     SDL_Thread *sdlThread;
+    char threadName[64];
+    RandomState rs;
     uint32 startTimeMS;
     BattleParams bp;
     Battle *battle;
     Fleet *fleet;
-    int winners[MAX_PLAYERS];
 } MainEngineThreadData;
 
 struct MainData {
@@ -46,11 +65,23 @@ struct MainData {
     uint displayFrames;
     int loop;
     uint timeLimit;
+
     uint64 seed;
     RandomState rs;
-    MainEngineThreadData tData;
+
+    BattleParams bp;
+    int winners[MAX_PLAYERS];
+
+    uint numThreads;
+    MainEngineThreadData *tData;
+    WorkQueue workQ;
+    WorkQueue resultQ;
+
     volatile bool asyncExit;
 } mainData;
+
+static void MainRunBattle(MainEngineThreadData *tData,
+                          MainEngineWorkUnit *wu);
 
 static void
 MainPrintBattleStatus(MainEngineThreadData *tData,
@@ -81,97 +112,201 @@ MainPrintBattleStatus(MainEngineThreadData *tData,
     }
 }
 
-static void MainPrintWinners(MainEngineThreadData *tData)
+static void MainPrintWinners(void)
 {
     uint32 totalBattles = 0;
 
     Warning("\n");
     Warning("Summary:\n");
 
-    for (uint32 i = 0; i < tData->bp.numPlayers; i++) {
-        totalBattles += tData->winners[i];
+    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
+        totalBattles += mainData.winners[i];
     }
 
-    for (uint32 i = 0; i < tData->bp.numPlayers; i++) {
-        int wins = tData->winners[i];
+    for (uint32 i = 0; i < mainData.bp.numPlayers; i++) {
+        int wins = mainData.winners[i];
         int losses = totalBattles - wins;
         float percent = 100.0f * wins / (float)totalBattles;
 
-        Warning("Fleet: %s\n", tData->bp.players[i].playerName);
+        Warning("Fleet: %s\n", mainData.bp.players[i].playerName);
         Warning("\t%d wins, %d losses: %0.1f\%\n", wins, losses, percent);
     }
 
     Warning("Total Battles: %d\n", totalBattles);
 }
 
-int Main_EngineThreadMain(void *data)
+static int MainEngineThreadMain(void *data)
+{
+    MainEngineThreadData *tData = data;
+    MainEngineWorkUnit wu;
+
+    while (TRUE) {
+        WorkQueue_WaitForItem(&mainData.workQ, &wu, sizeof(wu));
+
+        if (wu.type == MAIN_WORK_BATTLE) {
+            MainRunBattle(tData, &wu);
+        } else if (wu.type == MAIN_WORK_EXIT) {
+            return 0;
+        } else {
+            NOT_IMPLEMENTED();
+        }
+
+        WorkQueue_FinishItem(&mainData.workQ);
+    }
+}
+
+static void MainRunBattle(MainEngineThreadData *tData,
+                          MainEngineWorkUnit *wu)
 {
     bool finished = FALSE;
     const BattleStatus *bStatus;
 
+    tData->bp = wu->bp;
+    RandomState_SetSeed(&tData->rs, wu->seed);
+    uint64 seed = RandomState_Uint64(&tData->rs);
+    tData->battle = Battle_Create(&tData->bp, seed);
+    seed = RandomState_Uint64(&tData->rs);
+    tData->fleet = Fleet_Create(&tData->bp, seed);
+
     Warning("Starting Battle ...\n");
 
-    mainData.tData.startTimeMS = SDL_GetTicks();
-
-    ASSERT(data == NULL);
+    tData->startTimeMS = SDL_GetTicks();
 
     while (!finished && !mainData.asyncExit) {
         Mob *bMobs;
         uint32 numMobs;
 
         // Run the AI
-        bMobs = Battle_AcquireMobs(mainData.tData.battle, &numMobs);
-        bStatus = Battle_AcquireStatus(mainData.tData.battle);
-        Fleet_RunTick(mainData.tData.fleet, bStatus, bMobs, numMobs);
-        Battle_ReleaseMobs(mainData.tData.battle);
-        Battle_ReleaseStatus(mainData.tData.battle);
+        bMobs = Battle_AcquireMobs(tData->battle, &numMobs);
+        bStatus = Battle_AcquireStatus(tData->battle);
+        Fleet_RunTick(tData->fleet, bStatus, bMobs, numMobs);
+        Battle_ReleaseMobs(tData->battle);
+        Battle_ReleaseStatus(tData->battle);
 
         // Run the Physics
-        Battle_RunTick(mainData.tData.battle);
+        Battle_RunTick(tData->battle);
 
         // Draw
         if (!mainData.headless) {
-            bMobs = Battle_AcquireMobs(mainData.tData.battle, &numMobs);
+            bMobs = Battle_AcquireMobs(tData->battle, &numMobs);
             Mob *dMobs = Display_AcquireMobs(numMobs, mainData.frameSkip);
             if (dMobs != NULL) {
                 mainData.displayFrames++;
                 memcpy(dMobs, bMobs, numMobs * sizeof(bMobs[0]));
                 Display_ReleaseMobs();
             }
-            Battle_ReleaseMobs(mainData.tData.battle);
+            Battle_ReleaseMobs(tData->battle);
         }
 
-        bStatus = Battle_AcquireStatus(mainData.tData.battle);
-        if (bStatus->tick % 1000 == 0) {
-            MainPrintBattleStatus(&mainData.tData, bStatus);
+        bStatus = Battle_AcquireStatus(tData->battle);
+        if (mainData.numThreads == 1) {
+            if (bStatus->tick % 1000 == 0) {
+                MainPrintBattleStatus(tData, bStatus);
+            }
         }
         if (bStatus->finished) {
             finished = TRUE;
         }
-        Battle_ReleaseStatus(mainData.tData.battle);
+        Battle_ReleaseStatus(tData->battle);
     }
 
-    bStatus = Battle_AcquireStatus(mainData.tData.battle);
-    MainPrintBattleStatus(&mainData.tData, bStatus);
-    ASSERT(bStatus->winner < ARRAYSIZE(mainData.tData.winners));
-    mainData.tData.winners[bStatus->winner]++;
-    Battle_ReleaseStatus(mainData.tData.battle);
+    {
+        MainEngineResultUnit ru;
+
+        bStatus = Battle_AcquireStatus(tData->battle);
+        MainPrintBattleStatus(tData, bStatus);
+
+        MBUtil_Zero(&ru, sizeof(ru));
+        ru.bs = *bStatus;
+        WorkQueue_QueueItem(&mainData.resultQ, &ru, sizeof(ru));
+        Battle_ReleaseStatus(tData->battle);
+    }
 
     Warning("Battle %s!\n", finished ? "Finished" : "Aborted");
     Warning("\n");
 
-    return 0;
+    Fleet_Destroy(tData->fleet);
+    tData->fleet = NULL;
+
+    Battle_Destroy(tData->battle);
+    tData->battle = NULL;
+}
+
+void MainConstructScenario(void)
+{
+    uint p;
+
+    mainData.bp.width = 1600;
+    mainData.bp.height = 1200;
+    mainData.bp.startingCredits = 1000;
+    mainData.bp.creditsPerTick = 1;
+
+    if (mainData.timeLimit != 0) {
+        mainData.bp.timeLimit = mainData.timeLimit;
+    } else{
+        mainData.bp.timeLimit = 100 * 1000;
+    }
+
+    mainData.bp.lootDropRate = 0.25f;
+    mainData.bp.lootSpawnRate = 2.0f;
+    mainData.bp.minLootSpawn = 10;
+    mainData.bp.maxLootSpawn = 20;
+    mainData.bp.restrictedStart = TRUE;
+
+    /*
+     * The NEUTRAL fleet needs to be there.
+     *
+     * Otherwise these are in rough order of difficulty.
+     */
+    p = 0;
+    mainData.bp.players[p].playerName = "Neutral";
+    mainData.bp.players[p].aiType = FLEET_AI_NEUTRAL;
+    p++;
+
+//     mainData.bp.players[p].playerName = "DummyFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_DUMMY;
+//     p++;
+
+//     mainData.bp.players[p].playerName = "SimpleFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_SIMPLE;
+//     p++;
+
+//     mainData.bp.players[p].playerName = "BobFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_BOB;
+//     p++;
+
+//     mainData.bp.players[p].playerName = "GatherFleet";
+//     mainData.bp.players[p].aiType = FLEET_AI_GATHER;
+//     p++;
+
+    mainData.bp.players[p].playerName = "CloudFleet";
+    mainData.bp.players[p].aiType = FLEET_AI_CLOUD;
+    mainData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.bp.players[p].mreg, "CrazyMissiles", "TRUE");
+    p++;
+
+    mainData.bp.players[p].playerName = "MapperFleet";
+    mainData.bp.players[p].mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mainData.bp.players[p].mreg, "StartingWaveSize", "5");
+    MBRegistry_Put(mainData.bp.players[p].mreg, "WaveSizeIncrement", "0");
+    MBRegistry_Put(mainData.bp.players[p].mreg, "RandomWaves", "FALSE");
+    mainData.bp.players[p].aiType = FLEET_AI_MAPPER;
+    p++;
+
+    ASSERT(p <= ARRAYSIZE(mainData.bp.players));
+    mainData.bp.numPlayers = p;
 }
 
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",      FALSE, "Print help text"       },
-        { "-H", "--headless",  FALSE, "Run headless",         },
-        { "-F", "--frameSkip", FALSE, "Allow frame skipping", },
-        { "-l", "--loop",      TRUE,  "Loop <arg> times"      },
-        { "-s", "--seed",      TRUE,  "Set random seed"       },
-        { "-L", "--timeLimit", TRUE,  "Time limit in ticks"   },
+        { "-h", "--help",       FALSE, "Print help text"          },
+        { "-H", "--headless",   FALSE, "Run headless",            },
+        { "-F", "--frameSkip",  FALSE, "Allow frame skipping",    },
+        { "-l", "--loop",       TRUE,  "Loop <arg> times"         },
+        { "-s", "--seed",       TRUE,  "Set random seed"          },
+        { "-L", "--timeLimit",  TRUE,  "Time limit in ticks"      },
+        { "-t", "--numThreads", TRUE,  "Number of engine threads" },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -193,19 +328,22 @@ void MainParseCmdLine(int argc, char **argv)
     mainData.seed = MBOpt_GetUint64("seed");
     mainData.timeLimit = MBOpt_GetInt("timeLimit");
 
+    if (MBOpt_IsPresent("numThreads")) {
+        mainData.numThreads = MBOpt_GetInt("numThreads");
+    } else {
+        mainData.numThreads = 1;
+    }
+    ASSERT(mainData.numThreads >= 1);
 }
 
 int main(int argc, char **argv)
 {
-    uint32 p;
-
     ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
     MainParseCmdLine(argc, argv);
 
     // Setup
     Warning("Starting SpaceRobots2 %s...\n", DEBUG ? "(debug enabled)" : "");
     Warning("\n");
-    SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
 
     RandomState_Create(&mainData.rs);
     if (mainData.seed != 0) {
@@ -214,110 +352,92 @@ int main(int argc, char **argv)
     DebugPrint("Random seed: 0x%llX\n",
                RandomState_GetSeed(&mainData.rs));
 
-    /*
-     * Battle Scenario
-     */
-    mainData.tData.bp.width = 1600;
-    mainData.tData.bp.height = 1200;
-    mainData.tData.bp.startingCredits = 1000;
-    mainData.tData.bp.creditsPerTick = 1;
-    if (mainData.timeLimit != 0) {
-        mainData.tData.bp.timeLimit = mainData.timeLimit;
-    } else{
-        mainData.tData.bp.timeLimit = 100 * 1000;
+    SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
+
+    WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
+    WorkQueue_Create(&mainData.resultQ, sizeof(MainEngineResultUnit));
+
+    uint tDataSize = mainData.numThreads * sizeof(mainData.tData[0]);
+    mainData.tData = malloc(tDataSize);
+    for (uint i = 0; i < mainData.numThreads; i++) {
+        MainEngineThreadData *tData = &mainData.tData[i];
+
+        MBUtil_Zero(tData, sizeof(*tData));
+
+        tData->threadId = i;
+        uint threadNameLen = sizeof(tData->threadName);
+        snprintf(&tData->threadName[0], threadNameLen, "battle%d", i);
+        tData->threadName[threadNameLen - 1] = '\0';
+
+        tData->sdlThread =
+            SDL_CreateThread(MainEngineThreadMain, &tData->threadName[0], tData);
+        ASSERT(tData->sdlThread != NULL);
     }
-    mainData.tData.bp.lootDropRate = 0.25f;
-    mainData.tData.bp.lootSpawnRate = 2.0f;
-    mainData.tData.bp.minLootSpawn = 10;
-    mainData.tData.bp.maxLootSpawn = 20;
-    mainData.tData.bp.restrictedStart = TRUE;
 
-    /*
-     * The NEUTRAL fleet needs to be there.
-     *
-     * Otherwise these are in rough order of difficulty.
-     */
-    p = 0;
-    mainData.tData.bp.players[p].playerName = "Neutral";
-    mainData.tData.bp.players[p].aiType = FLEET_AI_NEUTRAL;
-    p++;
+    MainConstructScenario();
 
-//     mainData.tData.bp.players[p].playerName = "DummyFleet";
-//     mainData.tData.bp.players[p].aiType = FLEET_AI_DUMMY;
-//     p++;
-
-//     mainData.tData.bp.players[p].playerName = "SimpleFleet";
-//     mainData.tData.bp.players[p].aiType = FLEET_AI_SIMPLE;
-//     p++;
-
-//     mainData.tData.bp.players[p].playerName = "BobFleet";
-//     mainData.tData.bp.players[p].aiType = FLEET_AI_BOB;
-//     p++;
-
-//     mainData.tData.bp.players[p].playerName = "GatherFleet";
-//     mainData.tData.bp.players[p].aiType = FLEET_AI_GATHER;
-//     p++;
-
-    mainData.tData.bp.players[p].playerName = "CloudFleet";
-    mainData.tData.bp.players[p].aiType = FLEET_AI_CLOUD;
-    mainData.tData.bp.players[p].mreg = MBRegistry_Alloc();
-    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "CrazyMissiles", "TRUE");
-    p++;
-
-    mainData.tData.bp.players[p].playerName = "MapperFleet";
-    mainData.tData.bp.players[p].mreg = MBRegistry_Alloc();
-    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "StartingWaveSize", "5");
-    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "WaveSizeIncrement", "0");
-    MBRegistry_Put(mainData.tData.bp.players[p].mreg, "RandomWaves", "FALSE");
-    mainData.tData.bp.players[p].aiType = FLEET_AI_MAPPER;
-    p++;
-
-    ASSERT(p <= ARRAYSIZE(mainData.tData.bp.players));
-    mainData.tData.bp.numPlayers = p;
+    if (!mainData.headless) {
+        if (mainData.numThreads != 1) {
+            PANIC("Multiple threads requires --headless\n");
+        }
+        Display_Init(&mainData.bp);
+    }
 
     for (uint32 i = 0; i < mainData.loop; i++) {
-        uint64 seed = RandomState_Uint64(&mainData.rs);
-        mainData.tData.battle = Battle_Create(&mainData.tData.bp, seed);
-        seed = RandomState_Uint64(&mainData.rs);
-        mainData.tData.fleet = Fleet_Create(&mainData.tData.bp, seed);
+        MainEngineWorkUnit wu;
 
-        if (!mainData.headless) {
-            Display_Init(&mainData.tData.bp);
-        }
+        MBUtil_Zero(&wu, sizeof(wu));
+        wu.type = MAIN_WORK_BATTLE;
+        wu.seed = RandomState_Uint64(&mainData.rs);
+        wu.bp = mainData.bp;
 
-        // Launch Engine Thread
-        mainData.tData.sdlThread = SDL_CreateThread(Main_EngineThreadMain,
-                                                 "battle", NULL);
-        ASSERT(mainData.tData.sdlThread != NULL);
-
-        if (!mainData.headless) {
-            Display_Main();
-            mainData.asyncExit = TRUE;
-        }
-
-        SDL_WaitThread(mainData.tData.sdlThread, NULL);
-
-        //Cleanup
-        if (!mainData.headless) {
-            Display_Exit();
-        }
-
-        Fleet_Destroy(mainData.tData.fleet);
-        mainData.tData.fleet = NULL;
-
-        Battle_Destroy(mainData.tData.battle);
-        mainData.tData.battle = NULL;
+        WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
     }
 
-    MainPrintWinners(&mainData.tData);
+    if (!mainData.headless) {
+        Display_Main();
+        mainData.asyncExit = TRUE;
+        Display_Exit();
+    }
 
-    for (uint32 i = 0; i < mainData.tData.bp.numPlayers; i++) {
-        if (mainData.tData.bp.players[i].mreg != NULL) {
-            MBRegistry_Free(mainData.tData.bp.players[i].mreg);
+    WorkQueue_WaitForAllFinished(&mainData.workQ);
+
+    for (uint i = 0; i < mainData.numThreads; i++) {
+        MainEngineWorkUnit wu;
+        MBUtil_Zero(&wu, sizeof(wu));
+        wu.type = MAIN_WORK_EXIT;
+        WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
+    }
+    for (uint i = 0; i < mainData.numThreads; i++) {
+        SDL_WaitThread(mainData.tData[i].sdlThread, NULL);
+    }
+
+    WorkQueue_Lock(&mainData.resultQ);
+    uint qSize = WorkQueue_QueueSizeLocked(&mainData.resultQ);
+    ASSERT(qSize == mainData.loop);
+    for (uint i = 0; i < qSize; i++) {
+        MainEngineResultUnit ru;
+        WorkQueue_GetItemLocked(&mainData.resultQ, &ru, sizeof(ru));
+        ASSERT(ru.bs.winner < ARRAYSIZE(mainData.winners));
+        mainData.winners[ru.bs.winner]++;
+    }
+    WorkQueue_Unlock(&mainData.resultQ);
+
+    MainPrintWinners();
+
+    for (uint i = 0; i < mainData.bp.numPlayers; i++) {
+        if (mainData.bp.players[i].mreg != NULL) {
+            MBRegistry_Free(mainData.bp.players[i].mreg);
         }
     }
 
     RandomState_Destroy(&mainData.rs);
+
+    WorkQueue_Destroy(&mainData.workQ);
+    WorkQueue_Destroy(&mainData.resultQ);
+    free(mainData.tData);
+    mainData.tData = NULL;
+
     SDL_Quit();
     MBOpt_Exit();
 
