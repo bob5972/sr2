@@ -36,6 +36,8 @@ typedef struct Battle {
     BattleStatus bs;
     bool statusAcquired;
 
+    Fleet *fleet;
+
     float lootSpawnBucket;
 
     MobID lastMobID;
@@ -101,6 +103,8 @@ Battle *Battle_Create(const BattleParams *bp, uint64 seed)
         mob->cmd.target = mob->pos;
     }
 
+    battle->fleet = Fleet_Create(bp, RandomState_Uint64(&battle->rs));
+
     battle->initialized = TRUE;
     return battle;
 }
@@ -109,6 +113,9 @@ void Battle_Destroy(Battle *battle)
 {
     ASSERT(battle != NULL);
     ASSERT(battle->initialized);
+
+    Fleet_Destroy(battle->fleet);
+    battle->fleet = NULL;
 
     MobVector_Destroy(&battle->mobs);
     MobVector_Destroy(&battle->pendingSpawns);
@@ -445,6 +452,15 @@ static void BattleRunScanning(Battle *battle)
 void Battle_RunTick(Battle *battle)
 {
     ASSERT(battle->bs.tick < MAX_UINT32);
+
+    // Run the AI
+    uint32 numMobs;
+    Mob *bMobs = Battle_AcquireMobs(battle, &numMobs);
+    Fleet_RunTick(battle->fleet, &battle->bs, bMobs, numMobs);
+    Battle_ReleaseMobs(battle);
+    bMobs = NULL;
+
+    // Increment the tick after the AI
     battle->bs.tick++;
 
     // Run Physics

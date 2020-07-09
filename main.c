@@ -58,7 +58,6 @@ typedef struct MainEngineThreadData {
     uint battleId;
     BattleParams bp;
     Battle *battle;
-    Fleet *fleet;
 } MainEngineThreadData;
 
 struct MainData {
@@ -169,7 +168,6 @@ static void MainRunBattle(MainEngineThreadData *tData,
     uint64 seed = RandomState_Uint64(&tData->rs);
     tData->battle = Battle_Create(&tData->bp, seed);
     seed = RandomState_Uint64(&tData->rs);
-    tData->fleet = Fleet_Create(&tData->bp, seed);
 
     Warning("Starting Battle %d ...\n", tData->battleId);
     Warning("\n");
@@ -180,14 +178,7 @@ static void MainRunBattle(MainEngineThreadData *tData,
         Mob *bMobs;
         uint32 numMobs;
 
-        // Run the AI
-        bMobs = Battle_AcquireMobs(tData->battle, &numMobs);
-        bStatus = Battle_AcquireStatus(tData->battle);
-        Fleet_RunTick(tData->fleet, bStatus, bMobs, numMobs);
-        Battle_ReleaseMobs(tData->battle);
-        Battle_ReleaseStatus(tData->battle);
-
-        // Run the Physics
+        // Run the simulation
         Battle_RunTick(tData->battle);
 
         // Draw
@@ -229,9 +220,6 @@ static void MainRunBattle(MainEngineThreadData *tData,
     Warning("Battle %d %s!\n", tData->battleId,
             finished ? "Finished" : "Aborted");
     Warning("\n");
-
-    Fleet_Destroy(tData->fleet);
-    tData->fleet = NULL;
 
     Battle_Destroy(tData->battle);
     tData->battle = NULL;
