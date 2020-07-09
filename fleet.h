@@ -21,21 +21,24 @@
 
 #include "mob.h"
 #include "battleTypes.h"
+#include "random.h"
 
 struct Fleet;
 typedef struct Fleet Fleet;
 
-Fleet *Fleet_Create(const BattleParams *bp);
+Fleet *Fleet_Create(const BattleParams *bp, uint64 seed);
 void Fleet_Destroy(Fleet *fleet);
 void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
                    Mob *mobs, uint32 numMobs);
 
 Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter);
 Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter);
-void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius);
+void FleetUtil_RandomPointInRange(RandomState *rs, FPoint *p,
+                                  const FPoint *center, float radius);
 void FleetUtil_SortMobPByDistance(MobPVec *mobs, const FPoint *pos);
 int FleetUtil_FindNthClosestMobP(MobPVec *mobps, const FPoint *pos, int n);
 
+void DummyFleet_GetOps(FleetAIOps *ops);
 void SimpleFleet_GetOps(FleetAIOps *ops);
 void BobFleet_GetOps(FleetAIOps *ops);
 void MapperFleet_GetOps(FleetAIOps *ops);

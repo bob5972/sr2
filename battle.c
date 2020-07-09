@@ -31,6 +31,8 @@ typedef struct Battle {
     BattleParams bp;
     bool paramsAcquired;
 
+    RandomState rs;
+
     BattleStatus bs;
     bool statusAcquired;
 
@@ -43,13 +45,15 @@ typedef struct Battle {
     MobVector pendingSpawns;
 } Battle;
 
-Battle *Battle_Create(const BattleParams *bp)
+Battle *Battle_Create(const BattleParams *bp, uint64 seed)
 {
     Battle *battle;
 
     battle = malloc(sizeof(*battle));
     ASSERT(bp != NULL);
     MBUtil_Zero(battle, sizeof(*battle));
+
+    RandomState_CreateWithSeed(&battle->rs, seed);
 
     /*
      * We need Neutral + 2 fleets.
@@ -84,11 +88,15 @@ Battle *Battle_Create(const BattleParams *bp)
             // account for NEUTRAL
             uint p = i - 1;
             float slotW = battle->bp.width / (bp->numPlayers - 1);
-            mob->pos.x = Random_Float(p * slotW, (p + 1) * slotW);
-            mob->pos.y = Random_Float(0.0f, battle->bp.height);
+            mob->pos.x = RandomState_Float(&battle->rs, p * slotW,
+                                           (p + 1) * slotW);
+            mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
+                                           battle->bp.height);
         } else {
-            mob->pos.x = Random_Float(0.0f, battle->bp.width);
-            mob->pos.y = Random_Float(0.0f, battle->bp.height);
+            mob->pos.x = RandomState_Float(&battle->rs, 0.0f,
+                                           battle->bp.width);
+            mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
+                                           battle->bp.height);
         }
         mob->cmd.target = mob->pos;
     }
@@ -104,6 +112,7 @@ void Battle_Destroy(Battle *battle)
 
     MobVector_Destroy(&battle->mobs);
     MobVector_Destroy(&battle->pendingSpawns);
+    RandomState_Destroy(&battle->rs);
     battle->initialized = FALSE;
     free(battle);
 }
@@ -465,11 +474,15 @@ void Battle_RunTick(Battle *battle)
     battle->lootSpawnBucket += battle->bp.lootSpawnRate;
     while (battle->lootSpawnBucket > battle->bp.minLootSpawn) {
         FPoint pos;
-        int loot = Random_Int(battle->bp.minLootSpawn, battle->bp.maxLootSpawn);
+        int loot = RandomState_Int(&battle->rs,
+                                   battle->bp.minLootSpawn,
+                                   battle->bp.maxLootSpawn);
         battle->lootSpawnBucket -= loot;
 
-        pos.x = Random_Float(0.0f, battle->bp.width);
-        pos.y = Random_Float(0.0f, battle->bp.height);
+        pos.x = RandomState_Float(&battle->rs, 0.0f,
+                                  battle->bp.width);
+        pos.y = RandomState_Float(&battle->rs, 0.0f,
+                                  battle->bp.height);
         Mob *spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
                                       PLAYER_ID_NEUTRAL, &pos);
         spawn->lootCredits = loot;

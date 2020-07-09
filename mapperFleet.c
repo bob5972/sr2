@@ -45,6 +45,7 @@ typedef struct MapperShip {
 
 typedef struct MapperFleetData {
     FleetAI *ai;
+    RandomState rs;
 
     FPoint basePos;
     Mob enemyBase;
@@ -101,6 +102,7 @@ static void *MapperFleetCreate(FleetAI *ai)
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
     sf->ai = ai;
+    RandomState_CreateWithSeed(&sf->rs, ai->seed);
 
     sf->startingWaveSize = 5;
     sf->waveSizeIncrement = 0;
@@ -149,6 +151,7 @@ static void MapperFleetDestroy(void *aiHandle)
     BitVector_Destroy(&sf->tileBV);
     free(sf->tileScanTicks);
     free(sf->tileFlags);
+    RandomState_Destroy(&sf->rs);
 
     free(sf);
 }
@@ -174,7 +177,7 @@ static void *MapperFleetMobSpawned(void *aiHandle, Mob *m)
                 { MAPPER_GOV_GUARD,  0.50 },
                 { MAPPER_GOV_ATTACK, 0.00 },
             };
-            ship->gov = Random_Enum(dist, ARRAYSIZE(dist));
+            ship->gov = RandomState_Enum(&sf->rs, dist, ARRAYSIZE(dist));
         }
 
         if (ship->gov == MAPPER_GOV_GUARD) {
@@ -273,7 +276,7 @@ static void MapperFleetStartTileSearch(MapperFleetData *sf)
 
 static uint32 MapperFleetGetNextTile(MapperFleetData *sf, uint tileFilter)
 {
-    uint32 offset = Random_Int(0, sf->numTiles - 1);
+    uint32 offset = RandomState_Int(&sf->rs, 0, sf->numTiles - 1);
     uint32 bestIndex = offset;
     uint32 i;
 
@@ -418,7 +421,7 @@ static void MapperFleetRunAITick(void *aiHandle)
 
                 if (s->gov == MAPPER_GOV_GUARD) {
                     if (sf->curWaveSize > 0) {
-                        if (!sf->randomWaves || Random_Bit()) {
+                        if (!sf->randomWaves || RandomState_Bit(&sf->rs)) {
                             ASSERT(sf->numGuard > 0);
                             sf->numGuard--;
                             sf->curWaveSize--;
@@ -555,7 +558,7 @@ static void MapperFleetRunAITick(void *aiHandle)
                         NOT_REACHED();
                 }
 
-                FleetUtil_RandomPointInRange(&mob->cmd.target,
+                FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                              &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
@@ -565,7 +568,7 @@ static void MapperFleetRunAITick(void *aiHandle)
                 mob->cmd.target = target->pos;
             }
         } else if (mob->type == MOB_TYPE_BASE) {
-            if (ai->credits > 200 && Random_Int(0, 20) == 0) {
+            if (ai->credits > 200 && RandomState_Int(&sf->rs, 0, 20) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;

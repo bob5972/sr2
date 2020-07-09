@@ -50,6 +50,7 @@ typedef struct GatherFleetData {
     MobPVec fighters;
     MobPVec targets;
     MBVector contacts;
+    RandomState rs;
 } GatherFleetData;
 
 static void *GatherFleetCreate(FleetAI *ai);
@@ -81,6 +82,7 @@ static void *GatherFleetCreate(FleetAI *ai)
 
     sf = MBUtil_ZAlloc(sizeof(*sf));
     sf->ai = ai;
+    RandomState_CreateWithSeed(&sf->rs, ai->seed);
     MobPVec_CreateEmpty(&sf->fighters);
     MobPVec_CreateEmpty(&sf->targets);
     MBVector_CreateEmpty(&sf->contacts, sizeof(Contact));
@@ -95,6 +97,7 @@ static void GatherFleetDestroy(void *aiHandle)
     MobPVec_Destroy(&sf->fighters);
     MobPVec_Destroy(&sf->targets);
     MBVector_Destroy(&sf->contacts);
+    RandomState_Destroy(&sf->rs);
     free(sf);
 }
 
@@ -118,7 +121,8 @@ static void *GatherFleetMobSpawned(void *aiHandle, Mob *m)
         } else if (sf->numScouts < 1) {
             ship->gov = GATHER_GOV_SCOUT;
         } else {
-            ship->gov = Random_Int(GATHER_GOV_MIN, GATHER_GOV_MAX - 1);
+            ship->gov = RandomState_Int(&sf->rs, GATHER_GOV_MIN,
+                                        GATHER_GOV_MAX - 1);
         }
 
         if (ship->gov == GATHER_GOV_GUARD) {
@@ -408,8 +412,10 @@ static void GatherFleetRunAITick(void *aiHandle)
                     int i = 0;
                     bool conflict;
                     do {
-                        mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                        mob->cmd.target.y = Random_Float(0.0f, bp->height);
+                        mob->cmd.target.x =
+                            RandomState_Float(&sf->rs, 0.0f, bp->width);
+                        mob->cmd.target.y =
+                            RandomState_Float(&sf->rs, 0.0f, bp->height);
                         i++;
                         conflict = GatherFleetInConflictZone(sf, &mob->pos,
                                                              &mob->cmd.target);
@@ -431,8 +437,8 @@ static void GatherFleetRunAITick(void *aiHandle)
                     int i = 0;
                     bool tooClose;
                     do {
-                        FleetUtil_RandomPointInRange(&mob->cmd.target,
-                                                    &moveCenter, moveRadius);
+                        FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
+                                                     &moveCenter, moveRadius);
                         i++;
                         tooClose = FALSE;
                         if (GatherFleetBaseDistance(sf, &mob->cmd.target) <
@@ -450,21 +456,23 @@ static void GatherFleetRunAITick(void *aiHandle)
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 float moveRadius = firingRange;
                 FPoint moveCenter = mob->pos;
-                FleetUtil_RandomPointInRange(&mob->cmd.target,
+                FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                              &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
 
-            if (ai->credits > 200 && Random_Int(0, 20) == 0) {
+            if (ai->credits > 200 && RandomState_Int(&sf->rs, 0, 20) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;
             }
 
             if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                mob->cmd.target.y = Random_Float(0.0f, bp->height);
+                mob->cmd.target.x =
+                    RandomState_Float(&sf->rs, 0.0f, bp->width);
+                mob->cmd.target.y =
+                    RandomState_Float(&sf->rs, 0.0f, bp->height);
             }
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
             if (FPoint_Distance(&mob->pos, &sf->basePos) <= baseScanRange) {

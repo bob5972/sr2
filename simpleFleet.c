@@ -23,6 +23,7 @@
 
 typedef struct SimpleFleetData {
     FleetAI *ai;
+    RandomState rs;
     FPoint basePos;
     Mob enemyBase;
     uint enemyBaseAge;
@@ -53,6 +54,7 @@ static void *SimpleFleetCreate(FleetAI *ai)
     sf = malloc(sizeof(*sf));
     MBUtil_Zero(sf, sizeof(*sf));
     sf->ai = ai;
+    RandomState_CreateWithSeed(&sf->rs, ai->seed);
 
     return sf;
 }
@@ -61,6 +63,7 @@ static void SimpleFleetDestroy(void *handle)
 {
     SimpleFleetData *sf = handle;
     ASSERT(sf != NULL);
+    RandomState_Destroy(&sf->rs);
     free(sf);
 }
 
@@ -117,13 +120,15 @@ static void SimpleFleetRunAI(void *handle)
                 mob->cmd.target = target->pos;
 
                 if (target->type != MOB_TYPE_LOOT_BOX &&
-                    Random_Int(0, 20) == 0) {
+                    RandomState_Int(&sf->rs, 0, 20) == 0) {
                     mob->cmd.spawnType = MOB_TYPE_MISSILE;
                 }
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                if (Random_Bit()) {
-                    mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                    mob->cmd.target.y = Random_Float(0.0f, bp->height);
+                if (RandomState_Bit(&sf->rs)) {
+                    mob->cmd.target.x =
+                        RandomState_Float(&sf->rs, 0.0f, bp->width);
+                    mob->cmd.target.y =
+                        RandomState_Float(&sf->rs, 0.0f, bp->height);
                 } else {
                     mob->cmd.target = sf->basePos;
                 }
@@ -138,7 +143,7 @@ static void SimpleFleetRunAI(void *handle)
             sf->basePos = mob->pos;
 
             if (ai->credits > 200 &&
-                Random_Int(0, 100) == 0) {
+                RandomState_Int(&sf->rs, 0, 100) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;

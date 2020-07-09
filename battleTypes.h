@@ -171,6 +171,7 @@ typedef struct FleetAI {
     PlayerID id;
     BattleParams bp;
     BattlePlayerParams player;
+    uint64 seed;
     int credits;
     MobSet mobs;
     MobSet sensors;

@@ -122,11 +122,16 @@ void FleetUtil_SortMobPByDistance(MobPVec *mobps, const FPoint *pos)
     }
 }
 
-void FleetUtil_RandomPointInRange(FPoint *p, const FPoint *center, float radius)
+void FleetUtil_RandomPointInRange(RandomState *rs, FPoint *p,
+                                  const FPoint *center, float radius)
 {
+    ASSERT(rs != NULL);
     ASSERT(p != NULL);
     ASSERT(center != NULL);
 
-    p->x = Random_Float(MAX(0, center->x - radius), center->x + radius);
-    p->y = Random_Float(MAX(0, center->y - radius), center->y + radius);
+    // This technically generates a point within the square...
+    p->x = RandomState_Float(rs, MAX(0, center->x - radius),
+                             center->x + radius);
+    p->y = RandomState_Float(rs, MAX(0, center->y - radius),
+                             center->y + radius);
 }

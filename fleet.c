@@ -30,18 +30,20 @@ typedef struct Fleet {
     MobVector aiSensors;
 
     BattleParams bp;
+    RandomState rs;
 } Fleet;
 
 static void FleetGetOps(FleetAI *ai);
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
-static void DummyFleetRunAITick(void *aiHandle);
 
-Fleet *Fleet_Create(const BattleParams *bp)
+Fleet *Fleet_Create(const BattleParams *bp, uint64 seed)
 {
     Fleet *fleet;
 
     fleet = malloc(sizeof(*fleet));
     MBUtil_Zero(fleet, sizeof(*fleet));
+
+    RandomState_CreateWithSeed(&fleet->rs, seed);
 
     fleet->bp = *bp;
 
@@ -68,6 +70,7 @@ Fleet *Fleet_Create(const BattleParams *bp)
         MobSet_Create(&fleet->ais[i].sensors);
 
         fleet->ais[i].bp = fleet->bp;
+        fleet->ais[i].seed = RandomState_Uint64(&fleet->rs);
 
         FleetGetOps(&fleet->ais[i]);
         if (fleet->ais[i].ops.createFleet != NULL) {
@@ -112,9 +115,7 @@ static void FleetGetOps(FleetAI *ai)
     switch(ai->player.aiType) {
         case FLEET_AI_NEUTRAL:
         case FLEET_AI_DUMMY:
-            ai->ops.aiName = "DummyFleet";
-            ai->ops.aiAuthor = "Michael Banack";
-            ai->ops.runAITick = &DummyFleetRunAITick;
+            DummyFleet_GetOps(&ai->ops);
             break;
         case FLEET_AI_SIMPLE:
             SimpleFleet_GetOps(&ai->ops);
@@ -261,50 +262,6 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
             Mob *m = MobIt_Next(&mit);
             if (!m->alive) {
                 ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
-            }
-        }
-    }
-}
-
-static void DummyFleetRunAITick(void *handle)
-{
-    FleetAI *ai = handle;
-    MobIt mit;
-    const BattleParams *bp = &ai->bp;
-
-    /*
-     * We use this function for the neutral player, but don't actually queue any
-     * mobs for them to process.
-     */
-    ASSERT(ai->player.aiType == FLEET_AI_DUMMY ||
-           ai->player.aiType == FLEET_AI_NEUTRAL);
-
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
-        bool newTarget = FALSE;
-
-        if (mob->type == MOB_TYPE_BASE) {
-            if (Random_Int(0, 100) == 0) {
-                mob->cmd.spawnType = MOB_TYPE_FIGHTER;
-            }
-        }
-
-        if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-            newTarget = TRUE;
-        }
-        if (mob->type != MOB_TYPE_BASE &&
-            Random_Int(0, 100) == 0) {
-            newTarget = TRUE;
-        }
-        if (mob->birthTick == ai->tick) {
-            newTarget = TRUE;
-        }
-
-        if (newTarget) {
-            if (Random_Bit()) {
-                mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                mob->cmd.target.y = Random_Float(0.0f, bp->height);
             }
         }
     }

@@ -28,6 +28,7 @@ typedef struct CloudShip {
 
 typedef struct CloudFleetData {
     FleetAI *ai;
+    RandomState rs;
     bool crazyMissiles;
 
     FPoint basePos;
@@ -71,6 +72,8 @@ static void *CloudFleetCreate(FleetAI *ai)
         }
     }
 
+    RandomState_CreateWithSeed(&sf->rs, ai->seed);
+
     return sf;
 }
 
@@ -79,6 +82,7 @@ static void CloudFleetDestroy(void *aiHandle)
     CloudFleetData *sf = aiHandle;
     ASSERT(sf != NULL);
 
+    RandomState_Destroy(&sf->rs);
     free(sf);
 }
 
@@ -202,7 +206,7 @@ static void CloudFleetRunAITick(void *aiHandle)
             if (target != NULL) {
                 float moveRadius = 2 * MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
                 if (target->type != MOB_TYPE_LOOT_BOX) {
-                    FleetUtil_RandomPointInRange(&mob->cmd.target,
+                    FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                                  &target->pos, moveRadius);
                 } else {
                     mob->cmd.target = target->pos;
@@ -212,7 +216,7 @@ static void CloudFleetRunAITick(void *aiHandle)
             if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 float moveRadius = guardRange;
                 FPoint moveCenter = sf->basePos;
-                FleetUtil_RandomPointInRange(&mob->cmd.target,
+                FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                              &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
@@ -224,14 +228,14 @@ static void CloudFleetRunAITick(void *aiHandle)
                        FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 float moveRadius = firingRange;
                 FPoint moveCenter = mob->pos;
-                FleetUtil_RandomPointInRange(&mob->cmd.target,
+                FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                              &moveCenter, moveRadius);
             }
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
 
             if (ai->credits > 200 &&
-                Random_Int(0, 20) == 0) {
+                RandomState_Int(&sf->rs, 0, 20) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;

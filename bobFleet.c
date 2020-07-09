@@ -40,6 +40,7 @@ typedef struct BobFleetData {
     FPoint basePos;
     Mob enemyBase;
     uint enemyBaseAge;
+    RandomState rs;
 } BobFleetData;
 
 static void *BobFleetCreate(FleetAI *ai);
@@ -71,6 +72,8 @@ static void *BobFleetCreate(FleetAI *ai)
 
     sf = MBUtil_ZAlloc(sizeof(*sf));
     sf->ai = ai;
+
+    RandomState_CreateWithSeed(&sf->rs, ai->seed);
     return sf;
 }
 
@@ -78,6 +81,7 @@ static void BobFleetDestroy(void *handle)
 {
     BobFleetData *sf = handle;
     ASSERT(sf != NULL);
+    RandomState_Destroy(&sf->rs);
     free(sf);
 }
 
@@ -93,7 +97,8 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
         ship = MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
         m->cmd.target = sf->basePos;
-        ship->gov = Random_Int(BOB_GOV_MIN, BOB_GOV_MAX - 1);
+        ship->gov = RandomState_Int(&sf->rs, BOB_GOV_MIN,
+                                    BOB_GOV_MAX - 1);
         return ship;
     } else {
         /*
@@ -242,14 +247,18 @@ static void BobFleetRunAITick(void *aiHandle)
                 if (ship->gov == BOB_GOV_GUARD) {
                     float guardRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
                     mob->cmd.target.x =
-                        Random_Float(MAX(0, sf->basePos.x - guardRadius),
-                                     sf->basePos.x + guardRadius);
+                        RandomState_Float(&sf->rs,
+                                          MAX(0, sf->basePos.x - guardRadius),
+                                          sf->basePos.x + guardRadius);
                     mob->cmd.target.y =
-                        Random_Float(MAX(0, sf->basePos.y - guardRadius),
-                                     sf->basePos.y + guardRadius);
+                        RandomState_Float(&sf->rs,
+                                          MAX(0, sf->basePos.y - guardRadius),
+                                          sf->basePos.y + guardRadius);
                 } else {
-                    mob->cmd.target.x = Random_Float(0.0f, bp->width);
-                    mob->cmd.target.y = Random_Float(0.0f, bp->height);
+                    mob->cmd.target.x =
+                        RandomState_Float(&sf->rs, 0.0f, bp->width);
+                    mob->cmd.target.y =
+                        RandomState_Float(&sf->rs, 0.0f, bp->height);
                 }
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
@@ -261,7 +270,7 @@ static void BobFleetRunAITick(void *aiHandle)
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
 
-            if (ai->credits > 200 && Random_Int(0, 20) == 0) {
+            if (ai->credits > 200 && RandomState_Int(&sf->rs, 0, 20) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;

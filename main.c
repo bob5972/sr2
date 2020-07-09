@@ -47,6 +47,7 @@ struct MainData {
     int loop;
     uint timeLimit;
     uint64 seed;
+    RandomState rs;
     MainEngineThreadData tData;
     volatile bool asyncExit;
 } mainData;
@@ -206,11 +207,12 @@ int main(int argc, char **argv)
     Warning("\n");
     SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
 
+    RandomState_Create(&mainData.rs);
     if (mainData.seed != 0) {
-        Random_SetSeed(mainData.seed);
+        RandomState_SetSeed(&mainData.rs, mainData.seed);
     }
-    Random_Init();
-    DebugPrint("Random seed: 0x%llX\n", Random_GetSeed());
+    DebugPrint("Random seed: 0x%llX\n",
+               RandomState_GetSeed(&mainData.rs));
 
     /*
      * Battle Scenario
@@ -274,8 +276,10 @@ int main(int argc, char **argv)
     mainData.tData.bp.numPlayers = p;
 
     for (uint32 i = 0; i < mainData.loop; i++) {
-        mainData.tData.battle = Battle_Create(&mainData.tData.bp);
-        mainData.tData.fleet = Fleet_Create(&mainData.tData.bp);
+        uint64 seed = RandomState_Uint64(&mainData.rs);
+        mainData.tData.battle = Battle_Create(&mainData.tData.bp, seed);
+        seed = RandomState_Uint64(&mainData.rs);
+        mainData.tData.fleet = Fleet_Create(&mainData.tData.bp, seed);
 
         if (!mainData.headless) {
             Display_Init(&mainData.tData.bp);
@@ -313,7 +317,7 @@ int main(int argc, char **argv)
         }
     }
 
-    Random_Exit();
+    RandomState_Destroy(&mainData.rs);
     SDL_Quit();
     MBOpt_Exit();
 
