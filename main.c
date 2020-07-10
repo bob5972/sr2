@@ -273,9 +273,9 @@ void MainConstructScenario(void)
     p++;
 
     if (mainData.tournament) {
-        mainData.players[p].playerName = "DummyFleet";
-        mainData.players[p].aiType = FLEET_AI_DUMMY;
-        p++;
+        //mainData.players[p].playerName = "DummyFleet";
+        //mainData.players[p].aiType = FLEET_AI_DUMMY;
+        //p++;
 
         mainData.players[p].playerName = "SimpleFleet";
         mainData.players[p].aiType = FLEET_AI_SIMPLE;
