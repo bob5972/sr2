@@ -65,11 +65,12 @@ Battle *Battle_Create(const BattleParams *bp, uint64 seed)
 
     battle->bs.numPlayers = bp->numPlayers;
     for (uint32 i = 0; i < bp->numPlayers; i++) {
-        battle->bs.players[i].playerName = bp->players[i].playerName;
+        battle->bs.players[i].playerUID = bp->players[i].playerUID;
         battle->bs.players[i].alive = TRUE;
         battle->bs.players[i].credits = bp->startingCredits;
     }
     battle->bs.winner = PLAYER_ID_NEUTRAL;
+    battle->bs.winnerUID = PLAYER_ID_NEUTRAL;
 
     ASSERT(bp->players[PLAYER_ID_NEUTRAL].aiType == FLEET_AI_NEUTRAL);
     MobVector_Create(&battle->mobs, 0, 1024);
@@ -568,6 +569,7 @@ void Battle_RunTick(Battle *battle)
         for (uint32 i = 0; i < battle->bs.numPlayers; i++) {
             if (battle->bs.players[i].alive) {
                 battle->bs.winner = i;
+                battle->bs.winnerUID = battle->bs.players[i].playerUID;
             }
         }
     }

@@ -25,8 +25,13 @@
 
 #define MICRON (0.1f)
 
+/*
+ * PlayerID's are relative to a single scenario.
+ * PlayerUID's are consistent across multiple scenarios in a single run.
+ */
 #define MAX_PLAYERS 8
 typedef uint32 PlayerID;
+typedef uint32 PlayerUID;
 #define PLAYER_ID_INVALID ((uint32)-1)
 #define PLAYER_ID_NEUTRAL (0)
 
@@ -128,6 +133,7 @@ typedef enum FleetAIType {
 struct FleetAI;
 
 typedef struct BattlePlayerParams {
+    uint playerUID;
     const char *playerName;
     FleetAIType aiType;
     MBRegistry *mreg;
@@ -178,7 +184,7 @@ typedef struct FleetAI {
 } FleetAI;
 
 typedef struct BattlePlayerStatus {
-    const char *playerName;
+    uint playerUID;
     bool alive;
     int credits;
 } BattlePlayerStatus;
@@ -190,6 +196,7 @@ typedef struct BattleStatus {
     BattlePlayerStatus players[MAX_PLAYERS];
     uint numPlayers;
     PlayerID winner;
+    PlayerUID winnerUID;
 
     int collisions;
     int sensorContacts;
