@@ -57,7 +57,12 @@ Fleet *Fleet_Create(const BattleParams *bp, uint64 seed)
         ASSERT(MBUtil_IsZero(&fleet->ais[i], sizeof(fleet->ais[i])));
 
         fleet->ais[i].id = i;
+
         fleet->ais[i].player = bp->players[i];
+        if (bp->players[i].mreg != NULL) {
+            fleet->ais[i].player.mreg =
+                MBRegistry_AllocCopy(bp->players[i].mreg);
+        }
 
         ASSERT(bp->players[i].aiType < FLEET_AI_MAX);
         ASSERT(bp->players[i].aiType != FLEET_AI_INVALID);
@@ -99,6 +104,11 @@ void Fleet_Destroy(Fleet *fleet)
 
         MobSet_Destroy(&fleet->ais[i].mobs);
         MobSet_Destroy(&fleet->ais[i].sensors);
+
+        if (fleet->ais[i].player.mreg != NULL) {
+            MBRegistry_Free(fleet->ais[i].player.mreg);
+            fleet->ais[i].player.mreg = NULL;
+        }
     }
 
     MobVector_Destroy(&fleet->aiMobs);
