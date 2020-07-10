@@ -146,7 +146,7 @@ static void MainPrintWinners(void)
         float percent = 100.0f * wins / (float)battles;
 
         Warning("Fleet: %s\n", mainData.players[i].playerName);
-        Warning("\t%d wins, %d losses: %0.1f\%\n", wins, losses, percent);
+        Warning("\t%3d wins, %3d losses: %0.1f\%\n", wins, losses, percent);
     }
 
     Warning("Total Battles: %d\n", totalBattles);
