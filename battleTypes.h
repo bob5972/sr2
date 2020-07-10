@@ -140,7 +140,7 @@ typedef struct BattleParams {
     uint height;
     uint startingCredits;
     uint creditsPerTick;
-    uint timeLimit;
+    uint tickLimit;
     bool restrictedStart;
 
     // Factor of cost that gets dropped when a mob is destroyed.

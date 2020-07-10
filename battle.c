@@ -572,7 +572,7 @@ void Battle_RunTick(Battle *battle)
         }
     }
 
-    if(battle->bs.tick >= battle->bp.timeLimit) {
+    if(battle->bs.tick >= battle->bp.tickLimit) {
         battle->bs.finished = TRUE;
     }
 }

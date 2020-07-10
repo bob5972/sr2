@@ -65,7 +65,7 @@ struct MainData {
     bool frameSkip;
     uint displayFrames;
     int loop;
-    uint timeLimit;
+    uint tickLimit;
 
     bool reuseSeed;
     uint64 seed;
@@ -235,10 +235,10 @@ void MainConstructScenario(void)
     mainData.bp.startingCredits = 1000;
     mainData.bp.creditsPerTick = 1;
 
-    if (mainData.timeLimit != 0) {
-        mainData.bp.timeLimit = mainData.timeLimit;
+    if (mainData.tickLimit != 0) {
+        mainData.bp.tickLimit = mainData.tickLimit;
     } else{
-        mainData.bp.timeLimit = 100 * 1000;
+        mainData.bp.tickLimit = 100 * 1000;
     }
 
     mainData.bp.lootDropRate = 0.25f;
@@ -299,7 +299,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-F", "--frameSkip",  FALSE, "Allow frame skipping",         },
         { "-l", "--loop",       TRUE,  "Loop <arg> times"              },
         { "-s", "--seed",       TRUE,  "Set random seed"               },
-        { "-L", "--timeLimit",  TRUE,  "Time limit in ticks"           },
+        { "-L", "--tickLimit",  TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads", TRUE,  "Number of engine threads"      },
         { "-R", "--reuseSeed",  FALSE, "Reuse the seed across battles" },
     };
@@ -323,7 +323,7 @@ void MainParseCmdLine(int argc, char **argv)
     mainData.seed = MBOpt_GetUint64("seed");
     mainData.reuseSeed = MBOpt_GetBool("reuseSeed");
 
-    mainData.timeLimit = MBOpt_GetInt("timeLimit");
+    mainData.tickLimit = MBOpt_GetInt("tickLimit");
 
     if (MBOpt_IsPresent("numThreads")) {
         mainData.numThreads = MBOpt_GetInt("numThreads");
