@@ -32,6 +32,13 @@
 #include "MBOpt.h"
 #include "workQueue.h"
 
+typedef enum MainScenarioType {
+    MAIN_SCENARIO_INVALID = 0,
+    MAIN_SCENARIO_DEFAULT = 1,
+    MAIN_SCENARIO_LARGE   = 2,
+    MAIN_SCENARIO_MAX     = 3,
+} MainScenarioType;
+
 typedef enum MainEngineWorkType {
     MAIN_WORK_INVALID = 0,
     MAIN_WORK_EXIT    = 1,
@@ -73,6 +80,7 @@ struct MainData {
     int loop;
     uint tickLimit;
     bool tournament;
+    MainScenarioType scenario;
 
     bool reuseSeed;
     uint64 seed;
@@ -245,8 +253,17 @@ void MainConstructScenario(void)
     BattleParams bp;
 
     MBUtil_Zero(&bp, sizeof(bp));
+
+    ASSERT(mainData.scenario < MAIN_SCENARIO_MAX);
+    ASSERT(mainData.scenario != MAIN_SCENARIO_INVALID);
+
     bp.width = 1600;
     bp.height = 1200;
+    if (mainData.scenario == MAIN_SCENARIO_LARGE) {
+        bp.width *= 2;
+        bp.height *= 2;
+    }
+
     bp.startingCredits = 1000;
     bp.creditsPerTick = 1;
 
@@ -376,6 +393,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-H", "--headless",   FALSE, "Run headless"                  },
         { "-F", "--frameSkip",  FALSE, "Allow frame skipping"          },
         { "-l", "--loop",       TRUE,  "Loop <arg> times"              },
+        { "-S", "--scenario",   TRUE,  "Scenario type"                 },
         { "-T", "--tournament", FALSE, "Tournament mode"               },
         { "-s", "--seed",       TRUE,  "Set random seed"               },
         { "-L", "--tickLimit",  TRUE,  "Time limit in ticks"           },
@@ -416,6 +434,18 @@ void MainParseCmdLine(int argc, char **argv)
         mainData.numThreads = 1;
     }
     ASSERT(mainData.numThreads >= 1);
+
+    mainData.scenario = MAIN_SCENARIO_DEFAULT;
+    if (MBOpt_IsPresent("scenario")) {
+        const char *s = MBOpt_GetCStr("scenario");
+        if (strcmp(s, "default") == 0) {
+            mainData.scenario = MAIN_SCENARIO_DEFAULT;
+        } else if (strcmp(s, "large") == 0) {
+            mainData.scenario = MAIN_SCENARIO_LARGE;
+        } else {
+            PANIC("Unknown scenario: %s\n", s);
+        }
+    }
 }
 
 int main(int argc, char **argv)
