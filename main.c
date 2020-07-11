@@ -285,7 +285,7 @@ void MainConstructScenario(void)
     bsc.bp.lootSpawnRate = MBRegistry_GetFloat(&mreg, "lootSpawnRate");
     bsc.bp.minLootSpawn = MBRegistry_GetUint(&mreg, "minLootSpawn");
     bsc.bp.maxLootSpawn = MBRegistry_GetUint(&mreg, "maxLootSpawn");
-    bsc.bp.restrictedStart = MBRegistry_GetBool(&mreg, "restrictedSpawn");
+    bsc.bp.restrictedStart = MBRegistry_GetBool(&mreg, "restrictedStart");
 
     if (mainData.scenario == MAIN_SCENARIO_LARGE) {
         bsc.bp.width *= 2;
