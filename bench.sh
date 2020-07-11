@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./compile.sh release && time build/sr2 -H -l 4 -s 1
+./compile.sh release && time build/sr2 -H -l 16 -s 1 -R -t 4
