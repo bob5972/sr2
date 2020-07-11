@@ -257,34 +257,44 @@ static void MainRunBattle(MainEngineThreadData *tData,
 void MainConstructScenario(void)
 {
     uint p;
+    MBRegistry mreg;
     BattleScenario bsc;
 
-    MBUtil_Zero(&bsc, sizeof(bsc));
+    MBRegistry_Create(&mreg);
+    MBRegistry_Put(&mreg, "width", "1600");
+    MBRegistry_Put(&mreg, "height", "1200");
+    MBRegistry_Put(&mreg, "startingCredits", "1000");
+    MBRegistry_Put(&mreg, "creditsPerTick", "1");
+    MBRegistry_Put(&mreg, "tickLimit", "100000");
+    MBRegistry_Put(&mreg, "lootDropRate", "0.25");
+    MBRegistry_Put(&mreg, "lootSpawnRate", "2.0");
+    MBRegistry_Put(&mreg, "minLootSpawn", "10");
+    MBRegistry_Put(&mreg, "maxLootSpawn", "20");
+    MBRegistry_Put(&mreg, "restrictedStart", "TRUE");
 
+    MBUtil_Zero(&bsc, sizeof(bsc));
     ASSERT(mainData.scenario < MAIN_SCENARIO_MAX);
     ASSERT(mainData.scenario != MAIN_SCENARIO_INVALID);
 
-    bsc.bp.width = 1600;
-    bsc.bp.height = 1200;
+    bsc.bp.width = MBRegistry_GetUint(&mreg, "width");
+    bsc.bp.height = MBRegistry_GetUint(&mreg, "height");
+    bsc.bp.startingCredits = MBRegistry_GetUint(&mreg, "startingCredits");
+    bsc.bp.creditsPerTick = MBRegistry_GetUint(&mreg, "creditsPerTick");
+    bsc.bp.tickLimit = MBRegistry_GetUint(&mreg, "tickLimit");
+    bsc.bp.lootDropRate = MBRegistry_GetFloat(&mreg, "lootDropRate");
+    bsc.bp.lootSpawnRate = MBRegistry_GetFloat(&mreg, "lootSpawnRate");
+    bsc.bp.minLootSpawn = MBRegistry_GetUint(&mreg, "minLootSpawn");
+    bsc.bp.maxLootSpawn = MBRegistry_GetUint(&mreg, "maxLootSpawn");
+    bsc.bp.restrictedStart = MBRegistry_GetBool(&mreg, "restrictedSpawn");
+
     if (mainData.scenario == MAIN_SCENARIO_LARGE) {
         bsc.bp.width *= 2;
         bsc.bp.height *= 2;
     }
 
-    bsc.bp.startingCredits = 1000;
-    bsc.bp.creditsPerTick = 1;
-
     if (mainData.tickLimit != 0) {
         bsc.bp.tickLimit = mainData.tickLimit;
-    } else {
-        bsc.bp.tickLimit = 100 * 1000;
     }
-
-    bsc.bp.lootDropRate = 0.25f;
-    bsc.bp.lootSpawnRate = 2.0f;
-    bsc.bp.minLootSpawn = 10;
-    bsc.bp.maxLootSpawn = 20;
-    bsc.bp.restrictedStart = TRUE;
 
     /*
      * The NEUTRAL fleet needs to be there.
@@ -386,6 +396,8 @@ void MainConstructScenario(void)
             }
         }
     }
+
+    MBRegistry_Destroy(&mreg);
 }
 
 void MainParseCmdLine(int argc, char **argv)
