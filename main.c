@@ -257,35 +257,35 @@ static void MainRunBattle(MainEngineThreadData *tData,
 void MainConstructScenario(void)
 {
     uint p;
-    MBRegistry mreg;
+    MBRegistry *mreg;
     BattleScenario bsc;
 
-    MBRegistry_Create(&mreg);
-    MBRegistry_Put(&mreg, "width", "1600");
-    MBRegistry_Put(&mreg, "height", "1200");
-    MBRegistry_Put(&mreg, "startingCredits", "1000");
-    MBRegistry_Put(&mreg, "creditsPerTick", "1");
-    MBRegistry_Put(&mreg, "tickLimit", "100000");
-    MBRegistry_Put(&mreg, "lootDropRate", "0.25");
-    MBRegistry_Put(&mreg, "lootSpawnRate", "2.0");
-    MBRegistry_Put(&mreg, "minLootSpawn", "10");
-    MBRegistry_Put(&mreg, "maxLootSpawn", "20");
-    MBRegistry_Put(&mreg, "restrictedStart", "TRUE");
+    mreg = MBRegistry_Alloc();
+    MBRegistry_Put(mreg, "width", "1600");
+    MBRegistry_Put(mreg, "height", "1200");
+    MBRegistry_Put(mreg, "startingCredits", "1000");
+    MBRegistry_Put(mreg, "creditsPerTick", "1");
+    MBRegistry_Put(mreg, "tickLimit", "100000");
+    MBRegistry_Put(mreg, "lootDropRate", "0.25");
+    MBRegistry_Put(mreg, "lootSpawnRate", "2.0");
+    MBRegistry_Put(mreg, "minLootSpawn", "10");
+    MBRegistry_Put(mreg, "maxLootSpawn", "20");
+    MBRegistry_Put(mreg, "restrictedStart", "TRUE");
 
     MBUtil_Zero(&bsc, sizeof(bsc));
     ASSERT(mainData.scenario < MAIN_SCENARIO_MAX);
     ASSERT(mainData.scenario != MAIN_SCENARIO_INVALID);
 
-    bsc.bp.width = MBRegistry_GetUint(&mreg, "width");
-    bsc.bp.height = MBRegistry_GetUint(&mreg, "height");
-    bsc.bp.startingCredits = MBRegistry_GetUint(&mreg, "startingCredits");
-    bsc.bp.creditsPerTick = MBRegistry_GetUint(&mreg, "creditsPerTick");
-    bsc.bp.tickLimit = MBRegistry_GetUint(&mreg, "tickLimit");
-    bsc.bp.lootDropRate = MBRegistry_GetFloat(&mreg, "lootDropRate");
-    bsc.bp.lootSpawnRate = MBRegistry_GetFloat(&mreg, "lootSpawnRate");
-    bsc.bp.minLootSpawn = MBRegistry_GetUint(&mreg, "minLootSpawn");
-    bsc.bp.maxLootSpawn = MBRegistry_GetUint(&mreg, "maxLootSpawn");
-    bsc.bp.restrictedStart = MBRegistry_GetBool(&mreg, "restrictedStart");
+    bsc.bp.width = MBRegistry_GetUint(mreg, "width");
+    bsc.bp.height = MBRegistry_GetUint(mreg, "height");
+    bsc.bp.startingCredits = MBRegistry_GetUint(mreg, "startingCredits");
+    bsc.bp.creditsPerTick = MBRegistry_GetUint(mreg, "creditsPerTick");
+    bsc.bp.tickLimit = MBRegistry_GetUint(mreg, "tickLimit");
+    bsc.bp.lootDropRate = MBRegistry_GetFloat(mreg, "lootDropRate");
+    bsc.bp.lootSpawnRate = MBRegistry_GetFloat(mreg, "lootSpawnRate");
+    bsc.bp.minLootSpawn = MBRegistry_GetUint(mreg, "minLootSpawn");
+    bsc.bp.maxLootSpawn = MBRegistry_GetUint(mreg, "maxLootSpawn");
+    bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
 
     if (mainData.scenario == MAIN_SCENARIO_LARGE) {
         bsc.bp.width *= 2;
@@ -385,19 +385,19 @@ void MainConstructScenario(void)
                sizeof(mainData.players));
 
         ASSERT(mainData.numBSCs <= maxBscs);
+    }
 
-        for (uint b = 0; b < mainData.numBSCs; b++) {
-            BattleScenario *bsc = &mainData.bscs[b];
-            for (uint p = 0; p < bsc->bp.numPlayers; p++) {
-                if (bsc->players[p].mreg != NULL) {
-                    bsc->players[p].mreg =
-                        MBRegistry_AllocCopy(bsc->players[p].mreg);
-                }
+    for (uint b = 0; b < mainData.numBSCs; b++) {
+        BattleScenario *bsc = &mainData.bscs[b];
+        for (uint p = 0; p < bsc->bp.numPlayers; p++) {
+            if (bsc->players[p].mreg != NULL) {
+                bsc->players[p].mreg =
+                    MBRegistry_AllocCopy(bsc->players[p].mreg);
             }
         }
     }
 
-    MBRegistry_Destroy(&mreg);
+    MBRegistry_Free(mreg);
 }
 
 void MainParseCmdLine(int argc, char **argv)
