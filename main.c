@@ -212,7 +212,7 @@ static void MainRunBattle(MainEngineThreadData *tData,
 
         bStatus = Battle_AcquireStatus(tData->battle);
         if (mainData.numThreads == 1) {
-            if (bStatus->tick % 1000 == 0) {
+            if (bStatus->tick % 5000 == 0) {
                 MainPrintBattleStatus(tData, bStatus);
             }
         }
@@ -327,6 +327,9 @@ void MainConstructScenario(void)
     bsc.bp.maxLootSpawn = MBRegistry_GetUint(mreg, "maxLootSpawn");
     bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
 
+    MBRegistry_Free(mreg);
+    mreg = NULL;
+
     if (mainData.tickLimit != 0) {
         bsc.bp.tickLimit = mainData.tickLimit;
     }
@@ -421,18 +424,6 @@ void MainConstructScenario(void)
 
         ASSERT(mainData.numBSCs <= maxBscs);
     }
-
-    for (uint b = 0; b < mainData.numBSCs; b++) {
-        BattleScenario *bsc = &mainData.bscs[b];
-        for (uint p = 0; p < bsc->bp.numPlayers; p++) {
-            if (bsc->players[p].mreg != NULL) {
-                bsc->players[p].mreg =
-                    MBRegistry_AllocCopy(bsc->players[p].mreg);
-            }
-        }
-    }
-
-    MBRegistry_Free(mreg);
 }
 
 void MainParseCmdLine(int argc, char **argv)
@@ -546,6 +537,14 @@ int main(int argc, char **argv)
             MainEngineWorkUnit wu;
             MBUtil_Zero(&wu, sizeof(wu));
             wu.bsc = mainData.bscs[b];
+
+            for (uint p = 0; p < wu.bsc.bp.numPlayers; p++) {
+                if (wu.bsc.players[p].mreg != NULL) {
+                    wu.bsc.players[p].mreg =
+                        MBRegistry_AllocCopy(wu.bsc.players[p].mreg);
+                }
+            }
+
             wu.type = MAIN_WORK_BATTLE;
             wu.battleId = battleId++;
 
