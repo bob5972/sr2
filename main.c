@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 #include <math.h>
 
 #include <SDL.h>
@@ -31,13 +32,7 @@
 #include "fleet.h"
 #include "MBOpt.h"
 #include "workQueue.h"
-
-typedef enum MainScenarioType {
-    MAIN_SCENARIO_INVALID = 0,
-    MAIN_SCENARIO_DEFAULT = 1,
-    MAIN_SCENARIO_LARGE   = 2,
-    MAIN_SCENARIO_MAX     = 3,
-} MainScenarioType;
+#include "MBString.h"
 
 typedef enum MainEngineWorkType {
     MAIN_WORK_INVALID = 0,
@@ -80,7 +75,7 @@ struct MainData {
     int loop;
     uint tickLimit;
     bool tournament;
-    MainScenarioType scenario;
+    const char *scenario;
 
     bool reuseSeed;
     uint64 seed;
@@ -254,6 +249,59 @@ static void MainRunBattle(MainEngineThreadData *tData,
     }
 }
 
+void MainLoadScenario(MBRegistry *mreg, const char *scenario)
+{
+    MBString filename;
+    bool useDefault = FALSE;
+
+    struct {
+        const char *key;
+        const char *value;
+    } defaultValues[] = {
+        { "width", "1600", },
+        { "height", "1200", },
+        { "startingCredits", "1000", },
+        { "creditsPerTick", "1", },
+        { "tickLimit", "100000", },
+        { "lootDropRate", "0.25", },
+        { "lootSpawnRate", "2.0", },
+        { "minLootSpawn", "10", },
+        { "maxLootSpawn", "20", },
+        { "restrictedStart", "TRUE", },
+    };
+
+    if (scenario == NULL) {
+        scenario = "default";
+        useDefault = TRUE;
+    }
+
+    MBString_Create(&filename);
+    MBString_AppendCStr(&filename, "scenarios/");
+    MBString_AppendCStr(&filename, scenario);
+    MBString_AppendCStr(&filename, ".sc");
+
+    if (access(MBString_GetCStr(&filename), F_OK) == -1) {
+        PANIC("Cannot access: %s\n", MBString_GetCStr(&filename));
+    }
+
+    if (useDefault) {
+        for (uint i = 0; i < ARRAYSIZE(defaultValues); i++) {
+            MBRegistry_Put(mreg, defaultValues[i].key,
+                           defaultValues[i].value);
+        }
+    }
+
+    MBRegistry_LoadSubset(mreg, MBString_GetCStr(&filename));
+    MBString_Destroy(&filename);
+
+    if (useDefault) {
+        for (uint i = 0; i < ARRAYSIZE(defaultValues); i++) {
+            ASSERT(strcmp(MBRegistry_GetCStr(mreg, defaultValues[i].key),
+                          defaultValues[i].value) == 0);
+        }
+    }
+}
+
 void MainConstructScenario(void)
 {
     uint p;
@@ -261,20 +309,12 @@ void MainConstructScenario(void)
     BattleScenario bsc;
 
     mreg = MBRegistry_Alloc();
-    MBRegistry_Put(mreg, "width", "1600");
-    MBRegistry_Put(mreg, "height", "1200");
-    MBRegistry_Put(mreg, "startingCredits", "1000");
-    MBRegistry_Put(mreg, "creditsPerTick", "1");
-    MBRegistry_Put(mreg, "tickLimit", "100000");
-    MBRegistry_Put(mreg, "lootDropRate", "0.25");
-    MBRegistry_Put(mreg, "lootSpawnRate", "2.0");
-    MBRegistry_Put(mreg, "minLootSpawn", "10");
-    MBRegistry_Put(mreg, "maxLootSpawn", "20");
-    MBRegistry_Put(mreg, "restrictedStart", "TRUE");
+    MainLoadScenario(mreg, NULL);
+    if (mainData.scenario != NULL) {
+        MainLoadScenario(mreg, mainData.scenario);
+    }
 
     MBUtil_Zero(&bsc, sizeof(bsc));
-    ASSERT(mainData.scenario < MAIN_SCENARIO_MAX);
-    ASSERT(mainData.scenario != MAIN_SCENARIO_INVALID);
 
     bsc.bp.width = MBRegistry_GetUint(mreg, "width");
     bsc.bp.height = MBRegistry_GetUint(mreg, "height");
@@ -286,11 +326,6 @@ void MainConstructScenario(void)
     bsc.bp.minLootSpawn = MBRegistry_GetUint(mreg, "minLootSpawn");
     bsc.bp.maxLootSpawn = MBRegistry_GetUint(mreg, "maxLootSpawn");
     bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
-
-    if (mainData.scenario == MAIN_SCENARIO_LARGE) {
-        bsc.bp.width *= 2;
-        bsc.bp.height *= 2;
-    }
 
     if (mainData.tickLimit != 0) {
         bsc.bp.tickLimit = mainData.tickLimit;
@@ -449,16 +484,9 @@ void MainParseCmdLine(int argc, char **argv)
     }
     ASSERT(mainData.numThreads >= 1);
 
-    mainData.scenario = MAIN_SCENARIO_DEFAULT;
+    mainData.scenario = NULL;
     if (MBOpt_IsPresent("scenario")) {
-        const char *s = MBOpt_GetCStr("scenario");
-        if (strcmp(s, "default") == 0) {
-            mainData.scenario = MAIN_SCENARIO_DEFAULT;
-        } else if (strcmp(s, "large") == 0) {
-            mainData.scenario = MAIN_SCENARIO_LARGE;
-        } else {
-            PANIC("Unknown scenario: %s\n", s);
-        }
+        mainData.scenario = MBOpt_GetCStr("scenario");
     }
 }
 

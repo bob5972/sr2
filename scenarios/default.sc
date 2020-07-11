@@ -1,0 +1,10 @@
+width = 1600
+height = 1200
+startingCredits = 1000
+creditsPerTick = 1
+tickLimit = 100000
+lootDropRate = 0.25
+lootSpawnRate = 2.0
+minLootSpawn = 10
+maxLootSpawn = 20
+restrictedStart = TRUE
