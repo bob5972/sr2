@@ -29,14 +29,15 @@ typedef struct Fleet {
     MobVector aiMobs;
     MobVector aiSensors;
 
-    BattleParams bp;
+    BattleScenario bsc;
     RandomState rs;
 } Fleet;
 
 static void FleetGetOps(FleetAI *ai);
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
 
-Fleet *Fleet_Create(const BattleParams *bp, uint64 seed)
+Fleet *Fleet_Create(const BattleScenario *bsc,
+                    uint64 seed)
 {
     Fleet *fleet;
 
@@ -45,9 +46,9 @@ Fleet *Fleet_Create(const BattleParams *bp, uint64 seed)
 
     RandomState_CreateWithSeed(&fleet->rs, seed);
 
-    fleet->bp = *bp;
+    fleet->bsc = *bsc;
 
-    fleet->numAIs = bp->numPlayers;
+    fleet->numAIs = bsc->bp.numPlayers;
     fleet->ais = MBUtil_ZAlloc(fleet->numAIs * sizeof(fleet->ais[0]));
 
     // We need at least neutral and two fleets.
@@ -58,23 +59,23 @@ Fleet *Fleet_Create(const BattleParams *bp, uint64 seed)
 
         fleet->ais[i].id = i;
 
-        fleet->ais[i].player = bp->players[i];
-        if (bp->players[i].mreg != NULL) {
+        fleet->ais[i].player = bsc->players[i];
+        if (bsc->players[i].mreg != NULL) {
             fleet->ais[i].player.mreg =
-                MBRegistry_AllocCopy(bp->players[i].mreg);
+                MBRegistry_AllocCopy(bsc->players[i].mreg);
         }
 
-        ASSERT(bp->players[i].aiType < FLEET_AI_MAX);
-        ASSERT(bp->players[i].aiType != FLEET_AI_INVALID);
-        ASSERT(bp->players[i].aiType == FLEET_AI_NEUTRAL ||
+        ASSERT(bsc->players[i].aiType < FLEET_AI_MAX);
+        ASSERT(bsc->players[i].aiType != FLEET_AI_INVALID);
+        ASSERT(bsc->players[i].aiType == FLEET_AI_NEUTRAL ||
                i != PLAYER_ID_NEUTRAL);
-        ASSERT(bp->players[i].aiType != FLEET_AI_NEUTRAL ||
+        ASSERT(bsc->players[i].aiType != FLEET_AI_NEUTRAL ||
                i == PLAYER_ID_NEUTRAL);
 
         MobSet_Create(&fleet->ais[i].mobs);
         MobSet_Create(&fleet->ais[i].sensors);
 
-        fleet->ais[i].bp = fleet->bp;
+        fleet->ais[i].bp = fleet->bsc.bp;
         fleet->ais[i].seed = RandomState_Uint64(&fleet->rs);
 
         FleetGetOps(&fleet->ais[i]);
@@ -151,7 +152,7 @@ static void FleetGetOps(FleetAI *ai)
 void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
                    Mob *mobs, uint32 numMobs)
 {
-    const BattleParams *bp = &fleet->bp;
+    const BattleParams *bp = &fleet->bsc.bp;
 
     /*
      * Make sure the vectors are big enough that we don't

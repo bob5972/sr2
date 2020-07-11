@@ -28,8 +28,7 @@
 typedef struct Battle {
     bool initialized;
 
-    BattleParams bp;
-    bool paramsAcquired;
+    BattleScenario bsc;
 
     RandomState rs;
 
@@ -47,12 +46,13 @@ typedef struct Battle {
     MobVector pendingSpawns;
 } Battle;
 
-Battle *Battle_Create(const BattleParams *bp, uint64 seed)
+Battle *Battle_Create(const BattleScenario *bsc,
+                      uint64 seed)
 {
     Battle *battle;
 
     battle = malloc(sizeof(*battle));
-    ASSERT(bp != NULL);
+    ASSERT(bsc != NULL);
     MBUtil_Zero(battle, sizeof(*battle));
 
     RandomState_CreateWithSeed(&battle->rs, seed);
@@ -60,23 +60,26 @@ Battle *Battle_Create(const BattleParams *bp, uint64 seed)
     /*
      * We need Neutral + 2 fleets.
      */
-    ASSERT(bp->numPlayers >= 3);
-    battle->bp = *bp;
+    ASSERT(bsc->bp.numPlayers >= 3);
+    battle->bsc = *bsc;
 
-    battle->bs.numPlayers = bp->numPlayers;
-    for (uint32 i = 0; i < bp->numPlayers; i++) {
-        battle->bs.players[i].playerUID = bp->players[i].playerUID;
+    uint numPlayers = bsc->bp.numPlayers;
+    ASSERT(numPlayers < ARRAYSIZE(battle->bs.players));
+    battle->bs.numPlayers = numPlayers;
+    for (uint32 i = 0; i < numPlayers; i++) {
+        battle->bs.players[i].playerUID = bsc->players[i].playerUID;
         battle->bs.players[i].alive = TRUE;
-        battle->bs.players[i].credits = bp->startingCredits;
+        battle->bs.players[i].credits = bsc->bp.startingCredits;
     }
     battle->bs.winner = PLAYER_ID_NEUTRAL;
     battle->bs.winnerUID = PLAYER_ID_NEUTRAL;
 
-    ASSERT(bp->players[PLAYER_ID_NEUTRAL].aiType == FLEET_AI_NEUTRAL);
+    ASSERT(bsc->players[PLAYER_ID_NEUTRAL].aiType ==
+           FLEET_AI_NEUTRAL);
     MobVector_Create(&battle->mobs, 0, 1024);
     MobVector_CreateEmpty(&battle->pendingSpawns);
 
-    for (uint i = 0; i < bp->numPlayers; i++) {
+    for (uint i = 0; i < numPlayers; i++) {
         if (i == PLAYER_ID_NEUTRAL) {
             continue;
         }
@@ -87,24 +90,24 @@ Battle *Battle_Create(const BattleParams *bp, uint64 seed)
         Mob_Init(mob, MOB_TYPE_BASE);
         mob->playerID = i;
         mob->mobid = ++battle->lastMobID;
-        if (battle->bp.restrictedStart) {
+        if (battle->bsc.bp.restrictedStart) {
             // account for NEUTRAL
             uint p = i - 1;
-            float slotW = battle->bp.width / (bp->numPlayers - 1);
+            float slotW = battle->bsc.bp.width / (numPlayers - 1);
             mob->pos.x = RandomState_Float(&battle->rs, p * slotW,
                                            (p + 1) * slotW);
             mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
-                                           battle->bp.height);
+                                           battle->bsc.bp.height);
         } else {
             mob->pos.x = RandomState_Float(&battle->rs, 0.0f,
-                                           battle->bp.width);
+                                           battle->bsc.bp.width);
             mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
-                                           battle->bp.height);
+                                           battle->bsc.bp.height);
         }
         mob->cmd.target = mob->pos;
     }
 
-    battle->fleet = Fleet_Create(bp, RandomState_Uint64(&battle->rs));
+    battle->fleet = Fleet_Create(bsc, RandomState_Uint64(&battle->rs));
 
     battle->initialized = TRUE;
     return battle;
@@ -130,13 +133,13 @@ static bool BattleCheckMobInvariants(Battle *battle, const Mob *mob)
     ASSERT(Mob_CheckInvariants(mob));
     ASSERT(mob->pos.x >= 0.0f);
     ASSERT(mob->pos.y >= 0.0f);
-    ASSERT(mob->pos.x <= (uint32)battle->bp.width);
-    ASSERT(mob->pos.y <= (uint32)battle->bp.height);
+    ASSERT(mob->pos.x <= (uint32)battle->bsc.bp.width);
+    ASSERT(mob->pos.y <= (uint32)battle->bsc.bp.height);
 
     ASSERT(mob->cmd.target.x >= 0.0f);
     ASSERT(mob->cmd.target.y >= 0.0f);
-    ASSERT(mob->cmd.target.x <= (uint32)battle->bp.width);
-    ASSERT(mob->cmd.target.y <= (uint32)battle->bp.height);
+    ASSERT(mob->cmd.target.x <= (uint32)battle->bsc.bp.width);
+    ASSERT(mob->cmd.target.y <= (uint32)battle->bsc.bp.height);
 
     return TRUE;
 }
@@ -149,7 +152,7 @@ static int BattleCalcLootCredits(Battle *battle, const Mob *m)
     }
 
     int loot = MobType_GetCost(m->type);
-    return (int)(battle->bp.lootDropRate * loot);
+    return (int)(battle->bsc.bp.lootDropRate * loot);
 }
 
 static Mob *BattleQueueSpawn(Battle *battle, MobType type,
@@ -488,18 +491,18 @@ void Battle_RunTick(Battle *battle)
     }
 
     // Spawn loot
-    battle->lootSpawnBucket += battle->bp.lootSpawnRate;
-    while (battle->lootSpawnBucket > battle->bp.minLootSpawn) {
+    battle->lootSpawnBucket += battle->bsc.bp.lootSpawnRate;
+    while (battle->lootSpawnBucket > battle->bsc.bp.minLootSpawn) {
         FPoint pos;
         int loot = RandomState_Int(&battle->rs,
-                                   battle->bp.minLootSpawn,
-                                   battle->bp.maxLootSpawn);
+                                   battle->bsc.bp.minLootSpawn,
+                                   battle->bsc.bp.maxLootSpawn);
         battle->lootSpawnBucket -= loot;
 
         pos.x = RandomState_Float(&battle->rs, 0.0f,
-                                  battle->bp.width);
+                                  battle->bsc.bp.width);
         pos.y = RandomState_Float(&battle->rs, 0.0f,
-                                  battle->bp.height);
+                                  battle->bsc.bp.height);
         Mob *spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
                                       PLAYER_ID_NEUTRAL, &pos);
         spawn->lootCredits = loot;
@@ -560,7 +563,7 @@ void Battle_RunTick(Battle *battle)
     for (uint32 i = 0; i < battle->bs.numPlayers; i++) {
         if (battle->bs.players[i].alive) {
             livePlayers++;
-            battle->bs.players[i].credits += battle->bp.creditsPerTick;
+            battle->bs.players[i].credits += battle->bsc.bp.creditsPerTick;
         }
     }
     if (livePlayers <= 1) {
@@ -574,7 +577,7 @@ void Battle_RunTick(Battle *battle)
         }
     }
 
-    if(battle->bs.tick >= battle->bp.tickLimit) {
+    if(battle->bs.tick >= battle->bsc.bp.tickLimit) {
         battle->bs.finished = TRUE;
     }
 }
@@ -614,14 +617,4 @@ void Battle_ReleaseStatus(Battle *battle)
     ASSERT(battle->initialized);
     ASSERT(battle->statusAcquired);
     battle->statusAcquired = FALSE;
-}
-
-const BattleParams *Battle_GetParams(Battle *battle)
-{
-    /*
-     * This is called from multiple threads,and is
-     * safe safe only because this never changes.
-     */
-    ASSERT(battle->initialized);
-    return &battle->bp;
 }

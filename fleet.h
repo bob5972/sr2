@@ -26,7 +26,7 @@
 struct Fleet;
 typedef struct Fleet Fleet;
 
-Fleet *Fleet_Create(const BattleParams *bp, uint64 seed);
+Fleet *Fleet_Create(const BattleScenario *bsc, uint64 seed);
 void Fleet_Destroy(Fleet *fleet);
 void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
                    Mob *mobs, uint32 numMobs);

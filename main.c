@@ -49,7 +49,7 @@ typedef struct MainEngineWorkUnit {
     MainEngineWorkType type;
     uint battleId;
     uint64 seed;
-    BattleParams bp;
+    BattleScenario bsc;
 } MainEngineWorkUnit;
 
 typedef struct MainEngineResultUnit {
@@ -69,7 +69,7 @@ typedef struct MainEngineThreadData {
     uint32 startTimeMS;
     uint battleId;
     uint64 seed;
-    BattleParams bp;
+    BattleScenario bsc;
     Battle *battle;
 } MainEngineThreadData;
 
@@ -86,11 +86,11 @@ struct MainData {
     uint64 seed;
     RandomState rs;
 
-    uint numBPs;
-    BattleParams *bps;
+    uint numBSCs;
+    BattleScenario *bscs;
 
     int numPlayers;
-    BattlePlayerParams players[MAX_PLAYERS];
+    BattlePlayer players[MAX_PLAYERS];
     MainWinnerData winners[MAX_PLAYERS];
 
     uint numThreads;
@@ -130,7 +130,7 @@ MainPrintBattleStatus(MainEngineThreadData *tData,
     Warning("\n");
 
     if (bStatus->finished) {
-        BattlePlayerParams *bpp = &mainData.players[bStatus->winnerUID];
+        BattlePlayer *bpp = &mainData.players[bStatus->winnerUID];
         ASSERT(bStatus->winnerUID < ARRAYSIZE(mainData.players));
         Warning("Winner: %s\n", bpp->playerName);
     }
@@ -188,8 +188,8 @@ static void MainRunBattle(MainEngineThreadData *tData,
 
     tData->battleId = wu->battleId;
     tData->seed = wu->seed;
-    tData->bp = wu->bp;
-    tData->battle = Battle_Create(&tData->bp, wu->seed);
+    tData->bsc = wu->bsc;
+    tData->battle = Battle_Create(&tData->bsc, wu->seed);
 
     Warning("Starting Battle %d ...\n", tData->battleId);
     Warning("\n");
@@ -245,39 +245,46 @@ static void MainRunBattle(MainEngineThreadData *tData,
 
     Battle_Destroy(tData->battle);
     tData->battle = NULL;
+
+    for (uint i = 0; i < tData->bsc.bp.numPlayers; i++) {
+        if (tData->bsc.players[i].mreg != NULL) {
+            MBRegistry_Free(tData->bsc.players[i].mreg);
+            tData->bsc.players[i].mreg = NULL;
+        }
+    }
 }
 
 void MainConstructScenario(void)
 {
     uint p;
-    BattleParams bp;
+    BattleScenario bsc;
 
-    MBUtil_Zero(&bp, sizeof(bp));
+    MBUtil_Zero(&bsc, sizeof(bsc));
 
     ASSERT(mainData.scenario < MAIN_SCENARIO_MAX);
     ASSERT(mainData.scenario != MAIN_SCENARIO_INVALID);
 
-    bp.width = 1600;
-    bp.height = 1200;
+    bsc.bp.width = 1600;
+    bsc.bp.height = 1200;
     if (mainData.scenario == MAIN_SCENARIO_LARGE) {
-        bp.width *= 2;
-        bp.height *= 2;
+        bsc.bp.width *= 2;
+        bsc.bp.height *= 2;
     }
 
-    bp.startingCredits = 1000;
-    bp.creditsPerTick = 1;
+    bsc.bp.startingCredits = 1000;
+    bsc.bp.creditsPerTick = 1;
 
     if (mainData.tickLimit != 0) {
-        bp.tickLimit = mainData.tickLimit;
+        bsc.bp.tickLimit = mainData.tickLimit;
     } else {
-        bp.tickLimit = 100 * 1000;
+        bsc.bp.tickLimit = 100 * 1000;
     }
 
-    bp.lootDropRate = 0.25f;
-    bp.lootSpawnRate = 2.0f;
-    bp.minLootSpawn = 10;
-    bp.maxLootSpawn = 20;
-    bp.restrictedStart = TRUE;
+    bsc.bp.lootDropRate = 0.25f;
+    bsc.bp.lootSpawnRate = 2.0f;
+    bsc.bp.minLootSpawn = 10;
+    bsc.bp.maxLootSpawn = 20;
+    bsc.bp.restrictedStart = TRUE;
 
     /*
      * The NEUTRAL fleet needs to be there.
@@ -329,19 +336,20 @@ void MainConstructScenario(void)
     }
 
     if (!mainData.tournament) {
-        mainData.numBPs = 1;
-        mainData.bps = malloc(sizeof(mainData.bps[0]));
-        mainData.bps[0] = bp;
-        ASSERT(sizeof(mainData.players) == sizeof(mainData.bps[0].players));
-        mainData.bps[0].numPlayers = mainData.numPlayers;
-        memcpy(&mainData.bps[0].players, &mainData.players,
+        mainData.numBSCs = 1;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]));
+        mainData.bscs[0] = bsc;
+        ASSERT(sizeof(mainData.players) ==
+               sizeof(mainData.bscs[0].players));
+        mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
+        memcpy(&mainData.bscs[0].players, &mainData.players,
                sizeof(mainData.players));
     } else {
         // This is too big, but it works.
-        uint maxBPs = mainData.numPlayers * mainData.numPlayers;
-        mainData.bps = malloc(sizeof(mainData.bps[0]) * maxBPs);
+        uint maxBscs = mainData.numPlayers * mainData.numPlayers;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
 
-        mainData.numBPs = 0;
+        mainData.numBSCs = 0;
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
         for (uint x = 1; x < mainData.numPlayers; x++) {
@@ -350,38 +358,32 @@ void MainConstructScenario(void)
                     continue;
                 }
 
-                uint b = mainData.numBPs++;
-                mainData.bps[b] = bp;
-                mainData.bps[b].numPlayers = 3;
+                uint b = mainData.numBSCs++;
+                mainData.bscs[b].bp = bsc.bp;
+                mainData.bscs[b].bp.numPlayers = 3;
                 ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-                mainData.bps[b].players[0] = mainData.players[0];
-                mainData.bps[b].players[1] = mainData.players[x];
-                mainData.bps[b].players[2] = mainData.players[y];
+                mainData.bscs[b].players[0] = mainData.players[0];
+                mainData.bscs[b].players[1] = mainData.players[x];
+                mainData.bscs[b].players[2] = mainData.players[y];
             }
         }
 
-        uint b = mainData.numBPs++;
-        mainData.bps[b] = bp;
-        mainData.bps[b].numPlayers = mainData.numPlayers;
-        memcpy(&mainData.bps[b].players, &mainData.players,
+        uint b = mainData.numBSCs++;
+        mainData.bscs[b].bp = bsc.bp;
+        mainData.bscs[b].bp.numPlayers = mainData.numPlayers;
+        memcpy(&mainData.bscs[b].players, &mainData.players,
                sizeof(mainData.players));
 
-        ASSERT(mainData.numBPs <= maxBPs);
+        ASSERT(mainData.numBSCs <= maxBscs);
 
-        for (uint b = 0; b < mainData.numBPs; b++) {
-            BattleParams *bp = &mainData.bps[b];
-            for (uint p = 0; p < bp->numPlayers; p++) {
-                if (bp->players[p].mreg != NULL) {
-                    bp->players[p].mreg =
-                        MBRegistry_AllocCopy(bp->players[p].mreg);
+        for (uint b = 0; b < mainData.numBSCs; b++) {
+            BattleScenario *bsc = &mainData.bscs[b];
+            for (uint p = 0; p < bsc->bp.numPlayers; p++) {
+                if (bsc->players[p].mreg != NULL) {
+                    bsc->players[p].mreg =
+                        MBRegistry_AllocCopy(bsc->players[p].mreg);
                 }
             }
-        }
-    }
-
-    for (uint p = 0; p < bp.numPlayers; p++) {
-        if (bp.players[p].mreg != NULL) {
-            MBRegistry_Free(bp.players[p].mreg);
         }
     }
 }
@@ -492,18 +494,18 @@ int main(int argc, char **argv)
         if (mainData.numThreads != 1) {
             PANIC("Multiple threads requires --headless\n");
         }
-        if (mainData.numBPs != 1) {
+        if (mainData.numBSCs != 1) {
             PANIC("Multiple scenarios requries --headless\n");
         }
-        Display_Init(&mainData.bps[0]);
+        Display_Init(&mainData.bscs[0].bp);
     }
 
     uint battleId = 0;
     for (uint i = 0; i < mainData.loop; i++) {
-        for (uint b = 0; b < mainData.numBPs; b++) {
+        for (uint b = 0; b < mainData.numBSCs; b++) {
             MainEngineWorkUnit wu;
-
             MBUtil_Zero(&wu, sizeof(wu));
+            wu.bsc = mainData.bscs[b];
             wu.type = MAIN_WORK_BATTLE;
             wu.battleId = battleId++;
 
@@ -517,7 +519,6 @@ int main(int argc, char **argv)
             } else {
                 wu.seed = RandomState_Uint64(&mainData.rs);
             }
-            wu.bp = mainData.bps[b];
 
             WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
         }
@@ -550,7 +551,7 @@ int main(int argc, char **argv)
 
         for (uint p = 0; p < ru.bs.numPlayers; p++) {
             PlayerUID puid = ru.bs.players[p].playerUID;
-            BattlePlayerParams *bpp = &mainData.players[puid];
+            BattlePlayer *bpp = &mainData.players[puid];
             ASSERT(puid < ARRAYSIZE(mainData.players));
             ASSERT(puid < ARRAYSIZE(mainData.winners));
             ASSERT(puid == bpp->playerUID);
@@ -566,17 +567,15 @@ int main(int argc, char **argv)
 
     MainPrintWinners();
 
-    for (uint b = 0; b < mainData.numBPs; b++) {
-        BattleParams *bp = &mainData.bps[b];
-        for (uint i = 0; i < bp->numPlayers; i++) {
-            if (bp->players[i].mreg != NULL) {
-                MBRegistry_Free(bp->players[i].mreg);
-            }
+    for (uint p = 0; p < mainData.numPlayers; p++) {
+        if (mainData.players[p].mreg != NULL) {
+            MBRegistry_Free(mainData.players[p].mreg);
+            mainData.players[p].mreg = NULL;
         }
     }
 
-    free(mainData.bps);
-    mainData.bps = NULL;
+    free(mainData.bscs);
+    mainData.bscs = NULL;
 
     RandomState_Destroy(&mainData.rs);
 

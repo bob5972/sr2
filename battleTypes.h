@@ -29,7 +29,7 @@
  * PlayerID's are relative to a single scenario.
  * PlayerUID's are consistent across multiple scenarios in a single run.
  */
-#define MAX_PLAYERS 8
+#define MAX_PLAYERS (8)
 typedef uint32 PlayerID;
 typedef uint32 PlayerUID;
 #define PLAYER_ID_INVALID ((uint32)-1)
@@ -132,15 +132,14 @@ typedef enum FleetAIType {
 
 struct FleetAI;
 
-typedef struct BattlePlayerParams {
+typedef struct BattlePlayer {
     uint playerUID;
     const char *playerName;
     FleetAIType aiType;
     MBRegistry *mreg;
-} BattlePlayerParams;
+} BattlePlayer;
 
 typedef struct BattleParams {
-    BattlePlayerParams players[MAX_PLAYERS];
     uint numPlayers;
     uint width;
     uint height;
@@ -158,30 +157,10 @@ typedef struct BattleParams {
     int maxLootSpawn;
 } BattleParams;
 
-typedef struct FleetAIOps {
-    const char *aiName;
-    const char *aiAuthor;
-    void *(*createFleet)(struct FleetAI *ai);
-    void (*destroyFleet)(void *aiHandle);
-    void *(*mobSpawned)(void *aiHandle, Mob *m);
-    void (*mobDestroyed)(void *aiHandle, void *aiMobHandle);
-    void (*runAITick)(void *aiHandle);
-    void (*runAIMob)(void *aiHandle, void *aiMobHandle);
-} FleetAIOps;
-
-typedef struct FleetAI {
-    FleetAIOps ops;
-    void *aiHandle;
-
-    uint tick;
-    PlayerID id;
+typedef struct BattleScenario {
     BattleParams bp;
-    BattlePlayerParams player;
-    uint64 seed;
-    int credits;
-    MobSet mobs;
-    MobSet sensors;
-} FleetAI;
+    BattlePlayer players[MAX_PLAYERS];
+} BattleScenario;
 
 typedef struct BattlePlayerStatus {
     uint playerUID;
@@ -203,5 +182,30 @@ typedef struct BattleStatus {
     int spawns;
     int shipSpawns;
 } BattleStatus;
+
+typedef struct FleetAIOps {
+    const char *aiName;
+    const char *aiAuthor;
+    void *(*createFleet)(struct FleetAI *ai);
+    void (*destroyFleet)(void *aiHandle);
+    void *(*mobSpawned)(void *aiHandle, Mob *m);
+    void (*mobDestroyed)(void *aiHandle, void *aiMobHandle);
+    void (*runAITick)(void *aiHandle);
+    void (*runAIMob)(void *aiHandle, void *aiMobHandle);
+} FleetAIOps;
+
+typedef struct FleetAI {
+    FleetAIOps ops;
+    void *aiHandle;
+
+    uint tick;
+    PlayerID id;
+    BattleParams bp;
+    BattlePlayer player;
+    uint64 seed;
+    int credits;
+    MobSet mobs;
+    MobSet sensors;
+} FleetAI;
 
 #endif // _BATTLE_TYPES_H_202006071525

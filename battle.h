@@ -26,10 +26,9 @@
 struct Battle;
 typedef struct Battle Battle;
 
-Battle *Battle_Create(const BattleParams *bp, uint64 seed);
+Battle *Battle_Create(const BattleScenario *bsc, uint64 seed);
 void Battle_Destroy(Battle *battle);
 void Battle_RunTick(Battle *battle);
-const BattleParams *Battle_GetParams(Battle *battle);
 Mob *Battle_AcquireMobs(Battle *battle, uint32 *numMobs);
 void Battle_ReleaseMobs(Battle *battle);
 const BattleStatus *Battle_AcquireStatus(Battle *battle);
