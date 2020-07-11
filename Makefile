@@ -70,8 +70,17 @@ TARGET_OBJ = $(C_OBJ) $(CPP_OBJ) $(MBLIB_OBJ)
 #The config check is to test if we've been configured
 all: config.mk $(BUILDROOT)/config.h $(TARGET)
 
+# Our dependencies here are overly broad, which sometimes means that
+# we'll make MBLib thinking something has changed, but the underlying
+# MBLib build won't do anything, and we'll always think it needs
+# updating for every subsequent build.
+#
+# It's not a big deal, but we can avoid it by touching the archive
+# here after we build MBLib, so that it'll give it a newer timestamp
+# than whatever false depenency was triggering the rebuild.
 $(MBLIB_OBJ): MBLib/* MBLib/public/*
 	$(MAKE) -f $(MBLIB_SRCDIR)/Makefile all
+	touch $(MBLIB_OBJ)
 
 $(TARGET): $(BUILDROOT)/$(TARGET)
 
