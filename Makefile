@@ -65,7 +65,7 @@ C_OBJ=$(addprefix $(BUILDDIR)/, $(subst .c,.o, $(C_SOURCES)))
 CPP_OBJ=$(addprefix $(BUILDDIR)/, $(subst .cpp,.opp, $(CPP_SOURCES)))
 TARGET_OBJ = $(C_OBJ) $(CPP_OBJ) $(MBLIB_OBJ)
 
-.PHONY: all clean distclean dist MBLib
+.PHONY: all clean distclean dist MBLib $(TARGET)
 
 #The config check is to test if we've been configured
 all: config.mk $(BUILDROOT)/config.h $(TARGET)
@@ -75,9 +75,9 @@ $(MBLIB_OBJ): MBLib
 MBLib:
 	$(MAKE) -f $(MBLIB_SRCDIR)/Makefile all
 
-$(TARGET): $(BUILDROOT)/$(TARGET) MBLib
+$(TARGET): $(BUILDROOT)/$(TARGET)
 
-$(BUILDROOT)/$(TARGET): $(TARGET_OBJ)
+$(BUILDROOT)/$(TARGET): $(TARGET_OBJ) MBLib
 	${CXX} ${CFLAGS} $(TARGET_OBJ) $(LIBFLAGS) -o $(BUILDROOT)/$(TARGET)
 
 # XXX: I don't yet have a way to auto create the build dirs before
