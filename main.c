@@ -212,7 +212,8 @@ static void MainRunBattle(MainEngineThreadData *tData,
 
         bStatus = Battle_AcquireStatus(tData->battle);
         if (mainData.numThreads == 1) {
-            if (bStatus->tick % 5000 == 0) {
+            uint s = mainData.headless ? 5000 : 500;
+            if (bStatus->tick % s == 0) {
                 MainPrintBattleStatus(tData, bStatus);
             }
         }
