@@ -34,10 +34,15 @@
 // Poor mans command-line options...
 #define DRAW_SENSORS TRUE
 
+typedef struct DisplaySprite {
+    SDL_Surface *surface;
+    SDL_Texture *texture;
+} DisplaySprite;
+
 typedef struct FleetSprites {
     uint32 color;
-    SDL_Surface *mobSprites[MOB_TYPE_MAX];
-    SDL_Surface *scanSprites[MOB_TYPE_MAX];
+    DisplaySprite mobSprites[MOB_TYPE_MAX];
+    DisplaySprite scanSprites[MOB_TYPE_MAX];
 } FleetSprites;
 
 typedef struct DisplayGlobalData {
@@ -46,6 +51,7 @@ typedef struct DisplayGlobalData {
     uint32 height;
 
     SDL_Window *sdlWindow;
+    SDL_Renderer *sdlRenderer;
     bool paused;
     bool inMain;
     uint64 mobGenerationDrawn;
@@ -65,12 +71,11 @@ static DisplayGlobalData display;
 static uint32 DisplayGetColor(uint32 index);
 static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
                               const SDL_Point *center, int radius);
-static SDL_Surface *DisplayCreateCircleSprite(uint32 radius, uint32 color);
+static void DisplayCreateCircleSprite(DisplaySprite *sprite,
+                                      uint32 radius, uint32 color);
 
 void Display_Init(const BattleParams *bp)
 {
-    SDL_Surface *sdlSurface = NULL;
-
     ASSERT(MBUtil_IsZero(&display, sizeof(display)));
     display.width = bp->width;
     display.height = bp->height;
@@ -91,13 +96,17 @@ void Display_Init(const BattleParams *bp)
                          SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     if (display.sdlWindow == NULL) {
-        PANIC("Failed to create window\n");
+        PANIC("Failed to create SDL window\n");
     }
 
-    sdlSurface = SDL_GetWindowSurface(display.sdlWindow);
-    SDL_FillRect(sdlSurface, NULL,
-                 SDL_MapRGB(sdlSurface->format, 0x00, 0x00, 0x00));
-    SDL_UpdateWindowSurface(display.sdlWindow);
+    display.sdlRenderer = SDL_CreateRenderer(display.sdlWindow, -1, 0);
+    if (display.sdlRenderer == NULL) {
+        PANIC("Failed to create SDL renderer\n");
+    }
+
+    SDL_SetRenderDrawColor(display.sdlRenderer, 0x00, 0x00, 0x00, 0xFF);
+    SDL_RenderClear(display.sdlRenderer);
+    SDL_RenderPresent(display.sdlRenderer);
 
     ASSERT(bp->numPlayers <= ARRAYSIZE(display.fleets));
     for (uint x = 0; x < bp->numPlayers; x++) {
@@ -106,12 +115,12 @@ void Display_Init(const BattleParams *bp)
 
         for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
             uint32 radius = (uint32)MobType_GetRadius(t);
-            display.fleets[x].mobSprites[t] =
-                DisplayCreateCircleSprite(radius, color);
+            DisplayCreateCircleSprite(&display.fleets[x].mobSprites[t],
+                                      radius, color);
 
             radius = (uint32)MobType_GetSensorRadius(t);
-            display.fleets[x].scanSprites[t] =
-                DisplayCreateCircleSprite(radius, color / 2);
+            DisplayCreateCircleSprite(&display.fleets[x].scanSprites[t],
+                                      radius, color / 2);
         }
     }
 
@@ -128,13 +137,19 @@ void Display_Exit()
 
     for (uint x = 0; x < ARRAYSIZE(display.fleets); x++) {
         for (uint i = 0; i < ARRAYSIZE(display.fleets[x].mobSprites); i++) {
-            if (display.fleets[x].mobSprites[i] != NULL) {
-                SDL_FreeSurface(display.fleets[x].mobSprites[i]);
+            if (display.fleets[x].mobSprites[i].texture != NULL) {
+                SDL_DestroyTexture(display.fleets[x].mobSprites[i].texture);
+            }
+            if (display.fleets[x].mobSprites[i].surface != NULL) {
+                SDL_FreeSurface(display.fleets[x].mobSprites[i].surface);
             }
         }
         for (uint i = 0; i < ARRAYSIZE(display.fleets[x].scanSprites); i++) {
-            if (display.fleets[x].scanSprites[i] != NULL) {
-                SDL_FreeSurface(display.fleets[x].scanSprites[i]);
+            if (display.fleets[x].scanSprites[i].texture != NULL) {
+                SDL_DestroyTexture(display.fleets[x].scanSprites[i].texture);
+            }
+            if (display.fleets[x].scanSprites[i].surface != NULL) {
+                SDL_FreeSurface(display.fleets[x].scanSprites[i].surface);
             }
         }
     }
@@ -217,19 +232,21 @@ static uint32 DisplayGetColor(uint32 index)
     return colors[index] | ((SHIP_ALPHA & 0xFF) << 24);
 }
 
-static SDL_Surface *DisplayCreateCircleSprite(uint32 radius, uint32 color)
+static void DisplayCreateCircleSprite(DisplaySprite *sprite,
+                                      uint32 radius, uint32 color)
 {
     uint32 d = 2 * radius;
     SDL_Point cPoint;
-    SDL_Surface *sprite;
 
-    sprite = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
-                                            SDL_PIXELFORMAT_BGRA32);
+    ASSERT(sprite != NULL);
+    sprite->surface = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
+                                                     SDL_PIXELFORMAT_BGRA32);
     cPoint.x = d / 2;
     cPoint.y = d / 2;
-    DisplayDrawCircle(sprite, color, &cPoint, radius);
+    DisplayDrawCircle(sprite->surface, color, &cPoint, radius);
 
-    return sprite;
+    sprite->texture = SDL_CreateTextureFromSurface(display.sdlRenderer,
+                                                   sprite->surface);
 }
 
 static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
@@ -263,7 +280,6 @@ static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
 
 static void DisplayDrawFrame()
 {
-    SDL_Surface *sdlSurface = NULL;
     uint32 i;
 
     ASSERT(display.initialized);
@@ -279,20 +295,16 @@ static void DisplayDrawFrame()
     }
     display.mobGenerationDrawn = display.mobGeneration;
 
-    sdlSurface = SDL_GetWindowSurface(display.sdlWindow);
-    if (sdlSurface == NULL) {
-        PANIC("SDL_GetWindowSurface failed: %s\n", SDL_GetError());
-    }
-
-    SDL_FillRect(sdlSurface, NULL,
-                 SDL_MapRGB(sdlSurface->format, 0x00, 0x00, 0x00));
+    SDL_SetRenderDrawColor(display.sdlRenderer, 0x00, 0x00, 0x00, 0xFF);
+    SDL_RenderClear(display.sdlRenderer);
 
     for (i = 0; i < MobVector_Size(&display.mobs); i++) {
         Mob *mob = MobVector_GetPtr(&display.mobs, i);
 
         if (mob->alive) {
             FCircle circle;
-            SDL_Surface *sprite;
+            FleetSprites *fs;
+            SDL_Texture *sprite;
             SDL_Rect rect;
 
             Mob_GetCircle(mob, &circle);
@@ -304,9 +316,10 @@ static void DisplayDrawFrame()
             ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
                    mob->playerID < ARRAYSIZE(display.fleets));
             ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
-            sprite = display.fleets[mob->playerID].mobSprites[mob->type];
+            fs = &display.fleets[mob->playerID];
+            sprite = fs->mobSprites[mob->type].texture;
             ASSERT(sprite != NULL);
-            SDL_BlitSurface(sprite, NULL, sdlSurface, &rect);
+            SDL_RenderCopy(display.sdlRenderer, sprite, NULL, &rect);
 
             if (DRAW_SENSORS) {
                 Mob_GetSensorCircle(mob, &circle);
@@ -314,13 +327,13 @@ static void DisplayDrawFrame()
                 rect.y = (uint32)(circle.center.y - circle.radius);
                 rect.w = (uint32)(2 * circle.radius);
                 rect.h = rect.w;
-                sprite = display.fleets[mob->playerID].scanSprites[mob->type];
-                SDL_BlitSurface(sprite, NULL, sdlSurface, &rect);
+                sprite = fs->scanSprites[mob->type].texture;
+                SDL_RenderCopy(display.sdlRenderer, sprite, NULL, &rect);
             }
         }
     }
 
-    SDL_UpdateWindowSurface(display.sdlWindow);
+    SDL_RenderPresent(display.sdlRenderer);
 
     if (display.mainWaiting) {
         /*
@@ -349,7 +362,7 @@ void Display_Main(void)
     SDL_Event event;
     int done = 0;
 
-    uint32 targetFPS = 102;
+    uint32 targetFPS = 101;
     uint64 targetUSPerFrame = (1000 * 1000) / targetFPS;
     uint64 startTimeUS, endTimeUS;
 
