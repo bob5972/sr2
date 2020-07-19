@@ -259,16 +259,18 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
         const char *key;
         const char *value;
     } defaultValues[] = {
-        { "width", "1600", },
-        { "height", "1200", },
+        { "width", "1600",           },
+        { "height", "1200",          },
         { "startingCredits", "1000", },
-        { "creditsPerTick", "1", },
-        { "tickLimit", "100000", },
-        { "lootDropRate", "0.25", },
-        { "lootSpawnRate", "2.0", },
-        { "minLootSpawn", "10", },
-        { "maxLootSpawn", "20", },
+        { "creditsPerTick", "1",     },
+        { "tickLimit", "100000",     },
+        { "lootDropRate", "0.25",    },
+        { "lootSpawnRate", "2.0",    },
+        { "minLootSpawn", "10",      },
+        { "maxLootSpawn", "20",      },
         { "restrictedStart", "TRUE", },
+        { "startingBases", "1",      },
+        { "startingFighters", "0",   },
     };
 
     if (scenario == NULL) {
@@ -327,6 +329,8 @@ void MainConstructScenario(void)
     bsc.bp.minLootSpawn = MBRegistry_GetUint(mreg, "minLootSpawn");
     bsc.bp.maxLootSpawn = MBRegistry_GetUint(mreg, "maxLootSpawn");
     bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
+    bsc.bp.startingBases = MBRegistry_GetUint(mreg, "startingBases");
+    bsc.bp.startingFighters = MBRegistry_GetUint(mreg, "startingFighters");
 
     MBRegistry_Free(mreg);
     mreg = NULL;

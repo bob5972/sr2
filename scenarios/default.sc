@@ -8,3 +8,5 @@ lootSpawnRate = 2.0
 minLootSpawn = 10
 maxLootSpawn = 20
 restrictedStart = TRUE
+startingBases = 1
+startingFighters = 0

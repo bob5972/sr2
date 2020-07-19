@@ -84,27 +84,32 @@ Battle *Battle_Create(const BattleScenario *bsc,
             continue;
         }
 
-        MobVector_Grow(&battle->mobs);
-        Mob *mob = MobVector_GetLastPtr(&battle->mobs);
+        for (uint s = 0; s < battle->bsc.bp.startingBases + battle->bsc.bp.startingFighters;
+             s++) {
+            MobVector_Grow(&battle->mobs);
+            Mob *mob = MobVector_GetLastPtr(&battle->mobs);
 
-        Mob_Init(mob, MOB_TYPE_BASE);
-        mob->playerID = i;
-        mob->mobid = ++battle->lastMobID;
-        if (battle->bsc.bp.restrictedStart) {
-            // account for NEUTRAL
-            uint p = i - 1;
-            float slotW = battle->bsc.bp.width / (numPlayers - 1);
-            mob->pos.x = RandomState_Float(&battle->rs, p * slotW,
-                                           (p + 1) * slotW);
-            mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
-                                           battle->bsc.bp.height);
-        } else {
-            mob->pos.x = RandomState_Float(&battle->rs, 0.0f,
-                                           battle->bsc.bp.width);
-            mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
-                                           battle->bsc.bp.height);
+            MobType t = s < battle->bsc.bp.startingBases ?
+                        MOB_TYPE_BASE : MOB_TYPE_FIGHTER;
+            Mob_Init(mob, t);
+            mob->playerID = i;
+            mob->mobid = ++battle->lastMobID;
+            if (battle->bsc.bp.restrictedStart) {
+                // account for NEUTRAL
+                uint p = i - 1;
+                float slotW = battle->bsc.bp.width / (numPlayers - 1);
+                mob->pos.x = RandomState_Float(&battle->rs, p * slotW,
+                                            (p + 1) * slotW);
+                mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
+                                            battle->bsc.bp.height);
+            } else {
+                mob->pos.x = RandomState_Float(&battle->rs, 0.0f,
+                                            battle->bsc.bp.width);
+                mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
+                                            battle->bsc.bp.height);
+            }
+            mob->cmd.target = mob->pos;
         }
-        mob->cmd.target = mob->pos;
     }
 
     battle->fleet = Fleet_Create(bsc, RandomState_Uint64(&battle->rs));

@@ -155,6 +155,9 @@ typedef struct BattleParams {
     float lootSpawnRate;
     int minLootSpawn;
     int maxLootSpawn;
+
+    uint startingBases;
+    uint startingFighters;
 } BattleParams;
 
 typedef struct BattleScenario {
