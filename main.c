@@ -88,6 +88,7 @@ struct MainData {
     int numPlayers;
     BattlePlayer players[MAX_PLAYERS];
     MainWinnerData winners[MAX_PLAYERS];
+    MainWinnerData winnerBreakdown[MAX_PLAYERS][MAX_PLAYERS];
 
     uint numThreads;
     MainEngineThreadData *tData;
@@ -132,27 +133,61 @@ MainPrintBattleStatus(MainEngineThreadData *tData,
     }
 }
 
+static void MainRecordWinner(MainWinnerData *wd, PlayerUID puid,
+                             BattleStatus *bs)
+{
+    BattlePlayer *bpp = &mainData.players[puid];
+    ASSERT(puid < ARRAYSIZE(mainData.players));
+    ASSERT(puid == bpp->playerUID);
+    if (puid == bs->winnerUID) {
+        wd->wins++;
+    } else if (bs->winnerUID == PLAYER_ID_NEUTRAL) {
+        wd->draws++;
+    } else {
+        wd->losses++;
+    }
+    wd->battles++;
+}
+
+static void MainPrintWinnerData(MainWinnerData *wd)
+{
+    int wins = wd->wins;
+    int losses = wd->losses;
+    int battles = wd->battles;
+    int draws = wd->draws;
+    float percent = 100.0f * wins / (float)battles;
+
+    Warning("\t%3d wins, %3d losses, %3d draws => %0.1f\% wins\n",
+            wins, losses, draws, percent);
+}
+
 static void MainPrintWinners(void)
 {
     uint32 totalBattles = 0;
 
     Warning("\n");
+    Warning("Winner Breakdown:\n");
+    for (uint p1 = 0; p1 < mainData.numPlayers; p1++) {
+        Warning("Fleet %s:\n", mainData.players[p1].playerName);
+        for (uint p2 = 0; p2 < mainData.numPlayers; p2++) {
+            if (mainData.winnerBreakdown[p1][p2].battles > 0) {
+                Warning("\tvs %s:\n", mainData.players[p2].playerName,
+                        mainData.players[p2].playerName);
+                MainPrintWinnerData(&mainData.winnerBreakdown[p1][p2]);
+            }
+        }
+    }
+
+    Warning("\n");
     Warning("Summary:\n");
 
-    for (uint32 i = 0; i < mainData.numPlayers; i++) {
+    for (uint i = 0; i < mainData.numPlayers; i++) {
         totalBattles += mainData.winners[i].wins;
     }
 
-    for (uint32 i = 0; i < mainData.numPlayers; i++) {
-        int wins = mainData.winners[i].wins;
-        int losses = mainData.winners[i].losses;
-        int battles = mainData.winners[i].battles;
-        int draws = mainData.winners[i].draws;
-        float percent = 100.0f * wins / (float)battles;
-
+    for (uint i = 0; i < mainData.numPlayers; i++) {
         Warning("Fleet: %s\n", mainData.players[i].playerName);
-        Warning("\t%3d wins, %3d losses, %3d draws => %0.1f\% wins\n",
-                wins, losses, draws, percent);
+        MainPrintWinnerData(&mainData.winners[i]);
     }
 
     Warning("Total Battles: %d\n", totalBattles);
@@ -598,18 +633,15 @@ int main(int argc, char **argv)
 
         for (uint p = 0; p < ru.bs.numPlayers; p++) {
             PlayerUID puid = ru.bs.players[p].playerUID;
-            BattlePlayer *bpp = &mainData.players[puid];
-            ASSERT(puid < ARRAYSIZE(mainData.players));
             ASSERT(puid < ARRAYSIZE(mainData.winners));
-            ASSERT(puid == bpp->playerUID);
-            if (puid == ru.bs.winnerUID) {
-                mainData.winners[puid].wins++;
-            } else if (ru.bs.winnerUID == PLAYER_ID_NEUTRAL) {
-                mainData.winners[puid].draws++;
-            } else {
-                mainData.winners[puid].losses++;
-            }
-            mainData.winners[puid].battles++;
+            MainRecordWinner(&mainData.winners[puid], puid, &ru.bs);
+        }
+        if (ru.bs.numPlayers == 3) {
+            PlayerUID puid1 = ru.bs.players[1].playerUID;
+            PlayerUID puid2 = ru.bs.players[2].playerUID;
+            ASSERT(ru.bs.players[0].playerUID == PLAYER_ID_NEUTRAL);
+            MainRecordWinner(&mainData.winnerBreakdown[puid1][puid2], puid1, &ru.bs);
+            MainRecordWinner(&mainData.winnerBreakdown[puid2][puid1], puid2, &ru.bs);
         }
     }
     WorkQueue_Unlock(&mainData.resultQ);
