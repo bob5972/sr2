@@ -165,15 +165,17 @@ static void MainPrintWinners(void)
 {
     uint32 totalBattles = 0;
 
-    Warning("\n");
-    Warning("Winner Breakdown:\n");
-    for (uint p1 = 0; p1 < mainData.numPlayers; p1++) {
-        Warning("Fleet %s:\n", mainData.players[p1].playerName);
+    if (mainData.tournament) {
+        Warning("\n");
+        Warning("Winner Breakdown:\n");
+        for (uint p1 = 0; p1 < mainData.numPlayers; p1++) {
+            Warning("Fleet %s:\n", mainData.players[p1].playerName);
         for (uint p2 = 0; p2 < mainData.numPlayers; p2++) {
-            if (mainData.winnerBreakdown[p1][p2].battles > 0) {
-                Warning("\tvs %s:\n", mainData.players[p2].playerName,
-                        mainData.players[p2].playerName);
-                MainPrintWinnerData(&mainData.winnerBreakdown[p1][p2]);
+                    if (mainData.winnerBreakdown[p1][p2].battles > 0) {
+                    Warning("\tvs %s:\n", mainData.players[p2].playerName,
+                            mainData.players[p2].playerName);
+                    MainPrintWinnerData(&mainData.winnerBreakdown[p1][p2]);
+                }
             }
         }
     }
