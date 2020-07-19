@@ -55,6 +55,7 @@ typedef struct MainWinnerData {
     uint battles;
     uint wins;
     uint losses;
+    uint draws;
 } MainWinnerData;
 
 typedef struct MainEngineThreadData {
@@ -146,11 +147,12 @@ static void MainPrintWinners(void)
         int wins = mainData.winners[i].wins;
         int losses = mainData.winners[i].losses;
         int battles = mainData.winners[i].battles;
+        int draws = mainData.winners[i].draws;
         float percent = 100.0f * wins / (float)battles;
 
         Warning("Fleet: %s\n", mainData.players[i].playerName);
-        Warning("\t%3d wins, %3d losses => %0.1f\% wins\n",
-                wins, losses, percent);
+        Warning("\t%3d wins, %3d losses, %3d draws => %0.1f\% wins\n",
+                wins, losses, draws, percent);
     }
 
     Warning("Total Battles: %d\n", totalBattles);
@@ -554,7 +556,7 @@ int main(int argc, char **argv)
             wu.type = MAIN_WORK_BATTLE;
             wu.battleId = battleId++;
 
-            if (i == 0 || mainData.reuseSeed) {
+            if ((i == 0 && b == 0) || mainData.reuseSeed) {
                 /*
                  * Use the actual seed for the first battle, so that it's
                  * easy to re-create a single battle from the battle seed
@@ -602,6 +604,8 @@ int main(int argc, char **argv)
             ASSERT(puid == bpp->playerUID);
             if (puid == ru.bs.winnerUID) {
                 mainData.winners[puid].wins++;
+            } else if (ru.bs.winnerUID == PLAYER_ID_NEUTRAL) {
+                mainData.winners[puid].draws++;
             } else {
                 mainData.winners[puid].losses++;
             }
