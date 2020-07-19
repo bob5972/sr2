@@ -157,7 +157,7 @@ static void MainPrintWinnerData(MainWinnerData *wd)
     int draws = wd->draws;
     float percent = 100.0f * wins / (float)battles;
 
-    Warning("\t%3d wins, %3d losses, %3d draws => %0.1f\% wins\n",
+    Warning("\t%3d wins, %3d losses, %3d draws => %4.1f\% wins\n",
             wins, losses, draws, percent);
 }
 
