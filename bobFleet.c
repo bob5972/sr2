@@ -41,6 +41,7 @@ typedef struct BobFleetData {
     Mob enemyBase;
     uint enemyBaseAge;
     RandomState rs;
+    uint numGov[BOB_GOV_MAX];
 } BobFleetData;
 
 static void *BobFleetCreate(FleetAI *ai);
@@ -97,8 +98,13 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
         ship = MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
         m->cmd.target = sf->basePos;
-        ship->gov = RandomState_Int(&sf->rs, BOB_GOV_MIN,
-                                    BOB_GOV_MAX - 1);
+
+        if (sf->numGov[BOB_GOV_GUARD] < 1) {
+            ship->gov = BOB_GOV_GUARD;
+        } else {
+            ship->gov = BOB_GOV_SCOUT;
+        }
+        sf->numGov[ship->gov]++;
         return ship;
     } else {
         /*
@@ -119,6 +125,10 @@ static void BobFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
     BobFleetData *sf = aiHandle;
     BobShip *ship = aiMobHandle;
+
+    ASSERT(ship->gov < ARRAYSIZE(sf->numGov));
+    ASSERT(sf->numGov[ship->gov] > 0);
+    sf->numGov[ship->gov]--;
 
     ASSERT(sf != NULL);
     free(ship);
@@ -143,7 +153,6 @@ static void BobFleetRunAITick(void *aiHandle)
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
-    uint32 numGuard = 0;
 
     IntMap_Create(&targetMap);
 
@@ -165,6 +174,12 @@ static void BobFleetRunAITick(void *aiHandle)
     Mob *groupTarget = FleetUtil_FindClosestSensor(ai, &sf->basePos,
                                                    targetScanFilter);
 
+    bool doAttack = FALSE;
+
+    if (sf->numGov[BOB_GOV_SCOUT] > 12) {
+        doAttack = TRUE;
+    }
+
     MobIt mit;
     MobIt_Start(&ai->mobs, &mit);
     while (MobIt_HasNext(&mit)) {
@@ -176,20 +191,22 @@ static void BobFleetRunAITick(void *aiHandle)
 
             ASSERT(ship != NULL);
             ASSERT(ship->mobid == mob->mobid);
+            ASSERT(ship->gov < BOB_GOV_MAX);
 
             if (ship->gov == BOB_GOV_SCOUT) {
                 /*
                  * Just run the shared random/loot-box code.
                  */
+                if (doAttack && sf->numGov[BOB_GOV_SCOUT] > 2) {
+                    ship->gov = BOB_GOV_ATTACK;
+                    ASSERT(sf->numGov[BOB_GOV_SCOUT] > 0);
+                    sf->numGov[BOB_GOV_SCOUT]--;
+                    sf->numGov[BOB_GOV_ATTACK]++;
+                }
             } else if (ship->gov == BOB_GOV_ATTACK) {
                 target = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                                      targetScanFilter);
             } else if (ship->gov == BOB_GOV_GUARD) {
-                numGuard++;
-                if (numGuard >= 5) {
-                    ship->gov = BOB_GOV_ATTACK;
-                }
-
                 target = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                                      targetScanFilter);
                 if (target != NULL) {
@@ -270,7 +287,7 @@ static void BobFleetRunAITick(void *aiHandle)
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
 
-            if (ai->credits > 200 && RandomState_Int(&sf->rs, 0, 20) == 0) {
+            if (ai->credits > 200 && RandomState_Int(&sf->rs, 0, 10) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;
@@ -278,11 +295,18 @@ static void BobFleetRunAITick(void *aiHandle)
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+            Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
+                                                   MOB_FLAG_FIGHTER);
+            if (friend != NULL) {
+                mob->cmd.target = friend->pos;
+            } else {
+                mob->cmd.target = sf->basePos;
+            }
+
             /*
              * Add this mob to the sensor list so that we'll
              * steer towards it.
              */
-            mob->cmd.target = sf->basePos;
             MobSet_Add(&ai->sensors, mob);
         }
     }

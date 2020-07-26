@@ -398,10 +398,6 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_SIMPLE;
         p++;
 
-        mainData.players[p].playerName = "BobFleet";
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
-
         mainData.players[p].playerName = "GatherFleet";
         mainData.players[p].aiType = FLEET_AI_GATHER;
         p++;
@@ -423,10 +419,14 @@ void MainConstructScenario(void)
         mainData.players[p].playerName = "FighterFleet";
         mainData.players[p].aiType = FLEET_AI_FF;
         p++;
+
+        mainData.players[p].playerName = "BobFleet";
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
     } else {
-//         mainData.players[p].playerName = "BobFleet";
-//         mainData.players[p].aiType = FLEET_AI_BOB;
-//         p++;
+        mainData.players[p].playerName = "BobFleet";
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
 
         mainData.players[p].playerName = "MapperFleet";
         mainData.players[p].mreg = MBRegistry_Alloc();
@@ -436,9 +436,9 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_MAPPER;
         p++;
 
-        mainData.players[p].playerName = "FighterFleet";
-        mainData.players[p].aiType = FLEET_AI_FF;
-        p++;
+//         mainData.players[p].playerName = "FighterFleet";
+//         mainData.players[p].aiType = FLEET_AI_FF;
+//         p++;
     }
 
     ASSERT(p <= ARRAYSIZE(mainData.players));
