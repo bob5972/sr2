@@ -323,9 +323,9 @@ static void DisplayDrawFrame()
 
             if (DRAW_SENSORS) {
                 Mob_GetSensorCircle(mob, &circle);
-                rect.x = (uint32)(circle.center.x - circle.radius);
-                rect.y = (uint32)(circle.center.y - circle.radius);
-                rect.w = (uint32)(2 * circle.radius);
+                rect.x = (int32)(circle.center.x - circle.radius);
+                rect.y = (int32)(circle.center.y - circle.radius);
+                rect.w = (int32)(2 * circle.radius);
                 rect.h = rect.w;
                 sprite = fs->scanSprites[mob->type].texture;
                 SDL_RenderCopy(display.sdlRenderer, sprite, NULL, &rect);
