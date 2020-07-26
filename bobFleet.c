@@ -153,22 +153,39 @@ static void BobFleetRunAITick(void *aiHandle)
     IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
+    MobIt mit;
 
     IntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_BOB);
 
-    // If we've found the enemy base, assume it's still there.
+    /*
+     * Save the last enemy base we've seen.
+     */
     Mob *enemyBase = FleetUtil_FindClosestSensor(ai, &sf->basePos, MOB_FLAG_BASE);
-
     if (enemyBase != NULL) {
         ASSERT(enemyBase->type == MOB_TYPE_BASE);
         sf->enemyBase = *enemyBase;
         sf->enemyBaseAge = 0;
-    } else if (sf->enemyBase.type == MOB_TYPE_BASE &&
-               sf->enemyBaseAge < 1000) {
-        MobSet_Add(&ai->sensors, &sf->enemyBase);
-        sf->enemyBaseAge++;
+    } else {
+        MobIt_Start(&ai->mobs, &mit);
+        while (MobIt_HasNext(&mit)) {
+            Mob *mob = MobIt_Next(&mit);
+            if (Mob_CanScanPoint(mob, &sf->enemyBase.pos)) {
+                /*
+                 * We can confirm there's no base there any more.
+                 */
+                sf->enemyBase.type = MOB_TYPE_INVALID;
+            }
+        }
+
+        /*
+         * Assume it's still there if we haven't confirmed destruction.
+         */
+        if (sf->enemyBase.type == MOB_TYPE_BASE) {
+            MobSet_Add(&ai->sensors, &sf->enemyBase);
+            sf->enemyBaseAge++;
+        }
     }
 
     Mob *groupTarget = FleetUtil_FindClosestSensor(ai, &sf->basePos,
@@ -180,7 +197,6 @@ static void BobFleetRunAITick(void *aiHandle)
         doAttack = TRUE;
     }
 
-    MobIt mit;
     MobIt_Start(&ai->mobs, &mit);
     while (MobIt_HasNext(&mit)) {
         Mob *mob = MobIt_Next(&mit);

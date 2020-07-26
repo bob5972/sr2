@@ -116,4 +116,19 @@ static inline bool FCircle_Intersect(const FCircle *a, const FCircle *b)
     return FALSE;
 }
 
+static inline bool FCircle_ContainsPoint(const FCircle *a, const FPoint *p)
+{
+    float dx = a->center.x - p->x;
+    float dy = a->center.y - p->y;
+    float dr = a->radius;
+
+    if (dx * dx + dy * dy <= dr * dr) {
+        if (UNLIKELY(a->radius == 0.0f)) {
+            return FALSE;
+        }
+        return TRUE;
+    }
+    return FALSE;
+}
+
 #endif // _GEOMETRY_H_202005310649

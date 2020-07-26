@@ -89,6 +89,13 @@ static inline void Mob_GetSensorCircle(const Mob *mob, FCircle *c)
     c->radius = MobType_GetSensorRadius(mob->type);
 }
 
+static inline bool Mob_CanScanPoint(const Mob *mob, const FPoint *p)
+{
+    FCircle c;
+    Mob_GetSensorCircle(mob, &c);
+    return FCircle_ContainsPoint(&c, p);
+}
+
 
 static inline bool Mob_CheckInvariants(const Mob *m)
 {
