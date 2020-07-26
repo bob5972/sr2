@@ -240,8 +240,13 @@ void MobSet_Remove(MobSet *ms, MobID mobid)
     }
 
     int size = MobPVec_Size(&ms->pv);
-    Mob *last = MobPVec_GetValue(&ms->pv, size - 1);
-    MobPVec_PutValue(&ms->pv, index, last);
+    if (size > 1) {
+        Mob *last = MobPVec_GetValue(&ms->pv, size - 1);
+        MobPVec_PutValue(&ms->pv, index, last);
+        IntMap_Put(&ms->map, last->mobid, index);
+    }
+    MobPVec_Shrink(&ms->pv);
+
     IntMap_Remove(&ms->map, mobid);
 }
 
@@ -255,6 +260,7 @@ void MobIt_Start(MobSet *ms, MobIt *mit)
     MBUtil_Zero(mit, sizeof(*mit));
     mit->ms = ms;
     mit->i = 0;
+    mit->lastMobid = MOB_ID_INVALID;
 }
 
 bool MobIt_HasNext(MobIt *mit)
@@ -265,6 +271,20 @@ bool MobIt_HasNext(MobIt *mit)
 
 Mob *MobIt_Next(MobIt *mit)
 {
+    Mob *mob;
     ASSERT(MobIt_HasNext(mit));
-    return MobPVec_GetValue(&mit->ms->pv, mit->i++);
+    mob = MobPVec_GetValue(&mit->ms->pv, mit->i++);
+
+    ASSERT(mob != NULL);
+    mit->lastMobid = mob->mobid;
+    return mob;
+}
+
+void MobIt_Remove(MobIt *mit)
+{
+    ASSERT(mit->i > 0);
+    ASSERT(mit->lastMobid != MOB_ID_INVALID);
+    mit->i--;
+    MobSet_Remove(mit->ms, mit->lastMobid);
+    mit->lastMobid = MOB_ID_INVALID;
 }

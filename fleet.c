@@ -99,16 +99,27 @@ void Fleet_Destroy(Fleet *fleet)
     ASSERT(fleet->initialized);
 
     for (uint32 i = 0; i < fleet->numAIs; i++) {
-        if (fleet->ais[i].ops.destroyFleet != NULL) {
-            fleet->ais[i].ops.destroyFleet(fleet->ais[i].aiHandle);
+        FleetAI *ai = &fleet->ais[i];
+
+        if (ai->ops.mobDestroyed != NULL) {
+            MobIt mit;
+            MobIt_Start(&ai->mobs, &mit);
+            while (MobIt_HasNext(&mit)) {
+                Mob *m = MobIt_Next(&mit);
+                ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
+            }
         }
 
-        MobSet_Destroy(&fleet->ais[i].mobs);
-        MobSet_Destroy(&fleet->ais[i].sensors);
+        if (ai->ops.destroyFleet != NULL) {
+            ai->ops.destroyFleet(fleet->ais[i].aiHandle);
+        }
 
-        if (fleet->ais[i].player.mreg != NULL) {
-            MBRegistry_Free(fleet->ais[i].player.mreg);
-            fleet->ais[i].player.mreg = NULL;
+        MobSet_Destroy(&ai->mobs);
+        MobSet_Destroy(&ai->sensors);
+
+        if (ai->player.mreg != NULL) {
+            MBRegistry_Free(ai->player.mreg);
+            ai->player.mreg = NULL;
         }
     }
 
@@ -142,6 +153,9 @@ static void FleetGetOps(FleetAI *ai)
             break;
         case FLEET_AI_GATHER:
             GatherFleet_GetOps(&ai->ops);
+            break;
+        case FLEET_AI_FF:
+            FighterFleet_GetOps(&ai->ops);
             break;
         default:
             PANIC("Unknown AI type=%d\n", ai->player.aiType);
@@ -238,9 +252,7 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
 {
     MobIt mit;
 
-    if (ai->ops.mobSpawned != NULL ||
-        ai->ops.mobDestroyed != NULL ||
-        ai->ops.runAIMob != NULL) {
+    if (ai->ops.mobSpawned != NULL) {
         MobIt_Start(&ai->mobs, &mit);
         while (MobIt_HasNext(&mit)) {
             Mob *m = MobIt_Next(&mit);
@@ -273,6 +285,7 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
             Mob *m = MobIt_Next(&mit);
             if (!m->alive) {
                 ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
+                MobIt_Remove(&mit);
             }
         }
     }

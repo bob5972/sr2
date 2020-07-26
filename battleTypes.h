@@ -116,6 +116,7 @@ typedef struct MobSet {
 typedef struct MobIt {
     MobSet *ms;
     int i;
+    MobID lastMobid;
 } MobIt;
 
 typedef enum FleetAIType {
@@ -127,6 +128,7 @@ typedef enum FleetAIType {
     FLEET_AI_MAPPER  = 5,
     FLEET_AI_CLOUD   = 6,
     FLEET_AI_GATHER  = 7,
+    FLEET_AI_FF      = 8,
     FLEET_AI_MAX,
 } FleetAIType;
 

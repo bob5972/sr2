@@ -41,6 +41,7 @@ int MobSet_Size(MobSet *ms);
 void MobIt_Start(MobSet *ms, MobIt *mit);
 bool MobIt_HasNext(MobIt *mit);
 Mob *MobIt_Next(MobIt *mit);
+void MobIt_Remove(MobIt *mit);
 
 void Mob_Init(Mob *mob, MobType t);
 

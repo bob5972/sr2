@@ -402,24 +402,36 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
+        mainData.players[p].playerName = "FighterFleet";
+        mainData.players[p].aiType = FLEET_AI_FF;
+        p++;
+
         mainData.players[p].playerName = "GatherFleet";
         mainData.players[p].aiType = FLEET_AI_GATHER;
         p++;
+
+        mainData.players[p].playerName = "CloudFleet";
+        mainData.players[p].aiType = FLEET_AI_CLOUD;
+        mainData.players[p].mreg = MBRegistry_Alloc();
+        MBRegistry_Put(mainData.players[p].mreg, "CrazyMissiles", "TRUE");
+        p++;
+
+        mainData.players[p].playerName = "MapperFleet";
+        mainData.players[p].mreg = MBRegistry_Alloc();
+        MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
+        MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
+        MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
+        mainData.players[p].aiType = FLEET_AI_MAPPER;
+        p++;
+    } else {
+        mainData.players[p].playerName = "BobFleet";
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
+
+        mainData.players[p].playerName = "FighterFleet";
+        mainData.players[p].aiType = FLEET_AI_FF;
+        p++;
     }
-
-    mainData.players[p].playerName = "CloudFleet";
-    mainData.players[p].aiType = FLEET_AI_CLOUD;
-    mainData.players[p].mreg = MBRegistry_Alloc();
-    MBRegistry_Put(mainData.players[p].mreg, "CrazyMissiles", "TRUE");
-    p++;
-
-    mainData.players[p].playerName = "MapperFleet";
-    mainData.players[p].mreg = MBRegistry_Alloc();
-    MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
-    MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
-    MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
-    mainData.players[p].aiType = FLEET_AI_MAPPER;
-    p++;
 
     ASSERT(p <= ARRAYSIZE(mainData.players));
     mainData.numPlayers = p;
