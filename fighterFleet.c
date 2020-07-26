@@ -158,7 +158,7 @@ static void FighterFleetRunAITick(void *aiHandle)
             * Avoid having all the fighters rush to the same loot box.
             */
             target = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                    MOB_FLAG_LOOT_BOX);
+                                                 MOB_FLAG_LOOT_BOX);
             if (target != NULL &&
                 IntMap_Increment(&targetMap, target->mobid) > 1) {
                 /*
@@ -202,6 +202,12 @@ static void FighterFleetRunAITick(void *aiHandle)
             if (friend != NULL) {
                 mob->cmd.target = friend->pos;
             }
+
+            /*
+             * Add this mob to the sensor list so that we'll
+             * steer towards it.
+             */
+            MobSet_Add(&ai->sensors, mob);
         }
     }
 

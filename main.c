@@ -402,10 +402,6 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
-        mainData.players[p].playerName = "FighterFleet";
-        mainData.players[p].aiType = FLEET_AI_FF;
-        p++;
-
         mainData.players[p].playerName = "GatherFleet";
         mainData.players[p].aiType = FLEET_AI_GATHER;
         p++;
@@ -423,9 +419,21 @@ void MainConstructScenario(void)
         MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
         mainData.players[p].aiType = FLEET_AI_MAPPER;
         p++;
+
+        mainData.players[p].playerName = "FighterFleet";
+        mainData.players[p].aiType = FLEET_AI_FF;
+        p++;
     } else {
-        mainData.players[p].playerName = "BobFleet";
-        mainData.players[p].aiType = FLEET_AI_BOB;
+//         mainData.players[p].playerName = "BobFleet";
+//         mainData.players[p].aiType = FLEET_AI_BOB;
+//         p++;
+
+        mainData.players[p].playerName = "MapperFleet";
+        mainData.players[p].mreg = MBRegistry_Alloc();
+        MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
+        MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
+        MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
+        mainData.players[p].aiType = FLEET_AI_MAPPER;
         p++;
 
         mainData.players[p].playerName = "FighterFleet";
