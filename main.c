@@ -380,9 +380,7 @@ void MainConstructScenario(void)
     }
 
     /*
-     * The NEUTRAL fleet needs to be there.
-     *
-     * Otherwise these are in rough order of difficulty.
+     * The NEUTRAL fleet always needs to be there.
      */
     p = 0;
     mainData.players[p].aiType = FLEET_AI_NEUTRAL;
@@ -398,6 +396,17 @@ void MainConstructScenario(void)
             p++;
         }
     } else {
+        /*
+         * Rough order of difficulty:
+         *    DummyFleet
+         *    SimpleFleet
+         *    GatherFleet
+         *    CloudFleet
+         *    MapperFleet
+         *    BobFleet
+         *    CowardFleet
+         */
+
 //         mainData.players[p].mreg = MBRegistry_Alloc();
 //         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
 //         MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
@@ -405,10 +414,13 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_MAPPER;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
+//         mainData.players[p].aiType = FLEET_AI_BOB;
+//         p++;
 
         mainData.players[p].aiType = FLEET_AI_FF;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_COWARD;
         p++;
     }
 

@@ -312,11 +312,9 @@ static void BobFleetRunAITick(void *aiHandle)
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
             Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
-                                                   MOB_FLAG_FIGHTER);
+                                                   MOB_FLAG_SHIP);
             if (friend != NULL) {
                 mob->cmd.target = friend->pos;
-            } else {
-                mob->cmd.target = sf->basePos;
             }
 
             /*

@@ -157,11 +157,17 @@ static void CowardFleetRunAITick(void *aiHandle)
                 if (enemyTarget != NULL) {
                     if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
+
+                        if (enemyTarget->type == MOB_TYPE_BASE) {
+                            float range = MIN(firingRange, scanningRange) - 1;
+                            FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
+                                                         &enemyTarget->pos, range);
+                        }
                     }
                 }
 
                 enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                          MOB_FLAG_SHIP | MOB_FLAG_MISSILE);
+                                                          MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE);
                 if (enemyTarget != NULL) {
                     if (FPoint_Distance(&mob->pos, &enemyTarget->pos) >= firingRange) {
                         enemyTarget = NULL;
@@ -195,7 +201,7 @@ static void CowardFleetRunAITick(void *aiHandle)
             }
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
             Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
-                                                   MOB_FLAG_FIGHTER);
+                                                   MOB_FLAG_SHIP);
             if (friend != NULL) {
                 mob->cmd.target = friend->pos;
             }
