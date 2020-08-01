@@ -53,6 +53,7 @@ typedef struct DisplayGlobalData {
     SDL_Window *sdlWindow;
     SDL_Renderer *sdlRenderer;
     bool paused;
+    bool oneTick;
     bool inMain;
     uint64 mobGenerationDrawn;
 
@@ -284,7 +285,10 @@ static void DisplayDrawFrame()
 
     ASSERT(display.initialized);
 
-    if (display.paused) {
+    if (display.oneTick) {
+        display.paused = TRUE;
+        display.oneTick = FALSE;
+    } else if (display.paused) {
         return;
     }
 
@@ -379,6 +383,14 @@ void Display_Main(void)
                     break;
                 case SDL_MOUSEBUTTONUP:
                     display.paused = !display.paused;
+                    break;
+                case SDL_KEYUP:
+                    if (event.key.keysym.sym == SDLK_PERIOD) {
+                        display.oneTick = TRUE;
+                    } else if (event.key.keysym.sym == SDLK_ESCAPE ||
+                               event.key.keysym.sym == SDLK_q) {
+                        done = 1;
+                    }
                     break;
                 default:
                     break;
