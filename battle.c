@@ -66,10 +66,13 @@ Battle *Battle_Create(const BattleScenario *bsc,
     uint numPlayers = bsc->bp.numPlayers;
     ASSERT(numPlayers < ARRAYSIZE(battle->bs.players));
     battle->bs.numPlayers = numPlayers;
-    for (uint32 i = 0; i < numPlayers; i++) {
+    for (uint i = 0; i < numPlayers; i++) {
         battle->bs.players[i].playerUID = bsc->players[i].playerUID;
         battle->bs.players[i].alive = TRUE;
         battle->bs.players[i].credits = bsc->bp.startingCredits;
+    }
+    for (uint i = numPlayers; i < ARRAYSIZE(battle->bs.players); i++) {
+        battle->bs.players[i].playerUID = PLAYER_ID_INVALID;
     }
     battle->bs.winner = PLAYER_ID_NEUTRAL;
     battle->bs.winnerUID = PLAYER_ID_NEUTRAL;
@@ -537,12 +540,15 @@ void Battle_RunTick(Battle *battle)
     // Destroy mobs and track player liveness
     for (uint32 i = 0; i < battle->bs.numPlayers; i++) {
         battle->bs.players[i].alive = FALSE;
+        battle->bs.players[i].numMobs = 0;
     }
     for (uint32 i = 0; i < MobVector_Size(&battle->mobs); i++) {
         Mob *mob = MobVector_GetPtr(&battle->mobs, i);
         if (mob->alive) {
+            PlayerID p = mob->playerID;
+            battle->bs.players[p].numMobs++;
             if (mob->type != MOB_TYPE_LOOT_BOX) {
-                PlayerID p = mob->playerID;
+
                 battle->bs.players[p].alive = TRUE;
             }
         } else {

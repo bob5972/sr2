@@ -28,6 +28,7 @@ typedef struct CowardShip {
 typedef struct CowardFleetData {
     FleetAI *ai;
     RandomState rs;
+    MobSet lastTargets;
 } CowardFleetData;
 
 static void *CowardFleetCreate(FleetAI *ai);
@@ -61,6 +62,9 @@ static void *CowardFleetCreate(FleetAI *ai)
     sf->ai = ai;
 
     RandomState_CreateWithSeed(&sf->rs, ai->seed);
+
+    MobSet_Create(&sf->lastTargets);
+
     return sf;
 }
 
@@ -68,6 +72,7 @@ static void CowardFleetDestroy(void *handle)
 {
     CowardFleetData *sf = handle;
     ASSERT(sf != NULL);
+    MobSet_Destroy(&sf->lastTargets);
     RandomState_Destroy(&sf->rs);
     free(sf);
 }
@@ -126,10 +131,28 @@ static void CowardFleetRunAITick(void *aiHandle)
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+    MobIt mit;
 
     ASSERT(ai->player.aiType == FLEET_AI_COWARD);
 
-    MobIt mit;
+    MobIt_Start(&sf->lastTargets, &mit);
+    while (MobIt_HasNext(&mit)) {
+        Mob *target = MobIt_Next(&mit);
+        MobID mobid = target->mobid;
+
+        /*
+         * Add any targets found in the last round that have since
+         * moved out of scanning range, and assume they're still there.
+         *
+         * Since we probably just ran away, this gives the missiles we
+         * just shot a place to aim.
+         */
+        if (MobSet_Get(&ai->sensors, mobid) == NULL) {
+            MobSet_Add(&ai->sensors, target);
+        }
+    }
+    MobSet_MakeEmpty(&sf->lastTargets);
+
     MobIt_Start(&ai->mobs, &mit);
     while (MobIt_HasNext(&mit)) {
         Mob *mob = MobIt_Next(&mit);
@@ -157,6 +180,7 @@ static void CowardFleetRunAITick(void *aiHandle)
                 if (enemyTarget != NULL) {
                     if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
+                        MobSet_Add(&sf->lastTargets, enemyTarget);
 
                         if (enemyTarget->type == MOB_TYPE_BASE) {
                             float range = MIN(firingRange, scanningRange) - 1;
@@ -189,7 +213,9 @@ static void CowardFleetRunAITick(void *aiHandle)
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = MOB_FLAG_SHIP;
-            Mob *target = FleetUtil_FindClosestSensor(ai, &mob->pos, scanFilter);
+            float range = firingRange;
+            Mob *target = FleetUtil_FindClosestMobInRange(&ai->sensors, &mob->pos,
+                                                          scanFilter, range);
             if (target != NULL) {
                 mob->cmd.target = target->pos;
             }

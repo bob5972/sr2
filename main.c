@@ -110,6 +110,14 @@ MainPrintBattleStatus(MainEngineThreadData *tData,
 
     Warning("Finished tick %d\n", bStatus->tick);
     Warning("\tbattleId = %d\n", tData->battleId);
+
+    for (uint i = 0; i < ARRAYSIZE(bStatus->players); i++) {
+        if (bStatus->players[i].playerUID != PLAYER_ID_INVALID) {
+            Warning("\t player[%d] numMobs = %d\n", i,
+                    bStatus->players[i].numMobs);
+        }
+    }
+
     Warning("\tseed = 0x%llX\n", tData->seed);
     Warning("\tcollisions = %d\n", bStatus->collisions);
     Warning("\tsensor contacts = %d\n", bStatus->sensorContacts);

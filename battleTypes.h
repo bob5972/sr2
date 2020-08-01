@@ -172,6 +172,7 @@ typedef struct BattlePlayerStatus {
     uint playerUID;
     bool alive;
     int credits;
+    uint numMobs;
 } BattlePlayerStatus;
 
 typedef struct BattleStatus {

@@ -33,6 +33,8 @@ void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
                    Mob *mobs, uint32 numMobs);
 
 Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter);
+Mob *FleetUtil_FindClosestMobInRange(MobSet *ms, const FPoint *pos, uint filter,
+                                     float radius);
 Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter);
 void FleetUtil_RandomPointInRange(RandomState *rs, FPoint *p,
                                   const FPoint *center, float radius);

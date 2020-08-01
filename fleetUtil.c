@@ -51,6 +51,20 @@ Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter)
     return best;
 }
 
+Mob *FleetUtil_FindClosestMobInRange(MobSet *ms, const FPoint *pos, uint filter,
+                                     float radius)
+{
+    Mob *mob = FleetUtil_FindClosestMob(ms, pos, filter);
+
+    if (mob != NULL) {
+        if (FPoint_Distance(pos, &mob->pos) <= radius) {
+            return mob;
+        }
+    }
+
+    return NULL;
+}
+
 int FleetUtil_FindNthClosestMobP(MobPVec *mobps, const FPoint *pos, int n)
 {
     ASSERT(mobps != NULL);
