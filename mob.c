@@ -146,6 +146,7 @@ void Mob_Init(Mob *mob, MobType t)
     mob->alive = TRUE;
     mob->playerID = PLAYER_ID_INVALID;
     mob->mobid = MOB_ID_INVALID;
+    mob->parentMobid = MOB_ID_INVALID;
     mob->type = t;
     mob->fuel = MobType_GetMaxFuel(t);
     mob->health = MobType_GetMaxHealth(t);

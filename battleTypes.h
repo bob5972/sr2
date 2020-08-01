@@ -94,6 +94,7 @@ typedef struct Mob {
     uint birthTick;
     int rechargeTime;
     int lootCredits;
+    MobID parentMobid;
     MobCmd cmd;
 
     /*
