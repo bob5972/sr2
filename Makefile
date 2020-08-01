@@ -45,6 +45,7 @@ C_SOURCES = main.c \
             battle.c \
             bobFleet.c \
             cloudFleet.c \
+	    cowardFleet.c \
             display.c \
             dummyFleet.c \
             fighterFleet.c \

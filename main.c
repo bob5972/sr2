@@ -420,6 +420,10 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
+        mainData.players[p].playerName = "CowardFleet";
+        mainData.players[p].aiType = FLEET_AI_COWARD;
+        p++;
+
         mainData.players[p].playerName = "FighterFleet";
         mainData.players[p].aiType = FLEET_AI_FF;
         p++;
