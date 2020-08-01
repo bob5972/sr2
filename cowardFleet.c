@@ -223,64 +223,25 @@ static void CowardFleetRunAITick(void *aiHandle)
         }
     }
 
+    /*
+     * Move Non-Fighters first, since they're simpler and modify
+     * the sensor state.
+     */
     MobIt_Start(&ai->mobs, &mit);
     while (MobIt_HasNext(&mit)) {
         Mob *mob = MobIt_Next(&mit);
-
-        if (mob->type == MOB_TYPE_FIGHTER) {
-            CowardShip *ship = CowardFleetGetShip(sf, mob->mobid);
-            Mob *lootTarget = NULL;
-            Mob *enemyTarget = NULL;
-
-            ASSERT(ship != NULL);
-            ASSERT(ship->mobid == mob->mobid);
-
-            lootTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                     MOB_FLAG_LOOT_BOX);
-
-            if (lootTarget != NULL) {
-                if (FPoint_Distance(&mob->pos, &lootTarget->pos) > scanningRange) {
-                    lootTarget = NULL;
-                }
+        if (mob->type == MOB_TYPE_LOOT_BOX) {
+            Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
+                                                   MOB_FLAG_SHIP);
+            if (friend != NULL) {
+                mob->cmd.target = friend->pos;
             }
 
-            {
-                enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                          MOB_FLAG_SHIP);
-                if (enemyTarget != NULL) {
-                    if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
-                        mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                        CowardFleetAddTarget(sf, enemyTarget);
-
-                        if (enemyTarget->type == MOB_TYPE_BASE) {
-                            float range = MIN(firingRange, scanningRange) - 1;
-                            FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
-                                                         &enemyTarget->pos, range);
-                        }
-                    }
-                }
-
-                enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                          MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE);
-                if (enemyTarget != NULL) {
-                    if (FPoint_Distance(&mob->pos, &enemyTarget->pos) >= firingRange) {
-                        enemyTarget = NULL;
-                    }
-                }
-            }
-
-            if (enemyTarget != NULL) {
-                // Run away!
-                float dx = enemyTarget->pos.x - mob->pos.x;
-                float dy = enemyTarget->pos.y - mob->pos.y;
-                mob->cmd.target.x = mob->pos.x - dx;
-                mob->cmd.target.y = mob->pos.y - dy;
-            } else if (lootTarget != NULL) {
-                mob->cmd.target = lootTarget->pos;
-            } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-                mob->cmd.target.x = RandomState_Float(&sf->rs, 0.0f, bp->width);
-                mob->cmd.target.y = RandomState_Float(&sf->rs, 0.0f, bp->height);
-            }
+            /*
+             * Add this mob to the sensor list so that we'll
+             * steer towards it.
+             */
+            MobSet_Add(&ai->sensors, mob);
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = MOB_FLAG_SHIP;
             float range = firingRange + 5;
@@ -295,18 +256,77 @@ static void CowardFleetRunAITick(void *aiHandle)
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;
             }
-        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
-            Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
-                                                   MOB_FLAG_SHIP);
-            if (friend != NULL) {
-                mob->cmd.target = friend->pos;
+        } else {
+            ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        }
+    }
+
+    /*
+     * Move Fighters
+     */
+    MobIt_Start(&ai->mobs, &mit);
+    while (MobIt_HasNext(&mit)) {
+        Mob *mob = MobIt_Next(&mit);
+
+        if (mob->type != MOB_TYPE_FIGHTER) {
+            continue;
+        }
+
+        CowardShip *ship = CowardFleetGetShip(sf, mob->mobid);
+        Mob *lootTarget = NULL;
+        Mob *enemyTarget = NULL;
+
+        ASSERT(ship != NULL);
+        ASSERT(ship->mobid == mob->mobid);
+
+        lootTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                    MOB_FLAG_LOOT_BOX);
+
+        if (lootTarget != NULL) {
+            if (FPoint_Distance(&mob->pos, &lootTarget->pos) > scanningRange) {
+                lootTarget = NULL;
+            }
+        }
+
+        {
+            enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                        MOB_FLAG_SHIP);
+            if (enemyTarget != NULL) {
+                if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
+                    mob->cmd.spawnType = MOB_TYPE_MISSILE;
+                    CowardFleetAddTarget(sf, enemyTarget);
+
+                    if (enemyTarget->type == MOB_TYPE_BASE) {
+                        /*
+                            * Be more aggressive to bases.
+                            */
+                        float range = MIN(firingRange, scanningRange) - 1;
+                        FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
+                                                        &enemyTarget->pos, range);
+                    }
+                }
             }
 
-            /*
-             * Add this mob to the sensor list so that we'll
-             * steer towards it.
-             */
-            MobSet_Add(&ai->sensors, mob);
+            enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                        MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE);
+            if (enemyTarget != NULL) {
+                if (FPoint_Distance(&mob->pos, &enemyTarget->pos) >= firingRange) {
+                    enemyTarget = NULL;
+                }
+            }
+        }
+
+        if (enemyTarget != NULL) {
+            // Run away!
+            float dx = enemyTarget->pos.x - mob->pos.x;
+            float dy = enemyTarget->pos.y - mob->pos.y;
+            mob->cmd.target.x = mob->pos.x - dx;
+            mob->cmd.target.y = mob->pos.y - dy;
+        } else if (lootTarget != NULL) {
+            mob->cmd.target = lootTarget->pos;
+        } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+            mob->cmd.target.x = RandomState_Float(&sf->rs, 0.0f, bp->width);
+            mob->cmd.target.y = RandomState_Float(&sf->rs, 0.0f, bp->height);
         }
     }
 
