@@ -32,6 +32,7 @@
 
 typedef struct FighterShip {
     MobID mobid;
+    FPoint targetPos;
 //     FighterState state;
 } FighterShip;
 
@@ -94,6 +95,14 @@ static void *FighterFleetMobSpawned(void *aiHandle, Mob *m)
         ship = MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
         return ship;
+    } else if (m->type == MOB_TYPE_MISSILE) {
+        MobID parentMobid = m->parentMobid;
+        FighterShip *parent = FighterFleetGetShip(sf, parentMobid);
+        if (parent != NULL) {
+            m->cmd.target = parent->targetPos;
+        }
+
+        return NULL;
     } else {
         /*
          * We don't track anything else.
@@ -122,8 +131,10 @@ static FighterShip *FighterFleetGetShip(FighterFleetData *sf, MobID mobid)
 {
     FighterShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
-    ASSERT(s != NULL);
-    ASSERT(s->mobid == mobid);
+    if (s != NULL) {
+        ASSERT(s->mobid == mobid);
+    }
+
     return s;
 }
 
@@ -216,7 +227,7 @@ static void FighterFleetRunAITick(void *aiHandle)
         if (enemyTarget != NULL) {
             if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
                 mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                FighterFleetAddTarget(sf, enemyTarget);
+                ship->targetPos = enemyTarget->pos;
 
                 if (enemyTarget->type == MOB_TYPE_BASE) {
                     /*
