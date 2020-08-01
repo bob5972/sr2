@@ -303,11 +303,11 @@ static void CowardFleetRunAITick(void *aiHandle)
 
                 if (enemyTarget->type == MOB_TYPE_BASE) {
                     /*
-                        * Be more aggressive to bases.
-                        */
+                    * Be more aggressive to bases.
+                    */
                     float range = MIN(firingRange, scanningRange) - 1;
                     FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
-                                                    &enemyTarget->pos, range);
+                                                 &enemyTarget->pos, range);
                 }
             }
         }
