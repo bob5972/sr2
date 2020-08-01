@@ -21,10 +21,9 @@
 #include "IntMap.h"
 #include "battle.h"
 
-typedef struct FighterShip {
+typedef struct CowardShip {
     MobID mobid;
-//     FighterState state;
-} FighterShip;
+} CowardShip;
 
 typedef struct CowardFleetData {
     FleetAI *ai;
@@ -36,7 +35,7 @@ static void CowardFleetDestroy(void *aiHandle);
 static void CowardFleetRunAITick(void *aiHandle);
 static void *CowardFleetMobSpawned(void *aiHandle, Mob *m);
 static void CowardFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
-static FighterShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid);
+static CowardShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid);
 
 void CowardFleet_GetOps(FleetAIOps *ops)
 {
@@ -81,7 +80,7 @@ static void *CowardFleetMobSpawned(void *aiHandle, Mob *m)
     ASSERT(m != NULL);
 
     if (m->type == MOB_TYPE_FIGHTER) {
-        FighterShip *ship;
+        CowardShip *ship;
         ship = MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
         return ship;
@@ -103,15 +102,15 @@ static void CowardFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
     }
 
     CowardFleetData *sf = aiHandle;
-    FighterShip *ship = aiMobHandle;
+    CowardShip *ship = aiMobHandle;
 
     ASSERT(sf != NULL);
     free(ship);
 }
 
-static FighterShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid)
+static CowardShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid)
 {
-    FighterShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    CowardShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
     ASSERT(s != NULL);
     ASSERT(s->mobid == mobid);
@@ -136,7 +135,7 @@ static void CowardFleetRunAITick(void *aiHandle)
         Mob *mob = MobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
-            FighterShip *ship = CowardFleetGetShip(sf, mob->mobid);
+            CowardShip *ship = CowardFleetGetShip(sf, mob->mobid);
             Mob *lootTarget = NULL;
             Mob *enemyTarget = NULL;
 
