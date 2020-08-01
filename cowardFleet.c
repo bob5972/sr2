@@ -25,10 +25,15 @@ typedef struct CowardShip {
     MobID mobid;
 } CowardShip;
 
+typedef struct CowardTarget {
+    Mob mob;
+    uint seenTick;
+} CowardTarget;
+
 typedef struct CowardFleetData {
     FleetAI *ai;
     RandomState rs;
-    MobSet lastTargets;
+    MBVector tvec;
 } CowardFleetData;
 
 static void *CowardFleetCreate(FleetAI *ai);
@@ -63,7 +68,7 @@ static void *CowardFleetCreate(FleetAI *ai)
 
     RandomState_CreateWithSeed(&sf->rs, ai->seed);
 
-    MobSet_Create(&sf->lastTargets);
+    MBVector_CreateEmpty(&sf->tvec, sizeof(CowardTarget));
 
     return sf;
 }
@@ -72,9 +77,68 @@ static void CowardFleetDestroy(void *handle)
 {
     CowardFleetData *sf = handle;
     ASSERT(sf != NULL);
-    MobSet_Destroy(&sf->lastTargets);
+    MBVector_Destroy(&sf->tvec);
     RandomState_Destroy(&sf->rs);
     free(sf);
+}
+
+static void CowardFleetUpdateTarget(CowardFleetData *sf, Mob *m)
+{
+    ASSERT(sf != NULL);
+    ASSERT(m != NULL);
+
+    for (uint i = 0; i < MBVector_Size(&sf->tvec); i++) {
+        CowardTarget *cur = MBVector_GetPtr(&sf->tvec, i);
+        if (cur->mob.mobid == m->mobid) {
+            cur->mob = *m;
+            cur->seenTick = sf->ai->tick;
+            return;
+        }
+    }
+}
+
+static void CowardFleetAddTarget(CowardFleetData *sf, Mob *m)
+{
+    ASSERT(sf != NULL);
+    ASSERT(m != NULL);
+
+    for (uint i = 0; i < MBVector_Size(&sf->tvec); i++) {
+        CowardTarget *cur = MBVector_GetPtr(&sf->tvec, i);
+        if (cur->mob.mobid == m->mobid) {
+            /*
+             * If it's already here, don't re-add it.
+             * We already processed new scan data in UpdateTarget.
+             */
+            return;
+        }
+    }
+
+    MBVector_Grow(&sf->tvec);
+    uint index = MBVector_Size(&sf->tvec) - 1;
+    CowardTarget *t = MBVector_GetPtr(&sf->tvec, index);
+    t->mob = *m;
+    t->seenTick = sf->ai->tick;
+}
+
+static void CowardFleetCleanTargets(CowardFleetData *sf)
+{
+    ASSERT(sf != NULL);
+
+    uint i = 0;
+
+    while (i < MBVector_Size(&sf->tvec)) {
+        CowardTarget *cur = MBVector_GetPtr(&sf->tvec, i);
+
+        ASSERT(sf->ai->tick >= cur->seenTick);
+        if (sf->ai->tick - cur->seenTick > 2) {
+            uint lastIndex = MBVector_Size(&sf->tvec) - 1;
+            CowardTarget *last = MBVector_GetPtr(&sf->tvec, lastIndex);
+            *cur = *last;
+            MBVector_Shrink(&sf->tvec);
+        } else {
+            i++;
+        }
+    }
 }
 
 static void *CowardFleetMobSpawned(void *aiHandle, Mob *m)
@@ -135,10 +199,17 @@ static void CowardFleetRunAITick(void *aiHandle)
 
     ASSERT(ai->player.aiType == FLEET_AI_COWARD);
 
-    MobIt_Start(&sf->lastTargets, &mit);
+    MobIt_Start(&ai->sensors, &mit);
     while (MobIt_HasNext(&mit)) {
-        Mob *target = MobIt_Next(&mit);
-        MobID mobid = target->mobid;
+        Mob *m = MobIt_Next(&mit);
+        CowardFleetUpdateTarget(sf, m);
+    }
+
+    uint minVecSize = MBVector_Size(&sf->tvec) + MobSet_Size(&ai->sensors);
+    MBVector_EnsureCapacity(&sf->tvec, minVecSize);
+    MBVector_Pin(&sf->tvec);
+    for (uint i = 0; i < MBVector_Size(&sf->tvec); i++) {
+        CowardTarget *t = MBVector_GetPtr(&sf->tvec, i);
 
         /*
          * Add any targets found in the last round that have since
@@ -147,11 +218,10 @@ static void CowardFleetRunAITick(void *aiHandle)
          * Since we probably just ran away, this gives the missiles we
          * just shot a place to aim.
          */
-        if (MobSet_Get(&ai->sensors, mobid) == NULL) {
-            MobSet_Add(&ai->sensors, target);
+        if (MobSet_Get(&ai->sensors, t->mob.mobid) == NULL) {
+            MobSet_Add(&ai->sensors, &t->mob);
         }
     }
-    MobSet_MakeEmpty(&sf->lastTargets);
 
     MobIt_Start(&ai->mobs, &mit);
     while (MobIt_HasNext(&mit)) {
@@ -180,7 +250,7 @@ static void CowardFleetRunAITick(void *aiHandle)
                 if (enemyTarget != NULL) {
                     if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                        MobSet_Add(&sf->lastTargets, enemyTarget);
+                        CowardFleetAddTarget(sf, enemyTarget);
 
                         if (enemyTarget->type == MOB_TYPE_BASE) {
                             float range = MIN(firingRange, scanningRange) - 1;
@@ -213,7 +283,7 @@ static void CowardFleetRunAITick(void *aiHandle)
             }
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = MOB_FLAG_SHIP;
-            float range = firingRange;
+            float range = firingRange + 5;
             Mob *target = FleetUtil_FindClosestMobInRange(&ai->sensors, &mob->pos,
                                                           scanFilter, range);
             if (target != NULL) {
@@ -239,4 +309,10 @@ static void CowardFleetRunAITick(void *aiHandle)
             MobSet_Add(&ai->sensors, mob);
         }
     }
+
+    /*
+     * Clear out the old targets.
+     */
+    MBVector_Unpin(&sf->tvec);
+    CowardFleetCleanTargets(sf);
 }

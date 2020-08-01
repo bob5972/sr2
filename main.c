@@ -486,6 +486,13 @@ void MainConstructScenario(void)
     }
 }
 
+void MainUnitTests()
+{
+    Warning("Starting Unit Tests ...\n");
+    MobSet_UnitTest();
+    Warning("Done!\n");
+}
+
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
@@ -499,6 +506,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-L", "--tickLimit",  TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads", TRUE,  "Number of engine threads"      },
         { "-R", "--reuseSeed",  FALSE, "Reuse the seed across battles" },
+        { "-u", "--unitTests",  FALSE, "Run unit tests"                },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -506,6 +514,11 @@ void MainParseCmdLine(int argc, char **argv)
     if (MBOpt_IsPresent("help")) {
         MBOpt_PrintHelpText();
         exit(1);
+    }
+
+    if (MBOpt_IsPresent("unitTests")) {
+        MainUnitTests();
+        exit(0);
     }
 
     mainData.headless = MBOpt_GetBool("headless");

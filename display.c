@@ -390,6 +390,8 @@ void Display_Main(void)
                     } else if (event.key.keysym.sym == SDLK_ESCAPE ||
                                event.key.keysym.sym == SDLK_q) {
                         done = 1;
+                    } else if (event.key.keysym.sym == SDLK_SPACE) {
+                        display.paused = !display.paused;
                     }
                     break;
                 default:

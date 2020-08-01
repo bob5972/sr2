@@ -139,6 +139,7 @@ void Battle_Destroy(Battle *battle)
 static bool BattleCheckMobInvariants(Battle *battle, const Mob *mob)
 {
     ASSERT(Mob_CheckInvariants(mob));
+    ASSERT(mob->image == MOB_IMAGE_FULL);
     ASSERT(mob->pos.x >= 0.0f);
     ASSERT(mob->pos.y >= 0.0f);
     ASSERT(mob->pos.x <= (uint32)battle->bsc.bp.width);
@@ -233,7 +234,6 @@ static void BattleRunMobSpawn(Battle *battle, Mob *mob)
                              mob->playerID, &mob->pos);
     spawn->cmd.target = mob->cmd.target;
     mob->rechargeTime = SPAWN_RECHARGE_TICKS;
-    mob->cmd.spawnType = MOB_TYPE_INVALID;
 }
 
 static void BattleRunMobMove(Battle *battle, Mob *mob)
@@ -520,6 +520,7 @@ void Battle_RunTick(Battle *battle)
     for (uint32 i = 0; i < MobVector_Size(&battle->mobs); i++) {
         Mob *mob = MobVector_GetPtr(&battle->mobs, i);
         BattleRunMobSpawn(battle, mob);
+        mob->cmd.spawnType = MOB_TYPE_INVALID;
     }
 
     // Process collisions

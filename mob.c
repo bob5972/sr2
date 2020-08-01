@@ -266,6 +266,7 @@ void MobIt_Start(MobSet *ms, MobIt *mit)
 bool MobIt_HasNext(MobIt *mit)
 {
     ASSERT(mit != NULL);
+    ASSERT(mit->i >= 0);
     return mit->i < MobPVec_Size(&mit->ms->pv);
 }
 
@@ -273,18 +274,86 @@ Mob *MobIt_Next(MobIt *mit)
 {
     Mob *mob;
     ASSERT(MobIt_HasNext(mit));
-    mob = MobPVec_GetValue(&mit->ms->pv, mit->i++);
+
+    mob = MobPVec_GetValue(&mit->ms->pv, mit->i);
+    mit->i++;
 
     ASSERT(mob != NULL);
     mit->lastMobid = mob->mobid;
+
+    ASSERT(MobSet_Get(mit->ms, mob->mobid) == mob);
     return mob;
 }
 
 void MobIt_Remove(MobIt *mit)
 {
+    MobID mobid = mit->lastMobid;
     ASSERT(mit->i > 0);
-    ASSERT(mit->lastMobid != MOB_ID_INVALID);
+    ASSERT(mobid != MOB_ID_INVALID);
+    ASSERT(MobSet_Get(mit->ms, mobid) != NULL);
+
     mit->i--;
-    MobSet_Remove(mit->ms, mit->lastMobid);
+    MobSet_Remove(mit->ms, mobid);
     mit->lastMobid = MOB_ID_INVALID;
+
+    ASSERT(MobSet_Get(mit->ms, mobid) == NULL);
+}
+
+
+void MobSet_UnitTest()
+{
+    Mob mobs[100];
+    MobSet ms;
+    MobIt mit;
+
+    for (uint i = 0; i < ARRAYSIZE(mobs); i++) {
+        mobs[i].mobid = i;
+    }
+
+    MobSet_Create(&ms);
+    MobSet_Destroy(&ms);
+
+    MobSet_Create(&ms);
+    MobSet_Add(&ms, &mobs[1]);
+    ASSERT(MobSet_Get(&ms, 1) != NULL);
+    ASSERT(MobSet_Get(&ms, 1) != NULL);
+    MobSet_Add(&ms, &mobs[1]);
+    ASSERT(MobSet_Get(&ms, 1) != NULL);
+
+    MobIt_Start(&ms, &mit);
+    while (MobIt_HasNext(&mit)) {
+        MobIt_Next(&mit);
+        MobIt_Remove(&mit);
+    }
+    ASSERT(!MobIt_HasNext(&mit));
+    MobSet_Destroy(&ms);
+
+    MobSet_Create(&ms);
+    MobSet_Add(&ms, &mobs[0]);
+    ASSERT(MobSet_Get(&ms, 0) != NULL);
+    MobSet_Remove(&ms, 0);
+    ASSERT(MobSet_Get(&ms, 0) == NULL);
+    MobSet_Add(&ms, &mobs[1]);
+    ASSERT(MobSet_Get(&ms, 1) != NULL);
+    MobSet_Add(&ms, &mobs[2]);
+    ASSERT(MobSet_Get(&ms, 1) != NULL);
+    ASSERT(MobSet_Get(&ms, 2) != NULL);
+    MobSet_Remove(&ms, 2);
+    ASSERT(MobSet_Get(&ms, 2) == NULL);
+    MobSet_Destroy(&ms);
+
+    MobSet_Create(&ms);
+    for (uint i = 0; i < ARRAYSIZE(mobs); i++) {
+        MobSet_Add(&ms, &mobs[i]);
+
+        MobIt_Start(&ms, &mit);
+        while (MobIt_HasNext(&mit)) {
+            Mob *m = MobIt_Next(&mit);
+            if (m->mobid % 2 == 0) {
+                MobIt_Remove(&mit);
+            }
+        }
+        ASSERT(!MobIt_HasNext(&mit));
+    }
+    MobSet_Destroy(&ms);
 }
