@@ -279,8 +279,11 @@ static void CowardFleetRunAITick(void *aiHandle)
         ASSERT(ship != NULL);
         ASSERT(ship->mobid == mob->mobid);
 
+        /*
+         * Find loot.
+         */
         lootTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                    MOB_FLAG_LOOT_BOX);
+                                                 MOB_FLAG_LOOT_BOX);
 
         if (lootTarget != NULL) {
             if (FPoint_Distance(&mob->pos, &lootTarget->pos) > scanningRange) {
@@ -288,31 +291,35 @@ static void CowardFleetRunAITick(void *aiHandle)
             }
         }
 
-        {
-            enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                        MOB_FLAG_SHIP);
-            if (enemyTarget != NULL) {
-                if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
-                    mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                    CowardFleetAddTarget(sf, enemyTarget);
+        /*
+         * Find enemy targets to shoot.
+         */
+        enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                  MOB_FLAG_SHIP);
+        if (enemyTarget != NULL) {
+            if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
+                mob->cmd.spawnType = MOB_TYPE_MISSILE;
+                CowardFleetAddTarget(sf, enemyTarget);
 
-                    if (enemyTarget->type == MOB_TYPE_BASE) {
-                        /*
-                            * Be more aggressive to bases.
-                            */
-                        float range = MIN(firingRange, scanningRange) - 1;
-                        FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
-                                                        &enemyTarget->pos, range);
-                    }
+                if (enemyTarget->type == MOB_TYPE_BASE) {
+                    /*
+                        * Be more aggressive to bases.
+                        */
+                    float range = MIN(firingRange, scanningRange) - 1;
+                    FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
+                                                    &enemyTarget->pos, range);
                 }
             }
+        }
 
-            enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                        MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE);
-            if (enemyTarget != NULL) {
-                if (FPoint_Distance(&mob->pos, &enemyTarget->pos) >= firingRange) {
-                    enemyTarget = NULL;
-                }
+        /*
+         * Find enemy targets to run away from.
+         */
+        enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                  MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE);
+        if (enemyTarget != NULL) {
+            if (FPoint_Distance(&mob->pos, &enemyTarget->pos) >= firingRange) {
+                enemyTarget = NULL;
             }
         }
 
