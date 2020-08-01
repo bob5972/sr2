@@ -164,7 +164,8 @@ static int BattleCalcLootCredits(Battle *battle, const Mob *m)
     return (int)(battle->bsc.bp.lootDropRate * loot);
 }
 
-static Mob *BattleQueueSpawn(Battle *battle, MobType type,
+static Mob *BattleQueueSpawn(Battle *battle, MobID parentMobid,
+                             MobType type,
                              PlayerID p, const FPoint *pos)
 {
     Mob *spawn;
@@ -179,6 +180,7 @@ static Mob *BattleQueueSpawn(Battle *battle, MobType type,
     spawn->pos = *pos;
     spawn->cmd.target = *pos;
     spawn->birthTick = battle->bs.tick;
+    spawn->parentMobid = parentMobid;
 
     battle->bs.spawns++;
     if (spawn->type != MOB_TYPE_LOOT_BOX &&
@@ -230,7 +232,8 @@ static void BattleRunMobSpawn(Battle *battle, Mob *mob)
 
     battle->bs.players[mob->playerID].credits -=
         MobType_GetCost(mob->cmd.spawnType);
-    spawn = BattleQueueSpawn(battle, mob->cmd.spawnType,
+    spawn = BattleQueueSpawn(battle, mob->mobid,
+                             mob->cmd.spawnType,
                              mob->playerID, &mob->pos);
     spawn->cmd.target = mob->cmd.target;
     mob->rechargeTime = SPAWN_RECHARGE_TICKS;
@@ -361,7 +364,8 @@ BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
             oMob->alive = FALSE;
             int lootCredits = BattleCalcLootCredits(battle, oMob);
             if (lootCredits > 0) {
-                Mob *spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
+                Mob *spawn = BattleQueueSpawn(battle, oMob->mobid,
+                                              MOB_TYPE_LOOT_BOX,
                                               oMob->playerID, &oMob->pos);
                 spawn->lootCredits = lootCredits;
             }
@@ -371,7 +375,8 @@ BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
             int lootCredits = BattleCalcLootCredits(battle, iMob);
             if (lootCredits > 0) {
                 Mob *spawn;
-                spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
+                spawn = BattleQueueSpawn(battle, iMob->mobid,
+                                         MOB_TYPE_LOOT_BOX,
                                          iMob->playerID,
                                          &iMob->pos);
                 spawn->lootCredits = lootCredits;
@@ -511,7 +516,8 @@ void Battle_RunTick(Battle *battle)
                                   battle->bsc.bp.width);
         pos.y = RandomState_Float(&battle->rs, 0.0f,
                                   battle->bsc.bp.height);
-        Mob *spawn = BattleQueueSpawn(battle, MOB_TYPE_LOOT_BOX,
+        Mob *spawn = BattleQueueSpawn(battle, MOB_ID_INVALID,
+                                      MOB_TYPE_LOOT_BOX,
                                       PLAYER_ID_NEUTRAL, &pos);
         spawn->lootCredits = loot;
     }
