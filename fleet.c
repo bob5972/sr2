@@ -165,6 +165,9 @@ static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
         case FLEET_AI_GATHER:
             GatherFleet_GetOps(ops);
             break;
+        case FLEET_AI_COWARD:
+            CowardFleet_GetOps(ops);
+            break;
         case FLEET_AI_FF:
             FighterFleet_GetOps(ops);
             break;

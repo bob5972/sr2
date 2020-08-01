@@ -389,36 +389,22 @@ void MainConstructScenario(void)
     p++;
 
     if (mainData.tournament) {
-        //mainData.players[p].aiType = FLEET_AI_DUMMY;
-        //p++;
+        uint i = FLEET_AI_NEUTRAL + 1;
+        ASSERT(p == FLEET_AI_NEUTRAL);
 
-        mainData.players[p].aiType = FLEET_AI_SIMPLE;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_GATHER;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_CLOUD;
-        mainData.players[p].mreg = MBRegistry_Alloc();
-        MBRegistry_Put(mainData.players[p].mreg, "CrazyMissiles", "TRUE");
-        p++;
-
-        mainData.players[p].mreg = MBRegistry_Alloc();
-        MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
-        MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
-        MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
-        mainData.players[p].aiType = FLEET_AI_MAPPER;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_COWARD;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_FF;
-        p++;
+        while (i < FLEET_AI_MAX) {
+            mainData.players[p].aiType = i;
+            i++;
+            p++;
+        }
     } else {
+//         mainData.players[p].mreg = MBRegistry_Alloc();
+//         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
+//         MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
+//         MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
+//         mainData.players[p].aiType = FLEET_AI_MAPPER;
+//         p++;
+
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
