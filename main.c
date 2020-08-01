@@ -385,30 +385,24 @@ void MainConstructScenario(void)
      * Otherwise these are in rough order of difficulty.
      */
     p = 0;
-    mainData.players[p].playerName = "Neutral";
     mainData.players[p].aiType = FLEET_AI_NEUTRAL;
     p++;
 
     if (mainData.tournament) {
-        //mainData.players[p].playerName = "DummyFleet";
         //mainData.players[p].aiType = FLEET_AI_DUMMY;
         //p++;
 
-        mainData.players[p].playerName = "SimpleFleet";
         mainData.players[p].aiType = FLEET_AI_SIMPLE;
         p++;
 
-        mainData.players[p].playerName = "GatherFleet";
         mainData.players[p].aiType = FLEET_AI_GATHER;
         p++;
 
-        mainData.players[p].playerName = "CloudFleet";
         mainData.players[p].aiType = FLEET_AI_CLOUD;
         mainData.players[p].mreg = MBRegistry_Alloc();
         MBRegistry_Put(mainData.players[p].mreg, "CrazyMissiles", "TRUE");
         p++;
 
-        mainData.players[p].playerName = "MapperFleet";
         mainData.players[p].mreg = MBRegistry_Alloc();
         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
         MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
@@ -416,23 +410,18 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_MAPPER;
         p++;
 
-        mainData.players[p].playerName = "BobFleet";
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
-        mainData.players[p].playerName = "CowardFleet";
         mainData.players[p].aiType = FLEET_AI_COWARD;
         p++;
 
-        mainData.players[p].playerName = "FighterFleet";
         mainData.players[p].aiType = FLEET_AI_FF;
         p++;
     } else {
-        mainData.players[p].playerName = "BobFleet";
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
-        mainData.players[p].playerName = "FighterFleet";
         mainData.players[p].aiType = FLEET_AI_FF;
         p++;
     }
@@ -442,6 +431,10 @@ void MainConstructScenario(void)
 
     for (uint i = 0; i < p; i++) {
         mainData.players[i].playerUID = i;
+        if (mainData.players[i].playerName == NULL) {
+            FleetAIType aiType = mainData.players[i].aiType;
+            mainData.players[i].playerName = Fleet_GetName(aiType);
+        }
     }
 
     if (!mainData.tournament) {

@@ -33,7 +33,7 @@ typedef struct Fleet {
     RandomState rs;
 } Fleet;
 
-static void FleetGetOps(FleetAI *ai);
+static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops);
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
 
 Fleet *Fleet_Create(const BattleScenario *bsc,
@@ -78,7 +78,7 @@ Fleet *Fleet_Create(const BattleScenario *bsc,
         fleet->ais[i].bp = fleet->bsc.bp;
         fleet->ais[i].seed = RandomState_Uint64(&fleet->rs);
 
-        FleetGetOps(&fleet->ais[i]);
+        FleetGetOps(fleet->ais[i].player.aiType, &fleet->ais[i].ops);
         if (fleet->ais[i].ops.createFleet != NULL) {
             fleet->ais[i].aiHandle = fleet->ais[i].ops.createFleet(&fleet->ais[i]);
         } else {
@@ -130,35 +130,46 @@ void Fleet_Destroy(Fleet *fleet)
     free(fleet);
 }
 
-static void FleetGetOps(FleetAI *ai)
+const char *Fleet_GetName(FleetAIType aiType)
 {
-    MBUtil_Zero(&ai->ops, sizeof(ai->ops));
+    FleetAIOps ops;
+    FleetGetOps(aiType, &ops);
+    return ops.aiName;
+}
 
-    switch(ai->player.aiType) {
+
+static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
+{
+    MBUtil_Zero(ops, sizeof(*ops));
+
+    switch(aiType) {
         case FLEET_AI_NEUTRAL:
+            DummyFleet_GetOps(ops);
+            ops->aiName = "Neutral";
+            break;
         case FLEET_AI_DUMMY:
-            DummyFleet_GetOps(&ai->ops);
+            DummyFleet_GetOps(ops);
             break;
         case FLEET_AI_SIMPLE:
-            SimpleFleet_GetOps(&ai->ops);
+            SimpleFleet_GetOps(ops);
             break;
         case FLEET_AI_BOB:
-            BobFleet_GetOps(&ai->ops);
+            BobFleet_GetOps(ops);
             break;
         case FLEET_AI_MAPPER:
-            MapperFleet_GetOps(&ai->ops);
+            MapperFleet_GetOps(ops);
             break;
         case FLEET_AI_CLOUD:
-            CloudFleet_GetOps(&ai->ops);
+            CloudFleet_GetOps(ops);
             break;
         case FLEET_AI_GATHER:
-            GatherFleet_GetOps(&ai->ops);
+            GatherFleet_GetOps(ops);
             break;
         case FLEET_AI_FF:
-            FighterFleet_GetOps(&ai->ops);
+            FighterFleet_GetOps(ops);
             break;
         default:
-            PANIC("Unknown AI type=%d\n", ai->player.aiType);
+            PANIC("Unknown AI type=%d\n", aiType);
     }
 }
 
