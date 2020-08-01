@@ -133,12 +133,9 @@ static void FighterFleetRunAITick(void *aiHandle)
     FighterFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
-    uint targetScanFilter = MOB_FLAG_SHIP;
-    IntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
-
-    IntMap_Create(&targetMap);
+    float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
 
     ASSERT(ai->player.aiType == FLEET_AI_FF);
 
@@ -149,37 +146,47 @@ static void FighterFleetRunAITick(void *aiHandle)
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             FighterShip *ship = FighterFleetGetShip(sf, mob->mobid);
-            Mob *target = NULL;
+            Mob *lootTarget = NULL;
+            Mob *enemyTarget = NULL;
 
             ASSERT(ship != NULL);
             ASSERT(ship->mobid == mob->mobid);
 
-            /*
-            * Avoid having all the fighters rush to the same loot box.
-            */
-            target = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                 MOB_FLAG_LOOT_BOX);
-            if (target != NULL &&
-                IntMap_Increment(&targetMap, target->mobid) > 1) {
-                /*
-                    * Ideally we find the next best target, but for now just
-                    * go back to random movement.
-                    */
-                target = NULL;
+            lootTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                     MOB_FLAG_LOOT_BOX);
+
+            if (lootTarget != NULL) {
+                if (FPoint_Distance(&mob->pos, &lootTarget->pos) > scanningRange) {
+                    lootTarget = NULL;
+                }
             }
 
             {
-                Mob *closeTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                               targetScanFilter);
-                if (closeTarget != NULL) {
-                    if (FPoint_Distance(&mob->pos, &closeTarget->pos) < firingRange) {
+                enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                          MOB_FLAG_SHIP);
+                if (enemyTarget != NULL) {
+                    if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
                         mob->cmd.spawnType = MOB_TYPE_MISSILE;
+                    }
+                }
+
+                enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                          MOB_FLAG_SHIP | MOB_FLAG_MISSILE);
+                if (enemyTarget != NULL) {
+                    if (FPoint_Distance(&mob->pos, &enemyTarget->pos) >= firingRange) {
+                        enemyTarget = NULL;
                     }
                 }
             }
 
-            if (target != NULL) {
-                mob->cmd.target = target->pos;
+            if (enemyTarget != NULL) {
+                // Run away!
+                float dx = enemyTarget->pos.x - mob->pos.x;
+                float dy = enemyTarget->pos.y - mob->pos.y;
+                mob->cmd.target.x = mob->pos.x - dx;
+                mob->cmd.target.y = mob->pos.y - dy;
+            } else if (lootTarget != NULL) {
+                mob->cmd.target = lootTarget->pos;
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 mob->cmd.target.x = RandomState_Float(&sf->rs, 0.0f, bp->width);
                 mob->cmd.target.y = RandomState_Float(&sf->rs, 0.0f, bp->height);
@@ -210,6 +217,4 @@ static void FighterFleetRunAITick(void *aiHandle)
             MobSet_Add(&ai->sensors, mob);
         }
     }
-
-    IntMap_Destroy(&targetMap);
 }
