@@ -88,7 +88,7 @@ static void SimpleFleetRunAI(void *handle)
         sf->enemyBaseAge = 0;
     } else if (sf->enemyBase.type == MOB_TYPE_BASE &&
                sf->enemyBaseAge < 200) {
-        MobSet_Add(&ai->sensors, &sf->enemyBase);
+        MobPSet_Add(&ai->sensors, &sf->enemyBase);
         sf->enemyBaseAge++;
     }
 

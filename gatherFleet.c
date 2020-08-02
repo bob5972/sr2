@@ -172,7 +172,7 @@ static void GatherFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static GatherShip *GatherFleetGetShip(GatherFleetData *sf, MobID mobid)
 {
-    GatherShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    GatherShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
     ASSERT(s != NULL);
     ASSERT(s->mobid == mobid);
     return s;

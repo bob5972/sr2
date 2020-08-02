@@ -215,7 +215,7 @@ static void MapperFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static MapperShip *MapperFleetGetShip(MapperFleetData *sf, MobID mobid)
 {
-    MapperShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    MapperShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
     ASSERT(s != NULL);
     ASSERT(s->mobid == mobid);
     return s;
@@ -358,7 +358,7 @@ static void MapperFleetRunAITick(void *aiHandle)
              * Add this mob to the sensor list so that we'll
              * steer towards it.
              */
-            MobSet_Add(&ai->sensors, mob);
+            MobPSet_Add(&ai->sensors, mob);
         }
     }
 
@@ -396,7 +396,7 @@ static void MapperFleetRunAITick(void *aiHandle)
         if ((sf->tileFlags[tileIndex] & MAP_TILE_ENEMY_BASE) == 0) {
             sf->enemyBase.type = MOB_TYPE_INVALID;
         } else {
-            MobSet_Add(&ai->sensors, &sf->enemyBase);
+            MobPSet_Add(&ai->sensors, &sf->enemyBase);
         }
     }
 

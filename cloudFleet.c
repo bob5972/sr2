@@ -131,7 +131,7 @@ static void CloudFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static CloudShip *CloudFleetGetShip(CloudFleetData *sf, MobID mobid)
 {
-    CloudShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    CloudShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
     ASSERT(s != NULL);
     ASSERT(s->mobid == mobid);
     return s;
@@ -248,7 +248,7 @@ static void CloudFleetRunAITick(void *aiHandle)
              * steer towards it.
              */
             mob->cmd.target = sf->basePos;
-            MobSet_Add(&ai->sensors, mob);
+            MobPSet_Add(&ai->sensors, mob);
         }
     }
 

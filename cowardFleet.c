@@ -179,7 +179,7 @@ static void CowardFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static CowardShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid)
 {
-    CowardShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    CowardShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
     ASSERT(s != NULL);
     ASSERT(s->mobid == mobid);
@@ -205,7 +205,7 @@ static void CowardFleetRunAITick(void *aiHandle)
         CowardFleetUpdateTarget(sf, m);
     }
 
-    uint minVecSize = MBVector_Size(&sf->tvec) + MobSet_Size(&ai->sensors);
+    uint minVecSize = MBVector_Size(&sf->tvec) + MobPSet_Size(&ai->sensors);
     MBVector_EnsureCapacity(&sf->tvec, minVecSize);
     MBVector_Pin(&sf->tvec);
     for (uint i = 0; i < MBVector_Size(&sf->tvec); i++) {
@@ -218,8 +218,8 @@ static void CowardFleetRunAITick(void *aiHandle)
          * Since we probably just ran away, this gives the missiles we
          * just shot a place to aim.
          */
-        if (MobSet_Get(&ai->sensors, t->mob.mobid) == NULL) {
-            MobSet_Add(&ai->sensors, &t->mob);
+        if (MobPSet_Get(&ai->sensors, t->mob.mobid) == NULL) {
+            MobPSet_Add(&ai->sensors, &t->mob);
         }
     }
 
@@ -241,7 +241,7 @@ static void CowardFleetRunAITick(void *aiHandle)
              * Add this mob to the sensor list so that we'll
              * steer towards it.
              */
-            MobSet_Add(&ai->sensors, mob);
+            MobPSet_Add(&ai->sensors, mob);
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = MOB_FLAG_SHIP;
             float range = firingRange + 5;

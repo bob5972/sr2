@@ -489,7 +489,7 @@ void MainConstructScenario(void)
 void MainUnitTests()
 {
     Warning("Starting Unit Tests ...\n");
-    MobSet_UnitTest();
+    MobPSet_UnitTest();
     Warning("Done!\n");
 }
 

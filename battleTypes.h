@@ -109,13 +109,13 @@ typedef struct Mob {
 DECLARE_MBVECTOR_TYPE(Mob, MobVector);
 DECLARE_MBVECTOR_TYPE(Mob *, MobPVec);
 
-typedef struct MobSet {
+typedef struct MobPSet {
     IntMap map;
     MobPVec pv;
-} MobSet;
+} MobPSet;
 
 typedef struct MobIt {
-    MobSet *ms;
+    MobPSet *ms;
     int i;
     MobID lastMobid;
 } MobIt;
@@ -212,8 +212,8 @@ typedef struct FleetAI {
     BattlePlayer player;
     uint64 seed;
     int credits;
-    MobSet mobs;
-    MobSet sensors;
+    MobPSet mobs;
+    MobPSet sensors;
 } FleetAI;
 
 #endif // _BATTLE_TYPES_H_202006071525

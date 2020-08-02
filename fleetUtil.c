@@ -26,7 +26,7 @@ Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter)
     return FleetUtil_FindClosestMob(&ai->sensors, pos, filter);
 }
 
-Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter)
+Mob *FleetUtil_FindClosestMob(MobPSet *ms, const FPoint *pos, uint filter)
 {
     MobIt mit;
     float distance;
@@ -51,7 +51,7 @@ Mob *FleetUtil_FindClosestMob(MobSet *ms, const FPoint *pos, uint filter)
     return best;
 }
 
-Mob *FleetUtil_FindClosestMobInRange(MobSet *ms, const FPoint *pos, uint filter,
+Mob *FleetUtil_FindClosestMobInRange(MobPSet *ms, const FPoint *pos, uint filter,
                                      float radius)
 {
     Mob *mob = FleetUtil_FindClosestMob(ms, pos, filter);

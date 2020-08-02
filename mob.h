@@ -33,16 +33,16 @@ int MobType_GetCost(MobType type);
 /*
  * Tracks a set of mob pointers indexed by MobID.
  */
-void MobSet_Create(MobSet *ms);
-void MobSet_Destroy(MobSet *ms);
-void MobSet_MakeEmpty(MobSet *ms);
-void MobSet_Add(MobSet *ms, Mob *mob);
-Mob *MobSet_Get(MobSet *ms, MobID mobid);
-void MobSet_Remove(MobSet *ms, MobID mobid);
-int MobSet_Size(MobSet *ms);
-void MobSet_UnitTest();
+void MobPSet_Create(MobPSet *ms);
+void MobPSet_Destroy(MobPSet *ms);
+void MobPSet_MakeEmpty(MobPSet *ms);
+void MobPSet_Add(MobPSet *ms, Mob *mob);
+Mob *MobPSet_Get(MobPSet *ms, MobID mobid);
+void MobPSet_Remove(MobPSet *ms, MobID mobid);
+int MobPSet_Size(MobPSet *ms);
+void MobPSet_UnitTest();
 
-void MobIt_Start(MobSet *ms, MobIt *mit);
+void MobIt_Start(MobPSet *ms, MobIt *mit);
 bool MobIt_HasNext(MobIt *mit);
 Mob *MobIt_Next(MobIt *mit);
 void MobIt_Remove(MobIt *mit);

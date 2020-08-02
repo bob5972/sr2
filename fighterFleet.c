@@ -129,7 +129,7 @@ static void FighterFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static FighterShip *FighterFleetGetShip(FighterFleetData *sf, MobID mobid)
 {
-    FighterShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    FighterShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
     if (s != NULL) {
         ASSERT(s->mobid == mobid);
@@ -169,7 +169,7 @@ static void FighterFleetRunAITick(void *aiHandle)
              * Add this mob to the sensor list so that we'll
              * steer towards it.
              */
-            MobSet_Add(&ai->sensors, mob);
+            MobPSet_Add(&ai->sensors, mob);
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = MOB_FLAG_SHIP;
             float range = firingRange + 5;

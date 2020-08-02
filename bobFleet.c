@@ -136,7 +136,7 @@ static void BobFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
 
 static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid)
 {
-    BobShip *s = MobSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    BobShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
     ASSERT(s != NULL);
     ASSERT(s->mobid == mobid);
@@ -183,7 +183,7 @@ static void BobFleetRunAITick(void *aiHandle)
          * Assume it's still there if we haven't confirmed destruction.
          */
         if (sf->enemyBase.type == MOB_TYPE_BASE) {
-            MobSet_Add(&ai->sensors, &sf->enemyBase);
+            MobPSet_Add(&ai->sensors, &sf->enemyBase);
             sf->enemyBaseAge++;
         }
     }
@@ -321,7 +321,7 @@ static void BobFleetRunAITick(void *aiHandle)
              * Add this mob to the sensor list so that we'll
              * steer towards it.
              */
-            MobSet_Add(&ai->sensors, mob);
+            MobPSet_Add(&ai->sensors, mob);
         }
     }
 
