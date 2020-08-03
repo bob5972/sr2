@@ -23,6 +23,8 @@ extern "C" {
 #include "battle.h"
 }
 
+#include "MBVector.hpp"
+
 typedef struct CowardShip {
     MobID mobid;
 } CowardShip;
@@ -32,18 +34,28 @@ typedef struct CowardTarget {
     uint seenTick;
 } CowardTarget;
 
-typedef struct CowardFleetData {
+class CowardFleet {
+public:
+    CowardFleet(FleetAI *ai) {
+        this->ai = ai;
+        RandomState_CreateWithSeed(&this->rs, ai->seed);
+    }
+
+    ~CowardFleet() {
+        RandomState_Destroy(&this->rs);
+    }
+
     FleetAI *ai;
     RandomState rs;
-    CMBVector tvec;
-} CowardFleetData;
+    MBVector<CowardTarget> tvec;
+};
 
 static void *CowardFleetCreate(FleetAI *ai);
 static void CowardFleetDestroy(void *aiHandle);
 static void CowardFleetRunAITick(void *aiHandle);
 static void *CowardFleetMobSpawned(void *aiHandle, Mob *m);
 static void CowardFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
-static CowardShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid);
+static CowardShip *CowardFleetGetShip(CowardFleet *sf, MobID mobid);
 
 void CowardFleet_GetOps(FleetAIOps *ops)
 {
@@ -62,35 +74,24 @@ void CowardFleet_GetOps(FleetAIOps *ops)
 
 static void *CowardFleetCreate(FleetAI *ai)
 {
-    CowardFleetData *sf;
     ASSERT(ai != NULL);
-
-    sf = (CowardFleetData *)MBUtil_ZAlloc(sizeof(*sf));
-    sf->ai = ai;
-
-    RandomState_CreateWithSeed(&sf->rs, ai->seed);
-
-    CMBVector_CreateEmpty(&sf->tvec, sizeof(CowardTarget));
-
-    return sf;
+    return new CowardFleet(ai);
 }
 
 static void CowardFleetDestroy(void *handle)
 {
-    CowardFleetData *sf = (CowardFleetData *)handle;
+    CowardFleet *sf = (CowardFleet *)handle;
     ASSERT(sf != NULL);
-    CMBVector_Destroy(&sf->tvec);
-    RandomState_Destroy(&sf->rs);
-    free(sf);
+    delete sf;
 }
 
-static void CowardFleetUpdateTarget(CowardFleetData *sf, Mob *m)
+static void CowardFleetUpdateTarget(CowardFleet *sf, Mob *m)
 {
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
 
-    for (uint i = 0; i < CMBVector_Size(&sf->tvec); i++) {
-        CowardTarget *cur = (CowardTarget *)CMBVector_GetPtr(&sf->tvec, i);
+    for (uint i = 0; i < sf->tvec.size(); i++) {
+        CowardTarget *cur = &sf->tvec[i];
         if (cur->mob.mobid == m->mobid) {
             cur->mob = *m;
             cur->seenTick = sf->ai->tick;
@@ -99,13 +100,13 @@ static void CowardFleetUpdateTarget(CowardFleetData *sf, Mob *m)
     }
 }
 
-static void CowardFleetAddTarget(CowardFleetData *sf, Mob *m)
+static void CowardFleetAddTarget(CowardFleet *sf, Mob *m)
 {
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
 
-    for (uint i = 0; i < CMBVector_Size(&sf->tvec); i++) {
-        CowardTarget *cur = (CowardTarget *)CMBVector_GetPtr(&sf->tvec, i);
+    for (uint i = 0; i < sf->tvec.size(); i++) {
+        CowardTarget *cur = &sf->tvec[i];
         if (cur->mob.mobid == m->mobid) {
             /*
              * If it's already here, don't re-add it.
@@ -115,28 +116,28 @@ static void CowardFleetAddTarget(CowardFleetData *sf, Mob *m)
         }
     }
 
-    CMBVector_Grow(&sf->tvec);
-    uint index = CMBVector_Size(&sf->tvec) - 1;
-    CowardTarget *t = (CowardTarget *)CMBVector_GetPtr(&sf->tvec, index);
+    sf->tvec.grow();
+    uint index = sf->tvec.size() - 1;
+    CowardTarget *t = &sf->tvec[index];
     t->mob = *m;
     t->seenTick = sf->ai->tick;
 }
 
-static void CowardFleetCleanTargets(CowardFleetData *sf)
+static void CowardFleetCleanTargets(CowardFleet *sf)
 {
     ASSERT(sf != NULL);
 
     uint i = 0;
 
-    while (i < CMBVector_Size(&sf->tvec)) {
-        CowardTarget *cur = (CowardTarget *)CMBVector_GetPtr(&sf->tvec, i);
+    while (i < sf->tvec.size()) {
+        CowardTarget *cur = &sf->tvec[i];
 
         ASSERT(sf->ai->tick >= cur->seenTick);
         if (sf->ai->tick - cur->seenTick > 2) {
-            uint lastIndex = CMBVector_Size(&sf->tvec) - 1;
-            CowardTarget *last = (CowardTarget *)CMBVector_GetPtr(&sf->tvec, lastIndex);
+            uint lastIndex = sf->tvec.size() - 1;
+            CowardTarget *last = &sf->tvec[lastIndex];
             *cur = *last;
-            CMBVector_Shrink(&sf->tvec);
+            sf->tvec.shrink();
         } else {
             i++;
         }
@@ -145,7 +146,7 @@ static void CowardFleetCleanTargets(CowardFleetData *sf)
 
 static void *CowardFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    CowardFleetData *sf = (CowardFleetData *)aiHandle;
+    CowardFleet *sf = (CowardFleet *)aiHandle;
 
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
@@ -172,14 +173,14 @@ static void CowardFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
         return;
     }
 
-    CowardFleetData *sf = (CowardFleetData *)aiHandle;
+    CowardFleet *sf = (CowardFleet *)aiHandle;
     CowardShip *ship = (CowardShip *)aiMobHandle;
 
     ASSERT(sf != NULL);
     free(ship);
 }
 
-static CowardShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid)
+static CowardShip *CowardFleetGetShip(CowardFleet *sf, MobID mobid)
 {
     CowardShip *s = (CowardShip *)MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
@@ -191,7 +192,7 @@ static CowardShip *CowardFleetGetShip(CowardFleetData *sf, MobID mobid)
 
 static void CowardFleetRunAITick(void *aiHandle)
 {
-    CowardFleetData *sf = (CowardFleetData *)aiHandle;
+    CowardFleet *sf = (CowardFleet *)aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
@@ -207,11 +208,12 @@ static void CowardFleetRunAITick(void *aiHandle)
         CowardFleetUpdateTarget(sf, m);
     }
 
-    uint minVecSize = CMBVector_Size(&sf->tvec) + MobPSet_Size(&ai->sensors);
-    CMBVector_EnsureCapacity(&sf->tvec, minVecSize);
-    CMBVector_Pin(&sf->tvec);
-    for (uint i = 0; i < CMBVector_Size(&sf->tvec); i++) {
-        CowardTarget *t = (CowardTarget *)CMBVector_GetPtr(&sf->tvec, i);
+    uint minVecSize = sf->tvec.size() + MobPSet_Size(&ai->sensors);
+    sf->tvec.ensureCapacity(minVecSize);
+    sf->tvec.pin();
+
+    for (uint i = 0; i < sf->tvec.size(); i++) {
+        CowardTarget *t = &sf->tvec[i];
 
         /*
          * Add any targets found in the last round that have since
@@ -342,6 +344,6 @@ static void CowardFleetRunAITick(void *aiHandle)
     /*
      * Clear out the old targets.
      */
-    CMBVector_Unpin(&sf->tvec);
+    sf->tvec.unpin();
     CowardFleetCleanTargets(sf);
 }
