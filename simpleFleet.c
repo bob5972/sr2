@@ -73,9 +73,9 @@ static void SimpleFleetRunAI(void *handle)
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &ai->bp;
     uint targetScanFilter = MOB_FLAG_SHIP;
-    IntMap targetMap;
+    CIntMap targetMap;
 
-    IntMap_Create(&targetMap);
+    CIntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_SIMPLE);
 
@@ -106,7 +106,7 @@ static void SimpleFleetRunAI(void *handle)
                 target = FleetUtil_FindClosestSensor(ai, &sf->basePos,
                                                      MOB_FLAG_LOOT_BOX);
                 if (target != NULL) {
-                    if (IntMap_Increment(&targetMap, target->mobid) > 1) {
+                    if (CIntMap_Increment(&targetMap, target->mobid) > 1) {
                         /*
                         * Ideally we find the next best target, but for now just
                         * go back to random movement.
@@ -155,5 +155,5 @@ static void SimpleFleetRunAI(void *handle)
         }
     }
 
-    IntMap_Destroy(&targetMap);
+    CIntMap_Destroy(&targetMap);
 }

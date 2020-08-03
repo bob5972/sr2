@@ -150,12 +150,12 @@ static void BobFleetRunAITick(void *aiHandle)
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
     uint targetScanFilter = MOB_FLAG_SHIP;
-    IntMap targetMap;
+    CIntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     MobIt mit;
 
-    IntMap_Create(&targetMap);
+    CIntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_BOB);
 
@@ -248,7 +248,7 @@ static void BobFleetRunAITick(void *aiHandle)
                 target = FleetUtil_FindClosestSensor(ai, &mob->pos,
                                                      MOB_FLAG_LOOT_BOX);
                 if (target != NULL &&
-                    IntMap_Increment(&targetMap, target->mobid) > 1) {
+                    CIntMap_Increment(&targetMap, target->mobid) > 1) {
                     /*
                      * Ideally we find the next best target, but for now just
                      * go back to random movement.
@@ -325,5 +325,5 @@ static void BobFleetRunAITick(void *aiHandle)
         }
     }
 
-    IntMap_Destroy(&targetMap);
+    CIntMap_Destroy(&targetMap);
 }

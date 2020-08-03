@@ -106,11 +106,11 @@ typedef struct Mob {
     uint32 scannedBy;
 } Mob;
 
-DECLARE_MBVECTOR_TYPE(Mob, MobVector);
-DECLARE_MBVECTOR_TYPE(Mob *, MobPVec);
+DECLARE_CMBVECTOR_TYPE(Mob, MobVector);
+DECLARE_CMBVECTOR_TYPE(Mob *, MobPVec);
 
 typedef struct MobPSet {
-    IntMap map;
+    CIntMap map;
     MobPVec pv;
 } MobPSet;
 

@@ -327,13 +327,13 @@ static void MapperFleetRunAITick(void *aiHandle)
     MapperFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
     uint targetScanFilter = MOB_FLAG_SHIP;
-    IntMap targetMap;
+    CIntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
     float baseScanRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
 
-    IntMap_Create(&targetMap);
+    CIntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_MAPPER);
 
@@ -502,7 +502,7 @@ static void MapperFleetRunAITick(void *aiHandle)
                 }
 
                 if (target != NULL &&
-                    IntMap_Increment(&targetMap, target->mobid) > 1) {
+                    CIntMap_Increment(&targetMap, target->mobid) > 1) {
                     /*
                      * Ideally we find the next best target, but for now just
                      * go back to random movement.
@@ -590,5 +590,5 @@ static void MapperFleetRunAITick(void *aiHandle)
         }
     }
 
-    IntMap_Destroy(&targetMap);
+    CIntMap_Destroy(&targetMap);
 }

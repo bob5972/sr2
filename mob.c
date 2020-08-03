@@ -191,22 +191,22 @@ void Mob_MaskForSensor(Mob *mob)
 void MobPSet_Create(MobPSet *ms)
 {
     ASSERT(ms != NULL);
-    IntMap_Create(&ms->map);
-    IntMap_SetEmptyValue(&ms->map, -1);
+    CIntMap_Create(&ms->map);
+    CIntMap_SetEmptyValue(&ms->map, -1);
     MobPVec_CreateEmpty(&ms->pv);
 }
 
 void MobPSet_Destroy(MobPSet *ms)
 {
     ASSERT(ms != NULL);
-    IntMap_Destroy(&ms->map);
+    CIntMap_Destroy(&ms->map);
     MobPVec_Destroy(&ms->pv);
 }
 
 void MobPSet_MakeEmpty(MobPSet *ms)
 {
     ASSERT(ms != NULL);
-    IntMap_MakeEmpty(&ms->map);
+    CIntMap_MakeEmpty(&ms->map);
     MobPVec_MakeEmpty(&ms->pv);
 }
 
@@ -214,19 +214,19 @@ void MobPSet_Add(MobPSet *ms, Mob *mob)
 {
     ASSERT(mob != NULL);
 
-    int oldIndex = IntMap_Get(&ms->map, mob->mobid);
+    int oldIndex = CIntMap_Get(&ms->map, mob->mobid);
     if (oldIndex == -1) {
         int oldSize = MobPVec_Size(&ms->pv);
         MobPVec_Grow(&ms->pv);
         oldIndex = oldSize;
-        IntMap_Put(&ms->map, mob->mobid, oldIndex);
+        CIntMap_Put(&ms->map, mob->mobid, oldIndex);
     }
     MobPVec_PutValue(&ms->pv, oldIndex, mob);
 }
 
 Mob *MobPSet_Get(MobPSet *ms, MobID mobid)
 {
-    int index = IntMap_Get(&ms->map, mobid);
+    int index = CIntMap_Get(&ms->map, mobid);
     if (index == -1) {
         return NULL;
     }
@@ -235,7 +235,7 @@ Mob *MobPSet_Get(MobPSet *ms, MobID mobid)
 
 void MobPSet_Remove(MobPSet *ms, MobID mobid)
 {
-    int index = IntMap_Get(&ms->map, mobid);
+    int index = CIntMap_Get(&ms->map, mobid);
     if (index == -1) {
         return;
     }
@@ -244,11 +244,11 @@ void MobPSet_Remove(MobPSet *ms, MobID mobid)
     if (size > 1) {
         Mob *last = MobPVec_GetValue(&ms->pv, size - 1);
         MobPVec_PutValue(&ms->pv, index, last);
-        IntMap_Put(&ms->map, last->mobid, index);
+        CIntMap_Put(&ms->map, last->mobid, index);
     }
     MobPVec_Shrink(&ms->pv);
 
-    IntMap_Remove(&ms->map, mobid);
+    CIntMap_Remove(&ms->map, mobid);
 }
 
 int MobPSet_Size(MobPSet *ms)

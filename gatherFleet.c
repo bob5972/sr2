@@ -49,7 +49,7 @@ typedef struct GatherFleetData {
     uint numScouts;
     MobPVec fighters;
     MobPVec targets;
-    MBVector contacts;
+    CMBVector contacts;
     RandomState rs;
 } GatherFleetData;
 
@@ -85,7 +85,7 @@ static void *GatherFleetCreate(FleetAI *ai)
     RandomState_CreateWithSeed(&sf->rs, ai->seed);
     MobPVec_CreateEmpty(&sf->fighters);
     MobPVec_CreateEmpty(&sf->targets);
-    MBVector_CreateEmpty(&sf->contacts, sizeof(Contact));
+    CMBVector_CreateEmpty(&sf->contacts, sizeof(Contact));
 
     return sf;
 }
@@ -96,7 +96,7 @@ static void GatherFleetDestroy(void *aiHandle)
     ASSERT(sf != NULL);
     MobPVec_Destroy(&sf->fighters);
     MobPVec_Destroy(&sf->targets);
-    MBVector_Destroy(&sf->contacts);
+    CMBVector_Destroy(&sf->contacts);
     RandomState_Destroy(&sf->rs);
     free(sf);
 }
@@ -180,10 +180,10 @@ static GatherShip *GatherFleetGetShip(GatherFleetData *sf, MobID mobid)
 
 static void GatherFleetAgeContacts(GatherFleetData *sf)
 {
-    for (uint i = 0; i < MBVector_Size(&sf->contacts); i++) {
+    for (uint i = 0; i < CMBVector_Size(&sf->contacts); i++) {
         uint ageLimit;
 
-        Contact *c = MBVector_GetPtr(&sf->contacts, i);
+        Contact *c = CMBVector_GetPtr(&sf->contacts, i);
         switch (c->type) {
             case MOB_TYPE_BASE:
                 ageLimit = 1000;
@@ -199,10 +199,10 @@ static void GatherFleetAgeContacts(GatherFleetData *sf)
         }
 
         if (sf->ai->tick - c->tick > ageLimit) {
-            Contact *last = MBVector_GetLastPtr(&sf->contacts);
+            Contact *last = CMBVector_GetLastPtr(&sf->contacts);
             *c = *last;
             i--;
-            MBVector_Shrink(&sf->contacts);
+            CMBVector_Shrink(&sf->contacts);
         }
     }
 }
@@ -213,8 +213,8 @@ static void GatherFleetAddContact(GatherFleetData *sf, Mob *sm)
         return;
     }
 
-    for (uint i = 0; i < MBVector_Size(&sf->contacts); i++) {
-        Contact *c = MBVector_GetPtr(&sf->contacts, i);
+    for (uint i = 0; i < CMBVector_Size(&sf->contacts); i++) {
+        Contact *c = CMBVector_GetPtr(&sf->contacts, i);
         if (FPoint_Distance(&c->pos, &sm->pos) < MobType_GetSensorRadius(c->type)) {
             if (MobType_GetSensorRadius(c->type) < MobType_GetSensorRadius(sm->type)) {
                 c->type = sm->type;
@@ -224,8 +224,8 @@ static void GatherFleetAddContact(GatherFleetData *sf, Mob *sm)
         }
     }
 
-    MBVector_Grow(&sf->contacts);
-    Contact *c = MBVector_GetLastPtr(&sf->contacts);
+    CMBVector_Grow(&sf->contacts);
+    Contact *c = CMBVector_GetLastPtr(&sf->contacts);
     MBUtil_Zero(c, sizeof(*c));
     c->type = sm->type;
     c->pos = sm->pos;
@@ -235,8 +235,8 @@ static void GatherFleetAddContact(GatherFleetData *sf, Mob *sm)
 static bool GatherFleetInConflictZone(GatherFleetData *sf, const FPoint *pos,
                                       const FPoint *target)
 {
-    for (uint i = 0; i < MBVector_Size(&sf->contacts); i++) {
-        Contact *c = MBVector_GetPtr(&sf->contacts, i);
+    for (uint i = 0; i < CMBVector_Size(&sf->contacts); i++) {
+        Contact *c = CMBVector_GetPtr(&sf->contacts, i);
         if (FPoint_Distance(&c->pos, target) < MobType_GetSensorRadius(c->type)) {
             return TRUE;
         }
@@ -262,7 +262,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     GatherFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
-    IntMap targetMap;
+    CIntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
@@ -273,7 +273,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     MobIt mit;
 
     ASSERT(ai->player.aiType == FLEET_AI_GATHER);
-    IntMap_Create(&targetMap);
+    CIntMap_Create(&targetMap);
 
     MobPVec_MakeEmpty(&sf->fighters);
     MobPVec_MakeEmpty(&sf->targets);
@@ -381,7 +381,7 @@ static void GatherFleetRunAITick(void *aiHandle)
                         if (ship->gov == GATHER_GOV_SCOUT) {
                             claimLimit = 1 + (sf->numScouts / 4);
                         }
-                        if (IntMap_Increment(&targetMap, tMob->mobid) <= claimLimit ||
+                        if (CIntMap_Increment(&targetMap, tMob->mobid) <= claimLimit ||
                             forceClaim) {
                             // Claim the target so nobody else will go there.
                         } else {
@@ -489,5 +489,5 @@ static void GatherFleetRunAITick(void *aiHandle)
         }
     }
 
-    IntMap_Destroy(&targetMap);
+    CIntMap_Destroy(&targetMap);
 }

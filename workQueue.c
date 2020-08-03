@@ -32,7 +32,7 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     wq->workerWaitingCount = 0;
     wq->finishWaitingCount = 0;
 
-    MBVector_CreateEmpty(&wq->items, itemSize);
+    CMBVector_CreateEmpty(&wq->items, itemSize);
 
     wq->lock = SDL_CreateMutex();
     wq->workerSignal = SDL_CreateCond();
@@ -45,7 +45,7 @@ void WorkQueue_Destroy(WorkQueue *wq)
     ASSERT(wq->workerWaitingCount == 0);
     ASSERT(wq->finishWaitingCount == 0);
 
-    MBVector_Destroy(&wq->items);
+    CMBVector_Destroy(&wq->items);
     SDL_DestroyMutex(wq->lock);
     SDL_DestroyCond(wq->workerSignal);
     SDL_DestroyCond(wq->finishSignal);
@@ -92,12 +92,12 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
     ASSERT(wq->itemSize == itemSize);
     uint32 newLastIndex = wq->nextItem + wq->numQueued;
 
-    if (newLastIndex >= MBVector_Size(&wq->items)) {
-        MBVector_Grow(&wq->items);
+    if (newLastIndex >= CMBVector_Size(&wq->items)) {
+        CMBVector_Grow(&wq->items);
     }
 
-    ASSERT(newLastIndex < MBVector_Size(&wq->items));
-    void *ptr = MBVector_GetPtr(&wq->items, newLastIndex);
+    ASSERT(newLastIndex < CMBVector_Size(&wq->items));
+    void *ptr = CMBVector_GetPtr(&wq->items, newLastIndex);
     memcpy(ptr, item, wq->itemSize);
 
     wq->numQueued++;
@@ -113,10 +113,10 @@ void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
     //XXX ASSERT isLocked ?
 
     ASSERT(wq->itemSize == itemSize);
-    ASSERT(wq->numQueued + wq->nextItem <= MBVector_Size(&wq->items));
+    ASSERT(wq->numQueued + wq->nextItem <= CMBVector_Size(&wq->items));
     ASSERT(wq->numQueued > 0);
 
-    void *ptr = MBVector_GetPtr(&wq->items, wq->nextItem);
+    void *ptr = CMBVector_GetPtr(&wq->items, wq->nextItem);
     memcpy(item, ptr, wq->itemSize);
     wq->nextItem++;
     wq->numQueued--;
@@ -133,7 +133,7 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
     WorkQueue_Lock(wq);
 
     ASSERT(wq->itemSize == itemSize);
-    ASSERT(wq->numQueued + wq->nextItem <= MBVector_Size(&wq->items));
+    ASSERT(wq->numQueued + wq->nextItem <= CMBVector_Size(&wq->items));
 
     while (wq->numQueued == 0) {
         wq->workerWaitingCount++;

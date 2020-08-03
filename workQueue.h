@@ -30,7 +30,7 @@ typedef struct WorkQueue {
     SDL_atomic_t numInProgress;
     int workerWaitingCount;
     int finishWaitingCount;
-    MBVector items;
+    CMBVector items;
     SDL_mutex *lock;
     SDL_cond *workerSignal;
     SDL_cond *finishSignal;
