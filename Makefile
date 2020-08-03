@@ -45,7 +45,6 @@ C_SOURCES = main.c \
             battle.c \
             bobFleet.c \
             cloudFleet.c \
-	    cowardFleet.c \
             display.c \
             dummyFleet.c \
             fighterFleet.c \
@@ -56,7 +55,7 @@ C_SOURCES = main.c \
             mob.c \
             simpleFleet.c \
             workQueue.c
-CPP_SOURCES =
+CPP_SOURCES = cowardFleet.cpp
 
 #For reasons I cannot fathom, MBLIB_OBJ has to be last
 # or things don't link right...
