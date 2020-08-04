@@ -38,8 +38,6 @@ public:
     Mob *findClosestMobInRange(const FPoint *pos, MobTypeFlags filter,
                                float radius);
     Mob *get(MobID mobid);
-    void remove(MobID mobid);
-    void add(Mob *mob);
 
     /*
      * Find the enemy base closest to your base.
@@ -47,11 +45,19 @@ public:
     Mob *enemyBase();
 
 private:
+    void remove(MobID mobid);
+    void add(Mob *mob);
+
     struct Target {
         Mob mob;
         uint lastSeenTick;
     };
+
+    /*
+     * Map mobid to index in the mobs vector.
+     */
     IntMap map;
+
     MBVector<Target> mobs;
 }
 
