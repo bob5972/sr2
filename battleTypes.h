@@ -55,6 +55,7 @@ typedef enum MobType {
 #define MOB_FLAG_AMMO     (MOB_FLAG_MISSILE | MOB_FLAG_LOOT_BOX)
 #define MOB_FLAG_SHIP     (MOB_FLAG_BASE | MOB_FLAG_FIGHTER)
 #define MOB_FLAG_ALL      (MOB_FLAG_SHIP | MOB_FLAG_MISSILE | MOB_FLAG_LOOT_BOX)
+typedef uint MobTypeFlags;
 
 typedef struct MobCmd {
     FPoint target;
