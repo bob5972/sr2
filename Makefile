@@ -66,10 +66,15 @@ C_OBJ=$(addprefix $(BUILDDIR)/, $(subst .c,.o, $(C_SOURCES)))
 CPP_OBJ=$(addprefix $(BUILDDIR)/, $(subst .cpp,.opp, $(CPP_SOURCES)))
 TARGET_OBJ = $(C_OBJ) $(CPP_OBJ) $(MBLIB_OBJ)
 
-.PHONY: all clean distclean dist $(TARGET)
+.PHONY: all clean distclean dist docs $(TARGET)
 
 #The config check is to test if we've been configured
 all: config.mk $(BUILDROOT)/config.h $(TARGET)
+
+docs: $(BUILDROOT)/tmp/docs.ts
+$(BUILDROOT)/tmp/docs.ts: config.doxygen *.* MBLib/* MBLib/public/*
+	touch $(BUILDROOT)/tmp/docs.ts
+	doxygen config.doxygen
 
 # Our dependencies here are overly broad, which sometimes means that
 # we'll make MBLib thinking something has changed, but the underlying
