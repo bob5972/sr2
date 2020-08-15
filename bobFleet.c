@@ -153,7 +153,7 @@ static void BobFleetRunAITick(void *aiHandle)
     CIntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
-    MobIt mit;
+    CMobIt mit;
 
     CIntMap_Create(&targetMap);
 
@@ -168,9 +168,9 @@ static void BobFleetRunAITick(void *aiHandle)
         sf->enemyBase = *enemyBase;
         sf->enemyBaseAge = 0;
     } else {
-        MobIt_Start(&ai->mobs, &mit);
-        while (MobIt_HasNext(&mit)) {
-            Mob *mob = MobIt_Next(&mit);
+        CMobIt_Start(&ai->mobs, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *mob = CMobIt_Next(&mit);
             if (Mob_CanScanPoint(mob, &sf->enemyBase.pos)) {
                 /*
                  * We can confirm there's no base there any more.
@@ -197,9 +197,9 @@ static void BobFleetRunAITick(void *aiHandle)
         doAttack = TRUE;
     }
 
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             BobShip *ship = BobFleetGetShip(sf, mob->mobid);

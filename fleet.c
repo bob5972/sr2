@@ -102,10 +102,10 @@ void Fleet_Destroy(Fleet *fleet)
         FleetAI *ai = &fleet->ais[i];
 
         if (ai->ops.mobDestroyed != NULL) {
-            MobIt mit;
-            MobIt_Start(&ai->mobs, &mit);
-            while (MobIt_HasNext(&mit)) {
-                Mob *m = MobIt_Next(&mit);
+            CMobIt mit;
+            CMobIt_Start(&ai->mobs, &mit);
+            while (CMobIt_HasNext(&mit)) {
+                Mob *m = CMobIt_Next(&mit);
                 ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
             }
         }
@@ -264,12 +264,12 @@ void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
 {
-    MobIt mit;
+    CMobIt mit;
 
     if (ai->ops.mobSpawned != NULL) {
-        MobIt_Start(&ai->mobs, &mit);
-        while (MobIt_HasNext(&mit)) {
-            Mob *m = MobIt_Next(&mit);
+        CMobIt_Start(&ai->mobs, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *m = CMobIt_Next(&mit);
             ASSERT(Mob_CheckInvariants(m));
             if (m->birthTick == bs->tick) {
                 if (ai->ops.mobSpawned != NULL) {
@@ -286,20 +286,20 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
     }
 
     if (ai->ops.runAIMob != NULL) {
-        MobIt_Start(&ai->mobs, &mit);
-        while (MobIt_HasNext(&mit)) {
-            Mob *m = MobIt_Next(&mit);
+        CMobIt_Start(&ai->mobs, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *m = CMobIt_Next(&mit);
             ai->ops.runAIMob(ai->aiHandle, m->aiMobHandle);
         }
     }
 
     if (ai->ops.mobDestroyed != NULL) {
-        MobIt_Start(&ai->mobs, &mit);
-        while (MobIt_HasNext(&mit)) {
-            Mob *m = MobIt_Next(&mit);
+        CMobIt_Start(&ai->mobs, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *m = CMobIt_Next(&mit);
             if (!m->alive) {
                 ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
-                MobIt_Remove(&mit);
+                CMobIt_Remove(&mit);
             }
         }
     }

@@ -28,13 +28,13 @@ Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter)
 
 Mob *FleetUtil_FindClosestMob(MobPSet *ms, const FPoint *pos, uint filter)
 {
-    MobIt mit;
+    CMobIt mit;
     float distance;
     Mob *best = NULL;
 
-    MobIt_Start(ms, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *m = MobIt_Next(&mit);
+    CMobIt_Start(ms, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *m = CMobIt_Next(&mit);
 
         if (!m->alive) {
             continue;

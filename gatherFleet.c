@@ -270,7 +270,7 @@ static void GatherFleetRunAITick(void *aiHandle)
 //     float fighterScanRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
     float baseScanRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
     float scoutActivationRange = baseScanRange;
-    MobIt mit;
+    CMobIt mit;
 
     ASSERT(ai->player.aiType == FLEET_AI_GATHER);
     CIntMap_Create(&targetMap);
@@ -281,9 +281,9 @@ static void GatherFleetRunAITick(void *aiHandle)
     /*
      * Initialize mob state
      */
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
         ASSERT(Mob_CheckInvariants(mob));
 
         if (mob->type == MOB_TYPE_FIGHTER) {
@@ -300,9 +300,9 @@ static void GatherFleetRunAITick(void *aiHandle)
     /*
      * Initialize target state
      */
-    MobIt_Start(&ai->sensors, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *sm = MobIt_Next(&mit);
+    CMobIt_Start(&ai->sensors, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *sm = CMobIt_Next(&mit);
         ASSERT(Mob_CheckInvariants(sm));
 
         if (sm->type != MOB_TYPE_MISSILE) {
@@ -316,9 +316,9 @@ static void GatherFleetRunAITick(void *aiHandle)
     /*
      * Main Mob processing loop.
      */
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             GatherShip *ship = mob->aiMobHandle;

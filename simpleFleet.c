@@ -94,10 +94,10 @@ static void SimpleFleetRunAI(void *handle)
 
     Mob *target = FleetUtil_FindClosestSensor(ai, &sf->basePos, targetScanFilter);
 
-    MobIt mit;
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt mit;
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
         if (mob->type == MOB_TYPE_FIGHTER) {
             if (target == NULL) {
                 /*

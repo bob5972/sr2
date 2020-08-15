@@ -156,10 +156,10 @@ static void CloudFleetRunAITick(void *aiHandle)
     /*
      * Main Mob processing loop.
      */
-    MobIt mit;
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt mit;
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             CloudShip *ship = CloudFleetGetShip(sf, mob->mobid);

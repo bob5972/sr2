@@ -256,7 +256,7 @@ int MobPSet_Size(MobPSet *ms)
     return MobPVec_Size(&ms->pv);
 }
 
-void MobIt_Start(MobPSet *ms, MobIt *mit)
+void CMobIt_Start(MobPSet *ms, CMobIt *mit)
 {
     MBUtil_Zero(mit, sizeof(*mit));
     mit->ms = ms;
@@ -264,17 +264,17 @@ void MobIt_Start(MobPSet *ms, MobIt *mit)
     mit->lastMobid = MOB_ID_INVALID;
 }
 
-bool MobIt_HasNext(MobIt *mit)
+bool CMobIt_HasNext(CMobIt *mit)
 {
     ASSERT(mit != NULL);
     ASSERT(mit->i >= 0);
     return mit->i < MobPVec_Size(&mit->ms->pv);
 }
 
-Mob *MobIt_Next(MobIt *mit)
+Mob *CMobIt_Next(CMobIt *mit)
 {
     Mob *mob;
-    ASSERT(MobIt_HasNext(mit));
+    ASSERT(CMobIt_HasNext(mit));
 
     mob = MobPVec_GetValue(&mit->ms->pv, mit->i);
     mit->i++;
@@ -286,7 +286,7 @@ Mob *MobIt_Next(MobIt *mit)
     return mob;
 }
 
-void MobIt_Remove(MobIt *mit)
+void CMobIt_Remove(CMobIt *mit)
 {
     MobID mobid = mit->lastMobid;
     ASSERT(mit->i > 0);
@@ -305,7 +305,7 @@ void MobPSet_UnitTest()
 {
     Mob mobs[100];
     MobPSet ms;
-    MobIt mit;
+    CMobIt mit;
 
     for (uint i = 0; i < ARRAYSIZE(mobs); i++) {
         mobs[i].mobid = i;
@@ -321,12 +321,12 @@ void MobPSet_UnitTest()
     MobPSet_Add(&ms, &mobs[1]);
     ASSERT(MobPSet_Get(&ms, 1) != NULL);
 
-    MobIt_Start(&ms, &mit);
-    while (MobIt_HasNext(&mit)) {
-        MobIt_Next(&mit);
-        MobIt_Remove(&mit);
+    CMobIt_Start(&ms, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        CMobIt_Next(&mit);
+        CMobIt_Remove(&mit);
     }
-    ASSERT(!MobIt_HasNext(&mit));
+    ASSERT(!CMobIt_HasNext(&mit));
     MobPSet_Destroy(&ms);
 
     MobPSet_Create(&ms);
@@ -347,14 +347,14 @@ void MobPSet_UnitTest()
     for (uint i = 0; i < ARRAYSIZE(mobs); i++) {
         MobPSet_Add(&ms, &mobs[i]);
 
-        MobIt_Start(&ms, &mit);
-        while (MobIt_HasNext(&mit)) {
-            Mob *m = MobIt_Next(&mit);
+        CMobIt_Start(&ms, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *m = CMobIt_Next(&mit);
             if (m->mobid % 2 == 0) {
-                MobIt_Remove(&mit);
+                CMobIt_Remove(&mit);
             }
         }
-        ASSERT(!MobIt_HasNext(&mit));
+        ASSERT(!CMobIt_HasNext(&mit));
     }
     MobPSet_Destroy(&ms);
 }

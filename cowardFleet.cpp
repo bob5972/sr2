@@ -198,13 +198,13 @@ static void CowardFleetRunAITick(void *aiHandle)
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
-    MobIt mit;
+    CMobIt mit;
 
     ASSERT(ai->player.aiType == FLEET_AI_COWARD);
 
-    MobIt_Start(&ai->sensors, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *m = MobIt_Next(&mit);
+    CMobIt_Start(&ai->sensors, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *m = CMobIt_Next(&mit);
         CowardFleetUpdateTarget(sf, m);
     }
 
@@ -231,9 +231,9 @@ static void CowardFleetRunAITick(void *aiHandle)
      * Move Non-Fighters first, since they're simpler and modify
      * the sensor state.
      */
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
         if (mob->type == MOB_TYPE_LOOT_BOX) {
             Mob *friendMob = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
                                                       MOB_FLAG_SHIP);
@@ -268,9 +268,9 @@ static void CowardFleetRunAITick(void *aiHandle)
     /*
      * Move Fighters
      */
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
 
         if (mob->type != MOB_TYPE_FIGHTER) {
             continue;

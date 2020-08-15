@@ -340,10 +340,10 @@ static void MapperFleetRunAITick(void *aiHandle)
     /*
      * Analyze our sensor data.
      */
-    MobIt mit;
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt mit;
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             uint32 i;
@@ -362,9 +362,9 @@ static void MapperFleetRunAITick(void *aiHandle)
         }
     }
 
-    MobIt_Start(&ai->sensors, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *sm = MobIt_Next(&mit);
+    CMobIt_Start(&ai->sensors, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *sm = CMobIt_Next(&mit);
         uint32 i;
         MapTileFlags f = MAP_TILE_SCANNED;
 
@@ -410,10 +410,10 @@ static void MapperFleetRunAITick(void *aiHandle)
         }
 
         MapperFleetStartTileSearch(sf);
-        MobIt mit;
-        MobIt_Start(&ai->mobs, &mit);
-        while (MobIt_HasNext(&mit)) {
-            Mob *mob = MobIt_Next(&mit);
+        CMobIt mit;
+        CMobIt_Start(&ai->mobs, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *mob = CMobIt_Next(&mit);
             if (mob->type == MOB_TYPE_FIGHTER) {
                 MapperShip *s = MapperFleetGetShip(sf, mob->mobid);
                 ASSERT(s != NULL);
@@ -450,9 +450,9 @@ static void MapperFleetRunAITick(void *aiHandle)
     /*
      * Main Mob processing loop.
      */
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
 
         if (mob->type == MOB_TYPE_FIGHTER) {
             MapperShip *s = MapperFleetGetShip(sf, mob->mobid);

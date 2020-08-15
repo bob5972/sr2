@@ -115,11 +115,11 @@ typedef struct MobPSet {
     MobPVec pv;
 } MobPSet;
 
-typedef struct MobIt {
+typedef struct CMobIt {
     MobPSet *ms;
     int i;
     MobID lastMobid;
-} MobIt;
+} CMobIt;
 
 typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,

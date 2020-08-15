@@ -42,10 +42,10 @@ void MobPSet_Remove(MobPSet *ms, MobID mobid);
 int MobPSet_Size(MobPSet *ms);
 void MobPSet_UnitTest();
 
-void MobIt_Start(MobPSet *ms, MobIt *mit);
-bool MobIt_HasNext(MobIt *mit);
-Mob *MobIt_Next(MobIt *mit);
-void MobIt_Remove(MobIt *mit);
+void CMobIt_Start(MobPSet *ms, CMobIt *mit);
+bool CMobIt_HasNext(CMobIt *mit);
+Mob *CMobIt_Next(CMobIt *mit);
+void CMobIt_Remove(CMobIt *mit);
 
 void Mob_Init(Mob *mob, MobType t);
 

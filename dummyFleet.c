@@ -62,15 +62,15 @@ static void DummyFleetRunAITick(void *handle)
 {
     DummyFleetData *sf = handle;
     FleetAI *ai = sf->ai;
-    MobIt mit;
+    CMobIt mit;
     const BattleParams *bp = &ai->bp;
 
     ASSERT(ai->player.aiType == FLEET_AI_DUMMY ||
            ai->player.aiType == FLEET_AI_NEUTRAL);
 
-    MobIt_Start(&ai->mobs, &mit);
-    while (MobIt_HasNext(&mit)) {
-        Mob *mob = MobIt_Next(&mit);
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
         bool newTarget = FALSE;
 
         if (mob->type == MOB_TYPE_BASE) {
