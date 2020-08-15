@@ -22,6 +22,7 @@
 #include "geometry.h"
 #include "MBVector.h"
 #include "battleTypes.h"
+#include "MBCompare.h"
 
 float MobType_GetSpeed(MobType type);
 float MobType_GetSensorRadius(MobType type);
@@ -46,6 +47,8 @@ void CMobIt_Start(MobPSet *ms, CMobIt *mit);
 bool CMobIt_HasNext(CMobIt *mit);
 Mob *CMobIt_Next(CMobIt *mit);
 void CMobIt_Remove(CMobIt *mit);
+
+void Mob_InitDistanceComparator(CMBComparator *comp, const FPoint *pos);
 
 void Mob_Init(Mob *mob, MobType t);
 

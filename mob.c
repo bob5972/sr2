@@ -358,3 +358,31 @@ void MobPSet_UnitTest()
     }
     MobPSet_Destroy(&ms);
 }
+
+static int MobDistanceComparatorFn(const void *lhs, const void *rhs, void *cbData)
+{
+    const Mob *l = lhs;
+    const Mob *r = rhs;
+    const FPoint *pos = cbData;
+
+    float lDistance = FPoint_Distance(pos, &l->pos);
+    float rDistance = FPoint_Distance(pos, &r->pos);
+
+    if (lDistance < rDistance) {
+        return -1;
+    } else if (lDistance > rDistance) {
+        return 1;
+    } else {
+        ASSERT(lDistance == rDistance);
+        return 0;
+    }
+}
+
+
+void Mob_InitDistanceComparator(CMBComparator *comp, const FPoint *pos)
+{
+    ASSERT(comp != NULL);
+    comp->compareFn = MobDistanceComparatorFn;
+    comp->cbData = (void *)pos;
+    comp->itemSize = sizeof(Mob *);
+}

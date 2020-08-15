@@ -55,6 +55,8 @@ else
 	echo 'MACOS=1' >> $CONFIG_MK;
 fi;
 
+DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -D _GNU_SOURCE"
+
 if [ "$USE_CLANG" != "" ]; then
     echo CC=clang >> $CONFIG_MK;
     echo CXX=clang++ >> $CONFIG_MK;

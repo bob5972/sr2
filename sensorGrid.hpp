@@ -110,7 +110,11 @@ public:
             v.push(&myTargets[i].mob);
         }
 
-        NOT_IMPLEMENTED();
+        CMBComparator comp;
+        Mob_InitDistanceComparator(&comp, pos);
+        v.sort(MBComparator<Mob *>(&comp));
+
+        return v[n];
     }
 
     /**
