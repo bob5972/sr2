@@ -33,7 +33,10 @@ public:
     }
 
     /**
-     * Update the SensorGrid with the new sensor information in the tick.
+     * Update this SensorGrid with the new sensor information in the tick.
+     *
+     * This invalidates any Mob pointers previously obtained from this
+     * SensorGrid.
      */
     void updateTick(FleetAI *ai) {
         CMobIt mit;
@@ -49,6 +52,7 @@ public:
             if (i == -1) {
                 myTargets.grow();
                 i = myTargets.size() - 1;
+                myMap.put(m->mobid, i);
             }
 
             Target *t = &myTargets[i];
@@ -70,6 +74,7 @@ public:
             }
 
             if (myTargets[i].lastSeenTick - ai->tick > staleAge) {
+                myMap.remove(myTargets[i].mob.mobid);
                 int last = myTargets.size() - 1;
                 if (last != -1) {
                     myTargets[i] = myTargets[last];
@@ -80,16 +85,70 @@ public:
         }
     }
 
-    Mob *findClosestMob(const FPoint *pos, MobTypeFlags filter);
-    Mob *findNthClosestMob(const FPoint *pos, MobTypeFlags filter, int n);
-    Mob *findClosestMobInRange(const FPoint *pos, MobTypeFlags filter,
-                               float radius);
-    Mob *get(MobID mobid);
+    /**
+     * Find the closest mob to the specified point.
+     */
+    Mob *findClosestMob(const FPoint *pos, MobTypeFlags filter) {
+        return findNthClosestMob(pos, filter, 0);
+    }
 
-    /*
+    /**
+     * Find the Nth closest mob to the specified point.
+     * This is 0-based, so the closest mob is found when n=0.
+     */
+    Mob *findNthClosestMob(const FPoint *pos, MobTypeFlags filter, int n) {
+        ASSERT(n >= 0);
+
+        if (n > myTargets.size()) {
+            return NULL;
+        }
+
+        MBVector<Mob *> v;
+        v.ensureCapacity(myTargets.size());
+
+        for (uint i = 0; i < myTargets.size(); i++) {
+            v.push(&myTargets[i].mob);
+        }
+
+        NOT_IMPLEMENTED();
+    }
+
+    /**
+     * Find the closest mob to the specified point, if it's within
+     * the specified range.
+     */
+    Mob *findClosestMobInRange(const FPoint *pos, MobTypeFlags filter,
+                               float radius) {
+        Mob *m = findClosestMob(pos, filter);
+
+        if (m != NULL) {
+            if (FPoint_Distance(pos, &m->pos) <= radius) {
+                return m;
+            }
+        }
+
+        return NULL;
+    }
+
+    /**
+     * Look-up a Mob from this SensorGrid.
+     */
+    Mob *get(MobID mobid)
+    {
+        int i = myMap.get(mobid);
+        if (i == -1) {
+            return NULL;
+        }
+        ASSERT(i < myTargets.size());
+        return &myTargets[i].mob;
+    }
+
+    /**
      * Find the enemy base closest to your base.
      */
-    Mob *enemyBase();
+    Mob *enemyBase() {
+        NOT_IMPLEMENTED();
+    }
 
 private:
     struct Target {
