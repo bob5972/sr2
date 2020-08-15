@@ -42,7 +42,20 @@ public:
         CMobIt mit;
 
         /*
-         * Update existing mobs.
+         * Update base.
+         */
+        CMobIt_Start(&ai->mobs, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *m = CMobIt_Next(&mit);
+
+            if (m->type == MOB_TYPE_BASE) {
+                myBasePos = m->pos;
+                break;
+            }
+        }
+
+        /*
+         * Update existing targets.
          */
         CMobIt_Start(&ai->sensors, &mit);
         while (CMobIt_HasNext(&mit)) {
@@ -88,15 +101,18 @@ public:
     /**
      * Find the closest mob to the specified point.
      */
-    Mob *findClosestMob(const FPoint *pos, MobTypeFlags filter) {
-        return findNthClosestMob(pos, filter, 0);
+    Mob *findClosestTarget(const FPoint *pos, MobTypeFlags filter) {
+        /*
+         * XXX: It's faster to implement this directly to avoid the sort.
+         */
+        return findNthClosestTarget(pos, filter, 0);
     }
 
     /**
      * Find the Nth closest mob to the specified point.
      * This is 0-based, so the closest mob is found when n=0.
      */
-    Mob *findNthClosestMob(const FPoint *pos, MobTypeFlags filter, int n) {
+    Mob *findNthClosestTarget(const FPoint *pos, MobTypeFlags filter, int n) {
         ASSERT(n >= 0);
 
         if (n > myTargets.size()) {
@@ -107,7 +123,10 @@ public:
         v.ensureCapacity(myTargets.size());
 
         for (uint i = 0; i < myTargets.size(); i++) {
-            v.push(&myTargets[i].mob);
+            Mob *m = &myTargets[i].mob;
+            if (((1 << m->type) & filter) != 0) {
+                v.push(m);
+            }
         }
 
         CMBComparator comp;
@@ -121,9 +140,9 @@ public:
      * Find the closest mob to the specified point, if it's within
      * the specified range.
      */
-    Mob *findClosestMobInRange(const FPoint *pos, MobTypeFlags filter,
-                               float radius) {
-        Mob *m = findClosestMob(pos, filter);
+    Mob *findClosestTargetInRange(const FPoint *pos, MobTypeFlags filter,
+                                  float radius) {
+        Mob *m = findClosestTarget(pos, filter);
 
         if (m != NULL) {
             if (FPoint_Distance(pos, &m->pos) <= radius) {
@@ -137,8 +156,7 @@ public:
     /**
      * Look-up a Mob from this SensorGrid.
      */
-    Mob *get(MobID mobid)
-    {
+    Mob *get(MobID mobid) {
         int i = myMap.get(mobid);
         if (i == -1) {
             return NULL;
@@ -151,7 +169,7 @@ public:
      * Find the enemy base closest to your base.
      */
     Mob *enemyBase() {
-        NOT_IMPLEMENTED();
+        return findClosestTarget(&myBasePos, MOB_FLAG_BASE);
     }
 
 private:
@@ -164,6 +182,7 @@ private:
      * Map mobid to index in the mobs vector.
      */
     IntMap myMap;
+    FPoint myBasePos;
 
     MBVector<Target> myTargets;
 };
