@@ -26,15 +26,56 @@ class SensorGrid
 {
 public:
     SensorGrid() {
-        map.setEmptyValue(-1);
+        myMap.setEmptyValue(-1);
     }
 
     void updateTick(FleetAI *ai) {
-        NOT_IMPLEMENTED();
+        CMobIt mit;
+
+        /*
+         * Update existing mobs.
+         */
+        CMobIt_Start(&ai->sensors, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *m = CMobIt_Next(&mit);
+            int i = myMap.get(m->mobid);
+
+            if (i == -1) {
+                myTargets.grow();
+                i = myTargets.size() - 1;
+            }
+
+            Target *t = &myTargets[i];
+            t->mob = *m;
+            t->lastSeenTick = ai->tick;
+        }
+
+        /*
+         * Clear out stale targets.
+         */
+        for (uint i = 0; i < myTargets.size(); i++) {
+            uint staleAge;
+            ASSERT(myTargets[i].lastSeenTick <= ai->tick);
+
+            if (myTargets[i].mob.type == MOB_TYPE_BASE) {
+                staleAge = MAX_UINT;
+            } else {
+                staleAge = 2;
+            }
+
+            if (myTargets[i].lastSeenTick - ai->tick > staleAge) {
+                int last = myTargets.size() - 1;
+                if (last != -1) {
+                    myTargets[i] = myTargets[last];
+                    myTargets.shrink();
+                }
+                myMap.put(myTargets[i].mob.mobid, i);
+            }
+        }
     }
 
     Mob *findClosestMob(const FPoint *pos, MobTypeFlags filter);
-    MOb *findNthClosestMob(const FPoint *pos, MobTypeFlags filter, int n);
+    Mob *findNthClosestMob(const FPoint *pos, MobTypeFlags filter, int n);
     Mob *findClosestMobInRange(const FPoint *pos, MobTypeFlags filter,
                                float radius);
     Mob *get(MobID mobid);
@@ -45,9 +86,6 @@ public:
     Mob *enemyBase();
 
 private:
-    void remove(MobID mobid);
-    void add(Mob *mob);
-
     struct Target {
         Mob mob;
         uint lastSeenTick;
@@ -56,10 +94,10 @@ private:
     /*
      * Map mobid to index in the mobs vector.
      */
-    IntMap map;
+    IntMap myMap;
 
-    MBVector<Target> mobs;
-}
+    MBVector<Target> myTargets;
+};
 
 
 #endif // _SENSORGRID_H_202008021543

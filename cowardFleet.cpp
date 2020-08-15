@@ -24,6 +24,7 @@ extern "C" {
 }
 
 #include "MBVector.hpp"
+#include "sensorGrid.hpp"
 
 typedef struct CowardShip {
     MobID mobid;
