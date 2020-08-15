@@ -30,6 +30,11 @@ public:
      */
     SensorGrid() {
         myMap.setEmptyValue(-1);
+        myTargets.pin();
+    }
+
+    ~SensorGrid() {
+        myTargets.unpin();
     }
 
     /**
@@ -40,6 +45,8 @@ public:
      */
     void updateTick(FleetAI *ai) {
         CMobIt mit;
+
+        myTargets.unpin();
 
         /*
          * Update base.
@@ -62,12 +69,17 @@ public:
             Mob *m = CMobIt_Next(&mit);
             int i = myMap.get(m->mobid);
 
+            Warning("%s:%d i=%d\n", __FUNCTION__, __LINE__, i);//XXX banackm
+
             if (i == -1) {
                 myTargets.grow();
                 i = myTargets.size() - 1;
+                Warning("%s:%d putting mobid=%d, i=%d\n", __FUNCTION__, __LINE__,
+                        m->mobid, i);//XXX banackm
                 myMap.put(m->mobid, i);
             }
 
+            ASSERT(i < myTargets.size());
             Target *t = &myTargets[i];
             t->mob = *m;
             t->lastSeenTick = ai->tick;
@@ -78,6 +90,8 @@ public:
          */
         for (uint i = 0; i < myTargets.size(); i++) {
             uint staleAge;
+
+            ASSERT(myMap.get(myTargets[i].mob.mobid) == i);
             ASSERT(myTargets[i].lastSeenTick <= ai->tick);
 
             if (myTargets[i].mob.type == MOB_TYPE_BASE) {
@@ -88,14 +102,25 @@ public:
 
             if (myTargets[i].lastSeenTick - ai->tick > staleAge) {
                 myMap.remove(myTargets[i].mob.mobid);
+                 Warning("%s:%d removing mobid=%d\n", __FUNCTION__, __LINE__,
+                        myTargets[i].mob.mobid);//XXX banackm
                 int last = myTargets.size() - 1;
                 if (last != -1) {
                     myTargets[i] = myTargets[last];
+                    myMap.put(myTargets[i].mob.mobid, i);
+                    Warning("%s:%d putting mobid=%d, i=%d\n", __FUNCTION__, __LINE__,
+                            myTargets[i].mob.mobid, i);//XXX banackm
                     myTargets.shrink();
                 }
-                myMap.put(myTargets[i].mob.mobid, i);
+
+                /*
+                 * Re-process this same index.
+                 */
+                i--;
             }
         }
+
+        myTargets.pin();
     }
 
     /**
@@ -115,7 +140,7 @@ public:
     Mob *findNthClosestTarget(const FPoint *pos, MobTypeFlags filter, int n) {
         ASSERT(n >= 0);
 
-        if (n > myTargets.size()) {
+        if (n >= myTargets.size()) {
             return NULL;
         }
 
@@ -127,6 +152,10 @@ public:
             if (((1 << m->type) & filter) != 0) {
                 v.push(m);
             }
+        }
+
+        if (n >= v.size()) {
+            return NULL;
         }
 
         CMBComparator comp;

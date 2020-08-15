@@ -26,15 +26,6 @@ extern "C" {
 #include "MBVector.hpp"
 #include "sensorGrid.hpp"
 
-typedef struct CowardShip {
-    MobID mobid;
-} CowardShip;
-
-typedef struct CowardTarget {
-    Mob mob;
-    uint seenTick;
-} CowardTarget;
-
 class CowardFleet {
 public:
     CowardFleet(FleetAI *ai) {
@@ -48,15 +39,12 @@ public:
 
     FleetAI *ai;
     RandomState rs;
-    MBVector<CowardTarget> tvec;
+    SensorGrid sg;
 };
 
 static void *CowardFleetCreate(FleetAI *ai);
 static void CowardFleetDestroy(void *aiHandle);
 static void CowardFleetRunAITick(void *aiHandle);
-static void *CowardFleetMobSpawned(void *aiHandle, Mob *m);
-static void CowardFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
-static CowardShip *CowardFleetGetShip(CowardFleet *sf, MobID mobid);
 
 void CowardFleet_GetOps(FleetAIOps *ops)
 {
@@ -69,8 +57,6 @@ void CowardFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &CowardFleetCreate;
     ops->destroyFleet = &CowardFleetDestroy;
     ops->runAITick = &CowardFleetRunAITick;
-    ops->mobSpawned = CowardFleetMobSpawned;
-    ops->mobDestroyed = CowardFleetMobDestroyed;
 }
 
 static void *CowardFleetCreate(FleetAI *ai)
@@ -86,111 +72,6 @@ static void CowardFleetDestroy(void *handle)
     delete sf;
 }
 
-static void CowardFleetUpdateTarget(CowardFleet *sf, Mob *m)
-{
-    ASSERT(sf != NULL);
-    ASSERT(m != NULL);
-
-    for (uint i = 0; i < sf->tvec.size(); i++) {
-        CowardTarget *cur = &sf->tvec[i];
-        if (cur->mob.mobid == m->mobid) {
-            cur->mob = *m;
-            cur->seenTick = sf->ai->tick;
-            return;
-        }
-    }
-}
-
-static void CowardFleetAddTarget(CowardFleet *sf, Mob *m)
-{
-    ASSERT(sf != NULL);
-    ASSERT(m != NULL);
-
-    for (uint i = 0; i < sf->tvec.size(); i++) {
-        CowardTarget *cur = &sf->tvec[i];
-        if (cur->mob.mobid == m->mobid) {
-            /*
-             * If it's already here, don't re-add it.
-             * We already processed new scan data in UpdateTarget.
-             */
-            return;
-        }
-    }
-
-    sf->tvec.grow();
-    uint index = sf->tvec.size() - 1;
-    CowardTarget *t = &sf->tvec[index];
-    t->mob = *m;
-    t->seenTick = sf->ai->tick;
-}
-
-static void CowardFleetCleanTargets(CowardFleet *sf)
-{
-    ASSERT(sf != NULL);
-
-    uint i = 0;
-
-    while (i < sf->tvec.size()) {
-        CowardTarget *cur = &sf->tvec[i];
-
-        ASSERT(sf->ai->tick >= cur->seenTick);
-        if (sf->ai->tick - cur->seenTick > 2) {
-            uint lastIndex = sf->tvec.size() - 1;
-            CowardTarget *last = &sf->tvec[lastIndex];
-            *cur = *last;
-            sf->tvec.shrink();
-        } else {
-            i++;
-        }
-    }
-}
-
-static void *CowardFleetMobSpawned(void *aiHandle, Mob *m)
-{
-    CowardFleet *sf = (CowardFleet *)aiHandle;
-
-    ASSERT(sf != NULL);
-    ASSERT(m != NULL);
-
-    if (m->type == MOB_TYPE_FIGHTER) {
-        CowardShip *ship;
-        ship = (CowardShip *)MBUtil_ZAlloc(sizeof(*ship));
-        ship->mobid = m->mobid;
-        return ship;
-    } else {
-        /*
-         * We don't track anything else.
-         */
-        return NULL;
-    }
-}
-
-/*
- * Potentially invalidates any outstanding ship references.
- */
-static void CowardFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
-{
-    if (aiMobHandle == NULL) {
-        return;
-    }
-
-    CowardFleet *sf = (CowardFleet *)aiHandle;
-    CowardShip *ship = (CowardShip *)aiMobHandle;
-
-    ASSERT(sf != NULL);
-    free(ship);
-}
-
-static CowardShip *CowardFleetGetShip(CowardFleet *sf, MobID mobid)
-{
-    CowardShip *s = (CowardShip *)MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
-
-    ASSERT(s != NULL);
-    ASSERT(s->mobid == mobid);
-    return s;
-}
-
-
 static void CowardFleetRunAITick(void *aiHandle)
 {
     CowardFleet *sf = (CowardFleet *)aiHandle;
@@ -203,30 +84,7 @@ static void CowardFleetRunAITick(void *aiHandle)
 
     ASSERT(ai->player.aiType == FLEET_AI_COWARD);
 
-    CMobIt_Start(&ai->sensors, &mit);
-    while (CMobIt_HasNext(&mit)) {
-        Mob *m = CMobIt_Next(&mit);
-        CowardFleetUpdateTarget(sf, m);
-    }
-
-    uint minVecSize = sf->tvec.size() + MobPSet_Size(&ai->sensors);
-    sf->tvec.ensureCapacity(minVecSize);
-    sf->tvec.pin();
-
-    for (uint i = 0; i < sf->tvec.size(); i++) {
-        CowardTarget *t = &sf->tvec[i];
-
-        /*
-         * Add any targets found in the last round that have since
-         * moved out of scanning range, and assume they're still there.
-         *
-         * Since we probably just ran away, this gives the missiles we
-         * just shot a place to aim.
-         */
-        if (MobPSet_Get(&ai->sensors, t->mob.mobid) == NULL) {
-            MobPSet_Add(&ai->sensors, &t->mob);
-        }
-    }
+    sf->sg.updateTick(ai);
 
     /*
      * Move Non-Fighters first, since they're simpler and modify
@@ -250,8 +108,8 @@ static void CowardFleetRunAITick(void *aiHandle)
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = MOB_FLAG_SHIP;
             float range = firingRange + 5;
-            Mob *target = FleetUtil_FindClosestMobInRange(&ai->sensors, &mob->pos,
-                                                          scanFilter, range);
+            Mob *target;
+            target = sf->sg.findClosestTargetInRange(&mob->pos, scanFilter, range);
             if (target != NULL) {
                 mob->cmd.target = target->pos;
             }
@@ -277,12 +135,8 @@ static void CowardFleetRunAITick(void *aiHandle)
             continue;
         }
 
-        CowardShip *ship = CowardFleetGetShip(sf, mob->mobid);
         Mob *lootTarget = NULL;
         Mob *enemyTarget = NULL;
-
-        ASSERT(ship != NULL);
-        ASSERT(ship->mobid == mob->mobid);
 
         /*
          * Find loot.
@@ -304,7 +158,6 @@ static void CowardFleetRunAITick(void *aiHandle)
         if (enemyTarget != NULL) {
             if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
                 mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                CowardFleetAddTarget(sf, enemyTarget);
 
                 if (enemyTarget->type == MOB_TYPE_BASE) {
                     /*
@@ -341,10 +194,4 @@ static void CowardFleetRunAITick(void *aiHandle)
             mob->cmd.target.y = RandomState_Float(&sf->rs, 0.0f, bp->height);
         }
     }
-
-    /*
-     * Clear out the old targets.
-     */
-    sf->tvec.unpin();
-    CowardFleetCleanTargets(sf);
 }
