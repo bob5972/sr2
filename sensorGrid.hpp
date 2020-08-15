@@ -25,10 +25,16 @@
 class SensorGrid
 {
 public:
+    /**
+     * Construct a new SensorGrid.
+     */
     SensorGrid() {
         myMap.setEmptyValue(-1);
     }
 
+    /**
+     * Update the SensorGrid with the new sensor information in the tick.
+     */
     void updateTick(FleetAI *ai) {
         CMobIt mit;
 
