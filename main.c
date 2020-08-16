@@ -476,11 +476,12 @@ void MainConstructScenario(void)
             }
         }
 
-        uint b = mainData.numBSCs++;
-        mainData.bscs[b].bp = bsc.bp;
-        mainData.bscs[b].bp.numPlayers = mainData.numPlayers;
-        memcpy(&mainData.bscs[b].players, &mainData.players,
-               sizeof(mainData.players));
+//         // Battle royale
+//         uint b = mainData.numBSCs++;
+//         mainData.bscs[b].bp = bsc.bp;
+//         mainData.bscs[b].bp.numPlayers = mainData.numPlayers;
+//         memcpy(&mainData.bscs[b].players, &mainData.players,
+//                sizeof(mainData.players));
 
         ASSERT(mainData.numBSCs <= maxBscs);
     }

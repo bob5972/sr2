@@ -100,8 +100,7 @@ static void CowardFleetRunAITick(void *aiHandle)
     }
 
     /*
-     * Move Non-Fighters first, since they're simpler and modify
-     * the sensor state.
+     * Move Non-Fighters first, since they're simpler.
      */
     CMobIt_Start(&ai->mobs, &mit);
     while (CMobIt_HasNext(&mit)) {
