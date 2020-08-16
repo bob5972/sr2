@@ -28,14 +28,12 @@ public:
     /**
      * Construct a new SensorGrid.
      */
-    SensorGrid() {
-        myMap.setEmptyValue(-1);
-        myTargets.pin();
-    }
+    SensorGrid() { }
 
-    ~SensorGrid() {
-        myTargets.unpin();
-    }
+    /**
+     * Destroy this SensorGrid.
+     */
+    ~SensorGrid() { }
 
     /**
      * Update this SensorGrid with the new sensor information in the tick.
@@ -46,19 +44,22 @@ public:
     void updateTick(FleetAI *ai) {
         CMobIt mit;
 
+        myFriends.unpin();
         myTargets.unpin();
 
         /*
-         * Process friendly mobs, to update base / loot.
+         * Process friendly mobs.
          */
         CMobIt_Start(&ai->mobs, &mit);
         while (CMobIt_HasNext(&mit)) {
             Mob *m = CMobIt_Next(&mit);
 
+            myFriends.updateMob(m, ai->tick);
+
             if (m->type == MOB_TYPE_BASE) {
                 myBasePos = m->pos;
             } else if (m->type == MOB_TYPE_LOOT_BOX) {
-                MobPSet_Add(&ai->sensors, m);
+                myTargets.updateMob(m, ai->tick);
             }
         }
 
@@ -68,46 +69,27 @@ public:
         CMobIt_Start(&ai->sensors, &mit);
         while (CMobIt_HasNext(&mit)) {
             Mob *m = CMobIt_Next(&mit);
-            int i = myMap.get(m->mobid);
-
-            if (i == -1) {
-                myTargets.grow();
-                i = myTargets.size() - 1;
-                myMap.put(m->mobid, i);
-            }
-
-            ASSERT(i < myTargets.size());
-            Target *t = &myTargets[i];
-            t->mob = *m;
-            t->lastSeenTick = ai->tick;
+            myTargets.updateMob(m, ai->tick);
         }
 
         /*
          * Clear out stale targets.
          */
         uint i = 0;
-        while (i < myTargets.size()) {
+        while (i < myTargets.myMobs.size()) {
             uint staleAge;
 
-            ASSERT(myMap.get(myTargets[i].mob.mobid) == i);
-            ASSERT(myTargets[i].lastSeenTick <= ai->tick);
+            ASSERT(myTargets.myMap.get(myTargets.myMobs[i].mob.mobid) == i);
+            ASSERT(myTargets.myMobs[i].lastSeenTick <= ai->tick);
 
-            if (myTargets[i].mob.type == MOB_TYPE_BASE) {
+            if (myTargets.myMobs[i].mob.type == MOB_TYPE_BASE) {
                 staleAge = MAX_UINT;
             } else {
                 staleAge = 2;
             }
 
-            if (myTargets[i].lastSeenTick - ai->tick > staleAge) {
-                MobID badMobid = myTargets[i].mob.mobid;
-                int last = myTargets.size() - 1;
-                if (last != -1) {
-                    myTargets[i] = myTargets[last];
-                    myMap.put(myTargets[i].mob.mobid, i);
-                    myTargets.shrink();
-                }
-
-                myMap.remove(badMobid);
+            if (myTargets.myMobs[i].lastSeenTick - ai->tick > staleAge) {
+                myTargets.removeMob(myTargets.myMobs[i].mob.mobid);
             } else {
                 /*
                  * Only move onto the next one if we didn't swap it out.
@@ -116,11 +98,31 @@ public:
             }
         }
 
+        myFriends.pin();
         myTargets.pin();
     }
 
+
     /**
-     * Find the closest mob to the specified point.
+     * Find the friendly mob closest to the specified point.
+     */
+    Mob *findClosestFriend(const FPoint *pos, MobTypeFlags filter) {
+        /*
+         * XXX: It's faster to implement this directly to avoid the sort.
+         */
+        return findNthClosestFriend(pos, filter, 0);
+    }
+
+    /**
+     * Find the Nth closest friendly mob to the specified point.
+     * This is 0-based, so the closest mob is found when n=0.
+     */
+    Mob *findNthClosestFriend(const FPoint *pos, MobTypeFlags filter, int n) {
+        return findNthClosestMob(myFriends, pos, filter, n);
+    }
+
+    /**
+     * Find the target mob closest to the specified point.
      */
     Mob *findClosestTarget(const FPoint *pos, MobTypeFlags filter) {
         /*
@@ -130,35 +132,11 @@ public:
     }
 
     /**
-     * Find the Nth closest mob to the specified point.
+     * Find the Nth closest friendly mob to the specified point.
      * This is 0-based, so the closest mob is found when n=0.
      */
     Mob *findNthClosestTarget(const FPoint *pos, MobTypeFlags filter, int n) {
-        ASSERT(n >= 0);
-
-        if (n >= myTargets.size()) {
-            return NULL;
-        }
-
-        MBVector<Mob *> v;
-        v.ensureCapacity(myTargets.size());
-
-        for (uint i = 0; i < myTargets.size(); i++) {
-            Mob *m = &myTargets[i].mob;
-            if (((1 << m->type) & filter) != 0) {
-                v.push(m);
-            }
-        }
-
-        if (n >= v.size()) {
-            return NULL;
-        }
-
-        CMBComparator comp;
-        MobP_InitDistanceComparator(&comp, pos);
-        v.sort(MBComparator<Mob *>(&comp));
-
-        return v[n];
+        return findNthClosestMob(myTargets, pos, filter, n);
     }
 
     /**
@@ -182,12 +160,19 @@ public:
      * Look-up a Mob from this SensorGrid.
      */
     Mob *get(MobID mobid) {
-        int i = myMap.get(mobid);
-        if (i == -1) {
-            return NULL;
+        int i = myTargets.myMap.get(mobid);
+        if (i != -1) {
+            ASSERT(i < myTargets.myMobs.size());
+            return &myTargets.myMobs[i].mob;
         }
-        ASSERT(i < myTargets.size());
-        return &myTargets[i].mob;
+
+        i = myFriends.myMap.get(mobid);
+        if (i != -1) {
+            ASSERT(i < myFriends.myMobs.size());
+            return &myFriends.myMobs[i].mob;
+        }
+
+        return NULL;
     }
 
     /**
@@ -198,18 +183,101 @@ public:
     }
 
 private:
-    struct Target {
+    struct SensorImage {
         Mob mob;
         uint lastSeenTick;
     };
 
-    /*
-     * Map mobid to index in the mobs vector.
+    class MobSet {
+    public:
+        MobSet() {
+            myMap.setEmptyValue(-1);
+            myMobs.pin();
+        }
+
+        ~MobSet() {
+            myMobs.unpin();
+        }
+
+        void updateMob(Mob *m, uint tick) {
+            int i = myMap.get(m->mobid);
+
+            if (i == -1) {
+                myMobs.grow();
+                i = myMobs.size() - 1;
+                myMap.put(m->mobid, i);
+            }
+
+            ASSERT(i < myMobs.size());
+            SensorImage *t = &myMobs[i];
+            t->mob = *m;
+            t->lastSeenTick = tick;
+        }
+
+        void removeMob(MobID badMobid) {
+            int i = myMap.get(badMobid);
+            ASSERT(i != -1);
+
+            int last = myMobs.size() - 1;
+            if (last != -1) {
+                myMobs[i] = myMobs[last];
+                myMap.put(myMobs[i].mob.mobid, i);
+                myMobs.shrink();
+            }
+
+            myMap.remove(badMobid);
+        }
+
+        void pin() {
+            myMobs.pin();
+        }
+
+        void unpin() {
+            myMobs.unpin();
+        }
+
+        IntMap myMap;
+        MBVector<SensorImage> myMobs;
+    };
+
+
+    /**
+     * Find the Nth closest mob to the specified point.
+     * This is 0-based, so the closest mob is found when n=0.
      */
-    IntMap myMap;
+    Mob *findNthClosestMob(MobSet &ms, const FPoint *pos,
+                           MobTypeFlags filter, int n) {
+        ASSERT(n >= 0);
+
+        if (n >= ms.myMobs.size()) {
+            return NULL;
+        }
+
+        MBVector<Mob *> v;
+        v.ensureCapacity(ms.myMobs.size());
+
+        for (uint i = 0; i < ms.myMobs.size(); i++) {
+            Mob *m = &ms.myMobs[i].mob;
+            if (((1 << m->type) & filter) != 0) {
+                v.push(m);
+            }
+        }
+
+        if (n >= v.size()) {
+            return NULL;
+        }
+
+        CMBComparator comp;
+        MobP_InitDistanceComparator(&comp, pos);
+        v.sort(MBComparator<Mob *>(&comp));
+
+        return v[n];
+    }
+
     FPoint myBasePos;
 
-    MBVector<Target> myTargets;
+    MobSet myFriends;
+    MobSet myTargets;
 };
 
 

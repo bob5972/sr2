@@ -32,11 +32,16 @@ public:
         this->ai = ai;
         this->fighterCount = 0;
         this->waveSize = 0;
+        this->scaredOfFighters = TRUE;
 
         RandomState_CreateWithSeed(&this->rs, ai->seed);
 
         if (ai->player.mreg != NULL) {
-            this->waveSize = MBRegistry_GetUintD(ai->player.mreg, "WaveSize", 0);
+            this->waveSize = MBRegistry_GetUintD(ai->player.mreg, "WaveSize",
+                                                 this->waveSize);
+            this->scaredOfFighters =
+                MBRegistry_GetBoolD(ai->player.mreg, "scaredOfFighters",
+                                    this->scaredOfFighters);
         }
     }
 
@@ -47,6 +52,7 @@ public:
     FleetAI *ai;
     RandomState rs;
     SensorGrid sg;
+    bool scaredOfFighters;
     uint waveSize;
     int fighterCount;
 };
@@ -127,8 +133,7 @@ static void CowardFleetRunAITick(void *aiHandle)
     while (CMobIt_HasNext(&mit)) {
         Mob *mob = CMobIt_Next(&mit);
         if (mob->type == MOB_TYPE_LOOT_BOX) {
-            Mob *friendMob = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
-                                                      MOB_FLAG_SHIP);
+            Mob *friendMob = sf->sg.findClosestFriend(&mob->pos, MOB_FLAG_SHIP);
             if (friendMob != NULL) {
                 mob->cmd.target = friendMob->pos;
             }
@@ -194,11 +199,13 @@ static void CowardFleetRunAITick(void *aiHandle)
         /*
          * Find enemy targets to run away from.
          */
-        enemyTarget =
-            sf->sg.findClosestTargetInRange(&mob->pos,
-                                            MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE,
-                                            firingRange);
+        MobTypeFlags scaredFilter = MOB_FLAG_MISSILE;
+        if (sf->scaredOfFighters) {
+            scaredFilter |= MOB_FLAG_FIGHTER;
+        }
 
+        enemyTarget = sf->sg.findClosestTargetInRange(&mob->pos, scaredFilter,
+                                                      firingRange);
 
         if (enemyTarget != NULL) {
             // Run away!
