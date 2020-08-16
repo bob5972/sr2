@@ -28,7 +28,13 @@ public:
     /**
      * Construct a new SensorGrid.
      */
-    SensorGrid() { }
+    SensorGrid() {
+        myBasePos.x = 0.0f;
+        myBasePos.y = 0.0f;
+        myEnemyBaseIndex = -1;
+        myFriendBaseIndex = -1;
+        myEnemyBaseDestroyedCount = 0;
+    }
 
     /**
      * Destroy this SensorGrid.
@@ -50,16 +56,36 @@ public:
         /*
          * Process friendly mobs.
          */
+        myFriendBaseIndex = -1;
         CMobIt_Start(&ai->mobs, &mit);
         while (CMobIt_HasNext(&mit)) {
             Mob *m = CMobIt_Next(&mit);
 
-            myFriends.updateMob(m, ai->tick);
+            uint i = myFriends.updateMob(m, ai->tick);
 
             if (m->type == MOB_TYPE_BASE) {
                 myBasePos = m->pos;
+                myFriendBaseIndex = i;
             } else if (m->type == MOB_TYPE_LOOT_BOX) {
                 myTargets.updateMob(m, ai->tick);
+            }
+
+            if (myEnemyBaseIndex != -1) {
+                Mob *enemyBase = &myTargets.myMobs[myEnemyBaseIndex].mob;
+                ASSERT(enemyBase->type == MOB_TYPE_BASE);
+                if (Mob_CanScanPoint(m, &enemyBase->pos)) {
+                    /*
+                     * If we can scan where the enemyBase was, remove it,
+                     * since it's either gone now, or we'll re-add it below
+                     * if it shows up in the scan.
+                     *
+                     * XXX: If there's more than one enemyBase, we'll only
+                     * clear one at a time...
+                     */
+                    myEnemyBaseDestroyedCount++;
+                    myEnemyBaseIndex = -1;
+                    myTargets.removeMob(enemyBase->mobid);
+                }
             }
         }
 
@@ -83,12 +109,14 @@ public:
             ASSERT(myTargets.myMobs[i].lastSeenTick <= ai->tick);
 
             if (myTargets.myMobs[i].mob.type == MOB_TYPE_BASE) {
+                myEnemyBaseIndex = i;
                 staleAge = MAX_UINT;
             } else {
                 staleAge = 2;
             }
 
-            if (myTargets.myMobs[i].lastSeenTick - ai->tick > staleAge) {
+            if (staleAge < MAX_UINT &&
+                myTargets.myMobs[i].lastSeenTick - ai->tick > staleAge) {
                 myTargets.removeMob(myTargets.myMobs[i].mob.mobid);
             } else {
                 /*
@@ -182,6 +210,24 @@ public:
         return findClosestTarget(&myBasePos, MOB_FLAG_BASE);
     }
 
+    /**
+     * How many enemyBases can we confirm were destroyed?
+     */
+    int enemyBasesDestroyed() {
+        return myEnemyBaseDestroyedCount;
+    }
+
+    /**
+     * Return the position of a friendly base.
+     */
+    Mob *friendBase() {
+        if (myFriendBaseIndex == -1) {
+            return NULL;
+        }
+
+        return &myFriends.myMobs[myFriendBaseIndex].mob;
+    }
+
 private:
     struct SensorImage {
         Mob mob;
@@ -199,7 +245,7 @@ private:
             myMobs.unpin();
         }
 
-        void updateMob(Mob *m, uint tick) {
+        int updateMob(Mob *m, uint tick) {
             int i = myMap.get(m->mobid);
 
             if (i == -1) {
@@ -212,6 +258,8 @@ private:
             SensorImage *t = &myMobs[i];
             t->mob = *m;
             t->lastSeenTick = tick;
+
+            return i;
         }
 
         void removeMob(MobID badMobid) {
@@ -275,6 +323,10 @@ private:
     }
 
     FPoint myBasePos;
+    int myFriendBaseIndex;
+
+    int myEnemyBaseDestroyedCount;
+    int myEnemyBaseIndex;
 
     MobSet myFriends;
     MobSet myTargets;
