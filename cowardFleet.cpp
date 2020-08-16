@@ -36,7 +36,7 @@ public:
         RandomState_CreateWithSeed(&this->rs, ai->seed);
 
         if (ai->player.mreg != NULL) {
-            this->waveSize = MBRegistry_GetUintD(ai->player.mreg, "WaveSize", 20);
+            this->waveSize = MBRegistry_GetUintD(ai->player.mreg, "WaveSize", 00);
         }
     }
 
