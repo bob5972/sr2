@@ -36,7 +36,7 @@ public:
         RandomState_CreateWithSeed(&this->rs, ai->seed);
 
         if (ai->player.mreg != NULL) {
-            this->waveSize = MBRegistry_GetUintD(ai->player.mreg, "WaveSize", 00);
+            this->waveSize = MBRegistry_GetUintD(ai->player.mreg, "WaveSize", 0);
         }
     }
 
@@ -132,12 +132,6 @@ static void CowardFleetRunAITick(void *aiHandle)
             if (friendMob != NULL) {
                 mob->cmd.target = friendMob->pos;
             }
-
-            /*
-             * Add this mob to the sensor list so that we'll
-             * steer towards it.
-             */
-            MobPSet_Add(&ai->sensors, mob);
         } else if (mob->type == MOB_TYPE_MISSILE) {
             uint scanFilter = MOB_FLAG_SHIP;
             float range = firingRange + 5;
@@ -174,14 +168,9 @@ static void CowardFleetRunAITick(void *aiHandle)
         /*
          * Find loot.
          */
-        lootTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                 MOB_FLAG_LOOT_BOX);
-
-        if (lootTarget != NULL) {
-            if (FPoint_Distance(&mob->pos, &lootTarget->pos) > scanningRange) {
-                lootTarget = NULL;
-            }
-        }
+        lootTarget = sf->sg.findClosestTargetInRange(&mob->pos,
+                                                     MOB_FLAG_LOOT_BOX,
+                                                     scanningRange);
 
         /*
          * Find enemy targets to shoot.

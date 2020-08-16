@@ -49,7 +49,7 @@ public:
         myTargets.unpin();
 
         /*
-         * Update base.
+         * Process friendly mobs, to update base / loot.
          */
         CMobIt_Start(&ai->mobs, &mit);
         while (CMobIt_HasNext(&mit)) {
@@ -57,7 +57,8 @@ public:
 
             if (m->type == MOB_TYPE_BASE) {
                 myBasePos = m->pos;
-                break;
+            } else if (m->type == MOB_TYPE_LOOT_BOX) {
+                MobPSet_Add(&ai->sensors, m);
             }
         }
 
