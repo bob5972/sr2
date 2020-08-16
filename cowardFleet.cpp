@@ -85,6 +85,7 @@ static void CowardFleetRunAITick(void *aiHandle)
     CMobIt mit;
     Mob *friendBase = NULL;
     Mob *threatTarget = NULL;
+    uint threatCount = 0;
 
     ASSERT(ai->player.aiType == FLEET_AI_COWARD);
 
@@ -174,11 +175,12 @@ static void CowardFleetRunAITick(void *aiHandle)
             float dy = scaredTarget->pos.y - mob->pos.y;
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
-        } else if (threatTarget != NULL &&
+        } else if (threatCount < 2 && threatTarget != NULL &&
                    FPoint_Distance(&mob->pos, &friendBase->pos) < guardRange) {
             // Defend the base!
             FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                          &threatTarget->pos, attackRange);
+            threatCount++;
         } else if (lootTarget != NULL) {
             mob->cmd.target = lootTarget->pos;
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
