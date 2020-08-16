@@ -116,7 +116,7 @@ public:
             }
 
             if (staleAge < MAX_UINT &&
-                myTargets.myMobs[i].lastSeenTick - ai->tick > staleAge) {
+                ai->tick - myTargets.myMobs[i].lastSeenTick > staleAge) {
                 myTargets.removeMob(myTargets.myMobs[i].mob.mobid);
             } else {
                 /*
