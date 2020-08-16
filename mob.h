@@ -48,7 +48,15 @@ bool CMobIt_HasNext(CMobIt *mit);
 Mob *CMobIt_Next(CMobIt *mit);
 void CMobIt_Remove(CMobIt *mit);
 
+/**
+ * Construct comparator to sort array of <Mob *> by distance from pos.
+ */
 void Mob_InitDistanceComparator(CMBComparator *comp, const FPoint *pos);
+
+/**
+ * Construct comparator to sort array of <Mob **> by distance from pos.
+ */
+void MobP_InitDistanceComparator(CMBComparator *comp, const FPoint *pos);
 
 void Mob_Init(Mob *mob, MobType t);
 

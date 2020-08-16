@@ -69,13 +69,9 @@ public:
             Mob *m = CMobIt_Next(&mit);
             int i = myMap.get(m->mobid);
 
-            Warning("%s:%d i=%d\n", __FUNCTION__, __LINE__, i);//XXX banackm
-
             if (i == -1) {
                 myTargets.grow();
                 i = myTargets.size() - 1;
-                Warning("%s:%d putting mobid=%d, i=%d\n", __FUNCTION__, __LINE__,
-                        m->mobid, i);//XXX banackm
                 myMap.put(m->mobid, i);
             }
 
@@ -88,7 +84,8 @@ public:
         /*
          * Clear out stale targets.
          */
-        for (uint i = 0; i < myTargets.size(); i++) {
+        uint i = 0;
+        while (i < myTargets.size()) {
             uint staleAge;
 
             ASSERT(myMap.get(myTargets[i].mob.mobid) == i);
@@ -101,22 +98,20 @@ public:
             }
 
             if (myTargets[i].lastSeenTick - ai->tick > staleAge) {
-                myMap.remove(myTargets[i].mob.mobid);
-                 Warning("%s:%d removing mobid=%d\n", __FUNCTION__, __LINE__,
-                        myTargets[i].mob.mobid);//XXX banackm
+                MobID badMobid = myTargets[i].mob.mobid;
                 int last = myTargets.size() - 1;
                 if (last != -1) {
                     myTargets[i] = myTargets[last];
                     myMap.put(myTargets[i].mob.mobid, i);
-                    Warning("%s:%d putting mobid=%d, i=%d\n", __FUNCTION__, __LINE__,
-                            myTargets[i].mob.mobid, i);//XXX banackm
                     myTargets.shrink();
                 }
 
+                myMap.remove(badMobid);
+            } else {
                 /*
-                 * Re-process this same index.
+                 * Only move onto the next one if we didn't swap it out.
                  */
-                i--;
+                i++;
             }
         }
 
@@ -159,7 +154,7 @@ public:
         }
 
         CMBComparator comp;
-        Mob_InitDistanceComparator(&comp, pos);
+        MobP_InitDistanceComparator(&comp, pos);
         v.sort(MBComparator<Mob *>(&comp));
 
         return v[n];

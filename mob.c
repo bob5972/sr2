@@ -359,11 +359,16 @@ void MobPSet_UnitTest()
     MobPSet_Destroy(&ms);
 }
 
-static int MobDistanceComparatorFn(const void *lhs, const void *rhs, void *cbData)
+
+static int MobDistanceComparatorFn(const void *lhs, const void *rhs,
+                                   void *cbData)
 {
     const Mob *l = lhs;
     const Mob *r = rhs;
     const FPoint *pos = cbData;
+
+    ASSERT(Mob_CheckInvariants(l));
+    ASSERT(Mob_CheckInvariants(r));
 
     float lDistance = FPoint_Distance(pos, &l->pos);
     float rDistance = FPoint_Distance(pos, &r->pos);
@@ -378,11 +383,30 @@ static int MobDistanceComparatorFn(const void *lhs, const void *rhs, void *cbDat
     }
 }
 
+static int MobPDistanceComparatorFn(const void *lhs, const void *rhs,
+                                    void *cbData)
+{
+    const Mob **l = (void *)lhs;
+    const Mob **r = (void *)rhs;
+    const FPoint *pos = cbData;
+
+    return MobDistanceComparatorFn(*l, *r, (void *)pos);
+}
+
 
 void Mob_InitDistanceComparator(CMBComparator *comp, const FPoint *pos)
 {
     ASSERT(comp != NULL);
     comp->compareFn = MobDistanceComparatorFn;
     comp->cbData = (void *)pos;
+    comp->itemSize = sizeof(Mob);
+}
+
+void MobP_InitDistanceComparator(CMBComparator *comp, const FPoint *pos)
+{
+    ASSERT(comp != NULL);
+    comp->compareFn = MobPDistanceComparatorFn;
+    comp->cbData = (void *)pos;
     comp->itemSize = sizeof(Mob *);
 }
+
