@@ -30,16 +30,7 @@ class CowardFleet {
 public:
     CowardFleet(FleetAI *ai) {
         this->ai = ai;
-        this->fighterCount = 0;
-        this->baseWaveSize = 0;
-        this->aggressive = FALSE;
-
         RandomState_CreateWithSeed(&this->rs, ai->seed);
-
-        if (ai->player.mreg != NULL) {
-            this->baseWaveSize = MBRegistry_GetUintD(ai->player.mreg, "baseWaveSize",
-                                                 this->baseWaveSize);
-        }
     }
 
     ~CowardFleet() {
@@ -49,16 +40,11 @@ public:
     FleetAI *ai;
     RandomState rs;
     SensorGrid sg;
-    uint baseWaveSize;
-    int fighterCount;
-    bool aggressive;
 };
 
 static void *CowardFleetCreate(FleetAI *ai);
 static void CowardFleetDestroy(void *aiHandle);
 static void CowardFleetRunAITick(void *aiHandle);
-static void *CowardFleetMobSpawned(void *aiHandle, Mob *m);
-static void CowardFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
 void CowardFleet_GetOps(FleetAIOps *ops)
 {
@@ -71,8 +57,6 @@ void CowardFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &CowardFleetCreate;
     ops->destroyFleet = &CowardFleetDestroy;
     ops->runAITick = &CowardFleetRunAITick;
-    ops->mobSpawned = CowardFleetMobSpawned;
-    ops->mobDestroyed = CowardFleetMobDestroyed;
 }
 
 static void *CowardFleetCreate(FleetAI *ai)
@@ -88,26 +72,6 @@ static void CowardFleetDestroy(void *handle)
     delete sf;
 }
 
-static void *CowardFleetMobSpawned(void *aiHandle, Mob *m)
-{
-    CowardFleet *sf = (CowardFleet *)aiHandle;
-
-    if (m->type == MOB_TYPE_FIGHTER) {
-        sf->fighterCount++;
-    }
-
-    return NULL;
-}
-static void CowardFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
-{
-    CowardFleet *sf = (CowardFleet *)aiHandle;
-
-    if (m->type == MOB_TYPE_FIGHTER) {
-        ASSERT(sf->fighterCount > 0);
-        sf->fighterCount--;
-    }
-}
-
 static void CowardFleetRunAITick(void *aiHandle)
 {
     CowardFleet *sf = (CowardFleet *)aiHandle;
@@ -118,7 +82,6 @@ static void CowardFleetRunAITick(void *aiHandle)
     float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
     float attackRange = MIN(firingRange, scanningRange) - 1;
-    float aggressiveRange = firingRange * 3;
     CMobIt mit;
     Mob *friendBase = NULL;
     Mob *threatTarget = NULL;
@@ -126,13 +89,6 @@ static void CowardFleetRunAITick(void *aiHandle)
     ASSERT(ai->player.aiType == FLEET_AI_COWARD);
 
     sf->sg.updateTick(ai);
-
-    if (sf->sg.enemyBase() == NULL &&
-        sf->sg.enemyBasesDestroyed() > 0) {
-        sf->aggressive = TRUE;
-    } else {
-        sf->aggressive = FALSE;
-    }
 
     friendBase = sf->sg.friendBase();
     if (friendBase != NULL) {
@@ -187,7 +143,6 @@ static void CowardFleetRunAITick(void *aiHandle)
         Mob *lootTarget = NULL;
         Mob *enemyTarget = NULL;
         Mob *scaredTarget = NULL;
-        Mob *aggressiveTarget = NULL;
 
         /*
          * Find loot.
@@ -213,23 +168,6 @@ static void CowardFleetRunAITick(void *aiHandle)
         scaredTarget = sf->sg.findClosestTargetInRange(&mob->pos, scaredFilter,
                                                        firingRange);
 
-        /*
-         * Find enemy targets to head towards.
-         */
-        aggressiveTarget = sf->sg.findClosestTargetInRange(&mob->pos,
-                                                            MOB_FLAG_SHIP,
-                                                            aggressiveRange);
-        if (!sf->aggressive) {
-            /*
-             * If we're not aggressive, only aggressively pursue bases.
-             */
-            if (aggressiveTarget != NULL) {
-                if (aggressiveTarget->type != MOB_TYPE_BASE) {
-                    aggressiveTarget = NULL;
-                }
-            }
-        }
-
         if (scaredTarget != NULL) {
             // Run away!
             float dx = scaredTarget->pos.x - mob->pos.x;
@@ -253,16 +191,6 @@ static void CowardFleetRunAITick(void *aiHandle)
             if (enemyTarget != NULL && enemyTarget->type == MOB_TYPE_BASE) {
                 FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                              &enemyTarget->pos, attackRange);
-            } if (aggressiveTarget != NULL) {
-                FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
-                                             &aggressiveTarget->pos,
-                                             aggressiveRange);
-            } else if (sf->baseWaveSize > 0 &&
-                       sf->fighterCount > sf->baseWaveSize) {
-                Mob *enemyBase = sf->sg.enemyBase();
-                if (enemyBase != NULL) {
-                    mob->cmd.target = enemyBase->pos;
-                }
             }
         }
     }
