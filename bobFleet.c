@@ -48,7 +48,7 @@ static void *BobFleetCreate(FleetAI *ai);
 static void BobFleetDestroy(void *aiHandle);
 static void BobFleetRunAITick(void *aiHandle);
 static void *BobFleetMobSpawned(void *aiHandle, Mob *m);
-static void BobFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid);
 
 void BobFleet_GetOps(FleetAIOps *ops)
@@ -117,7 +117,7 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void BobFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
+static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
     if (aiMobHandle == NULL) {
         return;

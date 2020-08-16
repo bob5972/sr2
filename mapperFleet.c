@@ -74,7 +74,7 @@ static void *MapperFleetCreate(FleetAI *ai);
 static void MapperFleetDestroy(void *aiHandle);
 static void MapperFleetRunAITick(void *aiHandle);
 static void *MapperFleetMobSpawned(void *aiHandle, Mob *m);
-static void MapperFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static void MapperFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static MapperShip *MapperFleetGetShip(MapperFleetData *sf, MobID mobid);
 
 void MapperFleet_GetOps(FleetAIOps *ops)
@@ -194,7 +194,7 @@ static void *MapperFleetMobSpawned(void *aiHandle, Mob *m)
     }
 }
 
-static void MapperFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
+static void MapperFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
     if (aiMobHandle == NULL) {
         return;

@@ -30,7 +30,14 @@ class CowardFleet {
 public:
     CowardFleet(FleetAI *ai) {
         this->ai = ai;
+        this->fighterCount = 0;
+        this->waveSize = 0;
+
         RandomState_CreateWithSeed(&this->rs, ai->seed);
+
+        if (ai->player.mreg != NULL) {
+            this->waveSize = MBRegistry_GetUintD(ai->player.mreg, "WaveSize", 20);
+        }
     }
 
     ~CowardFleet() {
@@ -40,11 +47,15 @@ public:
     FleetAI *ai;
     RandomState rs;
     SensorGrid sg;
+    uint waveSize;
+    int fighterCount;
 };
 
 static void *CowardFleetCreate(FleetAI *ai);
 static void CowardFleetDestroy(void *aiHandle);
 static void CowardFleetRunAITick(void *aiHandle);
+static void *CowardFleetMobSpawned(void *aiHandle, Mob *m);
+static void CowardFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
 void CowardFleet_GetOps(FleetAIOps *ops)
 {
@@ -57,6 +68,8 @@ void CowardFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &CowardFleetCreate;
     ops->destroyFleet = &CowardFleetDestroy;
     ops->runAITick = &CowardFleetRunAITick;
+    ops->mobSpawned = CowardFleetMobSpawned;
+    ops->mobDestroyed = CowardFleetMobDestroyed;
 }
 
 static void *CowardFleetCreate(FleetAI *ai)
@@ -70,6 +83,26 @@ static void CowardFleetDestroy(void *handle)
     CowardFleet *sf = (CowardFleet *)handle;
     ASSERT(sf != NULL);
     delete sf;
+}
+
+static void *CowardFleetMobSpawned(void *aiHandle, Mob *m)
+{
+    CowardFleet *sf = (CowardFleet *)aiHandle;
+
+    if (m->type == MOB_TYPE_FIGHTER) {
+        sf->fighterCount++;
+    }
+
+    return NULL;
+}
+static void CowardFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
+{
+    CowardFleet *sf = (CowardFleet *)aiHandle;
+
+    if (m->type == MOB_TYPE_FIGHTER) {
+        ASSERT(sf->fighterCount > 0);
+        sf->fighterCount--;
+    }
 }
 
 static void CowardFleetRunAITick(void *aiHandle)
@@ -153,33 +186,30 @@ static void CowardFleetRunAITick(void *aiHandle)
         /*
          * Find enemy targets to shoot.
          */
-        enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                  MOB_FLAG_SHIP);
+        enemyTarget = sf->sg.findClosestTargetInRange(&mob->pos,
+                                                      MOB_FLAG_SHIP, firingRange);
         if (enemyTarget != NULL) {
-            if (FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange) {
-                mob->cmd.spawnType = MOB_TYPE_MISSILE;
+            ASSERT(FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange);
+            mob->cmd.spawnType = MOB_TYPE_MISSILE;
 
-                if (enemyTarget->type == MOB_TYPE_BASE) {
-                    /*
-                    * Be more aggressive to bases.
-                    */
-                    float range = MIN(firingRange, scanningRange) - 1;
-                    FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
-                                                 &enemyTarget->pos, range);
-                }
+            if (enemyTarget->type == MOB_TYPE_BASE) {
+                /*
+                * Be more aggressive to bases.
+                */
+                float range = MIN(firingRange, scanningRange) - 1;
+                FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
+                                             &enemyTarget->pos, range);
             }
         }
 
         /*
          * Find enemy targets to run away from.
          */
-        enemyTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                  MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE);
-        if (enemyTarget != NULL) {
-            if (FPoint_Distance(&mob->pos, &enemyTarget->pos) >= firingRange) {
-                enemyTarget = NULL;
-            }
-        }
+        enemyTarget =
+            sf->sg.findClosestTargetInRange(&mob->pos,
+                                            MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE,
+                                            firingRange);
+
 
         if (enemyTarget != NULL) {
             // Run away!
@@ -192,6 +222,13 @@ static void CowardFleetRunAITick(void *aiHandle)
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
             mob->cmd.target.x = RandomState_Float(&sf->rs, 0.0f, bp->width);
             mob->cmd.target.y = RandomState_Float(&sf->rs, 0.0f, bp->height);
+
+            if (sf->waveSize > 0 && sf->fighterCount > sf->waveSize) {
+                Mob *enemyBase = sf->sg.enemyBase();
+                if (enemyBase != NULL) {
+                    mob->cmd.target = enemyBase->pos;
+                }
+            }
         }
     }
 }

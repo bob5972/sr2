@@ -198,9 +198,9 @@ typedef struct FleetAIOps {
     void *(*createFleet)(struct FleetAI *ai);
     void (*destroyFleet)(void *aiHandle);
     void *(*mobSpawned)(void *aiHandle, Mob *m);
-    void (*mobDestroyed)(void *aiHandle, void *aiMobHandle);
+    void (*mobDestroyed)(void *aiHandle, Mob *m, void *aiMobHandle);
     void (*runAITick)(void *aiHandle);
-    void (*runAIMob)(void *aiHandle, void *aiMobHandle);
+    void (*runAIMob)(void *aiHandle, Mob *m, void *aiMobHandle);
 } FleetAIOps;
 
 typedef struct FleetAI {

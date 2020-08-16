@@ -57,7 +57,7 @@ static void *GatherFleetCreate(FleetAI *ai);
 static void GatherFleetDestroy(void *aiHandle);
 static void GatherFleetRunAITick(void *aiHandle);
 static void *GatherFleetMobSpawned(void *aiHandle, Mob *m);
-static void GatherFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static void GatherFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static GatherShip *GatherFleetGetShip(GatherFleetData *sf, MobID mobid);
 
 void GatherFleet_GetOps(FleetAIOps *ops)
@@ -147,7 +147,7 @@ static void *GatherFleetMobSpawned(void *aiHandle, Mob *m)
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void GatherFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
+static void GatherFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
     if (aiMobHandle == NULL) {
         return;

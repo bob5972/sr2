@@ -106,7 +106,7 @@ void Fleet_Destroy(Fleet *fleet)
             CMobIt_Start(&ai->mobs, &mit);
             while (CMobIt_HasNext(&mit)) {
                 Mob *m = CMobIt_Next(&mit);
-                ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
+                ai->ops.mobDestroyed(ai->aiHandle, m, m->aiMobHandle);
             }
         }
 
@@ -275,7 +275,7 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
                 if (ai->ops.mobSpawned != NULL) {
                     m->aiMobHandle = ai->ops.mobSpawned(ai->aiHandle, m);
                 } else {
-                    m->aiMobHandle = m;
+                    m->aiMobHandle = NULL;
                 }
             }
         }
@@ -289,7 +289,7 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
         CMobIt_Start(&ai->mobs, &mit);
         while (CMobIt_HasNext(&mit)) {
             Mob *m = CMobIt_Next(&mit);
-            ai->ops.runAIMob(ai->aiHandle, m->aiMobHandle);
+            ai->ops.runAIMob(ai->aiHandle, m, m->aiMobHandle);
         }
     }
 
@@ -298,7 +298,7 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
         while (CMobIt_HasNext(&mit)) {
             Mob *m = CMobIt_Next(&mit);
             if (!m->alive) {
-                ai->ops.mobDestroyed(ai->aiHandle, m->aiMobHandle);
+                ai->ops.mobDestroyed(ai->aiHandle, m, m->aiMobHandle);
                 CMobIt_Remove(&mit);
             }
         }

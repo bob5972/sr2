@@ -39,7 +39,7 @@ static void *CloudFleetCreate(FleetAI *ai);
 static void CloudFleetDestroy(void *aiHandle);
 static void CloudFleetRunAITick(void *aiHandle);
 static void *CloudFleetMobSpawned(void *aiHandle, Mob *m);
-static void CloudFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static void CloudFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static CloudShip *CloudFleetGetShip(CloudFleetData *sf, MobID mobid);
 
 void CloudFleet_GetOps(FleetAIOps *ops)
@@ -113,7 +113,7 @@ static void *CloudFleetMobSpawned(void *aiHandle, Mob *m)
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void CloudFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
+static void CloudFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
     if (aiMobHandle == NULL) {
         return;

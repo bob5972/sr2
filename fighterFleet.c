@@ -45,7 +45,7 @@ static void *FighterFleetCreate(FleetAI *ai);
 static void FighterFleetDestroy(void *aiHandle);
 static void FighterFleetRunAITick(void *aiHandle);
 static void *FighterFleetMobSpawned(void *aiHandle, Mob *m);
-static void FighterFleetMobDestroyed(void *aiHandle, void *aiMobHandle);
+static void FighterFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static FighterShip *FighterFleetGetShip(FighterFleetData *sf, MobID mobid);
 
 void FighterFleet_GetOps(FleetAIOps *ops)
@@ -114,7 +114,7 @@ static void *FighterFleetMobSpawned(void *aiHandle, Mob *m)
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void FighterFleetMobDestroyed(void *aiHandle, void *aiMobHandle)
+static void FighterFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
     if (aiMobHandle == NULL) {
         return;
