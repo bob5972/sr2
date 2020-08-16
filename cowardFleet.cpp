@@ -188,7 +188,10 @@ static void CowardFleetRunAITick(void *aiHandle)
             /*
              * Be more aggressive to bases.
              */
-            if (enemyTarget != NULL && enemyTarget->type == MOB_TYPE_BASE) {
+            Mob *enemyTarget =
+                sf->sg.findClosestTargetInRange(&mob->pos, MOB_FLAG_BASE,
+                                                guardRange);
+            if (enemyTarget != NULL) {
                 FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                              &enemyTarget->pos, attackRange);
             }

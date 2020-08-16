@@ -29,10 +29,6 @@ public:
      * Construct a new SensorGrid.
      */
     SensorGrid() {
-        myBasePos.x = 0.0f;
-        myBasePos.y = 0.0f;
-        myEnemyBaseIndex = -1;
-        myFriendBaseIndex = -1;
         myEnemyBaseDestroyedCount = 0;
     }
 
@@ -49,6 +45,8 @@ public:
      */
     void updateTick(FleetAI *ai) {
         CMobIt mit;
+        Mob *enemyBase = myTargets.getBase();
+        int trackedEnemyBases = myTargets.myNumTrackedBases;
 
         myFriends.unpin();
         myTargets.unpin();
@@ -56,22 +54,22 @@ public:
         /*
          * Process friendly mobs.
          */
-        myFriendBaseIndex = -1;
+        myFriends.makeEmpty();
         CMobIt_Start(&ai->mobs, &mit);
         while (CMobIt_HasNext(&mit)) {
             Mob *m = CMobIt_Next(&mit);
 
-            uint i = myFriends.updateMob(m, ai->tick);
+            myFriends.updateMob(m, ai->tick);
 
-            if (m->type == MOB_TYPE_BASE) {
-                myBasePos = m->pos;
-                myFriendBaseIndex = i;
-            } else if (m->type == MOB_TYPE_LOOT_BOX) {
+            if (m->type == MOB_TYPE_LOOT_BOX) {
+                /*
+                 * Also add LootBoxes to the targets list, since fleets
+                 * collect their own boxes as loot.
+                 */
                 myTargets.updateMob(m, ai->tick);
             }
 
-            if (myEnemyBaseIndex != -1) {
-                Mob *enemyBase = &myTargets.myMobs[myEnemyBaseIndex].mob;
+            if (enemyBase != NULL) {
                 ASSERT(enemyBase->type == MOB_TYPE_BASE);
                 if (Mob_CanScanPoint(m, &enemyBase->pos)) {
                     /*
@@ -82,9 +80,8 @@ public:
                      * XXX: If there's more than one enemyBase, we'll only
                      * clear one at a time...
                      */
-                    myEnemyBaseDestroyedCount++;
-                    myEnemyBaseIndex = -1;
                     myTargets.removeMob(enemyBase->mobid);
+                    enemyBase = myTargets.getBase();
                 }
             }
         }
@@ -95,7 +92,12 @@ public:
         CMobIt_Start(&ai->sensors, &mit);
         while (CMobIt_HasNext(&mit)) {
             Mob *m = CMobIt_Next(&mit);
-            myTargets.updateMob(m, ai->tick);
+
+            if (m->alive) {
+                myTargets.updateMob(m, ai->tick);
+            } else {
+                myTargets.removeMob(m->mobid);
+            }
         }
 
         /*
@@ -108,15 +110,15 @@ public:
             ASSERT(myTargets.myMap.get(myTargets.myMobs[i].mob.mobid) == i);
             ASSERT(myTargets.myMobs[i].lastSeenTick <= ai->tick);
 
+            uint scanAge = ai->tick - myTargets.myMobs[i].lastSeenTick;
+
             if (myTargets.myMobs[i].mob.type == MOB_TYPE_BASE) {
-                myEnemyBaseIndex = i;
                 staleAge = MAX_UINT;
             } else {
                 staleAge = 2;
             }
 
-            if (staleAge < MAX_UINT &&
-                ai->tick - myTargets.myMobs[i].lastSeenTick > staleAge) {
+            if (staleAge < MAX_UINT && scanAge > staleAge) {
                 myTargets.removeMob(myTargets.myMobs[i].mob.mobid);
             } else {
                 /*
@@ -128,6 +130,11 @@ public:
 
         myFriends.pin();
         myTargets.pin();
+
+        if (myTargets.myNumTrackedBases < trackedEnemyBases) {
+            int baseDelta = trackedEnemyBases - myTargets.myNumTrackedBases;
+            myEnemyBaseDestroyedCount += baseDelta;
+        }
     }
 
 
@@ -146,7 +153,7 @@ public:
      * This is 0-based, so the closest mob is found when n=0.
      */
     Mob *findNthClosestFriend(const FPoint *pos, MobTypeFlags filter, int n) {
-        return findNthClosestMob(myFriends, pos, filter, n);
+        return myFriends.findNthClosestMob(pos, filter, n);
     }
 
     /**
@@ -164,7 +171,7 @@ public:
      * This is 0-based, so the closest mob is found when n=0.
      */
     Mob *findNthClosestTarget(const FPoint *pos, MobTypeFlags filter, int n) {
-        return findNthClosestMob(myTargets, pos, filter, n);
+        return myTargets.findNthClosestMob(pos, filter, n);
     }
 
     /**
@@ -188,11 +195,7 @@ public:
      * Look-up a Mob from this SensorGrid.
      */
     Mob *get(MobID mobid) {
-        int i = myTargets.myMap.get(mobid);
-        if (i != -1) {
-            ASSERT(i < myTargets.myMobs.size());
-            return &myTargets.myMobs[i].mob;
-        }
+        int i;
 
         i = myFriends.myMap.get(mobid);
         if (i != -1) {
@@ -200,14 +203,20 @@ public:
             return &myFriends.myMobs[i].mob;
         }
 
+        i = myTargets.myMap.get(mobid);
+        if (i != -1) {
+            ASSERT(i < myTargets.myMobs.size());
+            return &myTargets.myMobs[i].mob;
+        }
+
         return NULL;
     }
 
     /**
-     * Find the enemy base closest to your base.
+     * Find an enemy base.
      */
     Mob *enemyBase() {
-        return findClosestTarget(&myBasePos, MOB_FLAG_BASE);
+        return myTargets.getBase();
     }
 
     /**
@@ -218,14 +227,10 @@ public:
     }
 
     /**
-     * Return the position of a friendly base.
+     * Find a friendly base.
      */
     Mob *friendBase() {
-        if (myFriendBaseIndex == -1) {
-            return NULL;
-        }
-
-        return &myFriends.myMobs[myFriendBaseIndex].mob;
+        return myFriends.getBase();
     }
 
 private:
@@ -237,6 +242,8 @@ private:
     class MobSet {
     public:
         MobSet() {
+            myNumTrackedBases = 0;
+            myCachedBase = -1;
             myMap.setEmptyValue(-1);
             myMobs.pin();
         }
@@ -245,35 +252,83 @@ private:
             myMobs.unpin();
         }
 
-        int updateMob(Mob *m, uint tick) {
+        void updateMob(Mob *m, uint tick) {
             int i = myMap.get(m->mobid);
 
             if (i == -1) {
                 myMobs.grow();
                 i = myMobs.size() - 1;
                 myMap.put(m->mobid, i);
+
+                if (m->type == MOB_TYPE_BASE) {
+                    myCachedBase = i;
+                    myNumTrackedBases++;
+                }
             }
 
             ASSERT(i < myMobs.size());
             SensorImage *t = &myMobs[i];
             t->mob = *m;
             t->lastSeenTick = tick;
-
-            return i;
         }
 
         void removeMob(MobID badMobid) {
             int i = myMap.get(badMobid);
-            ASSERT(i != -1);
+
+            if (i == -1) {
+                return;
+            }
+
+            if (myMobs[i].mob.type == MOB_TYPE_BASE) {
+                ASSERT(myNumTrackedBases > 0);
+                myNumTrackedBases--;
+            }
+
+
+            if (i == myCachedBase) {
+                myCachedBase = -1;
+            }
 
             int last = myMobs.size() - 1;
             if (last != -1) {
                 myMobs[i] = myMobs[last];
                 myMap.put(myMobs[i].mob.mobid, i);
                 myMobs.shrink();
+
+                if (myCachedBase == last) {
+                    myCachedBase = i;
+                }
             }
 
             myMap.remove(badMobid);
+        }
+
+        Mob *getBase() {
+            if (myCachedBase != -1) {
+                ASSERT(myNumTrackedBases > 0);
+                ASSERT(myCachedBase >= 0 && myCachedBase < myMobs.size());
+                return &myMobs[myCachedBase].mob;
+            }
+
+            if (myNumTrackedBases > 0) {
+                for (uint i = 0; i < myMobs.size(); i++) {
+                    if (myMobs[i].mob.type == MOB_TYPE_BASE) {
+                        myCachedBase = i;
+                        return &myMobs[i].mob;
+                    }
+                }
+
+                NOT_REACHED();
+            }
+
+            return NULL;
+        }
+
+        void makeEmpty() {
+            myMobs.makeEmpty();
+            myMap.makeEmpty();
+            myNumTrackedBases = 0;
+            myCachedBase = -1;
         }
 
         void pin() {
@@ -284,50 +339,47 @@ private:
             myMobs.unpin();
         }
 
+        /**
+        * Find the Nth closest mob to the specified point.
+        * This is 0-based, so the closest mob is found when n=0.
+        */
+        Mob *findNthClosestMob(const FPoint *pos,
+                               MobTypeFlags filter, int n) {
+            ASSERT(n >= 0);
+            ASSERT(filter != 0);
+
+            if (n >= myMobs.size()) {
+                return NULL;
+            }
+
+            MBVector<Mob *> v;
+            v.ensureCapacity(myMobs.size());
+
+            for (uint i = 0; i < myMobs.size(); i++) {
+                Mob *m = &myMobs[i].mob;
+                if (((1 << m->type) & filter) != 0) {
+                    v.push(m);
+                }
+            }
+
+            if (n >= v.size()) {
+                return NULL;
+            }
+
+            CMBComparator comp;
+            MobP_InitDistanceComparator(&comp, pos);
+            v.sort(MBComparator<Mob *>(&comp));
+
+            return v[n];
+        }
+
+        int myNumTrackedBases;
+        int myCachedBase;
         IntMap myMap;
         MBVector<SensorImage> myMobs;
     };
 
-
-    /**
-     * Find the Nth closest mob to the specified point.
-     * This is 0-based, so the closest mob is found when n=0.
-     */
-    Mob *findNthClosestMob(MobSet &ms, const FPoint *pos,
-                           MobTypeFlags filter, int n) {
-        ASSERT(n >= 0);
-
-        if (n >= ms.myMobs.size()) {
-            return NULL;
-        }
-
-        MBVector<Mob *> v;
-        v.ensureCapacity(ms.myMobs.size());
-
-        for (uint i = 0; i < ms.myMobs.size(); i++) {
-            Mob *m = &ms.myMobs[i].mob;
-            if (((1 << m->type) & filter) != 0) {
-                v.push(m);
-            }
-        }
-
-        if (n >= v.size()) {
-            return NULL;
-        }
-
-        CMBComparator comp;
-        MobP_InitDistanceComparator(&comp, pos);
-        v.sort(MBComparator<Mob *>(&comp));
-
-        return v[n];
-    }
-
-    FPoint myBasePos;
-    int myFriendBaseIndex;
-
     int myEnemyBaseDestroyedCount;
-    int myEnemyBaseIndex;
-
     MobSet myFriends;
     MobSet myTargets;
 };
