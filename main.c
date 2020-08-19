@@ -113,7 +113,7 @@ MainPrintBattleStatus(MainEngineThreadData *tData,
 
     for (uint i = 0; i < ARRAYSIZE(bStatus->players); i++) {
         if (bStatus->players[i].playerUID != PLAYER_ID_INVALID) {
-            Warning("\t player[%d] numMobs = %d\n", i,
+            Warning("\tplayer[%d] numMobs = %d\n", i,
                     bStatus->players[i].numMobs);
         }
     }
@@ -422,13 +422,13 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_MAPPER;
 //         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_BOB;
+//         mainData.players[p].aiType = FLEET_AI_FF;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_FF;
+        mainData.players[p].aiType = FLEET_AI_COWARD;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_COWARD;
+        mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
     }
 

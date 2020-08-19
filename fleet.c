@@ -285,14 +285,6 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
         ai->ops.runAITick(ai->aiHandle);
     }
 
-    if (ai->ops.runAIMob != NULL) {
-        CMobIt_Start(&ai->mobs, &mit);
-        while (CMobIt_HasNext(&mit)) {
-            Mob *m = CMobIt_Next(&mit);
-            ai->ops.runAIMob(ai->aiHandle, m, m->aiMobHandle);
-        }
-    }
-
     if (ai->ops.mobDestroyed != NULL) {
         CMobIt_Start(&ai->mobs, &mit);
         while (CMobIt_HasNext(&mit)) {
