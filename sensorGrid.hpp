@@ -30,6 +30,9 @@ public:
      */
     SensorGrid() {
         myEnemyBaseDestroyedCount = 0;
+
+        myFriendBasePos.x = 0.0f;
+        myFriendBasePos.y = 0.0f;
     }
 
     /**
@@ -233,6 +236,16 @@ public:
         return myFriends.getBase();
     }
 
+    FPoint *friendBasePos() {
+        Mob *fbase = friendBase();
+
+        if (fbase != NULL) {
+            myFriendBasePos = fbase->pos;
+        }
+
+        return &myFriendBasePos;
+    }
+
 private:
     struct SensorImage {
         Mob mob;
@@ -380,6 +393,7 @@ private:
     };
 
     int myEnemyBaseDestroyedCount;
+    FPoint myFriendBasePos;
     MobSet myFriends;
     MobSet myTargets;
 };
