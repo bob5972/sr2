@@ -154,6 +154,7 @@ static void BobFleetRunAITick(void *aiHandle)
     CIntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
+    float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
     CMobIt mit;
     Mob *groupTarget = NULL;
     bool doAttack = FALSE;
@@ -196,19 +197,18 @@ static void BobFleetRunAITick(void *aiHandle)
             } else if (ship->gov == BOB_GOV_ATTACK) {
                 target = sf->sg.findClosestTarget(&mob->pos, targetScanFilter);
             } else if (ship->gov == BOB_GOV_GUARD) {
-                target = sf->sg.findClosestTarget(&mob->pos, targetScanFilter);
-                if (target != NULL) {
-                    if (FPoint_Distance(&target->pos, sf->sg.friendBasePos()) >
-                        MobType_GetSensorRadius(MOB_TYPE_BASE)) {
-                        target = NULL;
-                    }
-                }
+                target = sf->sg.findClosestTargetInRange(&mob->pos,
+                                                         targetScanFilter,
+                                                         guardRange);
 
-                target = groupTarget;
-                if (target != NULL) {
-                    if (FPoint_Distance(&target->pos, sf->sg.friendBasePos()) >
-                        MobType_GetSensorRadius(MOB_TYPE_BASE)) {
-                        target = NULL;
+                if (target == NULL && groupTarget != NULL) {
+                    target = groupTarget;
+
+                    if (target != NULL) {
+                        if (FPoint_Distance(&target->pos, sf->sg.friendBasePos()) >
+                            guardRange) {
+                            target = NULL;
+                        }
                     }
                 }
             }
@@ -229,19 +229,18 @@ static void BobFleetRunAITick(void *aiHandle)
 
                 if (ship->gov == BOB_GOV_GUARD && target != NULL) {
                     if (FPoint_Distance(&target->pos, sf->sg.friendBasePos()) >
-                        MobType_GetSensorRadius(MOB_TYPE_BASE)) {
+                        guardRange) {
                         target = NULL;
                     }
                 }
             }
 
             {
-                Mob *closeTarget = sf->sg.findClosestTarget(&mob->pos,
-                                                            targetScanFilter);
+                Mob *closeTarget =
+                    sf->sg.findClosestTargetInRange(&mob->pos, targetScanFilter,
+                                                    firingRange);
                 if (closeTarget != NULL) {
-                    if (FPoint_Distance(&mob->pos, &closeTarget->pos) < firingRange) {
-                        mob->cmd.spawnType = MOB_TYPE_MISSILE;
-                    }
+                    mob->cmd.spawnType = MOB_TYPE_MISSILE;
                 }
             }
 
@@ -249,16 +248,15 @@ static void BobFleetRunAITick(void *aiHandle)
                 mob->cmd.target = target->pos;
             } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
                 if (ship->gov == BOB_GOV_GUARD) {
-                    float guardRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
                     FPoint *basePos = sf->sg.friendBasePos();
                     mob->cmd.target.x =
                         RandomState_Float(&sf->rs,
-                                          MAX(0, basePos->x - guardRadius),
-                                          basePos->x + guardRadius);
+                                          MAX(0, basePos->x - guardRange),
+                                          basePos->x + guardRange);
                     mob->cmd.target.y =
                         RandomState_Float(&sf->rs,
-                                          MAX(0, basePos->y - guardRadius),
-                                          basePos->y + guardRadius);
+                                          MAX(0, basePos->y - guardRange),
+                                          basePos->y + guardRange);
                 } else {
                     mob->cmd.target.x =
                         RandomState_Float(&sf->rs, 0.0f, bp->width);

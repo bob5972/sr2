@@ -108,9 +108,9 @@ public:
     }
 
     /**
-     * Look-up a Mob from this SensorGrid.
+     * Look-up a friendly Mob from this SensorGrid.
      */
-    Mob *get(MobID mobid) {
+    Mob *getFriend(MobID mobid) {
         int i;
 
         i = myFriends.myMap.get(mobid);
@@ -119,10 +119,36 @@ public:
             return &myFriends.myMobs[i].mob;
         }
 
+        return NULL;
+    }
+
+    /**
+     * Look-up an enemy Mob from this SensorGrid.
+     */
+    Mob *getEnemy(MobID mobid) {
+        int i;
+
         i = myTargets.myMap.get(mobid);
         if (i != -1) {
             ASSERT(i < myTargets.myMobs.size());
             return &myTargets.myMobs[i].mob;
+        }
+
+        return NULL;
+    }
+
+    /**
+     * Look-up a Mob from this SensorGrid.
+     */
+    Mob *get(MobID mobid) {
+        Mob *m = getFriend(mobid);
+        if (m != NULL) {
+            return m;
+        }
+
+        m = getEnemy(mobid);
+        if (m != NULL) {
+            return m;
         }
 
         return NULL;
