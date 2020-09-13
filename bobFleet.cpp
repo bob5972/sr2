@@ -32,10 +32,18 @@ typedef enum BobGovernor {
     BOB_GOV_MAX,
 } BobGovernor;
 
-typedef struct BobShip {
+class BobShip {
+public:
+    BobShip(MobID mobid, BobGovernor gov)
+    :mobid(mobid), gov(gov)
+    {}
+
+    ~BobShip()
+    {}
+
     MobID mobid;
     BobGovernor gov;
-} BobShip;
+};
 
 class BobFleet {
 public:
@@ -104,9 +112,7 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
     ASSERT(m != NULL);
 
     if (m->type == MOB_TYPE_FIGHTER) {
-        BobShip *ship;
-        ship = (BobShip *)MBUtil_ZAlloc(sizeof(*ship));
-        ship->mobid = m->mobid;
+        BobShip *ship = new BobShip(m->mobid, BOB_GOV_INVALID);
         m->cmd.target = sf->basePos;
 
         if (sf->numGov[BOB_GOV_GUARD] < 1) {
@@ -141,7 +147,7 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
     sf->numGov[ship->gov]--;
 
     ASSERT(sf != NULL);
-    free(ship);
+    delete(ship);
 }
 
 static BobShip *BobFleetGetShip(BobFleet *sf, MobID mobid)
