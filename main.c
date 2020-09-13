@@ -399,9 +399,12 @@ void MainConstructScenario(void)
         ASSERT(p == FLEET_AI_NEUTRAL);
 
         while (i < FLEET_AI_MAX) {
-            mainData.players[p].aiType = i;
+            if (i != FLEET_AI_DUMMY) {
+                mainData.players[p].aiType = i;
+                p++;
+            }
+
             i++;
-            p++;
         }
     } else {
         /*

@@ -1,5 +1,5 @@
 /*
- * bobFleet.c -- part of SpaceRobots2
+ * bobFleet.cpp -- part of SpaceRobots2
  * Copyright (C) 2020 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+extern "C" {
 #include "fleet.h"
 #include "random.h"
 #include "IntMap.h"
 #include "battle.h"
+}
 
 typedef enum BobGovernor {
     BOB_GOV_INVALID = 0,
@@ -71,7 +73,7 @@ static void *BobFleetCreate(FleetAI *ai)
     BobFleetData *sf;
     ASSERT(ai != NULL);
 
-    sf = MBUtil_ZAlloc(sizeof(*sf));
+    sf = (BobFleetData *)MBUtil_ZAlloc(sizeof(*sf));
     sf->ai = ai;
 
     RandomState_CreateWithSeed(&sf->rs, ai->seed);
@@ -80,7 +82,7 @@ static void *BobFleetCreate(FleetAI *ai)
 
 static void BobFleetDestroy(void *handle)
 {
-    BobFleetData *sf = handle;
+    BobFleetData *sf = (BobFleetData *)handle;
     ASSERT(sf != NULL);
     RandomState_Destroy(&sf->rs);
     free(sf);
@@ -88,14 +90,14 @@ static void BobFleetDestroy(void *handle)
 
 static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    BobFleetData *sf = aiHandle;
+    BobFleetData *sf = (BobFleetData *)aiHandle;
 
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
 
     if (m->type == MOB_TYPE_FIGHTER) {
         BobShip *ship;
-        ship = MBUtil_ZAlloc(sizeof(*ship));
+        ship = (BobShip *)MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
         m->cmd.target = sf->basePos;
 
@@ -123,8 +125,8 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
         return;
     }
 
-    BobFleetData *sf = aiHandle;
-    BobShip *ship = aiMobHandle;
+    BobFleetData *sf = (BobFleetData *)aiHandle;
+    BobShip *ship = (BobShip *)aiMobHandle;
 
     ASSERT(ship->gov < ARRAYSIZE(sf->numGov));
     ASSERT(sf->numGov[ship->gov] > 0);
@@ -136,7 +138,7 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 
 static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid)
 {
-    BobShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    BobShip *s = (BobShip *)MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
     ASSERT(s != NULL);
     ASSERT(s->mobid == mobid);
@@ -146,7 +148,7 @@ static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid)
 
 static void BobFleetRunAITick(void *aiHandle)
 {
-    BobFleetData *sf = aiHandle;
+    BobFleetData *sf = (BobFleetData *)aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
     uint targetScanFilter = MOB_FLAG_SHIP;
@@ -311,10 +313,10 @@ static void BobFleetRunAITick(void *aiHandle)
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
         } else if (mob->type == MOB_TYPE_LOOT_BOX) {
-            Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
-                                                   MOB_FLAG_SHIP);
-            if (friend != NULL) {
-                mob->cmd.target = friend->pos;
+            Mob *friendMob = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
+                                                      MOB_FLAG_SHIP);
+            if (friendMob != NULL) {
+                mob->cmd.target = friendMob->pos;
             }
 
             /*
