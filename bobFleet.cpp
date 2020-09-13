@@ -37,21 +37,36 @@ typedef struct BobShip {
     BobGovernor gov;
 } BobShip;
 
-typedef struct BobFleetData {
+class BobFleet {
+public:
+    BobFleet(FleetAI *ai) {
+        this->ai = ai;
+        RandomState_CreateWithSeed(&this->rs, ai->seed);
+
+        MBUtil_Zero(&this->basePos, sizeof(this->basePos));
+        MBUtil_Zero(&this->enemyBase, sizeof(this->enemyBase));
+        this->enemyBaseAge = 0;
+        MBUtil_Zero(&this->numGov, sizeof(this->numGov));
+    }
+
+    ~BobFleet() {
+        RandomState_Destroy(&this->rs);
+    }
+
     FleetAI *ai;
     FPoint basePos;
     Mob enemyBase;
     uint enemyBaseAge;
     RandomState rs;
     uint numGov[BOB_GOV_MAX];
-} BobFleetData;
+};
 
 static void *BobFleetCreate(FleetAI *ai);
 static void BobFleetDestroy(void *aiHandle);
 static void BobFleetRunAITick(void *aiHandle);
 static void *BobFleetMobSpawned(void *aiHandle, Mob *m);
 static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
-static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid);
+static BobShip *BobFleetGetShip(BobFleet *sf, MobID mobid);
 
 void BobFleet_GetOps(FleetAIOps *ops)
 {
@@ -70,27 +85,20 @@ void BobFleet_GetOps(FleetAIOps *ops)
 
 static void *BobFleetCreate(FleetAI *ai)
 {
-    BobFleetData *sf;
     ASSERT(ai != NULL);
-
-    sf = (BobFleetData *)MBUtil_ZAlloc(sizeof(*sf));
-    sf->ai = ai;
-
-    RandomState_CreateWithSeed(&sf->rs, ai->seed);
-    return sf;
+    return new BobFleet(ai);
 }
 
 static void BobFleetDestroy(void *handle)
 {
-    BobFleetData *sf = (BobFleetData *)handle;
+    BobFleet *sf = (BobFleet *)handle;
     ASSERT(sf != NULL);
-    RandomState_Destroy(&sf->rs);
-    free(sf);
+    delete(sf);
 }
 
 static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    BobFleetData *sf = (BobFleetData *)aiHandle;
+    BobFleet *sf = (BobFleet *)aiHandle;
 
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
@@ -125,7 +133,7 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
         return;
     }
 
-    BobFleetData *sf = (BobFleetData *)aiHandle;
+    BobFleet *sf = (BobFleet *)aiHandle;
     BobShip *ship = (BobShip *)aiMobHandle;
 
     ASSERT(ship->gov < ARRAYSIZE(sf->numGov));
@@ -136,7 +144,7 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
     free(ship);
 }
 
-static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid)
+static BobShip *BobFleetGetShip(BobFleet *sf, MobID mobid)
 {
     BobShip *s = (BobShip *)MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
@@ -148,7 +156,7 @@ static BobShip *BobFleetGetShip(BobFleetData *sf, MobID mobid)
 
 static void BobFleetRunAITick(void *aiHandle)
 {
-    BobFleetData *sf = (BobFleetData *)aiHandle;
+    BobFleet *sf = (BobFleet *)aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
     uint targetScanFilter = MOB_FLAG_SHIP;
