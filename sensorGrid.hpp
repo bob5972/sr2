@@ -24,8 +24,8 @@ extern "C" {
 #include "mob.h"
 }
 
+#include "mobSet.hpp"
 #include "IntMap.hpp"
-#include "MBVector.hpp"
 
 class SensorGrid
 {
@@ -34,6 +34,9 @@ public:
      * Construct a new SensorGrid.
      */
     SensorGrid() {
+        myTargetLastSeenMap.setEmptyValue(0);
+        myLastTick = 0;
+
         myEnemyBaseDestroyedCount = 0;
 
         myFriendBasePos.x = 0.0f;
@@ -116,7 +119,7 @@ public:
         i = myFriends.myMap.get(mobid);
         if (i != -1) {
             ASSERT(i < myFriends.myMobs.size());
-            return &myFriends.myMobs[i].mob;
+            return &myFriends.myMobs[i];
         }
 
         return NULL;
@@ -131,7 +134,7 @@ public:
         i = myTargets.myMap.get(mobid);
         if (i != -1) {
             ASSERT(i < myTargets.myMobs.size());
-            return &myTargets.myMobs[i].mob;
+            return &myTargets.myMobs[i];
         }
 
         return NULL;
@@ -185,61 +188,25 @@ public:
         return &myFriendBasePos;
     }
 
+    /**
+     * Return the tick we last scanned the specified mob at, if it's
+     * still tracked on the SensorGrid.
+     */
+    uint getLastSeenTick(MobID mobid) {
+        if (getFriend(mobid) != NULL) {
+            return myLastTick;
+        }
+
+        return myTargetLastSeenMap.get(mobid);
+    }
+
 private:
-    struct SensorImage {
-        Mob mob;
-        uint lastSeenTick;
-    };
-
-    class MobSet {
-    public:
-        MobSet() {
-            myNumTrackedBases = 0;
-            myCachedBase = -1;
-            myMap.setEmptyValue(-1);
-            myMobs.pin();
-        }
-
-        ~MobSet() {
-            myMobs.unpin();
-        }
-
-        void updateMob(Mob *m, uint tick);
-
-        void removeMob(MobID badMobid);
-
-        Mob *getBase();
-
-        void makeEmpty() {
-            myMobs.makeEmpty();
-            myMap.makeEmpty();
-            myNumTrackedBases = 0;
-            myCachedBase = -1;
-        }
-
-        void pin() {
-            myMobs.pin();
-        }
-
-        void unpin() {
-            myMobs.unpin();
-        }
-
-        /**
-         * Find the Nth closest mob to the specified point.
-         * This is 0-based, so the closest mob is found when n=0.
-         */
-        Mob *findNthClosestMob(const FPoint *pos,
-                               MobTypeFlags filter, int n);
-
-        int myNumTrackedBases;
-        int myCachedBase;
-        IntMap myMap;
-        MBVector<SensorImage> myMobs;
-    };
-
     int myEnemyBaseDestroyedCount;
     FPoint myFriendBasePos;
+
+    uint myLastTick;
+    IntMap myTargetLastSeenMap;
+
     MobSet myFriends;
     MobSet myTargets;
 };

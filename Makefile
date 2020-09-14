@@ -56,6 +56,7 @@ C_SOURCES = main.c \
             workQueue.c
 CPP_SOURCES = bobFleet.cpp \
               cowardFleet.cpp \
+              mobSet.cpp \
               sensorGrid.cpp
 
 #For reasons I cannot fathom, MBLIB_OBJ has to be last

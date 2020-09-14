@@ -24,6 +24,8 @@ void SensorGrid::updateTick(FleetAI *ai)
     Mob *enemyBase = myTargets.getBase();
     int trackedEnemyBases = myTargets.myNumTrackedBases;
 
+    myLastTick = ai->tick;
+
     myFriends.unpin();
     myTargets.unpin();
 
@@ -35,14 +37,15 @@ void SensorGrid::updateTick(FleetAI *ai)
     while (CMobIt_HasNext(&mit)) {
         Mob *m = CMobIt_Next(&mit);
 
-        myFriends.updateMob(m, ai->tick);
+        myFriends.updateMob(m);
 
         if (m->type == MOB_TYPE_LOOT_BOX) {
             /*
                 * Also add LootBoxes to the targets list, since fleets
                 * collect their own boxes as loot.
                 */
-            myTargets.updateMob(m, ai->tick);
+            myTargets.updateMob(m);
+            myTargetLastSeenMap.put(m->mobid, ai->tick);
         }
 
         if (enemyBase != NULL) {
@@ -57,6 +60,7 @@ void SensorGrid::updateTick(FleetAI *ai)
                  * clear one at a time...
                  */
                 myTargets.removeMob(enemyBase->mobid);
+                myTargetLastSeenMap.remove(enemyBase->mobid);
                 enemyBase = myTargets.getBase();
             }
         }
@@ -70,9 +74,11 @@ void SensorGrid::updateTick(FleetAI *ai)
         Mob *m = CMobIt_Next(&mit);
 
         if (m->alive) {
-            myTargets.updateMob(m, ai->tick);
+            myTargets.updateMob(m);
+            myTargetLastSeenMap.put(m->mobid, ai->tick);
         } else {
             myTargets.removeMob(m->mobid);
+            myTargetLastSeenMap.remove(m->mobid);
         }
     }
 
@@ -82,20 +88,23 @@ void SensorGrid::updateTick(FleetAI *ai)
     uint i = 0;
     while (i < myTargets.myMobs.size()) {
         uint staleAge;
+        MobID mobid = myTargets.myMobs[i].mobid;
+        uint lastSeenTick = getLastSeenTick(mobid);
 
-        ASSERT(myTargets.myMap.get(myTargets.myMobs[i].mob.mobid) == i);
-        ASSERT(myTargets.myMobs[i].lastSeenTick <= ai->tick);
+        ASSERT(myTargets.myMap.get(mobid) == i);
+        ASSERT(lastSeenTick <= ai->tick);
 
-        uint scanAge = ai->tick - myTargets.myMobs[i].lastSeenTick;
+        uint scanAge = ai->tick - lastSeenTick;
 
-        if (myTargets.myMobs[i].mob.type == MOB_TYPE_BASE) {
+        if (myTargets.myMobs[i].type == MOB_TYPE_BASE) {
             staleAge = MAX_UINT;
         } else {
             staleAge = 2;
         }
 
         if (staleAge < MAX_UINT && scanAge > staleAge) {
-            myTargets.removeMob(myTargets.myMobs[i].mob.mobid);
+            myTargets.removeMob(mobid);
+            myTargetLastSeenMap.remove(mobid);
         } else {
             /*
              * Only move onto the next one if we didn't swap it out.
@@ -113,108 +122,3 @@ void SensorGrid::updateTick(FleetAI *ai)
     }
 }
 
-void SensorGrid::MobSet::updateMob(Mob *m, uint tick)
-{
-    int i = myMap.get(m->mobid);
-
-    if (i == -1) {
-        myMobs.grow();
-        i = myMobs.size() - 1;
-        myMap.put(m->mobid, i);
-
-        if (m->type == MOB_TYPE_BASE) {
-            myCachedBase = i;
-            myNumTrackedBases++;
-        }
-    }
-
-    ASSERT(i < myMobs.size());
-    SensorImage *t = &myMobs[i];
-    t->mob = *m;
-    t->lastSeenTick = tick;
-}
-
-void SensorGrid::MobSet::removeMob(MobID badMobid)
-{
-    int i = myMap.get(badMobid);
-
-    if (i == -1) {
-        return;
-    }
-
-    if (myMobs[i].mob.type == MOB_TYPE_BASE) {
-        ASSERT(myNumTrackedBases > 0);
-        myNumTrackedBases--;
-    }
-
-
-    if (i == myCachedBase) {
-        myCachedBase = -1;
-    }
-
-    int last = myMobs.size() - 1;
-    if (last != -1) {
-        myMobs[i] = myMobs[last];
-        myMap.put(myMobs[i].mob.mobid, i);
-        myMobs.shrink();
-
-        if (myCachedBase == last) {
-            myCachedBase = i;
-        }
-    }
-
-    myMap.remove(badMobid);
-}
-
-Mob *SensorGrid::MobSet::findNthClosestMob(const FPoint *pos,
-                                           MobTypeFlags filter, int n)
-{
-    ASSERT(n >= 0);
-    ASSERT(filter != 0);
-
-    if (n >= myMobs.size()) {
-        return NULL;
-    }
-
-    MBVector<Mob *> v;
-    v.ensureCapacity(myMobs.size());
-
-    for (uint i = 0; i < myMobs.size(); i++) {
-        Mob *m = &myMobs[i].mob;
-        if (((1 << m->type) & filter) != 0) {
-            v.push(m);
-        }
-    }
-
-    if (n >= v.size()) {
-        return NULL;
-    }
-
-    CMBComparator comp;
-    MobP_InitDistanceComparator(&comp, pos);
-    v.sort(MBComparator<Mob *>(&comp));
-
-    return v[n];
-}
-
-Mob *SensorGrid::MobSet::getBase()
-{
-    if (myCachedBase != -1) {
-        ASSERT(myNumTrackedBases > 0);
-        ASSERT(myCachedBase >= 0 && myCachedBase < myMobs.size());
-        return &myMobs[myCachedBase].mob;
-    }
-
-    if (myNumTrackedBases > 0) {
-        for (uint i = 0; i < myMobs.size(); i++) {
-            if (myMobs[i].mob.type == MOB_TYPE_BASE) {
-                myCachedBase = i;
-                return &myMobs[i].mob;
-            }
-        }
-
-        NOT_REACHED();
-    }
-
-    return NULL;
-}
