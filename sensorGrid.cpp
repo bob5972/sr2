@@ -22,7 +22,7 @@ void SensorGrid::updateTick(FleetAI *ai)
 {
     CMobIt mit;
     Mob *enemyBase = myTargets.getBase();
-    int trackedEnemyBases = myTargets.myNumTrackedBases;
+    int trackedEnemyBases = myTargets.getNumTrackedBases();
 
     myLastTick = ai->tick;
 
@@ -85,39 +85,33 @@ void SensorGrid::updateTick(FleetAI *ai)
     /*
      * Clear out stale targets.
      */
-    uint i = 0;
-    while (i < myTargets.myMobs.size()) {
+    MobSet::MobIt it = myTargets.iterator();
+    while (it.hasNext()) {
+        Mob *m = it.next();
         uint staleAge;
-        MobID mobid = myTargets.myMobs[i].mobid;
-        uint lastSeenTick = getLastSeenTick(mobid);
+        MobID mobid = m->mobid;
+        uint lastSeenTick = myTargetLastSeenMap.get(mobid);
+    uint scanAge = ai->tick - lastSeenTick;
 
-        ASSERT(myTargets.myMap.get(mobid) == i);
         ASSERT(lastSeenTick <= ai->tick);
 
-        uint scanAge = ai->tick - lastSeenTick;
-
-        if (myTargets.myMobs[i].type == MOB_TYPE_BASE) {
+        if (m->type == MOB_TYPE_BASE) {
             staleAge = MAX_UINT;
         } else {
             staleAge = 2;
         }
 
         if (staleAge < MAX_UINT && scanAge > staleAge) {
-            myTargets.removeMob(mobid);
+            it.remove();
             myTargetLastSeenMap.remove(mobid);
-        } else {
-            /*
-             * Only move onto the next one if we didn't swap it out.
-             */
-            i++;
         }
     }
 
     myFriends.pin();
     myTargets.pin();
 
-    if (myTargets.myNumTrackedBases < trackedEnemyBases) {
-        int baseDelta = trackedEnemyBases - myTargets.myNumTrackedBases;
+    if (myTargets.getNumTrackedBases() < trackedEnemyBases) {
+        int baseDelta = trackedEnemyBases - myTargets.getNumTrackedBases();
         myEnemyBaseDestroyedCount += baseDelta;
     }
 }

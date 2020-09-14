@@ -40,6 +40,18 @@ public:
         myMobs.unpin();
     }
 
+    Mob *get(MobID mobid) {
+        int i = myMap.get(mobid);
+        if (i == -1) {
+            return NULL;
+        }
+
+        ASSERT(i < myMobs.size());
+        ASSERT(myMobs[i].mobid == mobid);
+
+        return &myMobs[i];
+    }
+
     void updateMob(Mob *m);
 
     void removeMob(MobID badMobid);
@@ -56,13 +68,62 @@ public:
         myMobs.unpin();
     }
 
+    int getNumTrackedBases() {
+        return myNumTrackedBases;
+    }
+
     /**
-        * Find the Nth closest mob to the specified point.
-        * This is 0-based, so the closest mob is found when n=0.
-        */
+     * Returns the number of mobs in this MobSet.
+     */
+    int size() {
+        return myMobs.size();
+    }
+
+    /**
+     * Find the Nth closest mob to the specified point.
+     * This is 0-based, so the closest mob is found when n=0.
+     */
     Mob *findNthClosestMob(const FPoint *pos,
                             MobTypeFlags filter, int n);
+    class MobIt {
+    public:
+        MobIt(MobSet *ms) {
+            myMobSet = ms;
+            i = 0;
+            myLastMobid = MOB_ID_INVALID;
+        }
 
+        bool hasNext() {
+            return i < myMobSet->size();
+        }
+
+        Mob *next() {
+            Mob *m = &myMobSet->myMobs[i++];
+            myLastMobid = m->mobid;
+            return m;
+        }
+
+        void remove() {
+            ASSERT(myLastMobid != MOB_ID_INVALID);
+            myMobSet->removeMob(myLastMobid);
+            myLastMobid = MOB_ID_INVALID;
+
+            ASSERT(i > 0);
+            i--;
+        }
+
+    private:
+        MobSet *myMobSet;
+        MobID myLastMobid;
+        int i;
+    };
+
+
+    MobIt iterator() {
+        return MobIt(this);
+    }
+
+private:
     int myNumTrackedBases;
     int myCachedBase;
     IntMap myMap;

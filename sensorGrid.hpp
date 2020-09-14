@@ -114,30 +114,14 @@ public:
      * Look-up a friendly Mob from this SensorGrid.
      */
     Mob *getFriend(MobID mobid) {
-        int i;
-
-        i = myFriends.myMap.get(mobid);
-        if (i != -1) {
-            ASSERT(i < myFriends.myMobs.size());
-            return &myFriends.myMobs[i];
-        }
-
-        return NULL;
+        return myFriends.get(mobid);
     }
 
     /**
      * Look-up an enemy Mob from this SensorGrid.
      */
     Mob *getEnemy(MobID mobid) {
-        int i;
-
-        i = myTargets.myMap.get(mobid);
-        if (i != -1) {
-            ASSERT(i < myTargets.myMobs.size());
-            return &myTargets.myMobs[i];
-        }
-
-        return NULL;
+        return myTargets.get(mobid);
     }
 
     /**
