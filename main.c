@@ -415,6 +415,7 @@ void MainConstructScenario(void)
          *    CloudFleet
          *    MapperFleet
          *    BobFleet
+         *    RunAwayFleet
          *    BasicFleet
          *    CowardFleet
          */
@@ -426,7 +427,7 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_MAPPER;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_FF;
+        mainData.players[p].aiType = FLEET_AI_RUNAWAY;
         p++;
 
         mainData.players[p].aiType = FLEET_AI_BASIC;

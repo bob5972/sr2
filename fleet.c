@@ -168,8 +168,8 @@ static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
         case FLEET_AI_COWARD:
             CowardFleet_GetOps(ops);
             break;
-        case FLEET_AI_FF:
-            FighterFleet_GetOps(ops);
+        case FLEET_AI_RUNAWAY:
+            RunAwayFleet_GetOps(ops);
             break;
         case FLEET_AI_BASIC:
             BasicFleet_GetOps(ops);

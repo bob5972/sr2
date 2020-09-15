@@ -46,7 +46,7 @@ C_SOURCES = main.c \
             cloudFleet.c \
             display.c \
             dummyFleet.c \
-            fighterFleet.c \
+            runAwayFleet.c \
             fleet.c \
             fleetUtil.c \
             gatherFleet.c \

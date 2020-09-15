@@ -1,5 +1,5 @@
 /*
- * fighterFleet.c -- part of SpaceRobots2
+ * runAwayFleet.c -- part of SpaceRobots2
  * Copyright (C) 2020 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,51 +21,41 @@
 #include "IntMap.h"
 #include "battle.h"
 
-// typedef enum FighterState {
-//     FF_STATE_INVALID = 0,
-//     FF_STATE_SCOUT   = 1,
-//     FF_STATE_ATTACK  = 2,
-//     FF_STATE_EVADE   = 3,
-//     FF_STATE_GATHER  = 4,
-//     FF_STATE_MAX,
-// } FighterState;
-
-typedef struct FighterShip {
+typedef struct RunAwayShip {
     MobID mobid;
     FPoint targetPos;
-//     FighterState state;
-} FighterShip;
+} RunAwayShip;
 
-typedef struct FighterFleetData {
+typedef struct RunAwayFleetData {
     FleetAI *ai;
     RandomState rs;
-} FighterFleetData;
+} RunAwayFleetData;
 
-static void *FighterFleetCreate(FleetAI *ai);
-static void FighterFleetDestroy(void *aiHandle);
-static void FighterFleetRunAITick(void *aiHandle);
-static void *FighterFleetMobSpawned(void *aiHandle, Mob *m);
-static void FighterFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
-static FighterShip *FighterFleetGetShip(FighterFleetData *sf, MobID mobid);
+static void *RunAwayFleetCreate(FleetAI *ai);
+static void RunAwayFleetDestroy(void *aiHandle);
+static void RunAwayFleetRunAITick(void *aiHandle);
+static void *RunAwayFleetMobSpawned(void *aiHandle, Mob *m);
+static void RunAwayFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
+static RunAwayShip *RunAwayFleetGetShip(RunAwayFleetData *sf, MobID mobid);
 
-void FighterFleet_GetOps(FleetAIOps *ops)
+void RunAwayFleet_GetOps(FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));
 
-    ops->aiName = "FighterFleet";
+    ops->aiName = "RunAwayFleet";
     ops->aiAuthor = "Michael Banack";
 
-    ops->createFleet = &FighterFleetCreate;
-    ops->destroyFleet = &FighterFleetDestroy;
-    ops->runAITick = &FighterFleetRunAITick;
-    ops->mobSpawned = FighterFleetMobSpawned;
-    ops->mobDestroyed = FighterFleetMobDestroyed;
+    ops->createFleet = &RunAwayFleetCreate;
+    ops->destroyFleet = &RunAwayFleetDestroy;
+    ops->runAITick = &RunAwayFleetRunAITick;
+    ops->mobSpawned = RunAwayFleetMobSpawned;
+    ops->mobDestroyed = RunAwayFleetMobDestroyed;
 }
 
-static void *FighterFleetCreate(FleetAI *ai)
+static void *RunAwayFleetCreate(FleetAI *ai)
 {
-    FighterFleetData *sf;
+    RunAwayFleetData *sf;
     ASSERT(ai != NULL);
 
     sf = MBUtil_ZAlloc(sizeof(*sf));
@@ -75,29 +65,29 @@ static void *FighterFleetCreate(FleetAI *ai)
     return sf;
 }
 
-static void FighterFleetDestroy(void *handle)
+static void RunAwayFleetDestroy(void *handle)
 {
-    FighterFleetData *sf = handle;
+    RunAwayFleetData *sf = handle;
     ASSERT(sf != NULL);
     RandomState_Destroy(&sf->rs);
     free(sf);
 }
 
-static void *FighterFleetMobSpawned(void *aiHandle, Mob *m)
+static void *RunAwayFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    FighterFleetData *sf = aiHandle;
+    RunAwayFleetData *sf = aiHandle;
 
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
 
     if (m->type == MOB_TYPE_FIGHTER) {
-        FighterShip *ship;
+        RunAwayShip *ship;
         ship = MBUtil_ZAlloc(sizeof(*ship));
         ship->mobid = m->mobid;
         return ship;
     } else if (m->type == MOB_TYPE_MISSILE) {
         MobID parentMobid = m->parentMobid;
-        FighterShip *parent = FighterFleetGetShip(sf, parentMobid);
+        RunAwayShip *parent = RunAwayFleetGetShip(sf, parentMobid);
         if (parent != NULL) {
             m->cmd.target = parent->targetPos;
         }
@@ -114,22 +104,22 @@ static void *FighterFleetMobSpawned(void *aiHandle, Mob *m)
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void FighterFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
+static void RunAwayFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
     if (aiMobHandle == NULL) {
         return;
     }
 
-    FighterFleetData *sf = aiHandle;
-    FighterShip *ship = aiMobHandle;
+    RunAwayFleetData *sf = aiHandle;
+    RunAwayShip *ship = aiMobHandle;
 
     ASSERT(sf != NULL);
     free(ship);
 }
 
-static FighterShip *FighterFleetGetShip(FighterFleetData *sf, MobID mobid)
+static RunAwayShip *RunAwayFleetGetShip(RunAwayFleetData *sf, MobID mobid)
 {
-    FighterShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
+    RunAwayShip *s = MobPSet_Get(&sf->ai->mobs, mobid)->aiMobHandle;
 
     if (s != NULL) {
         ASSERT(s->mobid == mobid);
@@ -139,9 +129,9 @@ static FighterShip *FighterFleetGetShip(FighterFleetData *sf, MobID mobid)
 }
 
 
-static void FighterFleetRunAITick(void *aiHandle)
+static void RunAwayFleetRunAITick(void *aiHandle)
 {
-    FighterFleetData *sf = aiHandle;
+    RunAwayFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
@@ -149,7 +139,7 @@ static void FighterFleetRunAITick(void *aiHandle)
     float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
     CMobIt mit;
 
-    ASSERT(ai->player.aiType == FLEET_AI_FF);
+    ASSERT(ai->player.aiType == FLEET_AI_RUNAWAY);
 
     /*
      * Move Non-Fighters first, since they're simpler and modify
@@ -200,7 +190,7 @@ static void FighterFleetRunAITick(void *aiHandle)
             continue;
         }
 
-        FighterShip *ship = FighterFleetGetShip(sf, mob->mobid);
+        RunAwayShip *ship = RunAwayFleetGetShip(sf, mob->mobid);
         Mob *lootTarget = NULL;
         Mob *enemyTarget = NULL;
 
