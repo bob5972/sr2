@@ -44,6 +44,7 @@ int FleetUtil_FindNthClosestMobP(MobPVec *mobps, const FPoint *pos, int n);
 void DummyFleet_GetOps(FleetAIOps *ops);
 void SimpleFleet_GetOps(FleetAIOps *ops);
 void BobFleet_GetOps(FleetAIOps *ops);
+void BasicFleet_GetOps(FleetAIOps *ops);
 void MapperFleet_GetOps(FleetAIOps *ops);
 void CloudFleet_GetOps(FleetAIOps *ops);
 void GatherFleet_GetOps(FleetAIOps *ops);

@@ -24,6 +24,7 @@ extern "C" {
 }
 
 #include "sensorGrid.hpp"
+#include "shipAI.hpp"
 
 typedef enum BobGovernor {
     BOB_GOV_INVALID = 0,
@@ -49,7 +50,8 @@ public:
 
 class BobFleet {
 public:
-    BobFleet(FleetAI *ai) {
+    BobFleet(FleetAI *ai)
+    {
         this->ai = ai;
         RandomState_CreateWithSeed(&this->rs, ai->seed);
         MBUtil_Zero(&this->numGov, sizeof(this->numGov));
@@ -115,7 +117,9 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
         } else {
             ship->gov = BOB_GOV_SCOUT;
         }
+
         sf->numGov[ship->gov]++;
+
         return ship;
     } else {
         /*

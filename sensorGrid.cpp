@@ -41,9 +41,9 @@ void SensorGrid::updateTick(FleetAI *ai)
 
         if (m->type == MOB_TYPE_LOOT_BOX) {
             /*
-                * Also add LootBoxes to the targets list, since fleets
-                * collect their own boxes as loot.
-                */
+             * Also add LootBoxes to the targets list, since fleets
+             * collect their own boxes as loot.
+             */
             myTargets.updateMob(m);
             myTargetLastSeenMap.put(m->mobid, ai->tick);
         }
@@ -91,7 +91,7 @@ void SensorGrid::updateTick(FleetAI *ai)
         uint staleAge;
         MobID mobid = m->mobid;
         uint lastSeenTick = myTargetLastSeenMap.get(mobid);
-    uint scanAge = ai->tick - lastSeenTick;
+        uint scanAge = ai->tick - lastSeenTick;
 
         ASSERT(lastSeenTick <= ai->tick);
 

@@ -54,10 +54,12 @@ C_SOURCES = main.c \
             mob.c \
             simpleFleet.c \
             workQueue.c
-CPP_SOURCES = bobFleet.cpp \
+CPP_SOURCES = basicFleet.cpp \
+              bobFleet.cpp \
               cowardFleet.cpp \
               mobSet.cpp \
-              sensorGrid.cpp
+              sensorGrid.cpp \
+              shipAI.cpp
 
 #For reasons I cannot fathom, MBLIB_OBJ has to be last
 # or things don't link right...

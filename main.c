@@ -311,7 +311,7 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
         { "height", "1200",          },
         { "startingCredits", "1000", },
         { "creditsPerTick", "1",     },
-        { "tickLimit", "100000",     },
+        { "tickLimit", "50000",      },
         { "lootDropRate", "0.25",    },
         { "lootSpawnRate", "2.0",    },
         { "minLootSpawn", "10",      },
@@ -415,6 +415,7 @@ void MainConstructScenario(void)
          *    CloudFleet
          *    MapperFleet
          *    BobFleet
+         *    BasicFleet
          *    CowardFleet
          */
 
@@ -425,14 +426,17 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_MAPPER;
 //         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_FF;
+        mainData.players[p].aiType = FLEET_AI_FF;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_BASIC;
+        p++;
+
+//         mainData.players[p].aiType = FLEET_AI_COWARD;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_COWARD;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
+//         mainData.players[p].aiType = FLEET_AI_BOB;
+//         p++;
     }
 
     ASSERT(p <= ARRAYSIZE(mainData.players));
