@@ -34,10 +34,10 @@ public:
     /**
      * Construct a new ShipAIGovernor.
      */
-    ShipAIGovernor(FleetAI *ai, RandomState *rs)
+    ShipAIGovernor(FleetAI *ai, uint64 seed)
     {
         myFleetAI = ai;
-        myRandomState = rs;
+        RandomState_CreateWithSeed(&myRandomState, seed);
         myMap.setEmptyValue(-1);
     }
 
@@ -50,6 +50,8 @@ public:
             ShipAI *ship = myAIData[i];
             destroyShip(ship);
         }
+
+        RandomState_Destroy(&myRandomState);
     }
 
     /**
@@ -109,7 +111,7 @@ public:
 
 protected:
     FleetAI *myFleetAI;
-    RandomState *myRandomState;
+    RandomState myRandomState;
 
     class ShipAI
     {
@@ -153,8 +155,8 @@ public:
     /**
      * Construct a new BasicAIGovernor.
      */
-    BasicAIGovernor(FleetAI *ai, RandomState *rs, SensorGrid *sg)
-    :ShipAIGovernor(ai, rs)
+    BasicAIGovernor(FleetAI *ai, uint64 seed, SensorGrid *sg)
+    :ShipAIGovernor(ai, seed)
     {
         mySensorGrid = sg;
     }

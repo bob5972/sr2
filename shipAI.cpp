@@ -27,7 +27,7 @@ void BasicAIGovernor::runMob(Mob *mob)
 {
     SensorGrid *sg = mySensorGrid;
     FleetAI *ai = myFleetAI;
-    RandomState *rs = myRandomState;
+    RandomState *rs = &myRandomState;
 
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
