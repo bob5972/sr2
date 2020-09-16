@@ -45,7 +45,11 @@ public:
      * Destroy this ShipAIGovernor.
      */
     ~ShipAIGovernor() {
-        // XXX Destroy ships...
+        int i;
+        for (i = 0; i < myAIData.size(); i++) {
+            ShipAI *ship = myAIData[i];
+            destroyShip(ship);
+        }
     }
 
     /**
