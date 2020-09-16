@@ -51,8 +51,6 @@ static void BasicFleetRunAITick(void *aiHandle);
 static void *BasicFleetMobSpawned(void *aiHandle, Mob *m);
 static void BasicFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
-#define ALLBASIC TRUE
-
 void BasicFleet_GetOps(FleetAIOps *ops)
 {
     ASSERT(ops != NULL);

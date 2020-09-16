@@ -57,6 +57,8 @@ typedef enum MobType {
 #define MOB_FLAG_ALL      (MOB_FLAG_SHIP | MOB_FLAG_MISSILE | MOB_FLAG_LOOT_BOX)
 typedef uint MobTypeFlags;
 
+#define SPAWN_RECHARGE_TICKS 5
+
 typedef struct MobCmd {
     FPoint target;
     MobType spawnType;
@@ -93,6 +95,7 @@ typedef struct Mob {
     int fuel;
     int health;
     uint birthTick;
+    uint lastSpawnTick;
     int rechargeTime;
     int lootCredits;
     MobID parentMobid;

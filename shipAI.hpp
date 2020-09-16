@@ -1,5 +1,5 @@
 /*
- * fighterAI.hpp -- part of SpaceRobots2
+ * shipAI.hpp -- part of SpaceRobots2
  * Copyright (C) 2020 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify

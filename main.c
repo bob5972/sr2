@@ -427,8 +427,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_MAPPER;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_RUNAWAY;
-        p++;
+//         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
+//         p++;
 
         mainData.players[p].aiType = FLEET_AI_BASIC;
         p++;
@@ -436,8 +436,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_COWARD;
 //         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_BOB;
-//         p++;
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
     }
 
     ASSERT(p <= ARRAYSIZE(mainData.players));

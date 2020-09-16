@@ -23,8 +23,6 @@
 #include "SDL_thread.h"
 #include "workQueue.h"
 
-#define SPAWN_RECHARGE_TICKS 5
-
 typedef struct Battle {
     bool initialized;
 
@@ -237,6 +235,7 @@ static void BattleRunMobSpawn(Battle *battle, Mob *mob)
                              mob->playerID, &mob->pos);
     spawn->cmd.target = mob->cmd.target;
     mob->rechargeTime = SPAWN_RECHARGE_TICKS;
+    mob->lastSpawnTick = battle->bs.tick;
 }
 
 static void BattleRunMobMove(Battle *battle, Mob *mob)
