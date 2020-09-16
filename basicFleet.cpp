@@ -29,10 +29,11 @@ extern "C" {
 class BasicFleet {
 public:
     BasicFleet(FleetAI *ai)
-    :sg(), basicGov(ai, ai->seed, &sg)
+    :sg(), basicGov(ai, &sg)
     {
         this->ai = ai;
         RandomState_CreateWithSeed(&this->rs, ai->seed);
+        basicGov.setSeed(RandomState_Uint64(&this->rs));
     }
 
     ~BasicFleet() {

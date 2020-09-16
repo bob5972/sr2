@@ -34,10 +34,10 @@ public:
     /**
      * Construct a new ShipAIGovernor.
      */
-    ShipAIGovernor(FleetAI *ai, uint64 seed)
+    ShipAIGovernor(FleetAI *ai)
     {
         myFleetAI = ai;
-        RandomState_CreateWithSeed(&myRandomState, seed);
+        RandomState_Create(&myRandomState);
         myMap.setEmptyValue(-1);
     }
 
@@ -67,6 +67,13 @@ public:
                 runMob(mob);
             }
         }
+    }
+
+    /**
+     * Sets the random seed used by this ShipAIGovernor.
+     */
+    void setSeed(uint64 seed) {
+        RandomState_SetSeed(&myRandomState, seed);
     }
 
     /**
@@ -155,8 +162,8 @@ public:
     /**
      * Construct a new BasicAIGovernor.
      */
-    BasicAIGovernor(FleetAI *ai, uint64 seed, SensorGrid *sg)
-    :ShipAIGovernor(ai, seed)
+    BasicAIGovernor(FleetAI *ai, SensorGrid *sg)
+    :ShipAIGovernor(ai)
     {
         mySensorGrid = sg;
     }
