@@ -101,6 +101,27 @@ static void BobFleetDestroy(void *handle)
     delete(sf);
 }
 
+static void BobFleetSetGov(BobFleet *sf, BobShip *ship, BobGovernor gov)
+{
+    ASSERT(sf != NULL);
+    ASSERT(ship != NULL);
+
+    ASSERT(ship->gov < BOB_GOV_MAX);
+    ASSERT(gov < BOB_GOV_MAX);
+
+
+    if (ship->gov != BOB_GOV_INVALID) {
+        ASSERT(sf->numGov[ship->gov] > 0);
+        sf->numGov[ship->gov]--;
+    }
+
+    ship->gov = gov;
+
+    if (gov != BOB_GOV_INVALID) {
+        sf->numGov[gov]++;
+    }
+}
+
 static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
 {
     BobFleet *sf = (BobFleet *)aiHandle;
@@ -113,12 +134,10 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
         m->cmd.target = *sf->sg.friendBasePos();
 
         if (sf->numGov[BOB_GOV_GUARD] < 1) {
-            ship->gov = BOB_GOV_GUARD;
+            BobFleetSetGov(sf, ship, BOB_GOV_GUARD);
         } else {
-            ship->gov = BOB_GOV_SCOUT;
+            BobFleetSetGov(sf, ship, BOB_GOV_SCOUT);
         }
-
-        sf->numGov[ship->gov]++;
 
         return ship;
     } else {
@@ -141,11 +160,8 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
     BobFleet *sf = (BobFleet *)aiHandle;
     BobShip *ship = (BobShip *)aiMobHandle;
 
-    ASSERT(ship->gov < ARRAYSIZE(sf->numGov));
-    ASSERT(sf->numGov[ship->gov] > 0);
-    sf->numGov[ship->gov]--;
+    BobFleetSetGov(sf, ship, BOB_GOV_INVALID);
 
-    ASSERT(sf != NULL);
     delete(ship);
 }
 
@@ -193,10 +209,7 @@ static void BobFleetRunAITick(void *aiHandle)
                  * Just run the shared random/loot-box code.
                  */
                 if (doAttack && sf->numGov[BOB_GOV_SCOUT] > 2) {
-                    ship->gov = BOB_GOV_ATTACK;
-                    ASSERT(sf->numGov[BOB_GOV_SCOUT] > 0);
-                    sf->numGov[BOB_GOV_SCOUT]--;
-                    sf->numGov[BOB_GOV_ATTACK]++;
+                    BobFleetSetGov(sf, ship, BOB_GOV_ATTACK);
                 }
             } else if (ship->gov == BOB_GOV_ATTACK) {
                 target = sf->sg.findClosestTarget(&mob->pos, targetScanFilter);
