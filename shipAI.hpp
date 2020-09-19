@@ -177,22 +177,20 @@ public:
     void loadRegistry(MBRegistry *mreg) {
         struct {
             const char *key;
-            bool defaultValue;
-            bool *targetVar;
-        } configEntries[] = {
-            { "evadeFighters", FALSE, &myEvadeFighters },
+            const char *value;
+        } configs[] = {
+            { "evadeFighters", "FALSE", },
         };
 
-        for (uint i = 0; i < ARRAYSIZE(configEntries); i++) {
-            if (mreg == NULL) {
-                *configEntries[i].targetVar = configEntries[i].defaultValue;
-            } else {
-                *configEntries[i].targetVar =
-                    MBRegistry_GetBoolD(mreg,
-                                        configEntries[i].key,
-                                        configEntries[i].defaultValue);
-            }
+        mreg = MBRegistry_AllocCopy(mreg);
+
+        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
+            MBRegistry_Put(mreg, configs[i].key, configs[i].value);
         }
+
+        myEvadeFighters = MBRegistry_GetBool(mreg, "evadeFighters");
+
+        MBRegistry_Free(mreg);
     }
 
     /**
