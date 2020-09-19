@@ -117,8 +117,40 @@ void BasicAIGovernor::runMob(Mob *mob)
             /*
              * If all else fails, move randomly.
              */
-            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            if (myConfig.idlePowerLaw) {
+                float sensorRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+                float d = myConfig.idlePowerLawBase;
+                bool keepGoing = TRUE;
+                FPoint tPoint;
+                uint32 i;
+                float xMax, yMax, dMax;
+
+                xMax = MAX(mob->pos.x, ai->bp.width - mob->pos.x);
+                yMax = MAX(mob->pos.y, ai->bp.width - mob->pos.y);
+                dMax = MAX(xMax, yMax);
+
+                while (keepGoing && d < dMax) {
+                    d *= myConfig.idlePowerLawExp;
+                    keepGoing = d < 2.5f * sensorRange || RandomState_Bit(rs);
+                }
+
+                i = 0;
+                do {
+                    tPoint = mob->pos;
+                    tPoint.x += RandomState_Float(rs, -d, d);
+                    tPoint.y += RandomState_Float(rs, -d, d);
+
+                    FPoint_Clamp(&tPoint, 0.0f, ai->bp.width, 0.0f, ai->bp.height);
+
+                    i++;
+                    ASSERT(i < 1000);
+                } while (FPoint_Distance(&tPoint, &mob->pos) < sensorRange);
+
+                mob->cmd.target = tPoint;
+            } else {
+                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            }
         }
     } else {
         NOT_IMPLEMENTED();

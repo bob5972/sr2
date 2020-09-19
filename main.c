@@ -611,6 +611,7 @@ int main(int argc, char **argv)
     Warning("Starting SpaceRobots2 %s...\n", DEBUG ? "(debug enabled)" : "");
     Warning("\n");
 
+    Random_Init();
     RandomState_Create(&mainData.rs);
     if (mainData.seed != 0) {
         RandomState_SetSeed(&mainData.rs, mainData.seed);
