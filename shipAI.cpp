@@ -91,7 +91,7 @@ void BasicAIGovernor::runMob(Mob *mob)
          */
         MobTypeFlags evadeFilter = MOB_FLAG_MISSILE;
 
-        if (myEvadeFighters) {
+        if (myConfig.evadeFighters) {
             evadeFilter |= MOB_FLAG_FIGHTER;
         }
 
@@ -102,6 +102,13 @@ void BasicAIGovernor::runMob(Mob *mob)
             // Run away!
             float dx = enemyTarget->pos.x - mob->pos.x;
             float dy = enemyTarget->pos.y - mob->pos.y;
+
+            if (myConfig.evadeUseStrictDistance) {
+                float d = FPoint_Distance(&enemyTarget->pos, &mob->pos);
+                dx = dx * myConfig.evadeStrictDistance / d;
+                dy = dy * myConfig.evadeStrictDistance / d;
+            }
+
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
         } else if (lootTarget != NULL) {

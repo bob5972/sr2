@@ -171,6 +171,8 @@ public:
     :ShipAIGovernor(ai)
     {
         mySensorGrid = sg;
+
+        MBUtil_Zero(&myConfig, sizeof(myConfig));
         loadRegistry(ai->player.mreg);
     }
 
@@ -179,7 +181,9 @@ public:
             const char *key;
             const char *value;
         } configs[] = {
-            { "evadeFighters", "FALSE", },
+            { "evadeFighters",          "FALSE", },
+            { "evadeUseStrictDistance", "FALSE", },
+            { "evadeStrictDistance",    "50", },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -188,7 +192,11 @@ public:
             MBRegistry_Put(mreg, configs[i].key, configs[i].value);
         }
 
-        myEvadeFighters = MBRegistry_GetBool(mreg, "evadeFighters");
+        myConfig.evadeFighters = MBRegistry_GetBool(mreg, "evadeFighters");
+        myConfig.evadeUseStrictDistance =
+            MBRegistry_GetBool(mreg, "evadeUseStrictDistance");
+        myConfig.evadeStrictDistance =
+            MBRegistry_GetFloat(mreg, "evadeStrictDistance");
 
         MBRegistry_Free(mreg);
     }
@@ -245,7 +253,12 @@ protected:
     }
 
     SensorGrid *mySensorGrid;
-    bool myEvadeFighters;
+
+    struct {
+        bool evadeFighters;
+        bool evadeUseStrictDistance;
+        float evadeStrictDistance;
+    } myConfig;
 };
 
 

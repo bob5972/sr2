@@ -38,9 +38,21 @@ public:
 
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
 
-        if (!MBRegistry_ContainsKey(mreg, "evadeFighters")) {
-            MBRegistry_Put(mreg, "evadeFighters", "FALSE");
+        struct {
+            const char *key;
+            const char *value;
+        } configs[] = {
+            { "evadeFighters",          "FALSE", },
+            { "evadeUseStrictDistance", "TRUE",  },
+            { "evadeStrictDistance",    "50",    },
+        };
+
+        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
+            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
+                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+            }
         }
+
         this->basicGov.loadRegistry(mreg);
     }
 
