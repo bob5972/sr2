@@ -28,6 +28,9 @@ void BasicAIGovernor::runMob(Mob *mob)
     SensorGrid *sg = mySensorGrid;
     FleetAI *ai = myFleetAI;
     RandomState *rs = &myRandomState;
+    BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+
+    ASSERT(ship != NULL);
 
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
@@ -46,13 +49,12 @@ void BasicAIGovernor::runMob(Mob *mob)
             mob->cmd.target = target->pos;
         }
     } else if (mob->type == MOB_TYPE_BASE) {
-        if (ai->credits > 200 && RandomState_Int(rs, 0, 20) == 0) {
+        if (ai->credits > 200 && RandomState_Int(rs, 0, 10) == 0) {
             mob->cmd.spawnType = MOB_TYPE_FIGHTER;
         } else {
             mob->cmd.spawnType = MOB_TYPE_INVALID;
         }
     } else if (mob->type == MOB_TYPE_FIGHTER) {
-        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
         Mob *lootTarget = NULL;
         Mob *enemyTarget = NULL;
 
@@ -87,10 +89,14 @@ void BasicAIGovernor::runMob(Mob *mob)
         /*
          * Find enemy targets to run away from.
          */
+        MobTypeFlags evadeFilter = MOB_FLAG_FIGHTER;
+
+        if (myEvadeMissiles) {
+            evadeFilter |= MOB_FLAG_MISSILE;
+        }
+
         enemyTarget =
-            sg->findClosestTargetInRange(&mob->pos,
-                                         MOB_FLAG_FIGHTER | MOB_FLAG_MISSILE,
-                                         firingRange);
+            sg->findClosestTargetInRange(&mob->pos, evadeFilter, firingRange);
 
         if (enemyTarget != NULL) {
             // Run away!
@@ -101,6 +107,9 @@ void BasicAIGovernor::runMob(Mob *mob)
         } else if (lootTarget != NULL) {
             mob->cmd.target = lootTarget->pos;
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+            /*
+             * If all else fails, move randomly.
+             */
             mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
             mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
         }

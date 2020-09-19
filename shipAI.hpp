@@ -99,6 +99,11 @@ public:
 
     void removeMobid(MobID mobid) {
         int i = myMap.get(mobid);
+
+        if (i == -1) {
+            return;
+        }
+
         ShipAI *delShip = myAIData[i];
 
         int lastIndex = myAIData.size() - 1;
@@ -166,6 +171,28 @@ public:
     :ShipAIGovernor(ai)
     {
         mySensorGrid = sg;
+        reloadRegistry();
+    }
+
+    void reloadRegistry() {
+        struct {
+            const char *key;
+            bool defaultValue;
+            bool *targetVar;
+        } configEntries[] = {
+            { "evadeMissiles", TRUE, &myEvadeMissiles },
+        };
+
+        for (uint i = 0; i < ARRAYSIZE(configEntries); i++) {
+            if (myFleetAI->player.mreg == NULL) {
+                *configEntries[i].targetVar = configEntries[i].defaultValue;
+            } else {
+                *configEntries[i].targetVar =
+                    MBRegistry_GetBoolD(myFleetAI->player.mreg,
+                                        configEntries[i].key,
+                                        configEntries[i].defaultValue);
+            }
+        }
     }
 
     /**
@@ -220,6 +247,7 @@ protected:
     }
 
     SensorGrid *mySensorGrid;
+    bool myEvadeMissiles;
 };
 
 

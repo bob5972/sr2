@@ -119,7 +119,7 @@ static void CowardFleetRunAITick(void *aiHandle)
                 mob->cmd.target = target->pos;
             }
         } else if (mob->type == MOB_TYPE_BASE) {
-            if (ai->credits > 200 && RandomState_Int(&sf->rs, 0, 20) == 0) {
+            if (ai->credits > 200 && RandomState_Int(&sf->rs, 0, 10) == 0) {
                 mob->cmd.spawnType = MOB_TYPE_FIGHTER;
             } else {
                 mob->cmd.spawnType = MOB_TYPE_INVALID;

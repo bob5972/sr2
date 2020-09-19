@@ -88,10 +88,6 @@ static void *BasicFleetMobSpawned(void *aiHandle, Mob *m)
     ASSERT(m != NULL);
 
     sf->basicGov.addMobid(m->mobid);
-
-    /*
-    * We don't track anything else.
-    */
     return NULL;
 }
 
