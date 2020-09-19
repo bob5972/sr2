@@ -29,7 +29,7 @@
  * PlayerID's are relative to a single scenario.
  * PlayerUID's are consistent across multiple scenarios in a single run.
  */
-#define MAX_PLAYERS (16)
+#define MAX_PLAYERS (100)
 typedef uint32 PlayerID;
 typedef uint32 PlayerUID;
 #define PLAYER_ID_INVALID ((uint32)-1)

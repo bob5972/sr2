@@ -76,6 +76,7 @@ struct MainData {
     int loop;
     uint tickLimit;
     bool tournament;
+    bool optimize;
     const char *scenario;
 
     bool reuseSeed;
@@ -394,7 +395,37 @@ void MainConstructScenario(void)
     mainData.players[p].aiType = FLEET_AI_NEUTRAL;
     p++;
 
-    if (mainData.tournament) {
+    if (mainData.optimize) {
+        /*
+         * Customize as needed.
+         */
+        float v[] = {
+            3, 7, 10, 50, 100,
+        };
+
+        for (uint i = 0; i < ARRAYSIZE(v); i++) {
+            char *vstr = NULL;
+            asprintf(&vstr, "%1.0f", v[i]);
+            mainData.players[p].mreg = MBRegistry_Alloc();
+            MBRegistry_Put(mainData.players[p].mreg, "evadeStrictDistance",
+                            vstr);
+            mainData.players[p].aiType = FLEET_AI_BOB;
+
+            char *name = NULL;
+            asprintf(&name, "%s %s",
+                        Fleet_GetName(mainData.players[p].aiType), vstr);
+            mainData.players[p].playerName = name;
+
+            p++;
+
+            // XXX: Leak!
+            //free(vstr);
+            //free(name);
+        }
+
+        mainData.players[p].aiType = FLEET_AI_BASIC;
+        p++;
+    } else if (mainData.tournament) {
         uint i = FLEET_AI_NEUTRAL + 1;
         ASSERT(p == FLEET_AI_NEUTRAL);
 
@@ -511,6 +542,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-l", "--loop",       TRUE,  "Loop <arg> times"              },
         { "-S", "--scenario",   TRUE,  "Scenario type"                 },
         { "-T", "--tournament", FALSE, "Tournament mode"               },
+        { "-O", "--optimize",   FALSE, "Optimize mode"                 },
         { "-s", "--seed",       TRUE,  "Set random seed"               },
         { "-L", "--tickLimit",  TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads", TRUE,  "Number of engine threads"      },
@@ -543,6 +575,13 @@ void MainParseCmdLine(int argc, char **argv)
         mainData.tournament = TRUE;
     } else {
         mainData.tournament = FALSE;
+    }
+
+    if (MBOpt_IsPresent("optimize")) {
+        mainData.optimize = TRUE;
+        mainData.tournament = TRUE;
+    } else {
+        mainData.optimize = FALSE;
     }
 
     mainData.seed = MBOpt_GetUint64("seed");

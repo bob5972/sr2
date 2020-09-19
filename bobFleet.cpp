@@ -44,7 +44,7 @@ public:
         } configs[] = {
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "TRUE",  },
-            { "evadeStrictDistance",    "50",    },
+            { "evadeStrictDistance",    "10",    },
         };
 
         for (uint i = 0; i < ARRAYSIZE(configs); i++) {

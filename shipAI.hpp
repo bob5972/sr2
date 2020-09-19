@@ -183,13 +183,15 @@ public:
         } configs[] = {
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "FALSE", },
-            { "evadeStrictDistance",    "50", },
+            { "evadeStrictDistance",    "50",    },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
 
         for (uint i = 0; i < ARRAYSIZE(configs); i++) {
-            MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
+                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+            }
         }
 
         myConfig.evadeFighters = MBRegistry_GetBool(mreg, "evadeFighters");
