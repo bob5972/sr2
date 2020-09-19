@@ -171,24 +171,24 @@ public:
     :ShipAIGovernor(ai)
     {
         mySensorGrid = sg;
-        reloadRegistry();
+        loadRegistry(ai->player.mreg);
     }
 
-    void reloadRegistry() {
+    void loadRegistry(MBRegistry *mreg) {
         struct {
             const char *key;
             bool defaultValue;
             bool *targetVar;
         } configEntries[] = {
-            { "evadeMissiles", TRUE, &myEvadeMissiles },
+            { "evadeFighters", FALSE, &myEvadeFighters },
         };
 
         for (uint i = 0; i < ARRAYSIZE(configEntries); i++) {
-            if (myFleetAI->player.mreg == NULL) {
+            if (mreg == NULL) {
                 *configEntries[i].targetVar = configEntries[i].defaultValue;
             } else {
                 *configEntries[i].targetVar =
-                    MBRegistry_GetBoolD(myFleetAI->player.mreg,
+                    MBRegistry_GetBoolD(mreg,
                                         configEntries[i].key,
                                         configEntries[i].defaultValue);
             }
@@ -247,7 +247,7 @@ protected:
     }
 
     SensorGrid *mySensorGrid;
-    bool myEvadeMissiles;
+    bool myEvadeFighters;
 };
 
 

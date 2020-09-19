@@ -36,29 +36,17 @@ public:
 
         this->basicGov.setSeed(RandomState_Uint64(&this->rs));
 
-        /*
-         * XXX: The mreg ownership is a problem...
-         */
-        if (ai->player.mreg == NULL) {
-            mreg = MBRegistry_Alloc();
-            ai->player.mreg = mreg;
-        } else {
-            mreg = NULL;
-        }
+        mreg = MBRegistry_AllocCopy(ai->player.mreg);
 
-        if (!MBRegistry_ContainsKey(ai->player.mreg, "evadeMissiles")) {
-            MBRegistry_Put(ai->player.mreg, "evadeMissiles", "FALSE");
+        if (!MBRegistry_ContainsKey(mreg, "evadeFighters")) {
+            MBRegistry_Put(mreg, "evadeFighters", "FALSE");
         }
-        this->basicGov.reloadRegistry();
+        this->basicGov.loadRegistry(mreg);
     }
 
     ~BobFleet() {
         RandomState_Destroy(&this->rs);
-
-        if (mreg != NULL) {
-            MBRegistry_Free(mreg);
-            ai->player.mreg = NULL;
-        }
+        MBRegistry_Free(mreg);
     }
 
     FleetAI *ai;

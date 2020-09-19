@@ -89,10 +89,10 @@ void BasicAIGovernor::runMob(Mob *mob)
         /*
          * Find enemy targets to run away from.
          */
-        MobTypeFlags evadeFilter = MOB_FLAG_FIGHTER;
+        MobTypeFlags evadeFilter = MOB_FLAG_MISSILE;
 
-        if (myEvadeMissiles) {
-            evadeFilter |= MOB_FLAG_MISSILE;
+        if (myEvadeFighters) {
+            evadeFilter |= MOB_FLAG_FIGHTER;
         }
 
         enemyTarget =
