@@ -1,5 +1,5 @@
 /*
- * bobFleet.cpp -- part of SpaceRobots2
+ * holdFleet.cpp -- part of SpaceRobots2
  * Copyright (C) 2020 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,16 +26,16 @@ extern "C" {
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"
 
-class BobFleetGovernor : public BasicAIGovernor
+class HoldFleetGovernor : public BasicAIGovernor
 {
 public:
-    BobFleetGovernor(FleetAI *ai, SensorGrid *sg)
+    HoldFleetGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     {
 
     }
 
-    virtual ~BobFleetGovernor() { }
+    virtual ~HoldFleetGovernor() { }
 
     virtual void runMob(Mob *mob) {
          BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
@@ -53,9 +53,9 @@ public:
 };
 
 
-class BobFleet {
+class HoldFleet {
 public:
-    BobFleet(FleetAI *ai)
+    HoldFleet(FleetAI *ai)
     :sg(), gov(ai, &sg)
     {
         this->ai = ai;
@@ -83,7 +83,7 @@ public:
         this->gov.loadRegistry(mreg);
     }
 
-    ~BobFleet() {
+    ~HoldFleet() {
         RandomState_Destroy(&this->rs);
         MBRegistry_Free(mreg);
     }
@@ -91,47 +91,47 @@ public:
     FleetAI *ai;
     RandomState rs;
     SensorGrid sg;
-    BobFleetGovernor gov;
+    HoldFleetGovernor gov;
     MBRegistry *mreg;
 };
 
-static void *BobFleetCreate(FleetAI *ai);
-static void BobFleetDestroy(void *aiHandle);
-static void BobFleetRunAITick(void *aiHandle);
-static void *BobFleetMobSpawned(void *aiHandle, Mob *m);
-static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
+static void *HoldFleetCreate(FleetAI *ai);
+static void HoldFleetDestroy(void *aiHandle);
+static void HoldFleetRunAITick(void *aiHandle);
+static void *HoldFleetMobSpawned(void *aiHandle, Mob *m);
+static void HoldFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
-void BobFleet_GetOps(FleetAIOps *ops)
+void HoldFleet_GetOps(FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));
 
-    ops->aiName = "BobFleet";
+    ops->aiName = "HoldFleet";
     ops->aiAuthor = "Michael Banack";
 
-    ops->createFleet = &BobFleetCreate;
-    ops->destroyFleet = &BobFleetDestroy;
-    ops->runAITick = &BobFleetRunAITick;
-    ops->mobSpawned = BobFleetMobSpawned;
-    ops->mobDestroyed = BobFleetMobDestroyed;
+    ops->createFleet = &HoldFleetCreate;
+    ops->destroyFleet = &HoldFleetDestroy;
+    ops->runAITick = &HoldFleetRunAITick;
+    ops->mobSpawned = HoldFleetMobSpawned;
+    ops->mobDestroyed = HoldFleetMobDestroyed;
 }
 
-static void *BobFleetCreate(FleetAI *ai)
+static void *HoldFleetCreate(FleetAI *ai)
 {
     ASSERT(ai != NULL);
-    return new BobFleet(ai);
+    return new HoldFleet(ai);
 }
 
-static void BobFleetDestroy(void *handle)
+static void HoldFleetDestroy(void *handle)
 {
-    BobFleet *sf = (BobFleet *)handle;
+    HoldFleet *sf = (HoldFleet *)handle;
     ASSERT(sf != NULL);
     delete(sf);
 }
 
-static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
+static void *HoldFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    BobFleet *sf = (BobFleet *)aiHandle;
+    HoldFleet *sf = (HoldFleet *)aiHandle;
 
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
@@ -143,24 +143,19 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
+static void HoldFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
-    BobFleet *sf = (BobFleet *)aiHandle;
+    HoldFleet *sf = (HoldFleet *)aiHandle;
     sf->gov.removeMobid(m->mobid);
 }
 
-static void BobFleetRunAITick(void *aiHandle)
+static void HoldFleetRunAITick(void *aiHandle)
 {
-    BobFleet *sf = (BobFleet *)aiHandle;
+    HoldFleet *sf = (HoldFleet *)aiHandle;
     FleetAI *ai = sf->ai;
-    //const BattleParams *bp = &sf->ai->bp;
-    //uint targetScanFilter = MOB_FLAG_SHIP;
-    //float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
-    //                    MobType_GetMaxFuel(MOB_TYPE_MISSILE);
-    //float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
     CMobIt mit;
 
-    ASSERT(ai->player.aiType == FLEET_AI_BOB);
+    ASSERT(ai->player.aiType == FLEET_AI_HOLD);
 
     sf->sg.updateTick(ai);
 

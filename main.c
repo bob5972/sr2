@@ -445,10 +445,11 @@ void MainConstructScenario(void)
          *    GatherFleet
          *    CloudFleet
          *    MapperFleet
-         *    BobFleet
          *    RunAwayFleet
-         *    BasicFleet
+         *    HoldFleet
          *    CowardFleet
+         *    BasicFleet
+         *    BobFleet (prototype, varies)
          */
 
 //         mainData.players[p].mreg = MBRegistry_Alloc();

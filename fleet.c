@@ -174,6 +174,9 @@ static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
         case FLEET_AI_BASIC:
             BasicFleet_GetOps(ops);
             break;
+        case FLEET_AI_HOLD:
+            HoldFleet_GetOps(ops);
+            break;
         default:
             PANIC("Unknown AI type=%d\n", aiType);
     }

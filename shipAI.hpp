@@ -184,8 +184,6 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
-            { "evadeHold",              "FALSE", },
-            { "holdCount",              "100",   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -201,8 +199,6 @@ public:
             MBRegistry_GetBool(mreg, "evadeUseStrictDistance");
         myConfig.evadeStrictDistance =
             MBRegistry_GetFloat(mreg, "evadeStrictDistance");
-        myConfig.evadeHold = MBRegistry_GetBool(mreg, "evadeHold");
-        myConfig.holdCount = MBRegistry_GetUint(mreg, "holdCount");
 
         MBRegistry_Free(mreg);
     }
@@ -229,20 +225,39 @@ protected:
         BasicShipAI(MobID mobid)
         :ShipAI(mobid)
         {
-            MBUtil_Zero(&enemyPos, sizeof(enemyPos));
-            MBUtil_Zero(&evadePos, sizeof(evadePos));
+            MBUtil_Zero(&attackData, sizeof(attackData));
+            MBUtil_Zero(&evadeData, sizeof(evadeData));
+            MBUtil_Zero(&holdData, sizeof(holdData));
+
             state = BSAI_STATE_IDLE;
-            holdCount = 0;
+            oldState = BSAI_STATE_IDLE;
+            stateChanged = FALSE;
         }
 
         ~BasicShipAI() { }
 
-        BasicShipAIState state;
+        void hold(const FPoint *holdPos, uint holdCount) {
+            state = BSAI_STATE_HOLD;
+            holdData.pos = *holdPos;
+            holdData.count = holdCount;
+        }
 
-        FPoint enemyPos;
-        FPoint evadePos;
-        uint holdCount;
-        FPoint holdPos;
+        BasicShipAIState oldState;
+        BasicShipAIState state;
+        bool stateChanged;
+
+        struct {
+            FPoint pos;
+        } attackData;
+
+        struct {
+            FPoint pos;
+        } evadeData;
+
+        struct {
+            uint count;
+            FPoint pos;
+        } holdData;
     };
 
     virtual ShipAI *createShip(MobID mobid);
@@ -253,8 +268,6 @@ protected:
         bool evadeFighters;
         bool evadeUseStrictDistance;
         float evadeStrictDistance;
-        bool evadeHold;
-        uint holdCount;
     } myConfig;
 };
 

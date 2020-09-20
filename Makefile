@@ -57,6 +57,7 @@ C_SOURCES = main.c \
 CPP_SOURCES = basicFleet.cpp \
               bobFleet.cpp \
               cowardFleet.cpp \
+              holdFleet.cpp \
               mobSet.cpp \
               sensorGrid.cpp \
               shipAI.cpp

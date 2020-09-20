@@ -26,18 +26,13 @@ extern "C" {
 BasicAIGovernor::ShipAI *BasicAIGovernor::createShip(MobID mobid)
 {
         BasicShipAI *ship = new BasicShipAI(mobid);
-        Mob *friendBase = mySensorGrid->friendBase();
-
-        if (friendBase != NULL) {
-            ship->enemyPos = friendBase->pos;
-        }
 
         Mob *m = getMob(mobid);
         if (m != NULL) {
             ShipAI *p = getShip(m->parentMobid);
             if (p != NULL) {
                 BasicShipAI *pShip = (BasicShipAI *)p;
-                ship->enemyPos = pShip->enemyPos;
+                ship->attackData.pos = pShip->attackData.pos;
             }
         }
 
@@ -52,6 +47,9 @@ void BasicAIGovernor::runMob(Mob *mob)
     BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
 
     ASSERT(ship != NULL);
+
+    ship->oldState = ship->state;
+    ship->stateChanged = FALSE;
 
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
@@ -96,7 +94,7 @@ void BasicAIGovernor::runMob(Mob *mob)
         if (enemyTarget != NULL) {
             ship->state = BSAI_STATE_ATTACK;
             mob->cmd.spawnType = MOB_TYPE_MISSILE;
-            ship->enemyPos = enemyTarget->pos;
+            ship->attackData.pos = enemyTarget->pos;
 
             if (enemyTarget->type == MOB_TYPE_BASE) {
                 /*
@@ -135,38 +133,28 @@ void BasicAIGovernor::runMob(Mob *mob)
 
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
-            ship->evadePos = mob->cmd.target;
-
-            if (myConfig.evadeHold) {
-                FPoint_Midpoint(&ship->holdPos, &mob->pos, &enemyTarget->pos);
-                //ship->holdPos = mob->pos;
-                //ship->holdPos = enemyTarget->pos;
-            }
+            ship->evadeData.pos = mob->cmd.target;
         } else if (lootTarget != NULL) {
             ship->state = BSAI_STATE_GATHER;
             mob->cmd.target = lootTarget->pos;
         } else if (ship->state == BSAI_STATE_HOLD) {
-            if (ship->holdCount == 0) {
+            if (ship->holdData.count == 0) {
                 ship->state = BSAI_STATE_IDLE;
             } else {
-                ASSERT(ship->holdCount > 0);
-                ship->holdCount--;
+                mob->cmd.target = ship->holdData.pos;
+                ASSERT(ship->holdData.count > 0);
+                ship->holdData.count--;
             }
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-
-            if (myConfig.evadeHold && ship->state == BSAI_STATE_EVADE &&
-                FPoint_Distance(&mob->cmd.target, &ship->evadePos) <= MICRON) {
-                // Hold!
-                ship->state = BSAI_STATE_HOLD;
-                ship->holdCount = myConfig.holdCount;
-                mob->cmd.target = ship->holdPos;
-            } else {
-                ship->state = BSAI_STATE_IDLE;
-                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
-            }
+            ship->state = BSAI_STATE_IDLE;
+            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
         }
     } else {
         NOT_IMPLEMENTED();
+    }
+
+    if (ship->state != ship->oldState) {
+        ship->stateChanged = TRUE;
     }
 }

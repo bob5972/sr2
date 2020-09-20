@@ -46,7 +46,7 @@ float MobType_GetSensorRadius(MobType type)
     } v[] = {
         { MOB_TYPE_INVALID,    0.0f, },
         { MOB_TYPE_BASE,     250.0f, },
-        { MOB_TYPE_FIGHTER,   50.0f, },
+        { MOB_TYPE_FIGHTER,   MOB_FIGHTER_SENSOR_RADIUS, },
         { MOB_TYPE_MISSILE,   30.0f, },
         { MOB_TYPE_LOOT_BOX ,  0.0f, },
     };
