@@ -184,7 +184,8 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
-            { "evadeStop",              "FALSE", },
+            { "evadeHold",              "FALSE", },
+            { "holdCount",              "100",   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -200,8 +201,8 @@ public:
             MBRegistry_GetBool(mreg, "evadeUseStrictDistance");
         myConfig.evadeStrictDistance =
             MBRegistry_GetFloat(mreg, "evadeStrictDistance");
-        myConfig.evadeStop =
-            MBRegistry_GetBool(mreg, "evadeStop");
+        myConfig.evadeHold = MBRegistry_GetBool(mreg, "evadeHold");
+        myConfig.holdCount = MBRegistry_GetUint(mreg, "holdCount");
 
         MBRegistry_Free(mreg);
     }
@@ -228,6 +229,7 @@ protected:
         BSAI_STATE_GATHER,
         BSAI_STATE_ATTACK,
         BSAI_STATE_EVADE,
+        BSAI_STATE_HOLD,
     } BasicShipAIState;
 
     class BasicShipAI : public ShipAI
@@ -236,16 +238,19 @@ protected:
         BasicShipAI(MobID mobid)
         :ShipAI(mobid)
         {
-            MBUtil_Zero(&targetPos, sizeof(targetPos));
+            MBUtil_Zero(&enemyPos, sizeof(enemyPos));
             MBUtil_Zero(&evadePos, sizeof(evadePos));
             state = BSAI_STATE_IDLE;
+            holdCount = 0;
         }
 
         ~BasicShipAI() { }
 
         BasicShipAIState state;
-        FPoint targetPos;
+
+        FPoint enemyPos;
         FPoint evadePos;
+        uint holdCount;
     };
 
     virtual ShipAI *createShip(MobID mobid);
@@ -256,7 +261,8 @@ protected:
         bool evadeFighters;
         bool evadeUseStrictDistance;
         float evadeStrictDistance;
-        bool evadeStop;
+        bool evadeHold;
+        uint holdCount;
     } myConfig;
 };
 

@@ -29,7 +29,7 @@ BasicAIGovernor::ShipAI *BasicAIGovernor::createShip(MobID mobid)
         Mob *friendBase = mySensorGrid->friendBase();
 
         if (friendBase != NULL) {
-            ship->targetPos = friendBase->pos;
+            ship->enemyPos = friendBase->pos;
         }
 
         Mob *m = getMob(mobid);
@@ -37,7 +37,7 @@ BasicAIGovernor::ShipAI *BasicAIGovernor::createShip(MobID mobid)
             ShipAI *p = getShip(m->parentMobid);
             if (p != NULL) {
                 BasicShipAI *pShip = (BasicShipAI *)p;
-                ship->targetPos = pShip->targetPos;
+                ship->enemyPos = pShip->enemyPos;
             }
         }
 
@@ -96,7 +96,7 @@ void BasicAIGovernor::runMob(Mob *mob)
         if (enemyTarget != NULL) {
             ship->state = BSAI_STATE_ATTACK;
             mob->cmd.spawnType = MOB_TYPE_MISSILE;
-            ship->targetPos = enemyTarget->pos;
+            ship->enemyPos = enemyTarget->pos;
 
             if (enemyTarget->type == MOB_TYPE_BASE) {
                 /*
@@ -139,12 +139,20 @@ void BasicAIGovernor::runMob(Mob *mob)
         } else if (lootTarget != NULL) {
             ship->state = BSAI_STATE_GATHER;
             mob->cmd.target = lootTarget->pos;
+        } else if (ship->state == BSAI_STATE_HOLD) {
+            if (ship->holdCount == 0) {
+                ship->state = BSAI_STATE_IDLE;
+            } else {
+                ASSERT(ship->holdCount > 0);
+                ship->holdCount--;
+            }
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
 
-            if (myConfig.evadeStop && ship->state == BSAI_STATE_EVADE &&
+            if (myConfig.evadeHold && ship->state == BSAI_STATE_EVADE &&
                 FPoint_Distance(&mob->cmd.target, &ship->evadePos) <= MICRON) {
                 // Hold!
-                ship->state = BSAI_STATE_EVADE;
+                ship->state = BSAI_STATE_HOLD;
+                ship->holdCount = myConfig.holdCount;
                 mob->cmd.target = mob->pos;
             } else {
                 ship->state = BSAI_STATE_IDLE;
