@@ -136,6 +136,12 @@ void BasicAIGovernor::runMob(Mob *mob)
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
             ship->evadePos = mob->cmd.target;
+
+            if (myConfig.evadeHold) {
+                FPoint_Midpoint(&ship->holdPos, &mob->pos, &enemyTarget->pos);
+                //ship->holdPos = mob->pos;
+                //ship->holdPos = enemyTarget->pos;
+            }
         } else if (lootTarget != NULL) {
             ship->state = BSAI_STATE_GATHER;
             mob->cmd.target = lootTarget->pos;
@@ -153,7 +159,7 @@ void BasicAIGovernor::runMob(Mob *mob)
                 // Hold!
                 ship->state = BSAI_STATE_HOLD;
                 ship->holdCount = myConfig.holdCount;
-                mob->cmd.target = mob->pos;
+                mob->cmd.target = ship->holdPos;
             } else {
                 ship->state = BSAI_STATE_IDLE;
                 mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);

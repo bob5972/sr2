@@ -212,15 +212,6 @@ public:
      */
     virtual ~BasicAIGovernor() { }
 
-//     FPoint *getTargetPos(MobID mobid) {
-//         BasicShipAI *ship = (BasicShipAI *)getShip(mobid);
-//         if (ship == NULL) {
-//             return NULL;
-//         }
-//
-//         return &ship->targetPos;
-//     }
-
     virtual void runMob(Mob *mob);
 
 protected:
@@ -251,6 +242,7 @@ protected:
         FPoint enemyPos;
         FPoint evadePos;
         uint holdCount;
+        FPoint holdPos;
     };
 
     virtual ShipAI *createShip(MobID mobid);
