@@ -49,7 +49,7 @@ public:
             if (ship->oldState == BSAI_STATE_EVADE &&
                 ship->state == BSAI_STATE_IDLE) {
                 FPoint holdPos = ship->attackData.pos;
-                ship->hold(&holdPos, 100);
+                ship->hold(&holdPos, defaultHoldCount);
             } else if (ship->state == BSAI_STATE_IDLE) {
                 Mob *eBase = sg->enemyBase();
 
@@ -70,6 +70,8 @@ public:
             { "evadeUseStrictDistance", "TRUE",  },
             { "evadeStrictDistance",    "10",    },
             { "holdCount",              "10",    },
+            { "evadeRange",             "50",    },
+            { "attackRange",            "100",   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);

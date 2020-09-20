@@ -133,9 +133,9 @@ typedef enum FleetAIType {
     FLEET_AI_CLOUD   = 5,
     FLEET_AI_MAPPER  = 6,
     FLEET_AI_RUNAWAY = 7,
-    FLEET_AI_HOLD    = 8,
-    FLEET_AI_COWARD  = 9,
-    FLEET_AI_BASIC   = 10,
+    FLEET_AI_COWARD  = 8,
+    FLEET_AI_BASIC   = 9,
+    FLEET_AI_HOLD    = 10,
     FLEET_AI_BOB     = 11,
     FLEET_AI_MAX,
 } FleetAIType;

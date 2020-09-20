@@ -24,7 +24,7 @@
 #include "battleTypes.h"
 #include "MBCompare.h"
 
-#define MOB_FIGHTER_SENSOR_RADIUS 50.0f
+#define MOB_FIGHTER_SENSOR_RADIUS (50.0f)
 
 float MobType_GetSpeed(MobType type);
 float MobType_GetSensorRadius(MobType type);

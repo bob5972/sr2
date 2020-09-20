@@ -92,14 +92,21 @@ void BasicAIGovernor::runMob(Mob *mob)
         enemyTarget = sg->findClosestTargetInRange(&mob->pos, MOB_FLAG_SHIP,
                                                    firingRange);
         if (enemyTarget != NULL) {
+            bool beAggressive = FALSE;
+
             ship->state = BSAI_STATE_ATTACK;
             mob->cmd.spawnType = MOB_TYPE_MISSILE;
             ship->attackData.pos = enemyTarget->pos;
 
-            if (enemyTarget->type == MOB_TYPE_BASE) {
-                /*
-                * Be more aggressive to bases.
-                */
+            if (myConfig.attackRange > 0 &&
+                FPoint_Distance(&mob->pos, &enemyTarget->pos) <
+                myConfig.attackRange) {
+                beAggressive = TRUE;
+            } else if (enemyTarget->type == MOB_TYPE_BASE) {
+                beAggressive = TRUE;
+            }
+
+            if (beAggressive) {
                 float range = MIN(firingRange, scanningRange) - 1;
                 FleetUtil_RandomPointInRange(rs, &mob->cmd.target,
                                              &enemyTarget->pos, range);

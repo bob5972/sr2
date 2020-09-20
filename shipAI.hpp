@@ -184,6 +184,7 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
+            { "attackRange",            "0",     },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -199,6 +200,8 @@ public:
             MBRegistry_GetBool(mreg, "evadeUseStrictDistance");
         myConfig.evadeStrictDistance =
             MBRegistry_GetFloat(mreg, "evadeStrictDistance");
+        myConfig.attackRange =
+            MBRegistry_GetFloat(mreg, "attackRange");
 
         MBRegistry_Free(mreg);
     }
@@ -268,6 +271,7 @@ protected:
         bool evadeFighters;
         bool evadeUseStrictDistance;
         float evadeStrictDistance;
+        float attackRange;
     } myConfig;
 };
 

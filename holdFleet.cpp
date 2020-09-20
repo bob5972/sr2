@@ -39,6 +39,7 @@ public:
 
     virtual void runMob(Mob *mob) {
          BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+         SensorGrid *sg = mySensorGrid;
 
         this->BasicAIGovernor::runMob(mob);
 
@@ -47,6 +48,12 @@ public:
                 ship->state == BSAI_STATE_IDLE) {
                 FPoint holdPos = ship->attackData.pos;
                 ship->hold(&holdPos, defaultHoldCount);
+            } else if (ship->state == BSAI_STATE_IDLE) {
+                Mob *eBase = sg->enemyBase();
+
+                if (eBase != NULL && mob->mobid % 2 == 0) {
+                    mob->cmd.target = eBase->pos;
+                }
             }
         }
     }
