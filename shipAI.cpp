@@ -23,6 +23,27 @@ extern "C" {
 
 #include "shipAI.hpp"
 
+BasicAIGovernor::ShipAI *BasicAIGovernor::createShip(MobID mobid)
+{
+        BasicShipAI *ship = new BasicShipAI(mobid);
+        Mob *friendBase = mySensorGrid->friendBase();
+
+        if (friendBase != NULL) {
+            ship->targetPos = friendBase->pos;
+        }
+
+        Mob *m = getMob(mobid);
+        if (m != NULL) {
+            ShipAI *p = getShip(m->parentMobid);
+            if (p != NULL) {
+                BasicShipAI *pShip = (BasicShipAI *)p;
+                ship->targetPos = pShip->targetPos;
+            }
+        }
+
+        return (ShipAI *)ship;
+    }
+
 void BasicAIGovernor::runMob(Mob *mob)
 {
     SensorGrid *sg = mySensorGrid;
@@ -73,6 +94,7 @@ void BasicAIGovernor::runMob(Mob *mob)
         enemyTarget = sg->findClosestTargetInRange(&mob->pos, MOB_FLAG_SHIP,
                                                    firingRange);
         if (enemyTarget != NULL) {
+            ship->state = BSAI_STATE_ATTACK;
             mob->cmd.spawnType = MOB_TYPE_MISSILE;
             ship->targetPos = enemyTarget->pos;
 
@@ -100,6 +122,8 @@ void BasicAIGovernor::runMob(Mob *mob)
 
         if (enemyTarget != NULL) {
             // Run away!
+            ship->state = BSAI_STATE_EVADE;
+
             float dx = enemyTarget->pos.x - mob->pos.x;
             float dy = enemyTarget->pos.y - mob->pos.y;
 
@@ -111,11 +135,22 @@ void BasicAIGovernor::runMob(Mob *mob)
 
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
+            ship->evadePos = mob->cmd.target;
         } else if (lootTarget != NULL) {
+            ship->state = BSAI_STATE_GATHER;
             mob->cmd.target = lootTarget->pos;
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
-            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+
+            if (myConfig.evadeStop && ship->state == BSAI_STATE_EVADE &&
+                FPoint_Distance(&mob->cmd.target, &ship->evadePos) <= MICRON) {
+                // Hold!
+                ship->state = BSAI_STATE_EVADE;
+                mob->cmd.target = mob->pos;
+            } else {
+                ship->state = BSAI_STATE_IDLE;
+                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            }
         }
     } else {
         NOT_IMPLEMENTED();

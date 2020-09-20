@@ -184,6 +184,7 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
+            { "evadeStop",              "FALSE", },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -199,6 +200,8 @@ public:
             MBRegistry_GetBool(mreg, "evadeUseStrictDistance");
         myConfig.evadeStrictDistance =
             MBRegistry_GetFloat(mreg, "evadeStrictDistance");
+        myConfig.evadeStop =
+            MBRegistry_GetBool(mreg, "evadeStop");
 
         MBRegistry_Free(mreg);
     }
@@ -220,6 +223,13 @@ public:
     virtual void runMob(Mob *mob);
 
 protected:
+    typedef enum BasicShipAIState {
+        BSAI_STATE_IDLE,
+        BSAI_STATE_GATHER,
+        BSAI_STATE_ATTACK,
+        BSAI_STATE_EVADE,
+    } BasicShipAIState;
+
     class BasicShipAI : public ShipAI
     {
     public:
@@ -227,32 +237,18 @@ protected:
         :ShipAI(mobid)
         {
             MBUtil_Zero(&targetPos, sizeof(targetPos));
+            MBUtil_Zero(&evadePos, sizeof(evadePos));
+            state = BSAI_STATE_IDLE;
         }
 
         ~BasicShipAI() { }
 
+        BasicShipAIState state;
         FPoint targetPos;
+        FPoint evadePos;
     };
 
-    virtual ShipAI *createShip(MobID mobid) {
-        BasicShipAI *ship = new BasicShipAI(mobid);
-        Mob *friendBase = mySensorGrid->friendBase();
-
-        if (friendBase != NULL) {
-            ship->targetPos = friendBase->pos;
-        }
-
-        Mob *m = getMob(mobid);
-        if (m != NULL) {
-            ShipAI *p = getShip(m->parentMobid);
-            if (p != NULL) {
-                BasicShipAI *pShip = (BasicShipAI *)p;
-                ship->targetPos = pShip->targetPos;
-            }
-        }
-
-        return (ShipAI *)ship;
-    }
+    virtual ShipAI *createShip(MobID mobid);
 
     SensorGrid *mySensorGrid;
 
@@ -260,6 +256,7 @@ protected:
         bool evadeFighters;
         bool evadeUseStrictDistance;
         float evadeStrictDistance;
+        bool evadeStop;
     } myConfig;
 };
 
