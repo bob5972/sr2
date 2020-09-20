@@ -38,18 +38,56 @@ public:
     virtual ~BobFleetGovernor() { }
 
     virtual void runMob(Mob *mob) {
-         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+        SensorGrid *sg = mySensorGrid;
+        //FleetAI *ai = myFleetAI;
+        //RandomState *rs = &myRandomState;
 
         this->BasicAIGovernor::runMob(mob);
 
         if (ship->stateChanged) {
             if (ship->oldState == BSAI_STATE_EVADE &&
                 ship->state == BSAI_STATE_IDLE) {
-                FPoint holdPos = mob->pos;
+                FPoint holdPos = ship->attackData.pos;
                 ship->hold(&holdPos, 100);
+            } else if (ship->state == BSAI_STATE_IDLE) {
+                Mob *eBase = sg->enemyBase();
+
+                if (eBase != NULL && mob->mobid % 2 == 0) {
+                    mob->cmd.target = eBase->pos;
+                }
             }
         }
     }
+
+
+    virtual void loadRegistry(MBRegistry *mreg) {
+        struct {
+            const char *key;
+            const char *value;
+        } configs[] = {
+            { "evadeFighters",          "FALSE", },
+            { "evadeUseStrictDistance", "TRUE",  },
+            { "evadeStrictDistance",    "10",    },
+            { "holdCount",              "10",    },
+        };
+
+        mreg = MBRegistry_AllocCopy(mreg);
+
+        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
+            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
+                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+            }
+        }
+
+        defaultHoldCount = MBRegistry_GetUint(mreg, "holdCount");
+
+        this->BasicAIGovernor::loadRegistry(mreg);
+
+        MBRegistry_Free(mreg);
+    }
+
+    uint defaultHoldCount;
 };
 
 
@@ -64,22 +102,6 @@ public:
         this->gov.setSeed(RandomState_Uint64(&this->rs));
 
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
-
-        struct {
-            const char *key;
-            const char *value;
-        } configs[] = {
-            { "evadeFighters",          "FALSE", },
-            { "evadeUseStrictDistance", "TRUE",  },
-            { "evadeStrictDistance",    "10",    },
-        };
-
-        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
-            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
-                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
-            }
-        }
-
         this->gov.loadRegistry(mreg);
     }
 

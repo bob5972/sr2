@@ -176,7 +176,7 @@ public:
         loadRegistry(ai->player.mreg);
     }
 
-    void loadRegistry(MBRegistry *mreg) {
+    virtual void loadRegistry(MBRegistry *mreg) {
         struct {
             const char *key;
             const char *value;

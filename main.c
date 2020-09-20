@@ -400,20 +400,23 @@ void MainConstructScenario(void)
          * Customize as needed.
          */
         float v[] = {
-            3, 7, 10, 50, 100,
+           10, 50,
         };
+
+        mainData.players[p].aiType = FLEET_AI_BASIC;
+        p++;
 
         for (uint i = 0; i < ARRAYSIZE(v); i++) {
             char *vstr = NULL;
             asprintf(&vstr, "%1.0f", v[i]);
             mainData.players[p].mreg = MBRegistry_Alloc();
-            MBRegistry_Put(mainData.players[p].mreg, "evadeStrictDistance",
+            MBRegistry_Put(mainData.players[p].mreg, "holdCount",
                             vstr);
-            mainData.players[p].aiType = FLEET_AI_BOB;
+            mainData.players[p].aiType = FLEET_AI_HOLD;
 
             char *name = NULL;
             asprintf(&name, "%s %s",
-                        Fleet_GetName(mainData.players[p].aiType), vstr);
+                     Fleet_GetName(mainData.players[p].aiType), vstr);
             mainData.players[p].playerName = name;
 
             p++;
@@ -422,9 +425,6 @@ void MainConstructScenario(void)
             //free(vstr);
             //free(name);
         }
-
-        mainData.players[p].aiType = FLEET_AI_BASIC;
-        p++;
     } else if (mainData.tournament) {
         uint i = FLEET_AI_NEUTRAL + 1;
         ASSERT(p == FLEET_AI_NEUTRAL);
@@ -446,9 +446,10 @@ void MainConstructScenario(void)
          *    CloudFleet
          *    MapperFleet
          *    RunAwayFleet
-         *    HoldFleet
          *    CowardFleet
          *    BasicFleet
+         *    HoldFleet
+         *
          *    BobFleet (prototype, varies)
          */
 
@@ -483,16 +484,26 @@ void MainConstructScenario(void)
         }
     }
 
-    if (!mainData.tournament) {
-        mainData.numBSCs = 1;
-        mainData.bscs = malloc(sizeof(mainData.bscs[0]));
-        mainData.bscs[0] = bsc;
-        ASSERT(sizeof(mainData.players) ==
-               sizeof(mainData.bscs[0].players));
-        mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
-        memcpy(&mainData.bscs[0].players, &mainData.players,
-               sizeof(mainData.players));
-    } else {
+    if (mainData.optimize) {
+        // This is too big, but it works.
+        uint maxBscs = mainData.numPlayers;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
+
+        mainData.numBSCs = 0;
+        ASSERT(mainData.numPlayers > 0);
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+        for (uint y = 2; y < mainData.numPlayers; y++) {
+            uint b = mainData.numBSCs++;
+            mainData.bscs[b].bp = bsc.bp;
+            mainData.bscs[b].bp.numPlayers = 3;
+            ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+            mainData.bscs[b].players[0] = mainData.players[0];
+            mainData.bscs[b].players[1] = mainData.players[1];
+            mainData.bscs[b].players[2] = mainData.players[y];
+        }
+
+        ASSERT(mainData.numBSCs <= maxBscs);
+    } else if (mainData.tournament) {
         // This is too big, but it works.
         uint maxBscs = mainData.numPlayers * mainData.numPlayers;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
@@ -516,14 +527,16 @@ void MainConstructScenario(void)
             }
         }
 
-//         // Battle royale
-//         uint b = mainData.numBSCs++;
-//         mainData.bscs[b].bp = bsc.bp;
-//         mainData.bscs[b].bp.numPlayers = mainData.numPlayers;
-//         memcpy(&mainData.bscs[b].players, &mainData.players,
-//                sizeof(mainData.players));
-
         ASSERT(mainData.numBSCs <= maxBscs);
+    } else {
+        mainData.numBSCs = 1;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]));
+        mainData.bscs[0] = bsc;
+        ASSERT(sizeof(mainData.players) ==
+               sizeof(mainData.bscs[0].players));
+        mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
+        memcpy(&mainData.bscs[0].players, &mainData.players,
+               sizeof(mainData.players));
     }
 }
 
