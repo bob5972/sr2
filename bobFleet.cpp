@@ -45,9 +45,6 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "TRUE",  },
             { "evadeStrictDistance",    "10",    },
-            { "idlePowerLaw",           "FALSE", },
-            { "idlePowerLawBase",       "50",    },
-            { "idlePowerLawExp",        "2",     },
         };
 
         for (uint i = 0; i < ARRAYSIZE(configs); i++) {

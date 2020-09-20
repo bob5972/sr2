@@ -184,9 +184,6 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
-            { "idlePowerLaw",           "FALSE", },
-            { "idlePowerLawBase",       "5",     },
-            { "idlePowerLawExp",        "2",     },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -202,11 +199,6 @@ public:
             MBRegistry_GetBool(mreg, "evadeUseStrictDistance");
         myConfig.evadeStrictDistance =
             MBRegistry_GetFloat(mreg, "evadeStrictDistance");
-        myConfig.idlePowerLaw = MBRegistry_GetBool(mreg, "idlePowerLaw");
-        myConfig.idlePowerLawBase =
-            MBRegistry_GetFloat(mreg, "idlePowerLawBase");
-        myConfig.idlePowerLawExp =
-            MBRegistry_GetFloat(mreg, "idlePowerLawExp");
 
         MBRegistry_Free(mreg);
     }
@@ -268,9 +260,6 @@ protected:
         bool evadeFighters;
         bool evadeUseStrictDistance;
         float evadeStrictDistance;
-        bool idlePowerLaw;
-        float idlePowerLawBase;
-        float idlePowerLawExp;
     } myConfig;
 };
 
