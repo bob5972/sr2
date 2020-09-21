@@ -184,7 +184,7 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
-            { "attackRange",            "0",     },
+            { "attackRange",            "100",   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
