@@ -667,7 +667,7 @@ int main(int argc, char **argv)
         if (mainData.numBSCs != 1) {
             PANIC("Multiple scenarios requries --headless\n");
         }
-        Display_Init(&mainData.bscs[0].bp);
+        Display_Init(&mainData.bscs[0]);
     }
 
     uint battleId = 0;

@@ -69,14 +69,16 @@ typedef struct DisplayGlobalData {
 
 static DisplayGlobalData display;
 
-static uint32 DisplayGetColor(uint32 index);
+static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount);
 static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
                               const SDL_Point *center, int radius);
 static void DisplayCreateCircleSprite(DisplaySprite *sprite,
                                       uint32 radius, uint32 color);
 
-void Display_Init(const BattleParams *bp)
+void Display_Init(const BattleScenario *bsc)
 {
+    const BattleParams *bp = &bsc->bp;
+
     ASSERT(MBUtil_IsZero(&display, sizeof(display)));
     display.width = bp->width;
     display.height = bp->height;
@@ -110,8 +112,12 @@ void Display_Init(const BattleParams *bp)
     SDL_RenderPresent(display.sdlRenderer);
 
     ASSERT(bp->numPlayers <= ARRAYSIZE(display.fleets));
+    uint repeatCount[FLEET_AI_MAX];
+    MBUtil_Zero(&repeatCount[0], sizeof(repeatCount));
+
     for (uint x = 0; x < bp->numPlayers; x++) {
-        uint32 color = DisplayGetColor(x);
+        FleetAIType aiType = bsc->players[x].aiType;
+        uint32 color = DisplayGetColor(aiType, repeatCount[aiType]++);
         display.fleets[x].color = color;
 
         for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
@@ -216,21 +222,35 @@ void Display_ReleaseMobs()
     SDL_UnlockMutex(display.mobMutex);
 }
 
-static uint32 DisplayGetColor(uint32 index)
+static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount)
 {
-    uint32 colors[] = {
-        0x888888, // 0 is NEUTRAL
-        0xFF0000,
-        0x00FF00,
-        0x0000FF,
-        0x808000,
-        0x800080,
-        0x008080,
-        0xFFFFFF,
+    struct {
+        FleetAIType aiType;
+        uint32 color;
+    } colors[] = {
+        { FLEET_AI_INVALID, 0x000000, },
+        { FLEET_AI_NEUTRAL, 0x888888, },
+        { FLEET_AI_DUMMY,   0xFFFFFF, },
+        { FLEET_AI_SIMPLE,  0xFF0000, },
+        { FLEET_AI_GATHER,  0x00FF00, },
+        { FLEET_AI_CLOUD,   0x0000FF, },
+        { FLEET_AI_MAPPER,  0x808000, },
+        { FLEET_AI_RUNAWAY, 0x800080, },
+        { FLEET_AI_COWARD,  0x008080, },
+        { FLEET_AI_BASIC,   0x808080, },
+        { FLEET_AI_HOLD,    0xF00080, },
+        { FLEET_AI_BOB,     0x80F080, },
     };
+    uint32 color;
 
-    index %= ARRAYSIZE(colors);
-    return colors[index] | ((SHIP_ALPHA & 0xFF) << 24);
+    ASSERT(ARRAYSIZE(colors) == FLEET_AI_MAX);
+    ASSERT(aiType < ARRAYSIZE(colors));
+    ASSERT(colors[aiType].aiType == aiType);
+
+
+    uint i  = aiType % ARRAYSIZE(colors);
+    color = colors[i].color / (1 + repeatCount);
+    return color | ((SHIP_ALPHA & 0xFF) << 24);
 }
 
 static void DisplayCreateCircleSprite(DisplaySprite *sprite,
