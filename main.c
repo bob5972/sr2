@@ -400,7 +400,7 @@ void MainConstructScenario(void)
          * Customize as needed.
          */
         float v[] = {
-           10, 50,
+           70, 100,
         };
 
         mainData.players[p].aiType = FLEET_AI_BASIC;
@@ -412,7 +412,7 @@ void MainConstructScenario(void)
             mainData.players[p].mreg = MBRegistry_Alloc();
             MBRegistry_Put(mainData.players[p].mreg, "holdCount",
                             vstr);
-            mainData.players[p].aiType = FLEET_AI_HOLD;
+            mainData.players[p].aiType = FLEET_AI_BOB;
 
             char *name = NULL;
             asprintf(&name, "%s %s",
