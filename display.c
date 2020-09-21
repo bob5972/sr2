@@ -300,7 +300,8 @@ static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount)
 
 
     uint i  = aiType % ARRAYSIZE(colors);
-    color = colors[i].color / (1 + repeatCount);
+    color = colors[i].color;
+    color /= (1 + repeatCount);
     return color | ((SHIP_ALPHA & 0xFF) << 24);
 }
 
@@ -450,6 +451,8 @@ void Display_Main(void)
 
     ASSERT(display.initialized);
     display.inMain = TRUE;
+
+    //display.paused = TRUE;
 
     while (!done) {
         startTimeUS = DisplayGetTimerUS();

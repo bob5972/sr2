@@ -453,6 +453,11 @@ void MainConstructScenario(void)
          *    BobFleet (prototype, varies)
          */
 
+//         mainData.players[p].aiType = FLEET_AI_BASIC;
+//         p++;
+//         mainData.players[p].aiType = FLEET_AI_HOLD;
+//         p++;
+
 //         mainData.players[p].mreg = MBRegistry_Alloc();
 //         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
 //         MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
