@@ -19,7 +19,7 @@ TARGET=sr2
 CFLAGS = ${DEFAULT_CFLAGS} -I $(BUILDROOT) $(INCLUDE_FLAGS)
 CPPFLAGS = ${CFLAGS}
 
-LIBFLAGS = -lm -lSDL2 -rdynamic
+LIBFLAGS = -lm -lSDL2 -lSDL2_ttf -rdynamic
 ifeq ($(OPENGL), 1)
 LIGFLAGS = ${LIBFLAGS} -lGL
 endif

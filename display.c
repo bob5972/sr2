@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include "SDL.h"
+#include "SDL_ttf.h"
 #include "mbbasic.h"
 #include "mbtypes.h"
 #include "mbassert.h"
@@ -57,6 +58,10 @@ typedef struct DisplayGlobalData {
     bool inMain;
     uint64 mobGenerationDrawn;
 
+    TTF_Font *font;
+    SDL_Surface *textSurface;
+    SDL_Texture *textTexture;
+
     SDL_mutex *mobMutex;
     bool mainWaiting;
     SDL_sem *mainSignal;
@@ -69,6 +74,8 @@ typedef struct DisplayGlobalData {
 
 static DisplayGlobalData display;
 
+void DisplayInitText(const BattleScenario *bsc);
+void DisplayExitText();
 static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount);
 static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
                               const SDL_Point *center, int radius);
@@ -78,8 +85,8 @@ static void DisplayCreateCircleSprite(DisplaySprite *sprite,
 void Display_Init(const BattleScenario *bsc)
 {
     const BattleParams *bp = &bsc->bp;
-
     ASSERT(MBUtil_IsZero(&display, sizeof(display)));
+
     display.width = bp->width;
     display.height = bp->height;
 
@@ -106,6 +113,8 @@ void Display_Init(const BattleScenario *bsc)
     if (display.sdlRenderer == NULL) {
         PANIC("Failed to create SDL renderer\n");
     }
+
+    DisplayInitText(bsc);
 
     SDL_SetRenderDrawColor(display.sdlRenderer, 0x00, 0x00, 0x00, 0xFF);
     SDL_RenderClear(display.sdlRenderer);
@@ -164,12 +173,54 @@ void Display_Exit()
     SDL_DestroyWindow(display.sdlWindow);
     display.sdlWindow = NULL;
 
+    DisplayExitText();
+
     SDL_DestroyMutex(display.mobMutex);
     display.mobMutex = NULL;
     SDL_DestroySemaphore(display.mainSignal);
     display.mainSignal = NULL;
 
     display.initialized = FALSE;
+}
+
+
+void DisplayInitText(const BattleScenario *bsc)
+{
+    char *displayText = NULL;
+    SDL_Color textColor = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+    TTF_Init();
+
+    display.font = TTF_OpenFont("/usr/share/fonts/corefonts/arial.ttf", 20);
+    VERIFY(display.font != NULL);
+
+    if (bsc->bp.numPlayers == 3) {
+        ASSERT(bsc->players[0].aiType == FLEET_AI_NEUTRAL);
+
+        asprintf(&displayText, "%s vs %s",
+                 bsc->players[1].playerName,
+                 bsc->players[2].playerName);
+    } else {
+        displayText = "Battle Royale";
+    }
+
+    display.textSurface = TTF_RenderText_Solid(display.font, displayText, textColor);
+    display.textTexture = SDL_CreateTextureFromSurface(display.sdlRenderer,
+                                                       display.textSurface);
+
+    free(displayText);
+}
+
+void DisplayExitText()
+{
+    SDL_DestroyTexture(display.textTexture);
+    SDL_FreeSurface(display.textSurface);
+    display.textSurface = NULL;
+
+    TTF_CloseFont(display.font);
+    display.font = NULL;
+
+    TTF_Quit();
 }
 
 
@@ -302,6 +353,7 @@ static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
 static void DisplayDrawFrame()
 {
     uint32 i;
+    SDL_Rect rect;
 
     ASSERT(display.initialized);
 
@@ -329,7 +381,6 @@ static void DisplayDrawFrame()
             FCircle circle;
             FleetSprites *fs;
             SDL_Texture *sprite;
-            SDL_Rect rect;
 
             Mob_GetCircle(mob, &circle);
             rect.x = (uint32)(circle.center.x - circle.radius);
@@ -356,6 +407,13 @@ static void DisplayDrawFrame()
             }
         }
     }
+
+
+    rect.x = 5;
+    rect.y = 5;
+    rect.w = display.textSurface->w;
+    rect.h = display.textSurface->h;
+    SDL_RenderCopy(display.sdlRenderer, display.textTexture, NULL, &rect);
 
     SDL_RenderPresent(display.sdlRenderer);
 
