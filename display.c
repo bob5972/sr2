@@ -37,12 +37,14 @@
 #define DRAW_SENSORS TRUE
 
 typedef struct DisplaySprite {
+    uint32 w, h;
     SDL_Surface *surface;
     SDL_Texture *texture;
 } DisplaySprite;
 
 typedef struct FleetSprites {
     uint32 color;
+    SDL_Surface *mobSpriteSheet;
     DisplaySprite mobSprites[MOB_TYPE_MAX];
     DisplaySprite scanSprites[MOB_TYPE_MAX];
 } FleetSprites;
@@ -86,6 +88,9 @@ static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color);
 static void DisplayCalcMobSpriteSheetSize(uint32 *sheetWidth,
                                           uint32 *sheetHeight);
 static void DisplayCalcMobSpriteRect(MobType mobType, SDL_Rect *rect);
+static void DisplayCreateSpriteFromMobSheet(DisplaySprite *sprite,
+                                            MobType t,
+                                            SDL_Surface *mobSpriteSheet);
 
 
 void Display_Init(const BattleScenario *bsc)
@@ -135,12 +140,13 @@ void Display_Init(const BattleScenario *bsc)
         uint32 color = DisplayGetColor(aiType, repeatCount[aiType]++);
         display.fleets[x].color = color;
 
-        for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
-            uint32 radius = (uint32)MobType_GetRadius(t);
-            DisplayCreateCircleSprite(&display.fleets[x].mobSprites[t],
-                                      radius, color);
+        display.fleets[x].mobSpriteSheet = DisplayCreateMobSpriteSheet(color);
 
-            radius = (uint32)MobType_GetSensorRadius(t);
+        for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
+            DisplayCreateSpriteFromMobSheet(&display.fleets[x].mobSprites[t],
+                                            t, display.fleets[x].mobSpriteSheet);
+
+            uint32 radius = (uint32)MobType_GetSensorRadius(t);
             DisplayCreateCircleSprite(&display.fleets[x].scanSprites[t],
                                       radius, color / 2);
         }
@@ -158,6 +164,8 @@ void Display_Exit()
     MobVector_Destroy(&display.mobs);
 
     for (uint x = 0; x < ARRAYSIZE(display.fleets); x++) {
+        SDL_FreeSurface(display.fleets[x].mobSpriteSheet);
+
         for (uint i = 0; i < ARRAYSIZE(display.fleets[x].mobSprites); i++) {
             if (display.fleets[x].mobSprites[i].texture != NULL) {
                 SDL_DestroyTexture(display.fleets[x].mobSprites[i].texture);
@@ -273,6 +281,7 @@ void Display_DumpPNG(const char *fileName)
     }
 
     png_write_end(pngPtr, NULL);
+    SDL_UnlockSurface(sdlSurface);
 
     png_destroy_write_struct(&pngPtr, &infoPtr);
 
@@ -337,7 +346,7 @@ static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount)
         FleetAIType aiType;
         uint32 color;
     } colors[] = {
-        { FLEET_AI_INVALID, 0x000000, },
+        { FLEET_AI_INVALID, 0x000000, }, // 0x(AA)RRGGBB
         { FLEET_AI_NEUTRAL, 0x888888, },
         { FLEET_AI_DUMMY,   0xFFFFFF, },
         { FLEET_AI_SIMPLE,  0xFF0000, },
@@ -409,8 +418,8 @@ static void DisplayCalcMobSpriteRect(MobType mobType,
         if (mobType == t) {
             rect->x = cPoint.x;
             rect->y = cPoint.y;
-            rect->w = 2 * radius;
-            rect->h = 2 * radius;
+            rect->w = 2 * radius + 1;
+            rect->h = 2 * radius + 1;
             return;
         }
 
@@ -424,12 +433,15 @@ static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color)
     SDL_Surface *spriteSheet;
     uint32 dw;
     uint32 dh;
+    uint32 transparentBlack = 0x00000000;
 
     DisplayCalcMobSpriteSheetSize(&dw, &dh);
 
     spriteSheet = SDL_CreateRGBSurfaceWithFormat(0, dw, dh, 32,
                                                  SDL_PIXELFORMAT_BGRA32);
     VERIFY(spriteSheet != NULL);
+
+    SDL_FillRect(spriteSheet, NULL, transparentBlack);
 
     /*
      * Draw the circles into the sprite-sheet.
@@ -440,6 +452,9 @@ static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color)
         uint32 radius = (uint32)MobType_GetRadius(t);
         DisplayCalcMobSpriteRect(t, &rect);
 
+        ASSERT(2 * radius + 1 == rect.w);
+        ASSERT(2 * radius + 1 == rect.h);
+
         cPoint.x = rect.x + radius;
         cPoint.y = rect.y + radius;
 
@@ -449,11 +464,42 @@ static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color)
     return spriteSheet;
 }
 
+static void DisplayCreateSpriteFromMobSheet(DisplaySprite *sprite,
+                                            MobType t,
+                                            SDL_Surface *mobSpriteSheet)
+{
+    SDL_Rect rect;
+    SDL_Surface *sdlSurface;
+
+    ASSERT(sprite != NULL);
+    ASSERT(mobSpriteSheet != NULL);
+
+    DisplayCalcMobSpriteRect(t, &rect);
+
+    sprite->w = rect.w;
+    sprite->h = rect.h;
+
+    sdlSurface = SDL_CreateRGBSurfaceWithFormat(0, rect.w, rect.h, 32,
+                                                SDL_PIXELFORMAT_BGRA32);
+    VERIFY(sdlSurface != NULL);
+    sprite->surface = sdlSurface;
+
+    ASSERT(rect.w == sdlSurface->w);
+    ASSERT(rect.h == sdlSurface->h);
+    SDL_BlitSurface(mobSpriteSheet, &rect, sdlSurface, NULL);
+
+    sprite->texture = SDL_CreateTextureFromSurface(display.sdlRenderer,
+                                                   sdlSurface);
+}
+
 static void DisplayCreateCircleSprite(DisplaySprite *sprite,
                                       uint32 radius, uint32 color)
 {
-    uint32 d = 2 * radius;
+    uint32 d = 2 * radius + 1;
     SDL_Point cPoint;
+
+    sprite->w = d;
+    sprite->h = d;
 
     ASSERT(sprite != NULL);
     sprite->surface = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
@@ -525,30 +571,34 @@ static void DisplayDrawFrame()
         if (mob->alive) {
             FCircle circle;
             FleetSprites *fs;
-            SDL_Texture *sprite;
+            DisplaySprite *sprite;
+
+            fs = &display.fleets[mob->playerID];
+            sprite = &fs->mobSprites[mob->type];
 
             Mob_GetCircle(mob, &circle);
             rect.x = (uint32)(circle.center.x - circle.radius);
             rect.y = (uint32)(circle.center.y - circle.radius);
-            rect.w = (uint32)(2 * circle.radius);
-            rect.h = rect.w;
+            rect.w = sprite->w;
+            rect.h = sprite->h;
 
             ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
                    mob->playerID < ARRAYSIZE(display.fleets));
             ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
-            fs = &display.fleets[mob->playerID];
-            sprite = fs->mobSprites[mob->type].texture;
+
             ASSERT(sprite != NULL);
-            SDL_RenderCopy(display.sdlRenderer, sprite, NULL, &rect);
+            SDL_RenderCopy(display.sdlRenderer, sprite->texture, NULL, &rect);
 
             if (DRAW_SENSORS) {
+                sprite = &fs->scanSprites[mob->type];
+
                 Mob_GetSensorCircle(mob, &circle);
                 rect.x = (int32)(circle.center.x - circle.radius);
                 rect.y = (int32)(circle.center.y - circle.radius);
-                rect.w = (int32)(2 * circle.radius);
-                rect.h = rect.w;
-                sprite = fs->scanSprites[mob->type].texture;
-                SDL_RenderCopy(display.sdlRenderer, sprite, NULL, &rect);
+                rect.w = sprite->w;
+                rect.h = sprite->h;
+
+                SDL_RenderCopy(display.sdlRenderer, sprite->texture, NULL, &rect);
             }
         }
     }
