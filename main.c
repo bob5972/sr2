@@ -570,6 +570,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-t", "--numThreads", TRUE,  "Number of engine threads"      },
         { "-R", "--reuseSeed",  FALSE, "Reuse the seed across battles" },
         { "-u", "--unitTests",  FALSE, "Run unit tests"                },
+        { "-p", "--dumpPNG",    TRUE,  "Dump a PNG of sprites"         },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -581,6 +582,11 @@ void MainParseCmdLine(int argc, char **argv)
 
     if (MBOpt_IsPresent("unitTests")) {
         MainUnitTests();
+        exit(0);
+    }
+
+    if (MBOpt_IsPresent("dumpPNG")) {
+        Display_DumpPNG(MBOpt_GetCStr("dumpPNG"));
         exit(0);
     }
 

@@ -27,5 +27,6 @@ void Display_Exit();
 Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip);
 void Display_ReleaseMobs();
 void Display_Main();
+void Display_DumpPNG(const char *fileName);
 
 #endif // _DISPLAY_H_202005252017

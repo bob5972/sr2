@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <png.h>
 
 #include "config.h"
 #include "SDL.h"
@@ -32,7 +33,7 @@
 
 #define SHIP_ALPHA 0x88
 
-// Poor mans command-line options...
+// Poor man's command-line options...
 #define DRAW_SENSORS TRUE
 
 typedef struct DisplaySprite {
@@ -221,6 +222,95 @@ void DisplayExitText()
     display.font = NULL;
 
     TTF_Quit();
+}
+
+void Display_DumpPNG(const char *fileName)
+{
+    uint32 color = 0xFF0000FF; // ABGR
+    uint32 dw = 0;
+    uint32 dh = 0;
+    SDL_Point cPoint;
+    SDL_Surface *sdlSurface;
+
+    /*
+     * Calculate dimensions of sprite-sheet.
+     */
+    for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
+        uint32 radius = (uint32)MobType_GetRadius(t);
+        uint32 d = 2 * radius + 2;
+        dw += d;
+        dh = MAX(dh, d);
+    }
+    dw++;
+    dh++;
+
+    sdlSurface = SDL_CreateRGBSurfaceWithFormat(0, dw, dh, 32,
+                                                SDL_PIXELFORMAT_BGRA32);
+
+    cPoint.x = 0;
+    cPoint.y = 0;
+
+    /*
+     * Draw the circles into the sprite-sheet.
+     */
+    uint d = 0;
+    for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
+        uint32 radius = (uint32)MobType_GetRadius(t);
+        uint32 md = 2 * radius;
+
+        d++;
+
+        cPoint.x = d + (md / 2);
+        cPoint.y = 1 + md / 2;
+
+        DisplayDrawCircle(sdlSurface, color, &cPoint, radius);
+
+        d += 1 + md;
+    }
+
+    /*
+     * Save the sprite-sheet into a PNG.
+     */
+    FILE *fp = fopen(fileName, "wb");
+    VERIFY(fp != NULL);
+
+    png_struct *pngPtr;
+
+    pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    VERIFY(pngPtr != NULL);
+
+    png_info *infoPtr;
+    infoPtr = png_create_info_struct(pngPtr);
+    VERIFY(infoPtr != NULL);
+
+    if (setjmp(png_jmpbuf(pngPtr))) {
+        PANIC("Error writing PNG file\n");
+    }
+
+    png_init_io(pngPtr, fp);
+
+    uint32 bitDepth = 8;
+    png_set_IHDR(pngPtr, infoPtr, dw, dh,
+                 bitDepth, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    png_write_info(pngPtr, infoPtr);
+
+    SDL_LockSurface(sdlSurface);
+    uint8 *pixels = (uint8 *)sdlSurface->pixels;
+
+    for (int y = 0; y < dh; y++) {
+        png_write_row(pngPtr, pixels);
+        pixels += sdlSurface->pitch;
+    }
+
+    png_write_end(pngPtr, NULL);
+
+    png_destroy_write_struct(&pngPtr, &infoPtr);
+
+    fclose(fp);
+
+    SDL_FreeSurface(sdlSurface);
 }
 
 
@@ -452,6 +542,7 @@ void Display_Main(void)
     ASSERT(display.initialized);
     display.inMain = TRUE;
 
+    // Start paused
     //display.paused = TRUE;
 
     while (!done) {

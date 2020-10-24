@@ -109,6 +109,7 @@ fi;
 
 if [ "$DEVEL" != "0" ]; then
     DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -fno-omit-frame-pointer"
+    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-clobbered"
 fi;
 
 echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
