@@ -83,6 +83,10 @@ static void DisplayDrawCircle(SDL_Surface *sdlSurface, uint32 color,
 static void DisplayCreateCircleSprite(DisplaySprite *sprite,
                                       uint32 radius, uint32 color);
 static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color);
+static void DisplayCalcMobSpriteSheetSize(uint32 *sheetWidth,
+                                          uint32 *sheetHeight);
+static void DisplayCalcMobSpriteRect(MobType mobType, SDL_Rect *rect);
+
 
 void Display_Init(const BattleScenario *bsc)
 {
@@ -359,13 +363,11 @@ static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount)
     return color | ((SHIP_ALPHA & 0xFF) << 24);
 }
 
-
-static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color)
+static void DisplayCalcMobSpriteSheetSize(uint32 *sheetWidth,
+                                          uint32 *sheetHeight)
 {
-    SDL_Surface *spriteSheet;
     uint32 dw = 0;
     uint32 dh = 0;
-    SDL_Point cPoint;
 
     /*
      * Calculate dimensions of sprite-sheet.
@@ -379,29 +381,69 @@ static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color)
     dw++;
     dh++;
 
-    spriteSheet = SDL_CreateRGBSurfaceWithFormat(0, dw, dh, 32,
-                                                SDL_PIXELFORMAT_BGRA32);
-    VERIFY(spriteSheet != NULL);
+    if (sheetWidth != NULL) {
+        *sheetWidth = dw;
+    }
+    if (sheetHeight != NULL) {
+        *sheetHeight = dh;
+    }
+}
 
-    cPoint.x = 0;
-    cPoint.y = 0;
+static void DisplayCalcMobSpriteRect(MobType mobType,
+                                     SDL_Rect *rect)
+{
+    ASSERT(rect != NULL);
+    ASSERT(mobType >= MOB_TYPE_MIN);
+    ASSERT(mobType < MOB_TYPE_MAX);
+
+    uint d = 0;
+    for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
+        SDL_Point cPoint;
+        uint32 radius = (uint32)MobType_GetRadius(t);
+
+        d++;
+
+        cPoint.x = d;
+        cPoint.y = 1;
+
+        if (mobType == t) {
+            rect->x = cPoint.x;
+            rect->y = cPoint.y;
+            rect->w = 2 * radius;
+            rect->h = 2 * radius;
+            return;
+        }
+
+        d += 1 + (2 * radius);
+    }
+}
+
+
+static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color)
+{
+    SDL_Surface *spriteSheet;
+    uint32 dw;
+    uint32 dh;
+
+    DisplayCalcMobSpriteSheetSize(&dw, &dh);
+
+    spriteSheet = SDL_CreateRGBSurfaceWithFormat(0, dw, dh, 32,
+                                                 SDL_PIXELFORMAT_BGRA32);
+    VERIFY(spriteSheet != NULL);
 
     /*
      * Draw the circles into the sprite-sheet.
      */
-    uint d = 0;
     for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
+        SDL_Point cPoint;
+        SDL_Rect rect;
         uint32 radius = (uint32)MobType_GetRadius(t);
-        uint32 md = 2 * radius;
+        DisplayCalcMobSpriteRect(t, &rect);
 
-        d++;
-
-        cPoint.x = d + (md / 2);
-        cPoint.y = 1 + md / 2;
+        cPoint.x = rect.x + radius;
+        cPoint.y = rect.y + radius;
 
         DisplayDrawCircle(spriteSheet, color, &cPoint, radius);
-
-        d += 1 + md;
     }
 
     return spriteSheet;
