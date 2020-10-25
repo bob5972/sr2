@@ -53,8 +53,26 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_GREEN_POWER_CORE, SPRITE_SOURCE_GREEN, 123, 1,   5,   5, },
 };
 
+typedef struct SpriteBacking {
+    uint32 refCount;
+
+    bool active;
+
+    SDL_Surface *sdlSurface;
+
+    /*
+     * Textures in SDL are tied to a renderer, so the Sprite module
+     * creates them on demand as the blit calls come in.
+     */
+    SDL_Texture *sdlTexture;
+    SDL_Renderer *sdlRenderer;
+} SpriteBacking;
+
 typedef struct SpriteGlobalData {
     SDL_Surface *sources[SPRITE_SOURCE_MAX];
+
+    uint32 numBacking;
+    SpriteBacking backing[1000];
 } SpriteGlobalData;
 
 SpriteGlobalData gSprite;
@@ -63,6 +81,13 @@ static void SpriteCalcMobSheetSize(uint32 *sheetWidth,
                                    uint32 *sheetHeight);
 static SpriteType SpriteGetSpriteType(int playerID, MobType t);
 static void SpriteCalcMobSpriteRect(MobType mobType, SDL_Rect *rect);
+
+static SpriteBacking *SpriteGetBacking(uint32 backingID);
+static SpriteBacking *SpriteAllocBacking(uint32 *backingID);
+static void SpriteFreeBacking(uint32 backingID);
+static void SpriteAcquireBacking(uint32 backingID);
+static void SpriteReleaseBacking(uint32 backingID);
+
 
 void Sprite_Init()
 {
@@ -76,26 +101,108 @@ void Sprite_Init()
     gSprite.sources[SPRITE_SOURCE_GREEN] = Sprite_LoadPNG("art/green.png", 129, 103);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
+        uint32 backingID;
+        SpriteBacking *backing;
+
         VERIFY(gSprite.sources[x] != NULL);
+
+        backing = SpriteAllocBacking(&backingID);
+        ASSERT(backingID == x);
+        backing->sdlSurface = gSprite.sources[x];
     }
 }
 
 void Sprite_Exit()
 {
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
-        SDL_FreeSurface(gSprite.sources[x]);
+        SpriteReleaseBacking(x);
+
+        // The surface was freed by the backing.
         gSprite.sources[x] = NULL;
+    }
+
+    for (int x = 0; x < ARRAYSIZE(gSprite.backing); x++) {
+        ASSERT(gSprite.backing[x].refCount == 0);
+        ASSERT(!gSprite.backing[x].active);
+    }
+}
+
+static SpriteBacking *SpriteGetBacking(uint32 backingID)
+{
+    SpriteBacking *backing = &gSprite.backing[backingID];
+    ASSERT(gSprite.numBacking < ARRAYSIZE(gSprite.backing));
+    ASSERT(backing->active);
+    ASSERT(backing->refCount > 0);
+    return backing;
+}
+
+static SpriteBacking *SpriteAllocBacking(uint32 *pBackingID)
+{
+    uint32 backingID;
+    ASSERT(pBackingID != NULL);
+    ASSERT(gSprite.numBacking < ARRAYSIZE(gSprite.backing));
+
+    backingID = gSprite.numBacking;
+    gSprite.numBacking++;
+
+    ASSERT(!gSprite.backing[backingID].active);
+    gSprite.backing[backingID].active = TRUE;
+
+    ASSERT(gSprite.backing[backingID].refCount == 0);
+    SpriteAcquireBacking(backingID);
+
+    *pBackingID = backingID;
+    return &gSprite.backing[backingID];
+}
+
+static void SpriteFreeBacking(uint32 backingID)
+{
+    ASSERT(backingID < ARRAYSIZE(gSprite.backing));
+    ASSERT(backingID < gSprite.numBacking);
+    ASSERT(gSprite.backing[backingID].active);
+    ASSERT(gSprite.backing[backingID].refCount == 0);
+
+    if (gSprite.backing[backingID].sdlTexture != NULL) {
+        SDL_DestroyTexture(gSprite.backing[backingID].sdlTexture);
+    }
+    ASSERT(gSprite.backing[backingID].sdlSurface != NULL);
+    SDL_FreeSurface(gSprite.backing[backingID].sdlSurface);
+
+    MBUtil_Zero(&gSprite.backing[backingID],
+                sizeof(gSprite.backing[backingID]));
+}
+
+static void SpriteAcquireBacking(uint32 backingID)
+{
+    ASSERT(backingID < ARRAYSIZE(gSprite.backing));
+    ASSERT(backingID < gSprite.numBacking);
+    ASSERT(gSprite.backing[backingID].active);
+    gSprite.backing[backingID].refCount++;
+}
+
+static void SpriteReleaseBacking(uint32 backingID)
+{
+    ASSERT(backingID < ARRAYSIZE(gSprite.backing));
+    ASSERT(backingID < gSprite.numBacking);
+    ASSERT(gSprite.backing[backingID].active);
+    ASSERT(gSprite.backing[backingID].refCount > 0);
+    gSprite.backing[backingID].refCount--;
+
+    if (gSprite.backing[backingID].refCount == 0) {
+        SpriteFreeBacking(backingID);
     }
 }
 
 Sprite *Sprite_CreateCircle(uint32 radius, uint32 bgraColor)
 {
     Sprite *sprite;
+    SpriteBacking *backing;
     uint32 d = 2 * radius + 1;
     SDL_Point cPoint;
 
     sprite = MBUtil_ZAlloc(sizeof(*sprite));
-    sprite->ownsSurface = TRUE;
+
+    backing = SpriteAllocBacking(&sprite->backingID);
 
     sprite->srcx = 0;
     sprite->srcy = 0;
@@ -103,14 +210,14 @@ Sprite *Sprite_CreateCircle(uint32 radius, uint32 bgraColor)
     sprite->h = d;
 
     ASSERT(sprite != NULL);
-    sprite->sdlSurface = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
-                                                        SDL_PIXELFORMAT_BGRA32);
+    backing->sdlSurface = SDL_CreateRGBSurfaceWithFormat(0, d, d, 32,
+                                                         SDL_PIXELFORMAT_BGRA32);
     cPoint.x = d / 2;
     cPoint.y = d / 2;
-    Sprite_DrawCircle(sprite->sdlSurface, bgraColor, &cPoint, radius);
+    Sprite_DrawCircle(backing->sdlSurface, bgraColor, &cPoint, radius);
 
-    ASSERT(sprite->sdlRenderer == NULL);
-    ASSERT(sprite->sdlTexture == NULL);
+    ASSERT(backing->sdlRenderer == NULL);
+    ASSERT(backing->sdlTexture == NULL);
 
     return sprite;
 }
@@ -153,19 +260,17 @@ Sprite *Sprite_CreateType(SpriteType t)
     ASSERT(t < ARRAYSIZE(gSpecs));
 
     sprite = MBUtil_ZAlloc(sizeof(*sprite));
-    sprite->ownsSurface = FALSE;
 
     ASSERT(gSpecs[t].type == t);
     source = gSpecs[t].source;
+    SpriteAcquireBacking(source);
+    sprite->backingID = source;
+    ASSERT(source < ARRAYSIZE(gSprite.sources));
 
     sprite->srcx = gSpecs[t].x;
     sprite->srcy = gSpecs[t].y;
     sprite->w = gSpecs[t].w;
     sprite->h = gSpecs[t].h;
-
-    ASSERT(source < ARRAYSIZE(gSprite.sources));
-    sprite->sdlSurface = gSprite.sources[source];
-    ASSERT(sprite->sdlSurface != NULL);
 
     return sprite;
 }
@@ -225,15 +330,7 @@ static SpriteType SpriteGetSpriteType(int playerID, MobType t)
 void Sprite_Free(Sprite *s)
 {
     ASSERT(s != NULL);
-
-    if (s->sdlTexture != NULL) {
-        SDL_DestroyTexture(s->sdlTexture);
-    }
-
-    if (s->ownsSurface) {
-        SDL_FreeSurface(s->sdlSurface);
-    }
-
+    SpriteReleaseBacking(s->backingID);
     free(s);
 }
 
@@ -242,6 +339,7 @@ void Sprite_Blit(Sprite *sprite, SDL_Renderer *r, uint32 x, uint32 y)
 {
     SDL_Rect srcRect;
     SDL_Rect destRect;
+    SpriteBacking *backing = SpriteGetBacking(sprite->backingID);
 
     Sprite_PrepareTexture(sprite, r);
 
@@ -255,7 +353,7 @@ void Sprite_Blit(Sprite *sprite, SDL_Renderer *r, uint32 x, uint32 y)
     destRect.w = sprite->w;
     destRect.h = sprite->h;
 
-    SDL_RenderCopy(r, sprite->sdlTexture, &srcRect, &destRect);
+    SDL_RenderCopy(r, backing->sdlTexture, &srcRect, &destRect);
 }
 
 void Sprite_BlitCentered(Sprite *s, SDL_Renderer *r, uint32 x, uint32 y)
@@ -444,11 +542,6 @@ SDL_Surface *Sprite_CreateMobSheet(uint32 bgraColor)
 
     SpriteCalcMobSheetSize(&dw, &dh);
 
-//     if (TRUE) {
-//         // XXX: Hack to experiment with loading sprites.
-//         return DisplayLoadPNG("build/sprite.png", &dw, &dh);
-//     }
-
     spriteSheet = SDL_CreateRGBSurfaceWithFormat(0, dw, dh, 32,
                                                  SDL_PIXELFORMAT_BGRA32);
     VERIFY(spriteSheet != NULL);
@@ -482,17 +575,17 @@ Sprite *Sprite_CreateFromMobSheet(MobType t,
 {
     Sprite *sprite;
     SDL_Rect rect;
+    SpriteBacking *backing;
     SDL_Surface *sdlSurface;
 
     ASSERT(mobSheet != NULL);
 
     sprite = MBUtil_ZAlloc(sizeof(*sprite));
-    sprite->ownsSurface = TRUE;
+    backing = SpriteAllocBacking(&sprite->backingID);
 
     SpriteCalcMobSpriteRect(t, &rect);
 
-    //Warning("t=%d, xywh(%d, %d, %d, %d)\n", t, rect.x, rect.y, rect.w, rect.h);//XXX bob5972
-
+    // XXX: We make a new surface instead of sharing the mobSheet.
     sprite->srcx = 0;
     sprite->srcy = 0;
     sprite->w = rect.w;
@@ -501,30 +594,28 @@ Sprite *Sprite_CreateFromMobSheet(MobType t,
     sdlSurface = SDL_CreateRGBSurfaceWithFormat(0, rect.w, rect.h, 32,
                                                 SDL_PIXELFORMAT_BGRA32);
     VERIFY(sdlSurface != NULL);
-    sprite->sdlSurface = sdlSurface;
+    backing->sdlSurface = sdlSurface;
 
     ASSERT(rect.w == sdlSurface->w);
     ASSERT(rect.h == sdlSurface->h);
     SDL_BlitSurface(mobSheet, &rect, sdlSurface, NULL);
-
-    ASSERT(sprite->sdlRenderer == NULL);
-    ASSERT(sprite->sdlTexture == NULL);
-
     return sprite;
 }
 
 void Sprite_PrepareTexture(Sprite *sprite, SDL_Renderer *r)
 {
     ASSERT(sprite != NULL);
-    ASSERT(sprite->sdlRenderer == NULL || sprite->sdlRenderer == r);
 
-    if (sprite->sdlRenderer != r) {
+    SpriteBacking *backing = SpriteGetBacking(sprite->backingID);
+    ASSERT(backing->sdlRenderer == NULL || backing->sdlRenderer == r);
+
+    if (backing->sdlRenderer != r) {
         /*
          * XXX: Minimize the texture to reflect the sprite size, and
          * not the surface?
          */
-        ASSERT(sprite->sdlTexture == NULL);
-        sprite->sdlTexture = SDL_CreateTextureFromSurface(r, sprite->sdlSurface);
-        sprite->sdlRenderer = r;
+        ASSERT(backing->sdlTexture == NULL);
+        backing->sdlTexture = SDL_CreateTextureFromSurface(r, backing->sdlSurface);
+        backing->sdlRenderer = r;
     }
 }

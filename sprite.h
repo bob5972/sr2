@@ -63,20 +63,7 @@ typedef enum SpriteType {
 typedef struct Sprite {
     uint32 srcx, srcy;
     uint32 w, h;
-
-    /*
-     * The surface data might be owned by this Sprite,
-     * or might be shared and managed by the Sprite module.
-     */
-    bool ownsSurface;
-    SDL_Surface *sdlSurface;
-
-    /*
-     * Textures in SDL are tied to a renderer, so the Sprite module
-     * creates them on demand as the blit calls come in.
-     */
-    SDL_Renderer *sdlRenderer;
-    SDL_Texture *sdlTexture;
+    uint32 backingID;
 } Sprite;
 
 void Sprite_Init();
