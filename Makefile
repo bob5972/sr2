@@ -53,6 +53,7 @@ C_SOURCES = main.c \
             mapperFleet.c \
             mob.c \
             simpleFleet.c \
+            sprite.c \
             workQueue.c
 CPP_SOURCES = basicFleet.cpp \
               bobFleet.cpp \
