@@ -91,6 +91,7 @@ static void DisplayCalcMobSpriteRect(MobType mobType, SDL_Rect *rect);
 static void DisplayCreateSpriteFromMobSheet(DisplaySprite *sprite,
                                             MobType t,
                                             SDL_Surface *mobSpriteSheet);
+SDL_Surface *DisplayLoadPNG(const char *fileName, uint32 *w, uint32 *h);
 
 
 void Display_Init(const BattleScenario *bsc)
@@ -290,6 +291,81 @@ void Display_DumpPNG(const char *fileName)
     SDL_FreeSurface(sdlSurface);
 }
 
+SDL_Surface *DisplayLoadPNG(const char *fileName, uint32 *wp, uint32 *hp)
+{
+    SDL_Surface *sdlSurface;
+
+    uint32 width, height;
+    int colorType;
+    int bitDepth;
+    int interlaceType;
+    int compressionMethod;
+    int filterMethod;
+    int numPasses;
+
+    ASSERT(wp != NULL);
+    ASSERT(hp != NULL);
+
+    FILE *fp = fopen(fileName, "rb");
+    VERIFY(fp != NULL);
+
+    png_struct *pngPtr;
+    pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    VERIFY(pngPtr != NULL);
+
+    png_info *infoPtr;
+    infoPtr = png_create_info_struct(pngPtr);
+    VERIFY(infoPtr != NULL);
+
+    if (setjmp(png_jmpbuf(pngPtr))) {
+        PANIC("Error reading PNG file\n");
+    }
+
+    png_init_io(pngPtr, fp);
+
+    png_read_info(pngPtr, infoPtr);
+
+    png_get_IHDR(pngPtr, infoPtr, &width, &height,
+                 &bitDepth, &colorType, &interlaceType,
+                 &compressionMethod, &filterMethod);
+
+    numPasses = png_set_interlace_handling(pngPtr);
+    png_set_bgr(pngPtr);
+
+    png_read_update_info(pngPtr, infoPtr);
+
+    /*
+     * XXX: Handle more PNG cases?
+     */
+    VERIFY(bitDepth == 8);
+    VERIFY(colorType == PNG_COLOR_TYPE_RGBA);
+    VERIFY(*wp == 0 || width == *wp);
+    VERIFY(*hp == 0 || height == *hp);
+    VERIFY(png_get_rowbytes(pngPtr, infoPtr) == sizeof(uint32) * width);
+
+    *wp = width;
+    *hp = height;
+
+    sdlSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32,
+                                                SDL_PIXELFORMAT_BGRA32);
+
+    SDL_LockSurface(sdlSurface);
+    for (int i = 0; i < numPasses; i++) {
+        uint8 *pixels = sdlSurface->pixels;
+        for (int y = 0; y < height; y++) {
+            png_read_row(pngPtr, pixels, NULL);
+            pixels += sdlSurface->pitch;
+        }
+    }
+    SDL_UnlockSurface(sdlSurface);
+
+    png_destroy_read_struct(&pngPtr, &infoPtr, NULL);
+
+    fclose(fp);
+
+    return sdlSurface;
+}
+
 
 Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip)
 {
@@ -436,6 +512,11 @@ static SDL_Surface *DisplayCreateMobSpriteSheet(uint32 color)
     uint32 transparentBlack = 0x00000000;
 
     DisplayCalcMobSpriteSheetSize(&dw, &dh);
+
+    if (FALSE) {
+        // XXX: Hack to experiment with loading sprites.
+        return DisplayLoadPNG("build/sprite.png", &dw, &dh);
+    }
 
     spriteSheet = SDL_CreateRGBSurfaceWithFormat(0, dw, dh, 32,
                                                  SDL_PIXELFORMAT_BGRA32);
