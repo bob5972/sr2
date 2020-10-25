@@ -26,18 +26,18 @@
 typedef enum SpriteType {
     SPRITE_INVALID,
 
-//     SPRITE_RED_BASE,
-//     SPRITE_RED_FIGHTER,
-//     SPRITE_RED_MISSILE,
-//     SPRITE_RED_CORE,
-//     SPRITE_BLUE_BASE,
-//     SPRITE_BLUE_FIGHTER,
-//     SPRITE_BLUE_MISSILE,
-//     SPRITE_BLUE_CORE,
-//     SPRITE_GREEN_BASE,
-//     SPRITE_GREEN_FIGHTER,
-//     SPRITE_GREEN_MISSILE,
-//     SPRITE_GREEN_CORE,
+    SPRITE_RED_BASE,
+    SPRITE_RED_FIGHTER,
+    SPRITE_RED_MISSILE,
+    SPRITE_RED_POWER_CORE,
+    SPRITE_BLUE_BASE,
+    SPRITE_BLUE_FIGHTER,
+    SPRITE_BLUE_MISSILE,
+    SPRITE_BLUE_POWER_CORE,
+    SPRITE_GREEN_BASE,
+    SPRITE_GREEN_FIGHTER,
+    SPRITE_GREEN_MISSILE,
+    SPRITE_GREEN_POWER_CORE,
 
 //     SPRITE_FIGHTER_BLUE1,
 //     SPRITE_FIGHTER_BLUE2,
@@ -57,6 +57,7 @@ typedef enum SpriteType {
 //     SPRITE_FIGHTER_CORE1,
 //     SPRITE_FIGHTER_CORE2,
 
+    SPRITE_TYPE_MAX,
 } SpriteType;
 
 typedef struct Sprite {
@@ -83,6 +84,7 @@ void Sprite_Exit();
 
 Sprite *Sprite_CreateCircle(uint32 radius, uint32 bgraColor);
 Sprite *Sprite_CreateType(SpriteType t);
+Sprite *Sprite_CreateMob(int playerID, MobType t);
 Sprite *Sprite_CreateFromMobSheet(MobType t, SDL_Surface *mobSheet);
 void Sprite_Free(Sprite *s);
 

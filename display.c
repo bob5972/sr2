@@ -128,10 +128,15 @@ void Display_Init(const BattleScenario *bsc)
         display.fleets[x].mobSpriteSheet = Sprite_CreateMobSheet(color);
 
         for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
-            display.fleets[x].mobSprites[t] =
-                Sprite_CreateFromMobSheet(t, display.fleets[x].mobSpriteSheet);
-            Sprite_PrepareTexture(display.fleets[x].mobSprites[t],
-                                  display.sdlRenderer);
+            // XXX: Sprite-toggle
+            if (FALSE && (x == 0 || x == 1 || x == 2)) {
+                display.fleets[x].mobSprites[t] = Sprite_CreateMob(x, t);
+            } else {
+                display.fleets[x].mobSprites[t] =
+                    Sprite_CreateFromMobSheet(t, display.fleets[x].mobSpriteSheet);
+                Sprite_PrepareTexture(display.fleets[x].mobSprites[t],
+                                      display.sdlRenderer);
+            }
 
             uint32 radius = (uint32)MobType_GetSensorRadius(t);
             display.fleets[x].scanSprites[t] =
