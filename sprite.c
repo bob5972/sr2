@@ -24,6 +24,7 @@ typedef enum SpriteSource {
     SPRITE_SOURCE_RED,
     SPRITE_SOURCE_BLUE,
     SPRITE_SOURCE_GREEN,
+    SPRITE_SOURCE_SHEET1,
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
 } SpriteSource;
@@ -35,22 +36,44 @@ typedef struct SpriteSpec {
 } SpriteSpec;
 
 static const SpriteSpec gSpecs[] = {
-    { SPRITE_INVALID,          SPRITE_SOURCE_INVALID, 0, 0,   0,   0, },
+    { SPRITE_INVALID,          SPRITE_SOURCE_INVALID,  0,   0,   0,   0, },
 
-    { SPRITE_RED_BASE,         SPRITE_SOURCE_RED,     1, 1, 101, 101, },
-    { SPRITE_RED_FIGHTER,      SPRITE_SOURCE_RED,   103, 1,  11,  11, },
-    { SPRITE_RED_MISSILE,      SPRITE_SOURCE_RED,   115, 1,   7,   7, },
-    { SPRITE_RED_POWER_CORE,   SPRITE_SOURCE_RED,   123, 1,   5,   5, },
+    { SPRITE_RED_BASE,         SPRITE_SOURCE_RED,      1,   1, 101, 101, },
+    { SPRITE_RED_FIGHTER,      SPRITE_SOURCE_RED,    103,   1,  11,  11, },
+    { SPRITE_RED_MISSILE,      SPRITE_SOURCE_RED,    115,   1,   7,   7, },
+    { SPRITE_RED_POWER_CORE,   SPRITE_SOURCE_RED,    123,   1,   5,   5, },
 
-    { SPRITE_BLUE_BASE,        SPRITE_SOURCE_BLUE,    1, 1, 101, 101, },
-    { SPRITE_BLUE_FIGHTER,     SPRITE_SOURCE_BLUE,  103, 1,  11,  11, },
-    { SPRITE_BLUE_MISSILE,     SPRITE_SOURCE_BLUE,  115, 1,   7,   7, },
-    { SPRITE_BLUE_POWER_CORE,  SPRITE_SOURCE_BLUE,  123, 1,   5,   5, },
+    { SPRITE_BLUE_BASE,        SPRITE_SOURCE_BLUE,     1,   1, 101, 101, },
+    { SPRITE_BLUE_FIGHTER,     SPRITE_SOURCE_BLUE,   103,   1,  11,  11, },
+    { SPRITE_BLUE_MISSILE,     SPRITE_SOURCE_BLUE,   115,   1,   7,   7, },
+    { SPRITE_BLUE_POWER_CORE,  SPRITE_SOURCE_BLUE,   123,   1,   5,   5, },
 
-    { SPRITE_GREEN_BASE,       SPRITE_SOURCE_GREEN,   1, 1, 101, 101, },
-    { SPRITE_GREEN_FIGHTER,    SPRITE_SOURCE_GREEN, 103, 1,  11,  11, },
-    { SPRITE_GREEN_MISSILE,    SPRITE_SOURCE_GREEN, 115, 1,   7,   7, },
-    { SPRITE_GREEN_POWER_CORE, SPRITE_SOURCE_GREEN, 123, 1,   5,   5, },
+    { SPRITE_GREEN_BASE,       SPRITE_SOURCE_GREEN,    1,   1, 101, 101, },
+    { SPRITE_GREEN_FIGHTER,    SPRITE_SOURCE_GREEN,  103,   1,  11,  11, },
+    { SPRITE_GREEN_MISSILE,    SPRITE_SOURCE_GREEN,  115,   1,   7,   7, },
+    { SPRITE_GREEN_POWER_CORE, SPRITE_SOURCE_GREEN,  123,   1,   5,   5, },
+
+    { SPRITE_FIGHTER_BLUE1,    SPRITE_SOURCE_SHEET1, 100,  20,   9,   9, },
+    { SPRITE_FIGHTER_BLUE2,    SPRITE_SOURCE_SHEET1, 116,  20,   9,   9, },
+    { SPRITE_FIGHTER_BLUE3,    SPRITE_SOURCE_SHEET1, 132,  20,   9,   9, },
+    { SPRITE_FIGHTER_BLUE4,    SPRITE_SOURCE_SHEET1, 148,  20,   9,   9, },
+
+    { SPRITE_FIGHTER_GREEN1,   SPRITE_SOURCE_SHEET1, 100,  36,   9,   9, },
+    { SPRITE_FIGHTER_GREEN2,   SPRITE_SOURCE_SHEET1, 116,  36,   9,   9, },
+    { SPRITE_FIGHTER_GREEN3,   SPRITE_SOURCE_SHEET1, 132,  36,   9,   9, },
+    { SPRITE_FIGHTER_GREEN4,   SPRITE_SOURCE_SHEET1, 148,  36,   9,   9, },
+
+    { SPRITE_FIGHTER_RED1,     SPRITE_SOURCE_SHEET1, 100,  52,   9,   9, },
+    { SPRITE_FIGHTER_RED2,     SPRITE_SOURCE_SHEET1, 116,  52,   9,   9, },
+    { SPRITE_FIGHTER_RED3,     SPRITE_SOURCE_SHEET1, 132,  52,   9,   9, },
+    { SPRITE_FIGHTER_RED4,     SPRITE_SOURCE_SHEET1, 148,  52,   9,   9, },
+
+    { SPRITE_MISSILE1,         SPRITE_SOURCE_SHEET1, 102, 110,   6,   6, },
+    { SPRITE_MISSILE2,         SPRITE_SOURCE_SHEET1, 118, 110,   6,   6, },
+    { SPRITE_MISSILE3,         SPRITE_SOURCE_SHEET1, 134, 110,   6,   6, },
+
+    { SPRITE_CORE1,            SPRITE_SOURCE_SHEET1, 103, 159,   4,   4, },
+    { SPRITE_CORE2,            SPRITE_SOURCE_SHEET1, 119, 159,   4,   4, },
 };
 
 typedef struct SpriteBacking {
@@ -94,11 +117,12 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 3);
+    ASSERT(SPRITE_SOURCE_MAX == 4);
 
     gSprite.sources[SPRITE_SOURCE_RED]   = Sprite_LoadPNG("art/red.png",   129, 103);
     gSprite.sources[SPRITE_SOURCE_BLUE]  = Sprite_LoadPNG("art/blue.png",  129, 103);
     gSprite.sources[SPRITE_SOURCE_GREEN] = Sprite_LoadPNG("art/green.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SHEET1] = Sprite_LoadPNG("art/sheet1.png", 200, 200);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
         uint32 backingID;
@@ -258,10 +282,10 @@ Sprite *Sprite_CreateType(SpriteType t)
 
     ASSERT(t < SPRITE_TYPE_MAX);
     ASSERT(t < ARRAYSIZE(gSpecs));
+    ASSERT(gSpecs[t].type == t);
 
     sprite = MBUtil_ZAlloc(sizeof(*sprite));
 
-    ASSERT(gSpecs[t].type == t);
     source = gSpecs[t].source;
     SpriteAcquireBacking(source);
     sprite->backingID = source;
@@ -301,11 +325,14 @@ static SpriteType SpriteGetSpriteType(int playerID, MobType t)
             case MOB_TYPE_BASE:
                 return SPRITE_BLUE_BASE;
             case MOB_TYPE_FIGHTER:
-                return SPRITE_BLUE_FIGHTER;
+                //return SPRITE_BLUE_FIGHTER;
+                return SPRITE_FIGHTER_BLUE1;
             case MOB_TYPE_MISSILE:
-                return SPRITE_BLUE_MISSILE;
+                //return SPRITE_BLUE_MISSILE;
+                return SPRITE_MISSILE1;
             case MOB_TYPE_POWER_CORE:
-                return SPRITE_BLUE_POWER_CORE;
+                //return SPRITE_BLUE_POWER_CORE;
+                return SPRITE_CORE1;
             default:
                 NOT_IMPLEMENTED();
         }
@@ -314,11 +341,14 @@ static SpriteType SpriteGetSpriteType(int playerID, MobType t)
             case MOB_TYPE_BASE:
                 return SPRITE_GREEN_BASE;
             case MOB_TYPE_FIGHTER:
-                return SPRITE_GREEN_FIGHTER;
+                //return SPRITE_GREEN_FIGHTER;
+                return SPRITE_FIGHTER_GREEN2;
             case MOB_TYPE_MISSILE:
-                return SPRITE_GREEN_MISSILE;
+                //return SPRITE_GREEN_MISSILE;
+                return SPRITE_MISSILE2;
             case MOB_TYPE_POWER_CORE:
-                return SPRITE_GREEN_POWER_CORE;
+                //return SPRITE_GREEN_POWER_CORE;
+                return SPRITE_CORE2;
             default:
                 NOT_IMPLEMENTED();
         }
