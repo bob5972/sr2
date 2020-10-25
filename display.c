@@ -109,6 +109,7 @@ void Display_Init(const BattleScenario *bsc)
         PANIC("Failed to create SDL renderer\n");
     }
 
+    Sprite_Init();
     DisplayInitText(bsc);
 
     SDL_SetRenderDrawColor(display.sdlRenderer, 0x00, 0x00, 0x00, 0xFF);
@@ -168,6 +169,7 @@ void Display_Exit()
     display.sdlWindow = NULL;
 
     DisplayExitText();
+    Sprite_Exit();
 
     SDL_DestroyMutex(display.mobMutex);
     display.mobMutex = NULL;
