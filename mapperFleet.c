@@ -24,7 +24,7 @@
 typedef uint8 MapTileFlags;
 #define MAP_TILE_EMPTY       (0)
 #define MAP_TILE_SCANNED     (1 << 0)
-#define MAP_TILE_LOOT        (1 << 0)
+#define MAP_TILE_POWER_CORE        (1 << 0)
 #define MAP_TILE_ENEMY       (1 << 1)
 #define MAP_TILE_ENEMY_BASE  (1 << 2)
 
@@ -353,7 +353,7 @@ static void MapperFleetRunAITick(void *aiHandle)
             sf->tileFlags[i] = MAP_TILE_SCANNED;
         } else if (mob->type == MOB_TYPE_BASE) {
             sf->basePos = mob->pos;
-        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+        } else if (mob->type == MOB_TYPE_POWER_CORE) {
             /*
              * Add this mob to the sensor list so that we'll
              * steer towards it.
@@ -376,8 +376,8 @@ static void MapperFleetRunAITick(void *aiHandle)
                    sm->type == MOB_TYPE_MISSILE) {
             f |= MAP_TILE_ENEMY;
         } else {
-            ASSERT(sm->type == MOB_TYPE_LOOT_BOX);
-            f |= MAP_TILE_LOOT;
+            ASSERT(sm->type == MOB_TYPE_POWER_CORE);
+            f |= MAP_TILE_POWER_CORE;
         }
 
         MapperFleetGetTileIndex(sf, &sm->pos, &i);
@@ -433,7 +433,7 @@ static void MapperFleetRunAITick(void *aiHandle)
                 if (s->assignedTile == -1) {
                     uint tileFilter = 0;
                     if (s->gov == MAPPER_GOV_SCOUT) {
-                        tileFilter = MAP_TILE_LOOT;
+                        tileFilter = MAP_TILE_POWER_CORE;
                     } else if (s->gov == MAPPER_GOV_ATTACK) {
                         tileFilter = MAP_TILE_ENEMY | MAP_TILE_ENEMY_BASE;
                     }
@@ -468,7 +468,7 @@ static void MapperFleetRunAITick(void *aiHandle)
 
             if (s->gov == MAPPER_GOV_SCOUT) {
                 /*
-                 * Just run the shared random/loot-box code.
+                 * Just run the shared random/power-core code.
                  */
             } else if (s->gov == MAPPER_GOV_ATTACK) {
                 target = FleetUtil_FindClosestSensor(ai, &mob->pos,
@@ -485,10 +485,10 @@ static void MapperFleetRunAITick(void *aiHandle)
 
             if (target == NULL) {
                 /*
-                * Avoid having all the fighters rush to the same loot box.
+                * Avoid having all the fighters rush to the same power core.
                 */
                 target = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                     MOB_FLAG_LOOT_BOX);
+                                                     MOB_FLAG_POWER_CORE);
                 if (target != NULL) {
                     if (s->gov == MAPPER_GOV_GUARD) {
                         if (FPoint_Distance(&target->pos, &sf->basePos) > guardRange) {
@@ -575,7 +575,7 @@ static void MapperFleetRunAITick(void *aiHandle)
             }
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
-        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+        } else if (mob->type == MOB_TYPE_POWER_CORE) {
             if (FPoint_Distance(&mob->pos, &sf->basePos) <= baseScanRange) {
                 mob->cmd.target = sf->basePos;
             } else {

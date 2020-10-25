@@ -35,7 +35,7 @@ typedef struct Battle {
 
     Fleet *fleet;
 
-    float lootSpawnBucket;
+    float powerCoreSpawnBucket;
 
     MobID lastMobID;
     MobVector mobs;
@@ -151,15 +151,15 @@ static bool BattleCheckMobInvariants(Battle *battle, const Mob *mob)
     return TRUE;
 }
 
-static int BattleCalcLootCredits(Battle *battle, const Mob *m)
+static int BattleCalcPowerCoreCredits(Battle *battle, const Mob *m)
 {
     if (m->type == MOB_TYPE_MISSILE ||
-        m->type == MOB_TYPE_LOOT_BOX) {
+        m->type == MOB_TYPE_POWER_CORE) {
         return 0;
     }
 
-    int loot = MobType_GetCost(m->type);
-    return (int)(battle->bsc.bp.lootDropRate * loot);
+    int powerCore = MobType_GetCost(m->type);
+    return (int)(battle->bsc.bp.powerCoreDropRate * powerCore);
 }
 
 static Mob *BattleQueueSpawn(Battle *battle, MobID parentMobid,
@@ -181,7 +181,7 @@ static Mob *BattleQueueSpawn(Battle *battle, MobID parentMobid,
     spawn->parentMobid = parentMobid;
 
     battle->bs.spawns++;
-    if (spawn->type != MOB_TYPE_LOOT_BOX &&
+    if (spawn->type != MOB_TYPE_POWER_CORE &&
         spawn->type != MOB_TYPE_MISSILE) {
         battle->bs.shipSpawns++;
     }
@@ -250,7 +250,7 @@ static void BattleRunMobMove(Battle *battle, Mob *mob)
         /*
          * The neutral player never moves today.
          */
-        ASSERT(mob->type == MOB_TYPE_LOOT_BOX);
+        ASSERT(mob->type == MOB_TYPE_POWER_CORE);
         return;
     }
 
@@ -322,8 +322,8 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
     if (!BattleCanMobTypesCollide(lhs->type, rhs->type)) {
         return FALSE;
     }
-    if (lhs->type != MOB_TYPE_LOOT_BOX &&
-        rhs->type != MOB_TYPE_LOOT_BOX &&
+    if (lhs->type != MOB_TYPE_POWER_CORE &&
+        rhs->type != MOB_TYPE_POWER_CORE &&
         lhs->playerID == rhs->playerID) {
         // Players generally don't collide with themselves...
         return FALSE;
@@ -345,15 +345,15 @@ BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 
     battle->bs.collisions++;
 
-    if (oMob->type == MOB_TYPE_LOOT_BOX) {
-        ASSERT(iMob->type != MOB_TYPE_LOOT_BOX);
+    if (oMob->type == MOB_TYPE_POWER_CORE) {
+        ASSERT(iMob->type != MOB_TYPE_POWER_CORE);
         ASSERT(iMob->playerID < ARRAYSIZE(battle->bs.players));
-        battle->bs.players[iMob->playerID].credits += oMob->lootCredits;
+        battle->bs.players[iMob->playerID].credits += oMob->powerCoreCredits;
         oMob->alive = FALSE;
-    } else if (iMob->type == MOB_TYPE_LOOT_BOX) {
-        ASSERT(oMob->type != MOB_TYPE_LOOT_BOX);
+    } else if (iMob->type == MOB_TYPE_POWER_CORE) {
+        ASSERT(oMob->type != MOB_TYPE_POWER_CORE);
         ASSERT(oMob->playerID < ARRAYSIZE(battle->bs.players));
-        battle->bs.players[oMob->playerID].credits += iMob->lootCredits;
+        battle->bs.players[oMob->playerID].credits += iMob->powerCoreCredits;
         iMob->alive = FALSE;
     } else {
         oMob->health -= MobType_GetMaxHealth(iMob->type);
@@ -361,24 +361,24 @@ BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 
         if (oMob->health <= 0) {
             oMob->alive = FALSE;
-            int lootCredits = BattleCalcLootCredits(battle, oMob);
-            if (lootCredits > 0) {
+            int powerCoreCredits = BattleCalcPowerCoreCredits(battle, oMob);
+            if (powerCoreCredits > 0) {
                 Mob *spawn = BattleQueueSpawn(battle, oMob->mobid,
-                                              MOB_TYPE_LOOT_BOX,
+                                              MOB_TYPE_POWER_CORE,
                                               oMob->playerID, &oMob->pos);
-                spawn->lootCredits = lootCredits;
+                spawn->powerCoreCredits = powerCoreCredits;
             }
         }
         if (iMob->health <= 0) {
             iMob->alive = FALSE;
-            int lootCredits = BattleCalcLootCredits(battle, iMob);
-            if (lootCredits > 0) {
+            int powerCoreCredits = BattleCalcPowerCoreCredits(battle, iMob);
+            if (powerCoreCredits > 0) {
                 Mob *spawn;
                 spawn = BattleQueueSpawn(battle, iMob->mobid,
-                                         MOB_TYPE_LOOT_BOX,
+                                         MOB_TYPE_POWER_CORE,
                                          iMob->playerID,
                                          &iMob->pos);
-                spawn->lootCredits = lootCredits;
+                spawn->powerCoreCredits = powerCoreCredits;
             }
         }
     }
@@ -403,8 +403,8 @@ static void BattleRunCollisions(Battle *battle)
 // Is the scanning mob allowed to scan anything?
 static bool BattleCanMobScan(const Mob *scanning)
 {
-    if (scanning->type == MOB_TYPE_LOOT_BOX) {
-        ASSERT(MobType_GetSensorRadius(MOB_TYPE_LOOT_BOX) == 0.0f);
+    if (scanning->type == MOB_TYPE_POWER_CORE) {
+        ASSERT(MobType_GetSensorRadius(MOB_TYPE_POWER_CORE) == 0.0f);
         return FALSE;
     }
     ASSERT(scanning->playerID != PLAYER_ID_NEUTRAL);
@@ -488,7 +488,7 @@ void Battle_RunTick(Battle *battle)
 
         if (mob->alive) {
             if (mob->type == MOB_TYPE_MISSILE ||
-                mob->type == MOB_TYPE_LOOT_BOX) {
+                mob->type == MOB_TYPE_POWER_CORE) {
                 mob->fuel--;
 
                 if (mob->fuel <= 0) {
@@ -502,23 +502,23 @@ void Battle_RunTick(Battle *battle)
         }
     }
 
-    // Spawn loot
-    battle->lootSpawnBucket += battle->bsc.bp.lootSpawnRate;
-    while (battle->lootSpawnBucket > battle->bsc.bp.minLootSpawn) {
+    // Spawn powerCore
+    battle->powerCoreSpawnBucket += battle->bsc.bp.powerCoreSpawnRate;
+    while (battle->powerCoreSpawnBucket > battle->bsc.bp.minPowerCoreSpawn) {
         FPoint pos;
-        int loot = RandomState_Int(&battle->rs,
-                                   battle->bsc.bp.minLootSpawn,
-                                   battle->bsc.bp.maxLootSpawn);
-        battle->lootSpawnBucket -= loot;
+        int powerCore = RandomState_Int(&battle->rs,
+                                   battle->bsc.bp.minPowerCoreSpawn,
+                                   battle->bsc.bp.maxPowerCoreSpawn);
+        battle->powerCoreSpawnBucket -= powerCore;
 
         pos.x = RandomState_Float(&battle->rs, 0.0f,
                                   battle->bsc.bp.width);
         pos.y = RandomState_Float(&battle->rs, 0.0f,
                                   battle->bsc.bp.height);
         Mob *spawn = BattleQueueSpawn(battle, MOB_ID_INVALID,
-                                      MOB_TYPE_LOOT_BOX,
+                                      MOB_TYPE_POWER_CORE,
                                       PLAYER_ID_NEUTRAL, &pos);
-        spawn->lootCredits = loot;
+        spawn->powerCoreCredits = powerCore;
     }
 
     // Queue spawned things
@@ -553,7 +553,7 @@ void Battle_RunTick(Battle *battle)
         if (mob->alive) {
             PlayerID p = mob->playerID;
             battle->bs.players[p].numMobs++;
-            if (mob->type != MOB_TYPE_LOOT_BOX) {
+            if (mob->type != MOB_TYPE_POWER_CORE) {
 
                 battle->bs.players[p].alive = TRUE;
             }

@@ -55,7 +55,7 @@ void BasicAIGovernor::runMob(Mob *mob)
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
 
-    if (mob->type == MOB_TYPE_LOOT_BOX) {
+    if (mob->type == MOB_TYPE_POWER_CORE) {
         Mob *friendMob = sg->findClosestFriend(&mob->pos, MOB_FLAG_SHIP);
         if (friendMob != NULL) {
             mob->cmd.target = friendMob->pos;
@@ -74,16 +74,16 @@ void BasicAIGovernor::runMob(Mob *mob)
             mob->cmd.spawnType = MOB_TYPE_INVALID;
         }
     } else if (mob->type == MOB_TYPE_FIGHTER) {
-        Mob *lootTarget = NULL;
+        Mob *powerCoreTarget = NULL;
         Mob *enemyTarget = NULL;
 
         ASSERT(ship != NULL);
         ASSERT(ship->mobid == mob->mobid);
 
         /*
-         * Find loot.
+         * Find powerCore.
          */
-        lootTarget = sg->findClosestTargetInRange(&mob->pos, MOB_FLAG_LOOT_BOX,
+        powerCoreTarget = sg->findClosestTargetInRange(&mob->pos, MOB_FLAG_POWER_CORE,
                                                   scanningRange);
 
         /*
@@ -141,9 +141,9 @@ void BasicAIGovernor::runMob(Mob *mob)
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
             ship->evadeData.pos = mob->cmd.target;
-        } else if (lootTarget != NULL) {
+        } else if (powerCoreTarget != NULL) {
             ship->state = BSAI_STATE_GATHER;
-            mob->cmd.target = lootTarget->pos;
+            mob->cmd.target = powerCoreTarget->pos;
         } else if (ship->state == BSAI_STATE_HOLD) {
             if (ship->holdData.count == 0) {
                 ship->state = BSAI_STATE_IDLE;

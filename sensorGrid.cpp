@@ -39,10 +39,10 @@ void SensorGrid::updateTick(FleetAI *ai)
 
         myFriends.updateMob(m);
 
-        if (m->type == MOB_TYPE_LOOT_BOX) {
+        if (m->type == MOB_TYPE_POWER_CORE) {
             /*
-             * Also add LootBoxes to the targets list, since fleets
-             * collect their own boxes as loot.
+             * Also add PowerCores to the targets list, since fleets
+             * collect their own boxes as powerCore.
              */
             myTargets.updateMob(m);
             myTargetLastSeenMap.put(m->mobid, ai->tick);

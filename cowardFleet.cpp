@@ -105,7 +105,7 @@ static void CowardFleetRunAITick(void *aiHandle)
     CMobIt_Start(&ai->mobs, &mit);
     while (CMobIt_HasNext(&mit)) {
         Mob *mob = CMobIt_Next(&mit);
-        if (mob->type == MOB_TYPE_LOOT_BOX) {
+        if (mob->type == MOB_TYPE_POWER_CORE) {
             Mob *friendMob = sf->sg.findClosestFriend(&mob->pos, MOB_FLAG_SHIP);
             if (friendMob != NULL) {
                 mob->cmd.target = friendMob->pos;
@@ -140,15 +140,15 @@ static void CowardFleetRunAITick(void *aiHandle)
             continue;
         }
 
-        Mob *lootTarget = NULL;
+        Mob *powerCoreTarget = NULL;
         Mob *enemyTarget = NULL;
         Mob *scaredTarget = NULL;
 
         /*
-         * Find loot.
+         * Find powerCore.
          */
-        lootTarget = sf->sg.findClosestTargetInRange(&mob->pos,
-                                                     MOB_FLAG_LOOT_BOX,
+        powerCoreTarget = sf->sg.findClosestTargetInRange(&mob->pos,
+                                                     MOB_FLAG_POWER_CORE,
                                                      scanningRange);
 
         /*
@@ -180,8 +180,8 @@ static void CowardFleetRunAITick(void *aiHandle)
             FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                          &threatTarget->pos, attackRange);
             threatCount++;
-        } else if (lootTarget != NULL) {
-            mob->cmd.target = lootTarget->pos;
+        } else if (powerCoreTarget != NULL) {
+            mob->cmd.target = powerCoreTarget->pos;
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
             mob->cmd.target.x = RandomState_Float(&sf->rs, 0.0f, bp->width);
             mob->cmd.target.y = RandomState_Float(&sf->rs, 0.0f, bp->height);

@@ -101,10 +101,10 @@ static void SimpleFleetRunAI(void *handle)
         if (mob->type == MOB_TYPE_FIGHTER) {
             if (target == NULL) {
                 /*
-                 * Avoid having all the fighters rush to the same loot box.
+                 * Avoid having all the fighters rush to the same power core.
                  */
                 target = FleetUtil_FindClosestSensor(ai, &sf->basePos,
-                                                     MOB_FLAG_LOOT_BOX);
+                                                     MOB_FLAG_POWER_CORE);
                 if (target != NULL) {
                     if (CIntMap_Increment(&targetMap, target->mobid) > 1) {
                         /*
@@ -119,7 +119,7 @@ static void SimpleFleetRunAI(void *handle)
             if (target != NULL) {
                 mob->cmd.target = target->pos;
 
-                if (target->type != MOB_TYPE_LOOT_BOX &&
+                if (target->type != MOB_TYPE_POWER_CORE &&
                     RandomState_Int(&sf->rs, 0, 20) == 0) {
                     mob->cmd.spawnType = MOB_TYPE_MISSILE;
                 }
@@ -150,7 +150,7 @@ static void SimpleFleetRunAI(void *handle)
             }
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
-        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+        } else if (mob->type == MOB_TYPE_POWER_CORE) {
             mob->cmd.target = sf->basePos;
         }
     }

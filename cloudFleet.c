@@ -173,10 +173,10 @@ static void CloudFleetRunAITick(void *aiHandle)
 
             if (target == NULL) {
                 /*
-                * Avoid having all the fighters rush to the same loot box.
+                * Avoid having all the fighters rush to the same power core.
                 */
                 target = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                     MOB_FLAG_LOOT_BOX);
+                                                     MOB_FLAG_POWER_CORE);
                 if (target != NULL) {
                     if (FPoint_Distance(&target->pos, &mob->pos) > firingRange) {
                         target = NULL;
@@ -205,7 +205,7 @@ static void CloudFleetRunAITick(void *aiHandle)
 
             if (target != NULL) {
                 float moveRadius = 2 * MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
-                if (target->type != MOB_TYPE_LOOT_BOX) {
+                if (target->type != MOB_TYPE_POWER_CORE) {
                     FleetUtil_RandomPointInRange(&sf->rs, &mob->cmd.target,
                                                  &target->pos, moveRadius);
                 } else {
@@ -242,7 +242,7 @@ static void CloudFleetRunAITick(void *aiHandle)
             }
 
             ASSERT(MobType_GetSpeed(MOB_TYPE_BASE) == 0.0f);
-        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+        } else if (mob->type == MOB_TYPE_POWER_CORE) {
             /*
              * Add this mob to the sensor list so that we'll
              * steer towards it.

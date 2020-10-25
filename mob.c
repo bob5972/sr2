@@ -28,7 +28,7 @@ float MobType_GetRadius(MobType type)
         { MOB_TYPE_BASE,      50.0f, },
         { MOB_TYPE_FIGHTER,    5.0f, },
         { MOB_TYPE_MISSILE,    3.0f, },
-        { MOB_TYPE_LOOT_BOX ,  2.0f, },
+        { MOB_TYPE_POWER_CORE ,  2.0f, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -48,7 +48,7 @@ float MobType_GetSensorRadius(MobType type)
         { MOB_TYPE_BASE,     250.0f, },
         { MOB_TYPE_FIGHTER,   MOB_FIGHTER_SENSOR_RADIUS, },
         { MOB_TYPE_MISSILE,   30.0f, },
-        { MOB_TYPE_LOOT_BOX ,  0.0f, },
+        { MOB_TYPE_POWER_CORE ,  0.0f, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -68,7 +68,7 @@ float MobType_GetSpeed(MobType type)
         { MOB_TYPE_BASE,       0.0f, },
         { MOB_TYPE_FIGHTER,    2.5f, },
         { MOB_TYPE_MISSILE,    5.0f, },
-        { MOB_TYPE_LOOT_BOX ,  0.5f, },
+        { MOB_TYPE_POWER_CORE ,  0.5f, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -88,7 +88,7 @@ int MobType_GetCost(MobType type)
         { MOB_TYPE_BASE,       -1, },
         { MOB_TYPE_FIGHTER,   100, },
         { MOB_TYPE_MISSILE,     5, },
-        { MOB_TYPE_LOOT_BOX ,  -1, },
+        { MOB_TYPE_POWER_CORE ,  -1, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -108,7 +108,7 @@ int MobType_GetMaxFuel(MobType type)
         { MOB_TYPE_BASE,         -1, },
         { MOB_TYPE_FIGHTER,      -1, },
         { MOB_TYPE_MISSILE,      14, },
-        { MOB_TYPE_LOOT_BOX ,  4000, },
+        { MOB_TYPE_POWER_CORE ,  4000, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -129,7 +129,7 @@ int MobType_GetMaxHealth(MobType type)
         { MOB_TYPE_BASE,         50, },
         { MOB_TYPE_FIGHTER,       1, },
         { MOB_TYPE_MISSILE,       1, },
-        { MOB_TYPE_LOOT_BOX ,     1, },
+        { MOB_TYPE_POWER_CORE ,     1, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -184,7 +184,7 @@ void Mob_MaskForSensor(Mob *mob)
     ASSERT(mob->health == 0);
     ASSERT(mob->birthTick == 0);
     ASSERT(mob->rechargeTime == 0);
-    ASSERT(mob->lootCredits == 0);
+    ASSERT(mob->powerCoreCredits == 0);
     ASSERT(MBUtil_IsZero(&mob->cmd, sizeof(mob->cmd)));
 }
 

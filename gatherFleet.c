@@ -209,7 +209,7 @@ static void GatherFleetAgeContacts(GatherFleetData *sf)
 
 static void GatherFleetAddContact(GatherFleetData *sf, Mob *sm)
 {
-    if (sm->type == MOB_TYPE_LOOT_BOX) {
+    if (sm->type == MOB_TYPE_POWER_CORE) {
         return;
     }
 
@@ -289,7 +289,7 @@ static void GatherFleetRunAITick(void *aiHandle)
         if (mob->type == MOB_TYPE_FIGHTER) {
             MobPVec_Grow(&sf->fighters);
             *MobPVec_GetLastPtr(&sf->fighters) = mob;
-        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+        } else if (mob->type == MOB_TYPE_POWER_CORE) {
             MobPVec_Grow(&sf->targets);
             *MobPVec_GetLastPtr(&sf->targets) = mob;
         }
@@ -474,7 +474,7 @@ static void GatherFleetRunAITick(void *aiHandle)
                 mob->cmd.target.y =
                     RandomState_Float(&sf->rs, 0.0f, bp->height);
             }
-        } else if (mob->type == MOB_TYPE_LOOT_BOX) {
+        } else if (mob->type == MOB_TYPE_POWER_CORE) {
             if (FPoint_Distance(&mob->pos, &sf->basePos) <= baseScanRange) {
                 mob->cmd.target = sf->basePos;
             } else {

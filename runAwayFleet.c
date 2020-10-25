@@ -148,7 +148,7 @@ static void RunAwayFleetRunAITick(void *aiHandle)
     CMobIt_Start(&ai->mobs, &mit);
     while (CMobIt_HasNext(&mit)) {
         Mob *mob = CMobIt_Next(&mit);
-        if (mob->type == MOB_TYPE_LOOT_BOX) {
+        if (mob->type == MOB_TYPE_POWER_CORE) {
             Mob *friend = FleetUtil_FindClosestMob(&sf->ai->mobs, &mob->pos,
                                                    MOB_FLAG_SHIP);
             if (friend != NULL) {
@@ -191,21 +191,21 @@ static void RunAwayFleetRunAITick(void *aiHandle)
         }
 
         RunAwayShip *ship = RunAwayFleetGetShip(sf, mob->mobid);
-        Mob *lootTarget = NULL;
+        Mob *powerCoreTarget = NULL;
         Mob *enemyTarget = NULL;
 
         ASSERT(ship != NULL);
         ASSERT(ship->mobid == mob->mobid);
 
         /*
-         * Find loot.
+         * Find powerCore.
          */
-        lootTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
-                                                 MOB_FLAG_LOOT_BOX);
+        powerCoreTarget = FleetUtil_FindClosestSensor(ai, &mob->pos,
+                                                 MOB_FLAG_POWER_CORE);
 
-        if (lootTarget != NULL) {
-            if (FPoint_Distance(&mob->pos, &lootTarget->pos) > scanningRange) {
-                lootTarget = NULL;
+        if (powerCoreTarget != NULL) {
+            if (FPoint_Distance(&mob->pos, &powerCoreTarget->pos) > scanningRange) {
+                powerCoreTarget = NULL;
             }
         }
 
@@ -247,8 +247,8 @@ static void RunAwayFleetRunAITick(void *aiHandle)
             float dy = enemyTarget->pos.y - mob->pos.y;
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
-        } else if (lootTarget != NULL) {
-            mob->cmd.target = lootTarget->pos;
+        } else if (powerCoreTarget != NULL) {
+            mob->cmd.target = powerCoreTarget->pos;
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
             mob->cmd.target.x = RandomState_Float(&sf->rs, 0.0f, bp->width);
             mob->cmd.target.y = RandomState_Float(&sf->rs, 0.0f, bp->height);

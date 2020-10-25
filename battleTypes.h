@@ -44,17 +44,17 @@ typedef enum MobType {
     MOB_TYPE_MIN      = 1,
     MOB_TYPE_FIGHTER  = 2,
     MOB_TYPE_MISSILE  = 3,
-    MOB_TYPE_LOOT_BOX = 4,
+    MOB_TYPE_POWER_CORE = 4,
     MOB_TYPE_MAX,
 } MobType;
 
 #define MOB_FLAG_BASE     (1 << MOB_TYPE_BASE)
 #define MOB_FLAG_FIGHTER  (1 << MOB_TYPE_FIGHTER)
 #define MOB_FLAG_MISSILE  (1 << MOB_TYPE_MISSILE)
-#define MOB_FLAG_LOOT_BOX (1 << MOB_TYPE_LOOT_BOX)
-#define MOB_FLAG_AMMO     (MOB_FLAG_MISSILE | MOB_FLAG_LOOT_BOX)
+#define MOB_FLAG_POWER_CORE (1 << MOB_TYPE_POWER_CORE)
+#define MOB_FLAG_AMMO     (MOB_FLAG_MISSILE | MOB_FLAG_POWER_CORE)
 #define MOB_FLAG_SHIP     (MOB_FLAG_BASE | MOB_FLAG_FIGHTER)
-#define MOB_FLAG_ALL      (MOB_FLAG_SHIP | MOB_FLAG_MISSILE | MOB_FLAG_LOOT_BOX)
+#define MOB_FLAG_ALL      (MOB_FLAG_SHIP | MOB_FLAG_MISSILE | MOB_FLAG_POWER_CORE)
 typedef uint MobTypeFlags;
 
 #define SPAWN_RECHARGE_TICKS 5
@@ -97,7 +97,7 @@ typedef struct Mob {
     uint birthTick;
     uint lastSpawnTick;
     int rechargeTime;
-    int lootCredits;
+    int powerCoreCredits;
     MobID parentMobid;
     MobCmd cmd;
 
@@ -159,12 +159,12 @@ typedef struct BattleParams {
     bool restrictedStart;
 
     // Factor of cost that gets dropped when a mob is destroyed.
-    float lootDropRate;
+    float powerCoreDropRate;
 
-    // How quickly neutral loot spawns, in credits / tick.
-    float lootSpawnRate;
-    int minLootSpawn;
-    int maxLootSpawn;
+    // How quickly neutral powerCore spawns, in credits / tick.
+    float powerCoreSpawnRate;
+    int minPowerCoreSpawn;
+    int maxPowerCoreSpawn;
 
     uint startingBases;
     uint startingFighters;
