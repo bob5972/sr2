@@ -311,7 +311,7 @@ Sprite *Sprite_CreateMob(MobType t, FleetAIType aiType, uint32 repeatCount)
         // XXX: Very inefficient!
         uint32 color = Sprite_GetColor(aiType, repeatCount);
         SDL_Surface *mobSheet = Sprite_CreateMobSheet(color);
-        Sprite *sprite = Sprite_CreateFromMobSheet(t,mobSheet);
+        Sprite *sprite = Sprite_CreateFromMobSheet(t, mobSheet);
         SDL_FreeSurface(mobSheet);
         return sprite;
     }
@@ -327,6 +327,7 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
     }
 
     // The first instance has a repeatCount of 1.
+    ASSERT(repeatCount > 0);
     if (repeatCount > 1) {
         return SPRITE_INVALID;
     }
