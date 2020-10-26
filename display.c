@@ -306,16 +306,15 @@ static void DisplayDrawFrame()
             FCircle circle;
             FleetSprites *fs;
             Sprite *sprite;
-            SDL_Point p;
+            IPoint p;
 
             fs = &display.fleets[mob->playerID];
             sprite = fs->scanSprites[mob->type];
 
             Mob_GetSensorCircle(mob, &circle);
-            p.x = (int32)(circle.center.x - circle.radius);
-            p.y = (int32)(circle.center.y - circle.radius);
+            FCircle_CenterToIPoint(&circle, &p);
 
-            Sprite_Blit(sprite, display.sdlRenderer, p.x, p.y);
+            Sprite_BlitCentered(sprite, display.sdlRenderer, p.x, p.y);
         }
     }
 
@@ -329,21 +328,20 @@ static void DisplayDrawFrame()
         FCircle circle;
         FleetSprites *fs;
         Sprite *sprite;
-        SDL_Point p;
+        IPoint p;
 
         fs = &display.fleets[mob->playerID];
         sprite = fs->mobSprites[mob->type];
 
         Mob_GetCircle(mob, &circle);
-        p.x = (uint32)(circle.center.x - circle.radius);
-        p.y = (uint32)(circle.center.y - circle.radius);
+        FCircle_CenterToIPoint(&circle, &p);
 
         ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
-                mob->playerID < ARRAYSIZE(display.fleets));
+               mob->playerID < ARRAYSIZE(display.fleets));
         ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
 
         ASSERT(sprite != NULL);
-        Sprite_Blit(sprite, display.sdlRenderer, p.x, p.y);
+        Sprite_BlitCentered(sprite, display.sdlRenderer, p.x, p.y);
     }
 
 

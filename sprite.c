@@ -413,9 +413,25 @@ void Sprite_Blit(Sprite *sprite, SDL_Renderer *r, uint32 x, uint32 y)
     SDL_RenderCopy(r, backing->sdlTexture, &srcRect, &destRect);
 }
 
-void Sprite_BlitCentered(Sprite *s, SDL_Renderer *r, uint32 x, uint32 y)
+void Sprite_BlitCentered(Sprite *sprite, SDL_Renderer *r, uint32 cx, uint32 cy)
 {
-    NOT_IMPLEMENTED();
+    SDL_Rect srcRect;
+    SDL_Rect destRect;
+    SpriteBacking *backing = SpriteGetBacking(sprite->backingID);
+
+    Sprite_PrepareTexture(sprite, r);
+
+    srcRect.x = sprite->srcx;
+    srcRect.y = sprite->srcy;
+    srcRect.w = sprite->w;
+    srcRect.h = sprite->h;
+
+    destRect.x = cx - (sprite->w / 2);
+    destRect.y = cy - (sprite->h / 2);
+    destRect.w = sprite->w;
+    destRect.h = sprite->h;
+
+    SDL_RenderCopy(r, backing->sdlTexture, &srcRect, &destRect);
 }
 
 SDL_Surface *Sprite_LoadPNG(const char *fileName,

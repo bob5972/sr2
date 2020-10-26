@@ -131,4 +131,16 @@ static inline bool FCircle_ContainsPoint(const FCircle *a, const FPoint *p)
     return FALSE;
 }
 
+static inline void FCircle_CenterToIPoint(const FCircle *c, IPoint *p)
+{
+    //p->x = lrintf(c->center.x);
+    //p->y = lrintf(c->center.y);
+
+    ASSERT(c->center.x >= 0);
+    ASSERT(c->center.y >= 0);
+
+    p->x = (int)(c->center.x + 0.5f);
+    p->y = (int)(c->center.y + 0.5f);
+}
+
 #endif // _GEOMETRY_H_202005310649
