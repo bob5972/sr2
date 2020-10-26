@@ -321,7 +321,10 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
                                          FleetAIType aiType,
                                          uint32 repeatCount)
 {
-    //return SPRITE_INVALID;
+    if (TRUE) {
+        // Disable sprites.
+        return SPRITE_INVALID;
+    }
 
     // The first instance has a repeatCount of 1.
     if (repeatCount > 1) {
@@ -330,7 +333,7 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
 
     if (aiType == FLEET_AI_NEUTRAL) {
         return SPRITE_INVALID;
-    } else if (aiType == FLEET_AI_CLOUD) {
+    } else if (aiType == FLEET_AI_SIMPLE) {
         switch (t) {
             case MOB_TYPE_BASE:
                 return SPRITE_RED_BASE;
@@ -352,7 +355,7 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
                 return SPRITE_FIGHTER_BLUE1;
             case MOB_TYPE_MISSILE:
                 //return SPRITE_BLUE_MISSILE;
-                return SPRITE_MISSILE1;
+                return SPRITE_MISSILE3;
             case MOB_TYPE_POWER_CORE:
                 //return SPRITE_BLUE_POWER_CORE;
                 return SPRITE_CORE1;
