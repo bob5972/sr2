@@ -415,23 +415,9 @@ void Sprite_Blit(Sprite *sprite, SDL_Renderer *r, uint32 x, uint32 y)
 
 void Sprite_BlitCentered(Sprite *sprite, SDL_Renderer *r, uint32 cx, uint32 cy)
 {
-    SDL_Rect srcRect;
-    SDL_Rect destRect;
-    SpriteBacking *backing = SpriteGetBacking(sprite->backingID);
-
-    Sprite_PrepareTexture(sprite, r);
-
-    srcRect.x = sprite->srcx;
-    srcRect.y = sprite->srcy;
-    srcRect.w = sprite->w;
-    srcRect.h = sprite->h;
-
-    destRect.x = cx - (sprite->w / 2);
-    destRect.y = cy - (sprite->h / 2);
-    destRect.w = sprite->w;
-    destRect.h = sprite->h;
-
-    SDL_RenderCopy(r, backing->sdlTexture, &srcRect, &destRect);
+    uint32 dx = cx - (sprite->w / 2);
+    uint32 dy = cy - (sprite->h / 2);
+    Sprite_Blit(sprite, r, dx, dy);
 }
 
 SDL_Surface *Sprite_LoadPNG(const char *fileName,
@@ -683,10 +669,6 @@ void Sprite_PrepareTexture(Sprite *sprite, SDL_Renderer *r)
     ASSERT(backing->sdlRenderer == NULL || backing->sdlRenderer == r);
 
     if (backing->sdlRenderer != r) {
-        /*
-         * XXX: Minimize the texture to reflect the sprite size, and
-         * not the surface?
-         */
         ASSERT(backing->sdlTexture == NULL);
         backing->sdlTexture = SDL_CreateTextureFromSurface(r, backing->sdlSurface);
         backing->sdlRenderer = r;
