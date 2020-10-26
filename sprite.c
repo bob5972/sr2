@@ -102,7 +102,8 @@ SpriteGlobalData gSprite;
 
 static void SpriteCalcMobSheetSize(uint32 *sheetWidth,
                                    uint32 *sheetHeight);
-static SpriteType SpriteGetSpriteType(int playerID, MobType t);
+static SpriteType SpriteGetMobSpriteType(MobType t, FleetAIType aiType,
+                                         uint32 repeatCount);
 static void SpriteCalcMobSpriteRect(MobType mobType, SDL_Rect *rect);
 
 static SpriteBacking *SpriteGetBacking(uint32 backingID);
@@ -300,14 +301,36 @@ Sprite *Sprite_CreateType(SpriteType t)
 }
 
 
-Sprite *Sprite_CreateMob(int playerID, MobType t)
+Sprite *Sprite_CreateMob(MobType t, FleetAIType aiType, uint32 repeatCount)
 {
-    return Sprite_CreateType(SpriteGetSpriteType(playerID, t));
+    SpriteType sType = SpriteGetMobSpriteType(t, aiType, repeatCount);
+
+    if (sType != SPRITE_INVALID) {
+        return Sprite_CreateType(sType);
+    } else {
+        // XXX: Very inefficient!
+        uint32 color = Sprite_GetColor(aiType, repeatCount);
+        SDL_Surface *mobSheet = Sprite_CreateMobSheet(color);
+        Sprite *sprite = Sprite_CreateFromMobSheet(t,mobSheet);
+        SDL_FreeSurface(mobSheet);
+        return sprite;
+    }
 }
 
-static SpriteType SpriteGetSpriteType(int playerID, MobType t)
+static SpriteType SpriteGetMobSpriteType(MobType t,
+                                         FleetAIType aiType,
+                                         uint32 repeatCount)
 {
-    if (playerID == 0) {
+    //return SPRITE_INVALID;
+
+    // The first instance has a repeatCount of 1.
+    if (repeatCount > 1) {
+        return SPRITE_INVALID;
+    }
+
+    if (aiType == FLEET_AI_NEUTRAL) {
+        return SPRITE_INVALID;
+    } else if (aiType == FLEET_AI_CLOUD) {
         switch (t) {
             case MOB_TYPE_BASE:
                 return SPRITE_RED_BASE;
@@ -318,9 +341,9 @@ static SpriteType SpriteGetSpriteType(int playerID, MobType t)
             case MOB_TYPE_POWER_CORE:
                 return SPRITE_RED_POWER_CORE;
             default:
-                NOT_IMPLEMENTED();
+                return SPRITE_INVALID;
         }
-    } else if (playerID == 1) {
+    } else if (aiType == FLEET_AI_BOB) {
         switch (t) {
             case MOB_TYPE_BASE:
                 return SPRITE_BLUE_BASE;
@@ -334,9 +357,9 @@ static SpriteType SpriteGetSpriteType(int playerID, MobType t)
                 //return SPRITE_BLUE_POWER_CORE;
                 return SPRITE_CORE1;
             default:
-                NOT_IMPLEMENTED();
+                return SPRITE_INVALID;
         }
-    } else if (playerID == 2) {
+    } else if (aiType == FLEET_AI_HOLD) {
         switch (t) {
             case MOB_TYPE_BASE:
                 return SPRITE_GREEN_BASE;
@@ -350,11 +373,11 @@ static SpriteType SpriteGetSpriteType(int playerID, MobType t)
                 //return SPRITE_GREEN_POWER_CORE;
                 return SPRITE_CORE2;
             default:
-                NOT_IMPLEMENTED();
+                return SPRITE_INVALID;
         }
-    } else {
-        NOT_IMPLEMENTED();
     }
+
+    return SPRITE_INVALID;
 }
 
 void Sprite_Free(Sprite *s)
@@ -648,4 +671,39 @@ void Sprite_PrepareTexture(Sprite *sprite, SDL_Renderer *r)
         backing->sdlTexture = SDL_CreateTextureFromSurface(r, backing->sdlSurface);
         backing->sdlRenderer = r;
     }
+}
+
+
+uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
+{
+    struct {
+        FleetAIType aiType;
+        uint32 color;
+    } colors[] = {
+        { FLEET_AI_INVALID, 0x000000, }, // 0x(AA)RRGGBB
+        { FLEET_AI_NEUTRAL, 0x888888, },
+        { FLEET_AI_DUMMY,   0xFFFFFF, },
+        { FLEET_AI_SIMPLE,  0xFF0000, },
+        { FLEET_AI_GATHER,  0x00FF00, },
+        { FLEET_AI_CLOUD,   0x0000FF, },
+        { FLEET_AI_MAPPER,  0x808000, },
+        { FLEET_AI_RUNAWAY, 0x800080, },
+        { FLEET_AI_COWARD,  0x008080, },
+        { FLEET_AI_BASIC,   0x808080, },
+        { FLEET_AI_HOLD,    0xF00080, },
+        { FLEET_AI_BOB,     0x80F080, },
+    };
+    uint32 color;
+
+    uint32 shipAlpha = 0x88;
+
+    ASSERT(ARRAYSIZE(colors) == FLEET_AI_MAX);
+    ASSERT(aiType < ARRAYSIZE(colors));
+    ASSERT(colors[aiType].aiType == aiType);
+    ASSERT(repeatCount > 0);
+
+    uint i  = aiType % ARRAYSIZE(colors);
+    color = colors[i].color;
+    color /= (1 + (repeatCount - 1));
+    return color | ((shipAlpha & 0xFF) << 24);
 }

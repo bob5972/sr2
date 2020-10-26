@@ -32,14 +32,11 @@
 #include "MBVector.h"
 #include "sprite.h"
 
-#define SHIP_ALPHA 0x88
-
 // Poor man's command-line options...
 #define DRAW_SENSORS TRUE
 
 typedef struct FleetSprites {
     uint32 color;
-    SDL_Surface *mobSpriteSheet;
     Sprite *mobSprites[MOB_TYPE_MAX];
     Sprite *scanSprites[MOB_TYPE_MAX];
 } FleetSprites;
@@ -74,8 +71,6 @@ static DisplayGlobalData display;
 
 void DisplayInitText(const BattleScenario *bsc);
 void DisplayExitText();
-static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount);
-
 
 void Display_Init(const BattleScenario *bsc)
 {
@@ -122,21 +117,14 @@ void Display_Init(const BattleScenario *bsc)
 
     for (uint x = 0; x < bp->numPlayers; x++) {
         FleetAIType aiType = bsc->players[x].aiType;
-        uint32 color = DisplayGetColor(aiType, repeatCount[aiType]++);
+        uint32 color = Sprite_GetColor(aiType, ++repeatCount[aiType]);
         display.fleets[x].color = color;
 
-        display.fleets[x].mobSpriteSheet = Sprite_CreateMobSheet(color);
-
         for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
-            // XXX: Sprite-toggle
-            if (FALSE && (x == 0 || x == 1 || x == 2)) {
-                display.fleets[x].mobSprites[t] = Sprite_CreateMob(x, t);
-            } else {
-                display.fleets[x].mobSprites[t] =
-                    Sprite_CreateFromMobSheet(t, display.fleets[x].mobSpriteSheet);
-                Sprite_PrepareTexture(display.fleets[x].mobSprites[t],
-                                      display.sdlRenderer);
-            }
+            display.fleets[x].mobSprites[t] =
+                Sprite_CreateMob(t, aiType, repeatCount[aiType]);
+            Sprite_PrepareTexture(display.fleets[x].mobSprites[t],
+                                    display.sdlRenderer);
 
             uint32 radius = (uint32)MobType_GetSensorRadius(t);
             display.fleets[x].scanSprites[t] =
@@ -158,8 +146,6 @@ void Display_Exit()
     MobVector_Destroy(&display.mobs);
 
     for (uint x = 0; x < ARRAYSIZE(display.fleets); x++) {
-        SDL_FreeSurface(display.fleets[x].mobSpriteSheet);
-
         for (uint i = 0; i < ARRAYSIZE(display.fleets[x].mobSprites); i++) {
             Sprite_Free(display.fleets[x].mobSprites[i]);
             display.fleets[x].mobSprites[i] = NULL;
@@ -284,38 +270,6 @@ void Display_ReleaseMobs()
     SDL_UnlockMutex(display.mobMutex);
 }
 
-static uint32 DisplayGetColor(FleetAIType aiType, uint repeatCount)
-{
-    struct {
-        FleetAIType aiType;
-        uint32 color;
-    } colors[] = {
-        { FLEET_AI_INVALID, 0x000000, }, // 0x(AA)RRGGBB
-        { FLEET_AI_NEUTRAL, 0x888888, },
-        { FLEET_AI_DUMMY,   0xFFFFFF, },
-        { FLEET_AI_SIMPLE,  0xFF0000, },
-        { FLEET_AI_GATHER,  0x00FF00, },
-        { FLEET_AI_CLOUD,   0x0000FF, },
-        { FLEET_AI_MAPPER,  0x808000, },
-        { FLEET_AI_RUNAWAY, 0x800080, },
-        { FLEET_AI_COWARD,  0x008080, },
-        { FLEET_AI_BASIC,   0x808080, },
-        { FLEET_AI_HOLD,    0xF00080, },
-        { FLEET_AI_BOB,     0x80F080, },
-    };
-    uint32 color;
-
-    ASSERT(ARRAYSIZE(colors) == FLEET_AI_MAX);
-    ASSERT(aiType < ARRAYSIZE(colors));
-    ASSERT(colors[aiType].aiType == aiType);
-
-
-    uint i  = aiType % ARRAYSIZE(colors);
-    color = colors[i].color;
-    color /= (1 + repeatCount);
-    return color | ((SHIP_ALPHA & 0xFF) << 24);
-}
-
 
 static void DisplayDrawFrame()
 {
@@ -341,39 +295,55 @@ static void DisplayDrawFrame()
     SDL_SetRenderDrawColor(display.sdlRenderer, 0x00, 0x00, 0x00, 0xFF);
     SDL_RenderClear(display.sdlRenderer);
 
-    for (i = 0; i < MobVector_Size(&display.mobs); i++) {
-        Mob *mob = MobVector_GetPtr(&display.mobs, i);
+    if (DRAW_SENSORS) {
+        for (i = 0; i < MobVector_Size(&display.mobs); i++) {
+            Mob *mob = MobVector_GetPtr(&display.mobs, i);
 
-        if (mob->alive) {
+            if (!mob->alive) {
+                continue;
+            }
+
             FCircle circle;
             FleetSprites *fs;
             Sprite *sprite;
             SDL_Point p;
 
             fs = &display.fleets[mob->playerID];
-            sprite = fs->mobSprites[mob->type];
+            sprite = fs->scanSprites[mob->type];
 
-            Mob_GetCircle(mob, &circle);
-            p.x = (uint32)(circle.center.x - circle.radius);
-            p.y = (uint32)(circle.center.y - circle.radius);
+            Mob_GetSensorCircle(mob, &circle);
+            p.x = (int32)(circle.center.x - circle.radius);
+            p.y = (int32)(circle.center.y - circle.radius);
 
-            ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
-                   mob->playerID < ARRAYSIZE(display.fleets));
-            ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
-
-            ASSERT(sprite != NULL);
             Sprite_Blit(sprite, display.sdlRenderer, p.x, p.y);
-
-            if (DRAW_SENSORS) {
-                sprite = fs->scanSprites[mob->type];
-
-                Mob_GetSensorCircle(mob, &circle);
-                p.x = (int32)(circle.center.x - circle.radius);
-                p.y = (int32)(circle.center.y - circle.radius);
-
-                Sprite_Blit(sprite, display.sdlRenderer, p.x, p.y);
-            }
         }
+    }
+
+    for (i = 0; i < MobVector_Size(&display.mobs); i++) {
+        Mob *mob = MobVector_GetPtr(&display.mobs, i);
+
+        if (!mob->alive) {
+            continue;
+        }
+
+        FCircle circle;
+        FleetSprites *fs;
+        Sprite *sprite;
+        SDL_Point p;
+
+        fs = &display.fleets[mob->playerID];
+        sprite = fs->mobSprites[mob->type];
+
+        Mob_GetCircle(mob, &circle);
+        p.x = (uint32)(circle.center.x - circle.radius);
+        p.y = (uint32)(circle.center.y - circle.radius);
+
+        ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
+                mob->playerID < ARRAYSIZE(display.fleets));
+        ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
+
+        ASSERT(sprite != NULL);
+        Sprite_Blit(sprite, display.sdlRenderer, p.x, p.y);
     }
 
 

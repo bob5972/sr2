@@ -69,9 +69,11 @@ typedef struct Sprite {
 void Sprite_Init();
 void Sprite_Exit();
 
+uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount);
+
 Sprite *Sprite_CreateCircle(uint32 radius, uint32 bgraColor);
 Sprite *Sprite_CreateType(SpriteType t);
-Sprite *Sprite_CreateMob(int playerID, MobType t);
+Sprite *Sprite_CreateMob(MobType t, FleetAIType aiType, uint repeatCount);
 Sprite *Sprite_CreateFromMobSheet(MobType t, SDL_Surface *mobSheet);
 void Sprite_Free(Sprite *s);
 
