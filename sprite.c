@@ -24,6 +24,7 @@ typedef enum SpriteSource {
     SPRITE_SOURCE_RED,
     SPRITE_SOURCE_BLUE,
     SPRITE_SOURCE_GREEN,
+    SPRITE_SOURCE_SPACE,
     SPRITE_SOURCE_SHEET1,
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
@@ -52,6 +53,11 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_GREEN_FIGHTER,    SPRITE_SOURCE_GREEN,  103,   1,  11,  11, },
     { SPRITE_GREEN_MISSILE,    SPRITE_SOURCE_GREEN,  115,   1,   7,   7, },
     { SPRITE_GREEN_POWER_CORE, SPRITE_SOURCE_GREEN,  123,   1,   5,   5, },
+
+    { SPRITE_SPACE_BASE,       SPRITE_SOURCE_SPACE,    1,   1, 101, 101, },
+    { SPRITE_SPACE_FIGHTER,    SPRITE_SOURCE_SPACE,  103,   1,  11,  11, },
+    { SPRITE_SPACE_MISSILE,    SPRITE_SOURCE_SPACE,  115,   1,   7,   7, },
+    { SPRITE_SPACE_POWER_CORE, SPRITE_SOURCE_SPACE,  123,   1,   5,   5, },
 
     { SPRITE_FIGHTER_BLUE1,    SPRITE_SOURCE_SHEET1, 100,  20,   9,   9, },
     { SPRITE_FIGHTER_BLUE2,    SPRITE_SOURCE_SHEET1, 116,  20,   9,   9, },
@@ -118,11 +124,12 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 4);
+    ASSERT(SPRITE_SOURCE_MAX == 5);
 
     gSprite.sources[SPRITE_SOURCE_RED]   = Sprite_LoadPNG("art/red.png",   129, 103);
     gSprite.sources[SPRITE_SOURCE_BLUE]  = Sprite_LoadPNG("art/blue.png",  129, 103);
     gSprite.sources[SPRITE_SOURCE_GREEN] = Sprite_LoadPNG("art/green.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE] = Sprite_LoadPNG("art/space.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SHEET1] = Sprite_LoadPNG("art/sheet1.png", 200, 200);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
@@ -347,7 +354,7 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             default:
                 return SPRITE_INVALID;
         }
-    } else if (aiType == FLEET_AI_BOB) {
+    } else if (aiType == FLEET_AI_COWARD) {
         switch (t) {
             case MOB_TYPE_BASE:
                 return SPRITE_BLUE_BASE;
@@ -360,6 +367,19 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             case MOB_TYPE_POWER_CORE:
                 //return SPRITE_BLUE_POWER_CORE;
                 return SPRITE_CORE1;
+            default:
+                return SPRITE_INVALID;
+        }
+    } else if (aiType == FLEET_AI_BOB) {
+        switch (t) {
+            case MOB_TYPE_BASE:
+                return SPRITE_SPACE_BASE;
+            case MOB_TYPE_FIGHTER:
+                return SPRITE_SPACE_FIGHTER;
+            case MOB_TYPE_MISSILE:
+                return SPRITE_SPACE_MISSILE;
+            case MOB_TYPE_POWER_CORE:
+                return SPRITE_SPACE_POWER_CORE;
             default:
                 return SPRITE_INVALID;
         }
