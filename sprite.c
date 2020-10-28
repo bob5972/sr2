@@ -38,7 +38,7 @@ typedef struct SpriteSpec {
 } SpriteSpec;
 
 static const SpriteSpec gSpecs[] = {
-    { SPRITE_INVALID,          SPRITE_SOURCE_INVALID,  0,   0,   0,   0, },
+    { SPRITE_INVALID,                 SPRITE_SOURCE_INVALID,  0,   0,   0,   0, },
 
     { SPRITE_SIMPLE_RED_BASE,         SPRITE_SOURCE_RED,      1,   1, 101, 101, },
     { SPRITE_SIMPLE_RED_FIGHTER,      SPRITE_SOURCE_RED,    103,   1,  11,  11, },
