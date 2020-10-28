@@ -19,6 +19,7 @@
 #include <png.h>
 
 #include "sprite.h"
+#include "random.h"
 
 typedef enum SpriteSource {
     SPRITE_SOURCE_RED,
@@ -490,7 +491,7 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
                 return SPRITE_BLUE_BASE;
             case MOB_TYPE_FIGHTER:
                 //return SPRITE_SIMPLE_GREEN_FIGHTER;
-                return SPRITE_BLUE_FIGHTER1;
+                return Random_Int(SPRITE_BLUE_FIGHTER1, SPRITE_BLUE_FIGHTER4);
             case MOB_TYPE_MISSILE:
                 //return SPRITE_SIMPLE_GREEN_MISSILE;
                 return SPRITE_MISSILE2;
