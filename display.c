@@ -318,30 +318,35 @@ static void DisplayDrawFrame()
         }
     }
 
-    for (i = 0; i < MobVector_Size(&display.mobs); i++) {
-        Mob *mob = MobVector_GetPtr(&display.mobs, i);
+    /*
+     * Paint mobs back to front.
+     */
+    for (MobType t = MOB_TYPE_MIN; t < MOB_TYPE_MAX; t++) {
+        for (i = 0; i < MobVector_Size(&display.mobs); i++) {
+            Mob *mob = MobVector_GetPtr(&display.mobs, i);
 
-        if (!mob->alive) {
-            continue;
+            if (mob->type != t || !mob->alive) {
+                continue;
+            }
+
+            FCircle circle;
+            FleetSprites *fs;
+            Sprite *sprite;
+            IPoint p;
+
+            fs = &display.fleets[mob->playerID];
+            sprite = fs->mobSprites[mob->type];
+
+            Mob_GetCircle(mob, &circle);
+            FCircle_CenterToIPoint(&circle, &p);
+
+            ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
+                mob->playerID < ARRAYSIZE(display.fleets));
+            ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
+
+            ASSERT(sprite != NULL);
+            Sprite_BlitCentered(sprite, display.sdlRenderer, p.x, p.y);
         }
-
-        FCircle circle;
-        FleetSprites *fs;
-        Sprite *sprite;
-        IPoint p;
-
-        fs = &display.fleets[mob->playerID];
-        sprite = fs->mobSprites[mob->type];
-
-        Mob_GetCircle(mob, &circle);
-        FCircle_CenterToIPoint(&circle, &p);
-
-        ASSERT(mob->playerID == PLAYER_ID_NEUTRAL ||
-               mob->playerID < ARRAYSIZE(display.fleets));
-        ASSERT(mob->type < ARRAYSIZE(display.fleets[0].mobSprites));
-
-        ASSERT(sprite != NULL);
-        Sprite_BlitCentered(sprite, display.sdlRenderer, p.x, p.y);
     }
 
 
