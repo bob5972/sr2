@@ -64,7 +64,7 @@ typedef struct DisplayGlobalData {
     bool mobsAcquired;
     MobVector mobs;
 
-    FleetSprites fleets[8];
+    FleetSprites fleets[32];
 } DisplayGlobalData;
 
 static DisplayGlobalData display;
@@ -188,7 +188,7 @@ void DisplayInitText(const BattleScenario *bsc)
                  bsc->players[1].playerName,
                  bsc->players[2].playerName);
     } else {
-        displayText = "Battle Royale";
+        displayText = strdup("Battle Royale");
     }
 
     display.textSurface = TTF_RenderText_Solid(display.font, displayText, textColor);

@@ -22,12 +22,7 @@
 #include "random.h"
 
 typedef enum SpriteSource {
-    SPRITE_SOURCE_RED,
-    SPRITE_SOURCE_BLUE,
-    SPRITE_SOURCE_GREEN,
-    SPRITE_SOURCE_SPACE,
     SPRITE_SOURCE_SPACE_BLUE,
-    SPRITE_SOURCE_SHEET1,
     SPRITE_SOURCE_SHEET2,
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
@@ -42,52 +37,10 @@ typedef struct SpriteSpec {
 static const SpriteSpec gSpecs[] = {
     { SPRITE_INVALID,                 SPRITE_SOURCE_INVALID,       0,   0,   0,   0, },
 
-    { SPRITE_SIMPLE_RED_BASE,         SPRITE_SOURCE_RED,           1,   1, 101, 101, },
-    { SPRITE_SIMPLE_RED_FIGHTER,      SPRITE_SOURCE_RED,         103,   1,  11,  11, },
-    { SPRITE_SIMPLE_RED_MISSILE,      SPRITE_SOURCE_RED,         115,   1,   7,   7, },
-    { SPRITE_SIMPLE_RED_POWER_CORE,   SPRITE_SOURCE_RED,         123,   1,   5,   5, },
-
-    { SPRITE_SIMPLE_BLUE_BASE,        SPRITE_SOURCE_BLUE,          1,   1, 101, 101, },
-    { SPRITE_SIMPLE_BLUE_FIGHTER,     SPRITE_SOURCE_BLUE,        103,   1,  11,  11, },
-    { SPRITE_SIMPLE_BLUE_MISSILE,     SPRITE_SOURCE_BLUE,        115,   1,   7,   7, },
-    { SPRITE_SIMPLE_BLUE_POWER_CORE,  SPRITE_SOURCE_BLUE,        123,   1,   5,   5, },
-
-    { SPRITE_SIMPLE_GREEN_BASE,       SPRITE_SOURCE_GREEN,         1,   1, 101, 101, },
-    { SPRITE_SIMPLE_GREEN_FIGHTER,    SPRITE_SOURCE_GREEN,       103,   1,  11,  11, },
-    { SPRITE_SIMPLE_GREEN_MISSILE,    SPRITE_SOURCE_GREEN,       115,   1,   7,   7, },
-    { SPRITE_SIMPLE_GREEN_POWER_CORE, SPRITE_SOURCE_GREEN,       123,   1,   5,   5, },
-
-    { SPRITE_SPACE_BASE,              SPRITE_SOURCE_SPACE,         1,   1, 101, 101, },
-    { SPRITE_SPACE_FIGHTER,           SPRITE_SOURCE_SPACE,       103,   1,  11,  11, },
-    { SPRITE_SPACE_MISSILE,           SPRITE_SOURCE_SPACE,       115,   1,   7,   7, },
-    { SPRITE_SPACE_POWER_CORE,        SPRITE_SOURCE_SPACE,       123,   1,   5,   5, },
-
     { SPRITE_SPACE_BLUE_BASE,         SPRITE_SOURCE_SPACE_BLUE,    1,   1, 101, 101, },
     { SPRITE_SPACE_BLUE_FIGHTER,      SPRITE_SOURCE_SPACE_BLUE,  103,   1,  11,  11, },
     { SPRITE_SPACE_BLUE_MISSILE,      SPRITE_SOURCE_SPACE_BLUE,  115,   1,   7,   7, },
     { SPRITE_SPACE_BLUE_POWER_CORE,   SPRITE_SOURCE_SPACE_BLUE,  123,   1,   5,   5, },
-
-    { SPRITE_FIGHTER_BLUE1,           SPRITE_SOURCE_SHEET1,      100,  20,   9,   9, },
-    { SPRITE_FIGHTER_BLUE2,           SPRITE_SOURCE_SHEET1,      116,  20,   9,   9, },
-    { SPRITE_FIGHTER_BLUE3,           SPRITE_SOURCE_SHEET1,      132,  20,   9,   9, },
-    { SPRITE_FIGHTER_BLUE4,           SPRITE_SOURCE_SHEET1,      148,  20,   9,   9, },
-
-    { SPRITE_FIGHTER_GREEN1,          SPRITE_SOURCE_SHEET1,      100,  36,   9,   9, },
-    { SPRITE_FIGHTER_GREEN2,          SPRITE_SOURCE_SHEET1,      116,  36,   9,   9, },
-    { SPRITE_FIGHTER_GREEN3,          SPRITE_SOURCE_SHEET1,      132,  36,   9,   9, },
-    { SPRITE_FIGHTER_GREEN4,          SPRITE_SOURCE_SHEET1,      148,  36,   9,   9, },
-
-    { SPRITE_FIGHTER_RED1,            SPRITE_SOURCE_SHEET1,      100,  52,   9,   9, },
-    { SPRITE_FIGHTER_RED2,            SPRITE_SOURCE_SHEET1,      116,  52,   9,   9, },
-    { SPRITE_FIGHTER_RED3,            SPRITE_SOURCE_SHEET1,      132,  52,   9,   9, },
-    { SPRITE_FIGHTER_RED4,            SPRITE_SOURCE_SHEET1,      148,  52,   9,   9, },
-
-    { SPRITE_MISSILE1,                SPRITE_SOURCE_SHEET1,      102, 110,   6,   6, },
-    { SPRITE_MISSILE2,                SPRITE_SOURCE_SHEET1,      118, 110,   6,   6, },
-    { SPRITE_MISSILE3,                SPRITE_SOURCE_SHEET1,      134, 110,   6,   6, },
-
-    { SPRITE_CORE1,                   SPRITE_SOURCE_SHEET1,      103, 159,   4,   4, },
-    { SPRITE_CORE2,                   SPRITE_SOURCE_SHEET1,      119, 159,   4,   4, },
 
     { SPRITE_BLUE_BASE,               SPRITE_SOURCE_SHEET2,       38,  34,  99,  99, },
     { SPRITE_BLUE_FIGHTER1,           SPRITE_SOURCE_SHEET2,       59, 148,   9,   9, },
@@ -260,13 +213,8 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 7);
-    gSprite.sources[SPRITE_SOURCE_RED]   = Sprite_LoadPNG("art/red.png",   129, 103);
-    gSprite.sources[SPRITE_SOURCE_BLUE]  = Sprite_LoadPNG("art/blue.png",  129, 103);
-    gSprite.sources[SPRITE_SOURCE_GREEN] = Sprite_LoadPNG("art/green.png", 129, 103);
-    gSprite.sources[SPRITE_SOURCE_SPACE] = Sprite_LoadPNG("art/space.png", 129, 103);
+    ASSERT(SPRITE_SOURCE_MAX == 2);
     gSprite.sources[SPRITE_SOURCE_SPACE_BLUE] = Sprite_LoadPNG("art/space_blue.png", 129, 103);
-    gSprite.sources[SPRITE_SOURCE_SHEET1] = Sprite_LoadPNG("art/sheet1.png", 200, 200);
     gSprite.sources[SPRITE_SOURCE_SHEET2] = Sprite_LoadPNG("art/sheet2.png", 656, 720);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
@@ -461,83 +409,137 @@ Sprite *Sprite_CreateMob(MobType t, FleetAIType aiType, uint32 repeatCount)
     }
 }
 
+static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
+                                                SpriteSet ss)
+{
+    SpriteType st;
+
+    switch (ss) {
+        case SPRITE_SET_INVALID:
+            st = SPRITE_INVALID;
+            break;
+        case SPRITE_SET_SPACE_BLUE:
+            st = SPRITE_SPACE_BLUE_BASE;
+            break;
+        case SPRITE_SET_BLUE:
+            st = SPRITE_BLUE_BASE;
+            break;
+        case SPRITE_SET_PURPLE:
+            st = SPRITE_PURPLE_BASE;
+            break;
+        case SPRITE_SET_GRAY:
+            st = SPRITE_GRAY_BASE;
+            break;
+        case SPRITE_SET_YELLOW:
+            st = SPRITE_YELLOW_BASE;
+            break;
+        case SPRITE_SET_GREEN:
+            st = SPRITE_GREEN_BASE;
+            break;
+        case SPRITE_SET_RED:
+            st = SPRITE_RED_BASE;
+            break;
+        case SPRITE_SET_BLUE2:
+            st = SPRITE_BLUE2_BASE;
+            break;
+        case SPRITE_SET_ORANGE:
+            st = SPRITE_ORANGE_BASE;
+            break;
+        case SPRITE_SET_TURQUOISE:
+            st = SPRITE_TURQUOISE_BASE;
+            break;
+        case SPRITE_SET_PURPLE2:
+            st = SPRITE_PURPLE2_BASE;
+            break;
+        case SPRITE_SET_WHITE:
+            st = SPRITE_WHITE_BASE;
+            break;
+        case SPRITE_SET_RED2:
+            st = SPRITE_RED2_BASE;
+            break;
+        case SPRITE_SET_YELLOW2:
+            st = SPRITE_YELLOW2_BASE;
+            break;
+        case SPRITE_SET_MAGENTA:
+            st = SPRITE_MAGENTA_BASE;
+            break;
+        case SPRITE_SET_ORANGE2:
+            st = SPRITE_ORANGE2_BASE;
+            break;
+        case SPRITE_SET_YELLOW3:
+            st = SPRITE_YELLOW3_BASE;
+            break;
+        default:
+            NOT_REACHED();
+    }
+
+    if (st == SPRITE_INVALID) {
+        return SPRITE_INVALID;
+    }
+
+    if (ss == SPRITE_SET_SPACE_BLUE) {
+        if (t == MOB_TYPE_BASE) {
+            return SPRITE_SPACE_BLUE_BASE;
+        } else if (t == MOB_TYPE_FIGHTER) {
+            return SPRITE_SPACE_BLUE_FIGHTER;
+        } else if (t == MOB_TYPE_MISSILE) {
+            return SPRITE_SPACE_BLUE_MISSILE;
+        } else if (t == MOB_TYPE_POWER_CORE) {
+            return SPRITE_SPACE_BLUE_POWER_CORE;
+        } else {
+            NOT_REACHED();
+        }
+    }
+
+    if (t == MOB_TYPE_BASE) {
+        return st;
+    } else if (t == MOB_TYPE_FIGHTER) {
+        return st + Random_Int(1, 4);
+    } else if (t == MOB_TYPE_POWER_CORE) {
+        return st + 5;
+    } else if (t == MOB_TYPE_MISSILE) {
+        return st + 6;
+    }
+
+    NOT_REACHED();
+}
+
 static SpriteType SpriteGetMobSpriteType(MobType t,
                                          FleetAIType aiType,
                                          uint32 repeatCount)
 {
-    if (TRUE) {
-        // Disable sprites.
-        return SPRITE_INVALID;
-    }
-
     // The first instance has a repeatCount of 1.
     ASSERT(repeatCount > 0);
     if (repeatCount > 1) {
         return SPRITE_INVALID;
     }
 
-    if (aiType == FLEET_AI_NEUTRAL) {
-        if (t == MOB_TYPE_POWER_CORE) {
-            //return SPRITE_GRAY_POWER_CORE;
-            return SPRITE_YELLOW_POWER_CORE;
-        }
-        return SPRITE_INVALID;
-    } else if (aiType == FLEET_AI_SIMPLE) {
-        switch (t) {
-            case MOB_TYPE_BASE:
-                return SPRITE_SIMPLE_RED_BASE;
-            case MOB_TYPE_FIGHTER:
-                return SPRITE_SIMPLE_RED_FIGHTER;
-            case MOB_TYPE_MISSILE:
-                return SPRITE_SIMPLE_RED_MISSILE;
-            case MOB_TYPE_POWER_CORE:
-                return SPRITE_SIMPLE_RED_POWER_CORE;
-            default:
-                return SPRITE_INVALID;
-        }
-    } else if (aiType == FLEET_AI_COWARD) {
-        switch (t) {
-            case MOB_TYPE_BASE:
-                return SPRITE_PURPLE_BASE;
-            case MOB_TYPE_FIGHTER:
-                return SPRITE_PURPLE_FIGHTER1;
-            case MOB_TYPE_MISSILE:
-                return SPRITE_PURPLE_MISSILE;
-            case MOB_TYPE_POWER_CORE:
-                return SPRITE_PURPLE_POWER_CORE;
-            default:
-                return SPRITE_INVALID;
-        }
-    } else if (aiType == FLEET_AI_BOB) {
-        switch (t) {
-            case MOB_TYPE_BASE:
-                return SPRITE_SPACE_BLUE_BASE;
-            case MOB_TYPE_FIGHTER:
-                return SPRITE_SPACE_BLUE_FIGHTER;
-            case MOB_TYPE_MISSILE:
-                //return SPRITE_MISSILE3;
-                return SPRITE_SPACE_BLUE_MISSILE;
-            case MOB_TYPE_POWER_CORE:
-                return SPRITE_SPACE_BLUE_POWER_CORE;
-            default:
-                return SPRITE_INVALID;
-        }
-    } else if (aiType == FLEET_AI_HOLD) {
-        switch (t) {
-            case MOB_TYPE_BASE:
-                return SPRITE_BLUE_BASE;
-            case MOB_TYPE_FIGHTER:
-                return Random_Int(SPRITE_BLUE_FIGHTER1, SPRITE_BLUE_FIGHTER4);
-            case MOB_TYPE_MISSILE:
-                return SPRITE_BLUE_MISSILE;
-            case MOB_TYPE_POWER_CORE:
-                return SPRITE_BLUE_POWER_CORE;
-            default:
-                return SPRITE_INVALID;
-        }
+    switch (aiType) {
+        case FLEET_AI_NEUTRAL:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_GRAY);
+        case FLEET_AI_DUMMY:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_WHITE);
+        case FLEET_AI_SIMPLE:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_RED);
+        case FLEET_AI_GATHER:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_GREEN);
+        case FLEET_AI_CLOUD:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_BLUE);
+        case FLEET_AI_MAPPER:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_YELLOW);
+        case FLEET_AI_RUNAWAY:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_PURPLE2);
+        case FLEET_AI_COWARD:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_TURQUOISE);
+        case FLEET_AI_BASIC:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_YELLOW3);
+        case FLEET_AI_HOLD:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_PURPLE);
+        case FLEET_AI_BOB:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
+        default:
+            NOT_REACHED();
     }
-
-    return SPRITE_INVALID;
 }
 
 void Sprite_Free(Sprite *s)
@@ -839,17 +841,17 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         uint32 color;
     } colors[] = {
         { FLEET_AI_INVALID, 0x000000, }, // 0x(AA)RRGGBB
-        { FLEET_AI_NEUTRAL, 0x888888, },
-        { FLEET_AI_DUMMY,   0xFFFFFF, },
-        { FLEET_AI_SIMPLE,  0xFF0000, },
-        { FLEET_AI_GATHER,  0x00FF00, },
-        { FLEET_AI_CLOUD,   0x0000FF, },
-        { FLEET_AI_MAPPER,  0x808000, },
-        { FLEET_AI_RUNAWAY, 0x800080, },
-        { FLEET_AI_COWARD,  0x008080, },
-        { FLEET_AI_BASIC,   0x808080, },
-        { FLEET_AI_HOLD,    0xF00080, },
-        { FLEET_AI_BOB,     0x80F080, },
+        { FLEET_AI_NEUTRAL, 0x888888, }, // GRAY
+        { FLEET_AI_DUMMY,   0xFFFFFF, }, // WHITE
+        { FLEET_AI_SIMPLE,  0xFF0000, }, // RED
+        { FLEET_AI_GATHER,  0x00FF00, }, // GREEN
+        { FLEET_AI_CLOUD,   0x0000FF, }, // BLUE
+        { FLEET_AI_MAPPER,  0x808000, }, // YELLOW
+        { FLEET_AI_RUNAWAY, 0x800080, }, // PURPLE
+        { FLEET_AI_COWARD,  0x008080, }, // TEAL
+        { FLEET_AI_BASIC,   0x808080, }, // DARK GRAY
+        { FLEET_AI_HOLD,    0xF00080, }, // PURPLE
+        { FLEET_AI_BOB,     0x80F080, }, // GREENISH-YELLOW
     };
     uint32 color;
 
