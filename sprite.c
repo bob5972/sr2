@@ -80,7 +80,7 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_FIGHTER_RED1,            SPRITE_SOURCE_SHEET1,      100,  52,   9,   9, },
     { SPRITE_FIGHTER_RED2,            SPRITE_SOURCE_SHEET1,      116,  52,   9,   9, },
     { SPRITE_FIGHTER_RED3,            SPRITE_SOURCE_SHEET1,      132,  52,   9,   9, },
-    { SPRITE_FIGHTER_RED4,            SPRITE_SOURCE_SHEET1,     148,  52,   9,   9, },
+    { SPRITE_FIGHTER_RED4,            SPRITE_SOURCE_SHEET1,      148,  52,   9,   9, },
 
     { SPRITE_MISSILE1,                SPRITE_SOURCE_SHEET1,      102, 110,   6,   6, },
     { SPRITE_MISSILE2,                SPRITE_SOURCE_SHEET1,      118, 110,   6,   6, },
@@ -94,96 +94,128 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_BLUE_FIGHTER2,           SPRITE_SOURCE_SHEET2,       75, 148,   9,   9, },
     { SPRITE_BLUE_FIGHTER3,           SPRITE_SOURCE_SHEET2,       91, 148,   9,   9, },
     { SPRITE_BLUE_FIGHTER4,           SPRITE_SOURCE_SHEET2,      107, 148,   9,   9, },
+    { SPRITE_BLUE_POWER_CORE,         SPRITE_SOURCE_SHEET2,      126, 150,   4,   4, },
+    { SPRITE_BLUE_MISSILE,            SPRITE_SOURCE_SHEET2,      140, 148,   8,   8, },
 
     { SPRITE_PURPLE_BASE,             SPRITE_SOURCE_SHEET2,      198,  34,  99,  99, },
     { SPRITE_PURPLE_FIGHTER1,         SPRITE_SOURCE_SHEET2,      219, 148,   9,   9, },
     { SPRITE_PURPLE_FIGHTER2,         SPRITE_SOURCE_SHEET2,      235, 148,   9,   9, },
     { SPRITE_PURPLE_FIGHTER3,         SPRITE_SOURCE_SHEET2,      251, 148,   9,   9, },
     { SPRITE_PURPLE_FIGHTER4,         SPRITE_SOURCE_SHEET2,      267, 148,   9,   9, },
+    { SPRITE_PURPLE_POWER_CORE,       SPRITE_SOURCE_SHEET2,      286, 150,   4,   4, },
+    { SPRITE_PURPLE_MISSILE,          SPRITE_SOURCE_SHEET2,      300, 148,   8,   8, },
 
     { SPRITE_GRAY_BASE,               SPRITE_SOURCE_SHEET2,      358,  34,  99,  99, },
     { SPRITE_GRAY_FIGHTER1,           SPRITE_SOURCE_SHEET2,      379, 148,   9,   9, },
     { SPRITE_GRAY_FIGHTER2,           SPRITE_SOURCE_SHEET2,      395, 148,   9,   9, },
     { SPRITE_GRAY_FIGHTER3,           SPRITE_SOURCE_SHEET2,      411, 148,   9,   9, },
     { SPRITE_GRAY_FIGHTER4,           SPRITE_SOURCE_SHEET2,      427, 148,   9,   9, },
+    { SPRITE_GRAY_POWER_CORE,         SPRITE_SOURCE_SHEET2,      446, 150,   4,   4, },
+    { SPRITE_GRAY_MISSILE,            SPRITE_SOURCE_SHEET2,      460, 148,   8,   8, },
 
     { SPRITE_YELLOW_BASE,             SPRITE_SOURCE_SHEET2,      518,  34,  99,  99, },
     { SPRITE_YELLOW_FIGHTER1,         SPRITE_SOURCE_SHEET2,      539, 148,   9,   9, },
     { SPRITE_YELLOW_FIGHTER2,         SPRITE_SOURCE_SHEET2,      555, 148,   9,   9, },
     { SPRITE_YELLOW_FIGHTER3,         SPRITE_SOURCE_SHEET2,      571, 148,   9,   9, },
-    { SPRITE_YELLOW_FIGHTER4,         SPRITE_SOURCE_SHEET2,      581, 148,   9,   9, },
+    { SPRITE_YELLOW_FIGHTER4,         SPRITE_SOURCE_SHEET2,      587, 148,   9,   9, },
+    { SPRITE_YELLOW_POWER_CORE,       SPRITE_SOURCE_SHEET2,      606, 150,   4,   4, },
+    { SPRITE_YELLOW_MISSILE,          SPRITE_SOURCE_SHEET2,      620, 148,   8,   8, },
 
     { SPRITE_GREEN_BASE,              SPRITE_SOURCE_SHEET2,       38, 210,  99,  99, },
     { SPRITE_GREEN_FIGHTER1,          SPRITE_SOURCE_SHEET2,       59, 324,   9,   9, },
     { SPRITE_GREEN_FIGHTER2,          SPRITE_SOURCE_SHEET2,       75, 324,   9,   9, },
     { SPRITE_GREEN_FIGHTER3,          SPRITE_SOURCE_SHEET2,       91, 324,   9,   9, },
     { SPRITE_GREEN_FIGHTER4,          SPRITE_SOURCE_SHEET2,      107, 324,   9,   9, },
+    { SPRITE_GREEN_POWER_CORE,        SPRITE_SOURCE_SHEET2,      126, 326,   4,   4, },
+    { SPRITE_GREEN_MISSILE,           SPRITE_SOURCE_SHEET2,      140, 324,   8,   8, },
 
     { SPRITE_RED_BASE,                SPRITE_SOURCE_SHEET2,      198, 210,  99,  99, },
     { SPRITE_RED_FIGHTER1,            SPRITE_SOURCE_SHEET2,      219, 324,   9,   9, },
     { SPRITE_RED_FIGHTER2,            SPRITE_SOURCE_SHEET2,      235, 324,   9,   9, },
     { SPRITE_RED_FIGHTER3,            SPRITE_SOURCE_SHEET2,      251, 324,   9,   9, },
     { SPRITE_RED_FIGHTER4,            SPRITE_SOURCE_SHEET2,      267, 324,   9,   9, },
+    { SPRITE_RED_POWER_CORE,          SPRITE_SOURCE_SHEET2,      286, 326,   4,   4, },
+    { SPRITE_RED_MISSILE,             SPRITE_SOURCE_SHEET2,      300, 324,   8,   8, },
 
     { SPRITE_BLUE2_BASE,              SPRITE_SOURCE_SHEET2,      358, 210,  99,  99, },
     { SPRITE_BLUE2_FIGHTER1,          SPRITE_SOURCE_SHEET2,      379, 324,   9,   9, },
     { SPRITE_BLUE2_FIGHTER2,          SPRITE_SOURCE_SHEET2,      395, 324,   9,   9, },
     { SPRITE_BLUE2_FIGHTER3,          SPRITE_SOURCE_SHEET2,      411, 324,   9,   9, },
     { SPRITE_BLUE2_FIGHTER4,          SPRITE_SOURCE_SHEET2,      427, 324,   9,   9, },
+    { SPRITE_BLUE2_POWER_CORE,        SPRITE_SOURCE_SHEET2,      446, 326,   4,   4, },
+    { SPRITE_BLUE2_MISSILE,           SPRITE_SOURCE_SHEET2,      460, 324,   8,   8, },
 
     { SPRITE_ORANGE_BASE,             SPRITE_SOURCE_SHEET2,      518, 210,  99,  99, },
     { SPRITE_ORANGE_FIGHTER1,         SPRITE_SOURCE_SHEET2,      539, 324,   9,   9, },
     { SPRITE_ORANGE_FIGHTER2,         SPRITE_SOURCE_SHEET2,      555, 324,   9,   9, },
     { SPRITE_ORANGE_FIGHTER3,         SPRITE_SOURCE_SHEET2,      571, 324,   9,   9, },
-    { SPRITE_ORANGE_FIGHTER4,         SPRITE_SOURCE_SHEET2,      581, 324,   9,   9, },
+    { SPRITE_ORANGE_FIGHTER4,         SPRITE_SOURCE_SHEET2,      587, 324,   9,   9, },
+    { SPRITE_ORANGE_POWER_CORE,       SPRITE_SOURCE_SHEET2,      606, 326,   4,   4, },
+    { SPRITE_ORANGE_MISSILE,          SPRITE_SOURCE_SHEET2,      620, 324,   8,   8, },
 
     { SPRITE_TURQUOISE_BASE,          SPRITE_SOURCE_SHEET2,       38, 386,  99,  99, },
     { SPRITE_TURQUOISE_FIGHTER1,      SPRITE_SOURCE_SHEET2,       59, 500,   9,   9, },
     { SPRITE_TURQUOISE_FIGHTER2,      SPRITE_SOURCE_SHEET2,       75, 500,   9,   9, },
     { SPRITE_TURQUOISE_FIGHTER3,      SPRITE_SOURCE_SHEET2,       91, 500,   9,   9, },
     { SPRITE_TURQUOISE_FIGHTER4,      SPRITE_SOURCE_SHEET2,      107, 500,   9,   9, },
+    { SPRITE_TURQUOISE_POWER_CORE,    SPRITE_SOURCE_SHEET2,      126, 502,   4,   4, },
+    { SPRITE_TURQUOISE_MISSILE,       SPRITE_SOURCE_SHEET2,      140, 500,   8,   8, },
 
     { SPRITE_PURPLE2_BASE,            SPRITE_SOURCE_SHEET2,      198, 386,  99,  99, },
     { SPRITE_PURPLE2_FIGHTER1,        SPRITE_SOURCE_SHEET2,      219, 500,   9,   9, },
     { SPRITE_PURPLE2_FIGHTER2,        SPRITE_SOURCE_SHEET2,      235, 500,   9,   9, },
     { SPRITE_PURPLE2_FIGHTER3,        SPRITE_SOURCE_SHEET2,      251, 500,   9,   9, },
     { SPRITE_PURPLE2_FIGHTER4,        SPRITE_SOURCE_SHEET2,      267, 500,   9,   9, },
+    { SPRITE_PURPLE2_POWER_CORE,      SPRITE_SOURCE_SHEET2,      286, 502,   4,   4, },
+    { SPRITE_PURPLE2_MISSILE,         SPRITE_SOURCE_SHEET2,      300, 500,   8,   8, },
 
     { SPRITE_WHITE_BASE,              SPRITE_SOURCE_SHEET2,      358, 386,  99,  99, },
     { SPRITE_WHITE_FIGHTER1,          SPRITE_SOURCE_SHEET2,      379, 500,   9,   9, },
     { SPRITE_WHITE_FIGHTER2,          SPRITE_SOURCE_SHEET2,      395, 500,   9,   9, },
     { SPRITE_WHITE_FIGHTER3,          SPRITE_SOURCE_SHEET2,      411, 500,   9,   9, },
     { SPRITE_WHITE_FIGHTER4,          SPRITE_SOURCE_SHEET2,      427, 500,   9,   9, },
+    { SPRITE_WHITE_POWER_CORE,        SPRITE_SOURCE_SHEET2,      446, 502,   4,   4, },
+    { SPRITE_WHITE_MISSILE,           SPRITE_SOURCE_SHEET2,      460, 500,   8,   8, },
 
     { SPRITE_RED2_BASE,               SPRITE_SOURCE_SHEET2,      518, 386,  99,  99, },
     { SPRITE_RED2_FIGHTER1,           SPRITE_SOURCE_SHEET2,      539, 500,   9,   9, },
     { SPRITE_RED2_FIGHTER2,           SPRITE_SOURCE_SHEET2,      555, 500,   9,   9, },
     { SPRITE_RED2_FIGHTER3,           SPRITE_SOURCE_SHEET2,      571, 500,   9,   9, },
-    { SPRITE_RED2_FIGHTER4,           SPRITE_SOURCE_SHEET2,      581, 500,   9,   9, },
+    { SPRITE_RED2_FIGHTER4,           SPRITE_SOURCE_SHEET2,      587, 500,   9,   9, },
+    { SPRITE_RED2_POWER_CORE,         SPRITE_SOURCE_SHEET2,      606, 502,   4,   4, },
+    { SPRITE_RED2_MISSILE,            SPRITE_SOURCE_SHEET2,      620, 500,   8,   8, },
 
     { SPRITE_YELLOW2_BASE,            SPRITE_SOURCE_SHEET2,       38, 562,  99,  99, },
     { SPRITE_YELLOW2_FIGHTER1,        SPRITE_SOURCE_SHEET2,       59, 676,   9,   9, },
     { SPRITE_YELLOW2_FIGHTER2,        SPRITE_SOURCE_SHEET2,       75, 676,   9,   9, },
     { SPRITE_YELLOW2_FIGHTER3,        SPRITE_SOURCE_SHEET2,       91, 676,   9,   9, },
     { SPRITE_YELLOW2_FIGHTER4,        SPRITE_SOURCE_SHEET2,      107, 676,   9,   9, },
+    { SPRITE_YELLOW2_POWER_CORE,      SPRITE_SOURCE_SHEET2,      126, 678,   4,   4, },
+    { SPRITE_YELLOW2_MISSILE,         SPRITE_SOURCE_SHEET2,      140, 676,   8,   8, },
 
     { SPRITE_MAGENTA_BASE,            SPRITE_SOURCE_SHEET2,      198, 562,  99,  99, },
     { SPRITE_MAGENTA_FIGHTER1,        SPRITE_SOURCE_SHEET2,      219, 676,   9,   9, },
     { SPRITE_MAGENTA_FIGHTER2,        SPRITE_SOURCE_SHEET2,      235, 676,   9,   9, },
     { SPRITE_MAGENTA_FIGHTER3,        SPRITE_SOURCE_SHEET2,      251, 676,   9,   9, },
     { SPRITE_MAGENTA_FIGHTER4,        SPRITE_SOURCE_SHEET2,      267, 676,   9,   9, },
+    { SPRITE_MAGENTA_POWER_CORE,      SPRITE_SOURCE_SHEET2,      286, 678,   4,   4, },
+    { SPRITE_MAGENTA_MISSILE,         SPRITE_SOURCE_SHEET2,      300, 676,   8,   8, },
 
     { SPRITE_ORANGE2_BASE,            SPRITE_SOURCE_SHEET2,      358, 562,  99,  99, },
     { SPRITE_ORANGE2_FIGHTER1,        SPRITE_SOURCE_SHEET2,      379, 676,   9,   9, },
     { SPRITE_ORANGE2_FIGHTER2,        SPRITE_SOURCE_SHEET2,      395, 676,   9,   9, },
     { SPRITE_ORANGE2_FIGHTER3,        SPRITE_SOURCE_SHEET2,      411, 676,   9,   9, },
     { SPRITE_ORANGE2_FIGHTER4,        SPRITE_SOURCE_SHEET2,      427, 676,   9,   9, },
+    { SPRITE_ORANGE2_POWER_CORE,      SPRITE_SOURCE_SHEET2,      446, 678,   4,   4, },
+    { SPRITE_ORANGE2_MISSILE,         SPRITE_SOURCE_SHEET2,      460, 676,   8,   8, },
 
     { SPRITE_YELLOW3_BASE,            SPRITE_SOURCE_SHEET2,      518, 562,  99,  99, },
     { SPRITE_YELLOW3_FIGHTER1,        SPRITE_SOURCE_SHEET2,      539, 676,   9,   9, },
     { SPRITE_YELLOW3_FIGHTER2,        SPRITE_SOURCE_SHEET2,      555, 676,   9,   9, },
     { SPRITE_YELLOW3_FIGHTER3,        SPRITE_SOURCE_SHEET2,      571, 676,   9,   9, },
-    { SPRITE_YELLOW3_FIGHTER4,        SPRITE_SOURCE_SHEET2,      581, 676,   9,   9, },
+    { SPRITE_YELLOW3_FIGHTER4,        SPRITE_SOURCE_SHEET2,      587, 676,   9,   9, },
+    { SPRITE_YELLOW3_POWER_CORE,      SPRITE_SOURCE_SHEET2,      606, 678,   4,   4, },
+    { SPRITE_YELLOW3_MISSILE,         SPRITE_SOURCE_SHEET2,      620, 676,   8,   8, },
 };
 
 typedef struct SpriteBacking {
@@ -445,9 +477,10 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
     }
 
     if (aiType == FLEET_AI_NEUTRAL) {
-        //if (t == MOB_TYPE_POWER_CORE) {
-        //    return SPRITE_SPACE_POWER_CORE;
-        //}
+        if (t == MOB_TYPE_POWER_CORE) {
+            //return SPRITE_GRAY_POWER_CORE;
+            return SPRITE_YELLOW_POWER_CORE;
+        }
         return SPRITE_INVALID;
     } else if (aiType == FLEET_AI_SIMPLE) {
         switch (t) {
@@ -465,16 +498,13 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
     } else if (aiType == FLEET_AI_COWARD) {
         switch (t) {
             case MOB_TYPE_BASE:
-                return SPRITE_SIMPLE_BLUE_BASE;
+                return SPRITE_PURPLE_BASE;
             case MOB_TYPE_FIGHTER:
-                //return SPRITE_SIMPLE_BLUE_FIGHTER;
-                return SPRITE_FIGHTER_BLUE1;
+                return SPRITE_PURPLE_FIGHTER1;
             case MOB_TYPE_MISSILE:
-                //return SPRITE_SIMPLE_BLUE_MISSILE;
-                return SPRITE_MISSILE3;
+                return SPRITE_PURPLE_MISSILE;
             case MOB_TYPE_POWER_CORE:
-                //return SPRITE_SIMPLE_BLUE_POWER_CORE;
-                return SPRITE_CORE1;
+                return SPRITE_PURPLE_POWER_CORE;
             default:
                 return SPRITE_INVALID;
         }
@@ -497,14 +527,11 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             case MOB_TYPE_BASE:
                 return SPRITE_BLUE_BASE;
             case MOB_TYPE_FIGHTER:
-                //return SPRITE_SIMPLE_GREEN_FIGHTER;
                 return Random_Int(SPRITE_BLUE_FIGHTER1, SPRITE_BLUE_FIGHTER4);
             case MOB_TYPE_MISSILE:
-                //return SPRITE_SIMPLE_GREEN_MISSILE;
-                return SPRITE_MISSILE2;
+                return SPRITE_BLUE_MISSILE;
             case MOB_TYPE_POWER_CORE:
-                //return SPRITE_SIMPLE_GREEN_POWER_CORE;
-                return SPRITE_CORE2;
+                return SPRITE_BLUE_POWER_CORE;
             default:
                 return SPRITE_INVALID;
         }
