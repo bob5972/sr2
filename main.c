@@ -477,7 +477,7 @@ void MainConstructScenario(void)
 
 //         mainData.players[p].aiType = FLEET_AI_COWARD;
 //         p++;
-
+//
 //         mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 

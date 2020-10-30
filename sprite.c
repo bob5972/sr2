@@ -22,7 +22,23 @@
 #include "random.h"
 
 typedef enum SpriteSource {
-    SPRITE_SOURCE_SPACE_BLUE,
+
+    SPRITE_SOURCE_SPACE15,
+    SPRITE_SOURCE_SPACE16,
+    SPRITE_SOURCE_SPACE17,
+    SPRITE_SOURCE_SPACE18,
+    SPRITE_SOURCE_SPACE19,
+    SPRITE_SOURCE_SPACE20,
+    SPRITE_SOURCE_SPACE21,
+    SPRITE_SOURCE_SPACE22,
+    SPRITE_SOURCE_SPACE23,
+    SPRITE_SOURCE_SPACE24,
+    SPRITE_SOURCE_SPACE25,
+    SPRITE_SOURCE_SPACE26,
+    SPRITE_SOURCE_SPACE27,
+    SPRITE_SOURCE_SPACE28,
+    SPRITE_SOURCE_SPACE29,
+
     SPRITE_SOURCE_SHEET2,
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
@@ -37,10 +53,80 @@ typedef struct SpriteSpec {
 static const SpriteSpec gSpecs[] = {
     { SPRITE_INVALID,                 SPRITE_SOURCE_INVALID,       0,   0,   0,   0, },
 
-    { SPRITE_SPACE_BLUE_BASE,         SPRITE_SOURCE_SPACE_BLUE,    1,   1, 101, 101, },
-    { SPRITE_SPACE_BLUE_FIGHTER,      SPRITE_SOURCE_SPACE_BLUE,  103,   1,  11,  11, },
-    { SPRITE_SPACE_BLUE_MISSILE,      SPRITE_SOURCE_SPACE_BLUE,  115,   1,   7,   7, },
-    { SPRITE_SPACE_BLUE_POWER_CORE,   SPRITE_SOURCE_SPACE_BLUE,  123,   1,   5,   5, },
+    { SPRITE_SPACE_BLUE_BASE,         SPRITE_SOURCE_SPACE15,       1,   1, 101, 101, },
+    { SPRITE_SPACE_BLUE_FIGHTER,      SPRITE_SOURCE_SPACE15,     103,   1,  11,  11, },
+    { SPRITE_SPACE_BLUE_MISSILE,      SPRITE_SOURCE_SPACE15,     115,   1,   7,   7, },
+    { SPRITE_SPACE_BLUE_POWER_CORE,   SPRITE_SOURCE_SPACE15,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_PURPLE_BASE,       SPRITE_SOURCE_SPACE16,       1,   1, 101, 101, },
+    { SPRITE_SPACE_PURPLE_FIGHTER,    SPRITE_SOURCE_SPACE16,     103,   1,  11,  11, },
+    { SPRITE_SPACE_PURPLE_MISSILE,    SPRITE_SOURCE_SPACE16,     115,   1,   7,   7, },
+    { SPRITE_SPACE_PURPLE_POWER_CORE, SPRITE_SOURCE_SPACE16,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_GREEN_BASE,        SPRITE_SOURCE_SPACE17,       1,   1, 101, 101, },
+    { SPRITE_SPACE_GREEN_FIGHTER,     SPRITE_SOURCE_SPACE17,     103,   1,  11,  11, },
+    { SPRITE_SPACE_GREEN_MISSILE,     SPRITE_SOURCE_SPACE17,     115,   1,   7,   7, },
+    { SPRITE_SPACE_GREEN_POWER_CORE,  SPRITE_SOURCE_SPACE17,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_GREEN2_BASE,       SPRITE_SOURCE_SPACE18,       1,   1, 101, 101, },
+    { SPRITE_SPACE_GREEN2_FIGHTER,    SPRITE_SOURCE_SPACE18,     103,   1,  11,  11, },
+    { SPRITE_SPACE_GREEN2_MISSILE,    SPRITE_SOURCE_SPACE18,     115,   1,   7,   7, },
+    { SPRITE_SPACE_GREEN2_POWER_CORE, SPRITE_SOURCE_SPACE18,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_GREEN3_BASE,       SPRITE_SOURCE_SPACE19,       1,   1, 101, 101, },
+    { SPRITE_SPACE_GREEN3_FIGHTER,    SPRITE_SOURCE_SPACE19,     103,   1,  11,  11, },
+    { SPRITE_SPACE_GREEN3_MISSILE,    SPRITE_SOURCE_SPACE19,     115,   1,   7,   7, },
+    { SPRITE_SPACE_GREEN3_POWER_CORE, SPRITE_SOURCE_SPACE19,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_YELLOW_BASE,       SPRITE_SOURCE_SPACE20,       1,   1, 101, 101, },
+    { SPRITE_SPACE_YELLOW_FIGHTER,    SPRITE_SOURCE_SPACE20,     103,   1,  11,  11, },
+    { SPRITE_SPACE_YELLOW_MISSILE,    SPRITE_SOURCE_SPACE20,     115,   1,   7,   7, },
+    { SPRITE_SPACE_YELLOW_POWER_CORE, SPRITE_SOURCE_SPACE20,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_ORANGE_BASE,       SPRITE_SOURCE_SPACE21,       1,   1, 101, 101, },
+    { SPRITE_SPACE_ORANGE_FIGHTER,    SPRITE_SOURCE_SPACE21,     103,   1,  11,  11, },
+    { SPRITE_SPACE_ORANGE_MISSILE,    SPRITE_SOURCE_SPACE21,     115,   1,   7,   7, },
+    { SPRITE_SPACE_ORANGE_POWER_CORE, SPRITE_SOURCE_SPACE21,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_RED_BASE,          SPRITE_SOURCE_SPACE22,       1,   1, 101, 101, },
+    { SPRITE_SPACE_RED_FIGHTER,       SPRITE_SOURCE_SPACE22,     103,   1,  11,  11, },
+    { SPRITE_SPACE_RED_MISSILE,       SPRITE_SOURCE_SPACE22,     115,   1,   7,   7, },
+    { SPRITE_SPACE_RED_POWER_CORE,    SPRITE_SOURCE_SPACE22,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_PURPLE2_BASE,      SPRITE_SOURCE_SPACE23,       1,   1, 101, 101, },
+    { SPRITE_SPACE_PURPLE2_FIGHTER,   SPRITE_SOURCE_SPACE23,     103,   1,  11,  11, },
+    { SPRITE_SPACE_PURPLE2_MISSILE,   SPRITE_SOURCE_SPACE23,     115,   1,   7,   7, },
+    { SPRITE_SPACE_PURPLE2_POWER_CORE,SPRITE_SOURCE_SPACE23,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_RED2_BASE,         SPRITE_SOURCE_SPACE24,       1,   1, 101, 101, },
+    { SPRITE_SPACE_RED2_FIGHTER,      SPRITE_SOURCE_SPACE24,     103,   1,  11,  11, },
+    { SPRITE_SPACE_RED2_MISSILE,      SPRITE_SOURCE_SPACE24,     115,   1,   7,   7, },
+    { SPRITE_SPACE_RED2_POWER_CORE,   SPRITE_SOURCE_SPACE24,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_WHITE_BASE,        SPRITE_SOURCE_SPACE25,       1,   1, 101, 101, },
+    { SPRITE_SPACE_WHITE_FIGHTER,     SPRITE_SOURCE_SPACE25,     103,   1,  11,  11, },
+    { SPRITE_SPACE_WHITE_MISSILE,     SPRITE_SOURCE_SPACE25,     115,   1,   7,   7, },
+    { SPRITE_SPACE_WHITE_POWER_CORE,  SPRITE_SOURCE_SPACE25,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_YELLOW2_BASE,      SPRITE_SOURCE_SPACE26,       1,   1, 101, 101, },
+    { SPRITE_SPACE_YELLOW2_FIGHTER,   SPRITE_SOURCE_SPACE26,     103,   1,  11,  11, },
+    { SPRITE_SPACE_YELLOW2_MISSILE,   SPRITE_SOURCE_SPACE26,     115,   1,   7,   7, },
+    { SPRITE_SPACE_YELLOW2_POWER_CORE,SPRITE_SOURCE_SPACE26,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_BROWN_BASE,        SPRITE_SOURCE_SPACE27,       1,   1, 101, 101, },
+    { SPRITE_SPACE_BROWN_FIGHTER,     SPRITE_SOURCE_SPACE27,     103,   1,  11,  11, },
+    { SPRITE_SPACE_BROWN_MISSILE,     SPRITE_SOURCE_SPACE27,     115,   1,   7,   7, },
+    { SPRITE_SPACE_BROWN_POWER_CORE,  SPRITE_SOURCE_SPACE27,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_RED3_BASE,         SPRITE_SOURCE_SPACE28,       1,   1, 101, 101, },
+    { SPRITE_SPACE_RED3_FIGHTER,      SPRITE_SOURCE_SPACE28,     103,   1,  11,  11, },
+    { SPRITE_SPACE_RED3_MISSILE,      SPRITE_SOURCE_SPACE28,     115,   1,   7,   7, },
+    { SPRITE_SPACE_RED3_POWER_CORE,   SPRITE_SOURCE_SPACE28,     123,   1,   5,   5, },
+
+    { SPRITE_SPACE_PURPLE3_BASE,      SPRITE_SOURCE_SPACE29,       1,   1, 101, 101, },
+    { SPRITE_SPACE_PURPLE3_FIGHTER,   SPRITE_SOURCE_SPACE29,     103,   1,  11,  11, },
+    { SPRITE_SPACE_PURPLE3_MISSILE,   SPRITE_SOURCE_SPACE29,     115,   1,   7,   7, },
+    { SPRITE_SPACE_PURPLE3_POWER_CORE,SPRITE_SOURCE_SPACE29,     123,   1,   5,   5, },
 
     { SPRITE_BLUE_BASE,               SPRITE_SOURCE_SHEET2,       38,  34,  99,  99, },
     { SPRITE_BLUE_FIGHTER1,           SPRITE_SOURCE_SHEET2,       59, 148,   9,   9, },
@@ -213,8 +299,22 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 2);
-    gSprite.sources[SPRITE_SOURCE_SPACE_BLUE] = Sprite_LoadPNG("art/space_blue.png", 129, 103);
+    ASSERT(SPRITE_SOURCE_MAX == 16);
+    gSprite.sources[SPRITE_SOURCE_SPACE15] = Sprite_LoadPNG("art/space15.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE16] = Sprite_LoadPNG("art/space16.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE17] = Sprite_LoadPNG("art/space17.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE18] = Sprite_LoadPNG("art/space18.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE19] = Sprite_LoadPNG("art/space19.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE20] = Sprite_LoadPNG("art/space20.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE21] = Sprite_LoadPNG("art/space21.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE22] = Sprite_LoadPNG("art/space22.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE23] = Sprite_LoadPNG("art/space23.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE24] = Sprite_LoadPNG("art/space24.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE25] = Sprite_LoadPNG("art/space25.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE26] = Sprite_LoadPNG("art/space26.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE27] = Sprite_LoadPNG("art/space27.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE28] = Sprite_LoadPNG("art/space28.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_SPACE29] = Sprite_LoadPNG("art/space29.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SHEET2] = Sprite_LoadPNG("art/sheet2.png", 656, 720);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
@@ -421,6 +521,48 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         case SPRITE_SET_SPACE_BLUE:
             st = SPRITE_SPACE_BLUE_BASE;
             break;
+        case SPRITE_SET_SPACE_PURPLE:
+            st = SPRITE_SPACE_PURPLE_BASE;
+            break;
+        case SPRITE_SET_SPACE_GREEN:
+            st = SPRITE_SPACE_GREEN_BASE;
+            break;
+        case SPRITE_SET_SPACE_GREEN2:
+            st = SPRITE_SPACE_GREEN2_BASE;
+            break;
+        case SPRITE_SET_SPACE_GREEN3:
+            st = SPRITE_SPACE_GREEN3_BASE;
+            break;
+        case SPRITE_SET_SPACE_YELLOW:
+            st = SPRITE_SPACE_YELLOW_BASE;
+            break;
+        case SPRITE_SET_SPACE_ORANGE:
+            st = SPRITE_SPACE_ORANGE_BASE;
+            break;
+        case SPRITE_SET_SPACE_RED:
+            st = SPRITE_SPACE_RED_BASE;
+            break;
+        case SPRITE_SET_SPACE_PURPLE2:
+            st = SPRITE_SPACE_PURPLE2_BASE;
+            break;
+        case SPRITE_SET_SPACE_RED2:
+            st = SPRITE_SPACE_RED2_BASE;
+            break;
+        case SPRITE_SET_SPACE_WHITE:
+            st = SPRITE_SPACE_WHITE_BASE;
+            break;
+        case SPRITE_SET_SPACE_YELLOW2:
+            st = SPRITE_SPACE_YELLOW2_BASE;
+            break;
+        case SPRITE_SET_SPACE_BROWN:
+            st = SPRITE_SPACE_BROWN_BASE;
+            break;
+        case SPRITE_SET_SPACE_RED3:
+            st = SPRITE_SPACE_RED3_BASE;
+            break;
+        case SPRITE_SET_SPACE_PURPLE3:
+            st = SPRITE_SPACE_PURPLE3_BASE;
+            break;
         case SPRITE_SET_BLUE:
             st = SPRITE_BLUE_BASE;
             break;
@@ -477,18 +619,14 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         return SPRITE_INVALID;
     }
 
-    if (ss == SPRITE_SET_SPACE_BLUE) {
-        if (t == MOB_TYPE_BASE) {
-            return SPRITE_SPACE_BLUE_BASE;
-        } else if (t == MOB_TYPE_FIGHTER) {
-            return SPRITE_SPACE_BLUE_FIGHTER;
-        } else if (t == MOB_TYPE_MISSILE) {
-            return SPRITE_SPACE_BLUE_MISSILE;
-        } else if (t == MOB_TYPE_POWER_CORE) {
-            return SPRITE_SPACE_BLUE_POWER_CORE;
-        } else {
-            NOT_REACHED();
-        }
+    if (ss >= SPRITE_SET_SPACE_BLUE &&
+        ss <= SPRITE_SET_SPACE_PURPLE3) {
+        ASSERT(MOB_TYPE_BASE == 1);
+        ASSERT(MOB_TYPE_FIGHTER == 2);
+        ASSERT(MOB_TYPE_MISSILE == 3);
+        ASSERT(MOB_TYPE_POWER_CORE == 4);
+        ASSERT(t >= 1 && t <= 4);
+        return st + (t - 1);
     }
 
     if (t == MOB_TYPE_BASE) {
@@ -516,7 +654,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
 
     switch (aiType) {
         case FLEET_AI_NEUTRAL:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_GRAY);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_GRAY);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_WHITE);
         case FLEET_AI_DUMMY:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_WHITE);
         case FLEET_AI_SIMPLE:
@@ -531,10 +670,13 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_PURPLE2);
         case FLEET_AI_COWARD:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_TURQUOISE);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN2);
         case FLEET_AI_BASIC:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_YELLOW3);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_YELLOW2);
         case FLEET_AI_HOLD:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_PURPLE);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
         case FLEET_AI_BOB:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
         default:
