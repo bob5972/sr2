@@ -679,8 +679,10 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
         case FLEET_AI_BOB:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
+        case FLEET_AI_CIRCLE:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_BLUE2);
         default:
-            NOT_REACHED();
+            return SPRITE_INVALID;
     }
 }
 
@@ -994,6 +996,7 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_BASIC,   0x808080, }, // DARK GRAY
         { FLEET_AI_HOLD,    0xF00080, }, // PURPLE
         { FLEET_AI_BOB,     0x80F080, }, // GREENISH-YELLOW
+        { FLEET_AI_CIRCLE,  0x048488, }, // TEAL-ish
     };
     uint32 color;
 
