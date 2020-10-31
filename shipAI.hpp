@@ -245,9 +245,19 @@ protected:
             holdData.count = holdCount;
         }
 
+//         void idleMove(const FPoint *movePos) {
+//             idleData.newPos = TRUE;
+//             idleData.pos = *movePos;
+//         }
+
         BasicShipAIState oldState;
         BasicShipAIState state;
         bool stateChanged;
+
+//         struct {
+//             bool newPos;
+//             FPoint pos;
+//         } idleData;
 
         struct {
             FPoint pos;
