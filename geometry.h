@@ -37,6 +37,11 @@ typedef struct FPoint {
     float y;
 } FPoint;
 
+typedef struct FRPoint {
+    float radius;
+    float theta;
+} FRPoint;
+
 typedef struct FCircle {
     FPoint center;
     float radius;
@@ -49,23 +54,42 @@ typedef struct FQuad {
     float h;
 } FQuad;
 
-static inline void FPoint_Clamp(FPoint *p, float xMin, float xMax,
+
+static INLINE bool
+Float_Compare(float lhs, float rhs, float tolerance)
+{
+    float d = lhs - rhs;
+    if (fabsf(d) <= tolerance) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static inline bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
                                 float yMin, float yMax)
 {
+    bool clamped = FALSE;
+
     ASSERT(xMin <= xMax);
     ASSERT(yMin <= yMax);
 
     if (p->x < xMin) {
         p->x = xMin;
+        clamped = TRUE;
     } else if (p->x > xMax) {
         p->x = xMax;
+        clamped = TRUE;
     }
 
     if (p->y < yMin) {
         p->y = yMin;
+        clamped = TRUE;
     } else if (p->y > yMax) {
         p->y = yMax;
+        clamped = TRUE;
     }
+
+    return clamped;
 }
 
 static inline float FPoint_Distance(const FPoint *a, const FPoint *b)
@@ -82,6 +106,43 @@ static inline void FPoint_Midpoint(FPoint *m, const FPoint *a, const FPoint *b)
 {
     m->x = (a->x + b->x) / 2.0f;
     m->y = (a->y + b->y) / 2.0f;
+}
+
+
+static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
+{
+    ASSERT(p != NULL);
+    ASSERT(c != NULL);
+    ASSERT(rp != NULL);
+
+    FPoint temp = *p;
+    temp.x -= c->x;
+    temp.y -= c->y;
+
+    rp->radius = sqrt((temp.x * temp.x) + (temp.y * temp.y));
+    rp->theta = atanf(temp.y / temp.x);
+
+    if (isnanf(rp->theta)) {
+        rp->theta = 0.0f;
+    } else if (temp.x <= 0.0f) {
+        rp->theta += M_PI;
+    }
+}
+
+static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
+{
+    ASSERT(p != NULL);
+    ASSERT(c != NULL);
+    ASSERT(rp != NULL);
+
+    FPoint temp;
+
+    temp.x = rp->radius * cosf(rp->theta);
+    temp.y = rp->radius * sinf(rp->theta);
+    temp.x += c->x;
+    temp.y += c->y;
+
+    *p = temp;
 }
 
 static inline bool FQuad_Intersect(const FQuad *a, const FQuad *b)
