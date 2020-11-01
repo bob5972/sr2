@@ -58,64 +58,68 @@ public:
         MBRegistry_Free(mreg);
     }
 
-    virtual void doIdle(Mob *mob) {
-        BasicShipAI *ship;
-        ship = (BasicShipAI *)getShip(mob->mobid);
+    virtual void doIdle(Mob *mob, bool newlyIdle) {
+        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+        Mob *base = mySensorGrid->friendBase();
+
         ASSERT(ship != NULL);
+        ASSERT(ship->state == BSAI_STATE_IDLE);
 
-        if (mob->type == MOB_TYPE_FIGHTER &&
-            ship->state == BSAI_STATE_IDLE) {
-            Mob *base = mySensorGrid->friendBase();
+        if (mob->type != MOB_TYPE_FIGHTER || base == NULL) {
+            BasicAIGovernor::doIdle(mob, newlyIdle);
+            return;
+        }
 
-            if (base != NULL) {
-                float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-                float radius = baseRadius;
+        if (!newlyIdle) {
+            return;
+        }
 
-//                 int numFriends = mySensorGrid->numFriends();
-//                 uint maxDim = MAX(myFleetAI->bp.width, myFleetAI->bp.height);
-//                 radius *= 1.1f * (numFriends / 4.0f);
-//                 radius = MAX(50.0f, radius);
-//                 radius = MIN(radius, maxDim);
+        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+        float radius = baseRadius;
 
-                FRPoint rPos;
-                FPoint_ToFRPoint(&mob->pos, &base->pos, &rPos);
+//      int numFriends = mySensorGrid->numFriends();
+//      uint maxDim = MAX(myFleetAI->bp.width, myFleetAI->bp.height);
+//      radius *= 1.1f * (numFriends / 4.0f);
+//      radius = MAX(50.0f, radius);
+//      radius = MIN(radius, maxDim);
 
-                if (!Float_Compare(rPos.radius, radius, MICRON)) {
-                    rPos.radius = radius;
-                    FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
-                } else {
-                    float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-                    float circumRate = speed / (2 * M_PI * radius);
-                    float angularSpeed = circumRate * (2 * M_PI);
+        FRPoint rPos;
+        FPoint_ToFRPoint(&mob->pos, &base->pos, &rPos);
 
-                    rPos.theta += angularSpeed;
-                    FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
-                }
+        if (!Float_Compare(rPos.radius, radius, MICRON)) {
+            rPos.radius = radius;
+            FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
+        } else {
+            float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+            float circumRate = speed / (2 * M_PI * radius);
+            float angularSpeed = circumRate * (2 * M_PI);
 
-                ASSERT(!isnanf(mob->cmd.target.x));
-                ASSERT(!isnanf(mob->cmd.target.y));
+            rPos.theta += angularSpeed;
+            FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
+        }
 
-                /*
-                 * Deal with edge-cases so we can keep making forward progres.
-                 */
-                bool clamped;
-                clamped = FPoint_Clamp(&mob->cmd.target,
-                                       0.0f, myFleetAI->bp.width,
-                                       0.0f, myFleetAI->bp.height);
-                if (clamped) {
-                    rPos.theta += 1.0f;
-                    FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
-                }
+        ASSERT(!isnanf(mob->cmd.target.x));
+        ASSERT(!isnanf(mob->cmd.target.y));
 
-                clamped = FPoint_Clamp(&mob->cmd.target,
-                                       0.0f, myFleetAI->bp.width,
-                                       0.0f, myFleetAI->bp.height);
-                if (clamped) {
-                    FleetUtil_RandomPointInRange(&myRandomState,
-                                                 &mob->cmd.target, &base->pos,
-                                                 baseRadius);
-                }
-            }
+        /*
+        * Deal with edge-cases so we can keep making forward progres.
+        */
+        bool clamped;
+        clamped = FPoint_Clamp(&mob->cmd.target,
+                                0.0f, myFleetAI->bp.width,
+                                0.0f, myFleetAI->bp.height);
+        if (clamped) {
+            rPos.theta += 1.0f;
+            FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
+        }
+
+        clamped = FPoint_Clamp(&mob->cmd.target,
+                                0.0f, myFleetAI->bp.width,
+                                0.0f, myFleetAI->bp.height);
+        if (clamped) {
+            FleetUtil_RandomPointInRange(&myRandomState,
+                                            &mob->cmd.target, &base->pos,
+                                            baseRadius);
         }
     }
 

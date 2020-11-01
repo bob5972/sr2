@@ -217,11 +217,14 @@ public:
     virtual void runMob(Mob *mob);
 
 
-    virtual void doIdle(Mob *mob) {
+    virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;
         RandomState *rs = &myRandomState;
-        mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-        mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+
+        if (newlyIdle) {
+            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+        }
     }
 
 protected:

@@ -76,6 +76,7 @@ void BasicAIGovernor::runMob(Mob *mob)
     } else if (mob->type == MOB_TYPE_FIGHTER) {
         Mob *powerCoreTarget = NULL;
         Mob *enemyTarget = NULL;
+        bool redoIdle = FALSE;
 
         ASSERT(ship != NULL);
         ASSERT(ship->mobid == mob->mobid);
@@ -155,7 +156,11 @@ void BasicAIGovernor::runMob(Mob *mob)
             }
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
             ship->state = BSAI_STATE_IDLE;
-            doIdle(mob);
+            redoIdle = TRUE;
+        }
+
+        if (ship->state == BSAI_STATE_IDLE) {
+            doIdle(mob, redoIdle || ship->oldState != BSAI_STATE_IDLE);
         }
     } else {
         NOT_IMPLEMENTED();
