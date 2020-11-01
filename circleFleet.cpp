@@ -54,11 +54,6 @@ public:
                 FRPoint rPos;
                 FPoint_ToFRPoint(&mob->pos, &base->pos, &rPos);
 
-//                 Warning("mob xy(%0.2f, %0.2f), base xy(%0.2f, %0.2f) radius=%0.2f, theta=%0.2f\n",
-//                         mob->pos.x, mob->pos.y,
-//                         base->pos.x, base->pos.y,
-//                         rPos.radius, rPos.theta);//XXX bob5972
-
                 if (!Float_Compare(rPos.radius, radius, MICRON)) {
                     rPos.radius = radius;
                     FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
@@ -67,15 +62,9 @@ public:
                     float circumRate = speed / (2 * M_PI * radius);
                     float angularSpeed = circumRate * (2 * M_PI);
 
-                    rPos.radius = radius;
                     rPos.theta += angularSpeed;
                     FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
                 }
-
-
-//                 Warning("   targetPos xy(%0.2f, %0.2f), radius=%0.2f, theta=%0.2f)\n",
-//                         mob->cmd.target.x, mob->cmd.target.y,
-//                         rPos.radius, rPos.theta);//XXX bob5972
 
                 ASSERT(!isnanf(mob->cmd.target.x));
                 ASSERT(!isnanf(mob->cmd.target.y));
@@ -84,8 +73,8 @@ public:
                                             0.0f, myFleetAI->bp.width,
                                             0.0f, myFleetAI->bp.height);
                 if (clamped) {
-                    FleetUtil_RandomPointInRange(&myRandomState, &mob->cmd.target,
-                                                 &base->pos, radius);
+                    rPos.theta += 1.0f;
+                    FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
                 }
             }
         }
