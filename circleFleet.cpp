@@ -59,6 +59,8 @@ public:
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
+        FleetAI *ai = myFleetAI;
+        RandomState *rs = &myRandomState;
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
         Mob *base = mySensorGrid->friendBase();
 
@@ -77,11 +79,12 @@ public:
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
         float radius = baseRadius;
 
-//      int numFriends = mySensorGrid->numFriends();
-//      uint maxDim = MAX(myFleetAI->bp.width, myFleetAI->bp.height);
-//      radius *= 1.1f * (numFriends / 4.0f);
-//      radius = MAX(50.0f, radius);
-//      radius = MIN(radius, maxDim);
+        //XXX: Per-ship radius?
+        int numFriends = mySensorGrid->numFriends();
+        uint maxDim = MAX(myFleetAI->bp.width, myFleetAI->bp.height);
+        radius *= 1.05f * (1 + numFriends / 6);
+        radius = MAX(50.0f, radius);
+        radius = MIN(radius, maxDim);
 
         FRPoint rPos;
         FPoint_ToFRPoint(&mob->pos, &base->pos, &rPos);
@@ -106,20 +109,19 @@ public:
         */
         bool clamped;
         clamped = FPoint_Clamp(&mob->cmd.target,
-                                0.0f, myFleetAI->bp.width,
-                                0.0f, myFleetAI->bp.height);
+                               0.0f, ai->bp.width,
+                               0.0f, ai->bp.height);
         if (clamped) {
             rPos.theta += 1.0f;
             FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
         }
 
         clamped = FPoint_Clamp(&mob->cmd.target,
-                                0.0f, myFleetAI->bp.width,
-                                0.0f, myFleetAI->bp.height);
+                               0.0f, ai->bp.width,
+                               0.0f, ai->bp.height);
         if (clamped) {
-            FleetUtil_RandomPointInRange(&myRandomState,
-                                            &mob->cmd.target, &base->pos,
-                                            baseRadius);
+            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
         }
     }
 
