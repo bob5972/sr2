@@ -81,22 +81,24 @@ public:
 
         //XXX: Per-ship radius?
         int numFriends = mySensorGrid->numFriends();
-        uint maxDim = MAX(myFleetAI->bp.width, myFleetAI->bp.height);
-        radius *= 1.05f * (1 + numFriends / 6);
+        uint maxDim = sqrtf(myFleetAI->bp.width * myFleetAI->bp.width +
+                            myFleetAI->bp.height * myFleetAI->bp.height);
+        radius *= expf(logf(1.01f) * (1 + numFriends));
         radius = MAX(50.0f, radius);
         radius = MIN(radius, maxDim);
+
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+        float angularSpeed = Float_AngularSpeed(radius, speed);
 
         FRPoint rPos;
         FPoint_ToFRPoint(&mob->pos, &base->pos, &rPos);
 
-        if (!Float_Compare(rPos.radius, radius, MICRON)) {
+        if (FPoint_Distance(&base->pos, &mob->pos) <= 10.0f) {
+            FleetUtil_RandomPointInRange(rs, &mob->cmd.target, &base->pos, baseRadius);
+        } else if (!Float_Compare(rPos.radius, radius, MICRON)) {
             rPos.radius = radius;
             FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
         } else {
-            float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-            float circumRate = speed / (2 * M_PI * radius);
-            float angularSpeed = circumRate * (2 * M_PI);
-
             rPos.theta += angularSpeed;
             FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
         }
@@ -105,21 +107,24 @@ public:
         ASSERT(!isnanf(mob->cmd.target.y));
 
         /*
-        * Deal with edge-cases so we can keep making forward progres.
+        * Deal with edge-cases so we can keep making forward progress.
         */
         bool clamped;
         clamped = FPoint_Clamp(&mob->cmd.target,
                                0.0f, ai->bp.width,
                                0.0f, ai->bp.height);
         if (clamped) {
-            rPos.theta += 1.0f;
+            FPoint_ToFRPoint(&mob->cmd.target, &base->pos, &rPos);
+            angularSpeed = Float_AngularSpeed(rPos.radius, speed);
+            rPos.theta += MAX(0.5f, angularSpeed);
             FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
+
+            clamped = FPoint_Clamp(&mob->cmd.target,
+                                   0.0f, ai->bp.width,
+                                   0.0f, ai->bp.height);
         }
 
-        clamped = FPoint_Clamp(&mob->cmd.target,
-                               0.0f, ai->bp.width,
-                               0.0f, ai->bp.height);
-        if (clamped) {
+        if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= speed/4.0f) {
             mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
             mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
         }

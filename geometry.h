@@ -55,7 +55,7 @@ typedef struct FQuad {
 } FQuad;
 
 
-static INLINE bool
+static inline bool
 Float_Compare(float lhs, float rhs, float tolerance)
 {
     float d = lhs - rhs;
@@ -63,6 +63,11 @@ Float_Compare(float lhs, float rhs, float tolerance)
         return TRUE;
     }
     return FALSE;
+}
+
+static inline float Float_AngularSpeed(float radius, float speed)
+{
+    return speed / radius;
 }
 
 static inline bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
@@ -99,7 +104,7 @@ static inline float FPoint_Distance(const FPoint *a, const FPoint *b)
     float d = dx * dx + dy * dy;
 
     ASSERT(d >= 0);
-    return sqrt(d);
+    return sqrtf(d);
 }
 
 static inline void FPoint_Midpoint(FPoint *m, const FPoint *a, const FPoint *b)
@@ -119,7 +124,7 @@ static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *r
     temp.x -= c->x;
     temp.y -= c->y;
 
-    rp->radius = sqrt((temp.x * temp.x) + (temp.y * temp.y));
+    rp->radius = sqrtf((temp.x * temp.x) + (temp.y * temp.y));
     rp->theta = atanf(temp.y / temp.x);
 
     if (isnanf(rp->theta)) {
