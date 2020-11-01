@@ -31,11 +31,31 @@ class CircleAIGovernor : public BasicAIGovernor
 public:
     CircleAIGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
-    {
-
-    }
+    { }
 
     virtual ~CircleAIGovernor() { }
+
+
+    virtual void loadRegistry(MBRegistry *mreg) {
+        struct {
+            const char *key;
+            const char *value;
+        } configs[] = {
+            { "gatherRange",          "100", },
+        };
+
+        mreg = MBRegistry_AllocCopy(mreg);
+
+        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
+            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
+                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+            }
+        }
+
+        this->BasicAIGovernor::loadRegistry(mreg);
+
+        MBRegistry_Free(mreg);
+    }
 
     virtual void runMob(Mob *mob) {
         BasicShipAI *ship;
@@ -89,16 +109,22 @@ public:
         this->ai = ai;
         RandomState_CreateWithSeed(&this->rs, ai->seed);
         gov.setSeed(RandomState_Uint64(&this->rs));
+
+        mreg = MBRegistry_AllocCopy(ai->player.mreg);
+        this->gov.loadRegistry(mreg);
+
     }
 
     ~CircleFleet() {
         RandomState_Destroy(&this->rs);
+        MBRegistry_Free(mreg);
     }
 
     FleetAI *ai;
     RandomState rs;
     SensorGrid sg;
     CircleAIGovernor gov;
+    MBRegistry *mreg;
 };
 
 static void *CircleFleetCreate(FleetAI *ai);

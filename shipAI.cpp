@@ -85,7 +85,7 @@ void BasicAIGovernor::runMob(Mob *mob)
          */
         powerCoreTarget = sg->findClosestTargetInRange(&mob->pos,
                                                        MOB_FLAG_POWER_CORE,
-                                                       scanningRange);
+                                                       myConfig.gatherRange);
 
         /*
          * Find enemy targets to shoot.
