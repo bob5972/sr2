@@ -42,6 +42,7 @@ public:
             const char *value;
         } configs[] = {
             { "gatherRange",          "100", },
+            { "attackRange",          "250", },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -57,10 +58,8 @@ public:
         MBRegistry_Free(mreg);
     }
 
-    virtual void runMob(Mob *mob) {
+    virtual void doIdle(Mob *mob) {
         BasicShipAI *ship;
-        BasicAIGovernor::runMob(mob);
-
         ship = (BasicShipAI *)getShip(mob->mobid);
         ASSERT(ship != NULL);
 
@@ -69,7 +68,14 @@ public:
             Mob *base = mySensorGrid->friendBase();
 
             if (base != NULL) {
-                float radius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+                float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+                float radius = baseRadius;
+
+//                 int numFriends = mySensorGrid->numFriends();
+//                 uint maxDim = MAX(myFleetAI->bp.width, myFleetAI->bp.height);
+//                 radius *= 1.1f * (numFriends / 4.0f);
+//                 radius = MAX(50.0f, radius);
+//                 radius = MIN(radius, maxDim);
 
                 FRPoint rPos;
                 FPoint_ToFRPoint(&mob->pos, &base->pos, &rPos);
@@ -89,15 +95,32 @@ public:
                 ASSERT(!isnanf(mob->cmd.target.x));
                 ASSERT(!isnanf(mob->cmd.target.y));
 
-                bool clamped = FPoint_Clamp(&mob->cmd.target,
-                                            0.0f, myFleetAI->bp.width,
-                                            0.0f, myFleetAI->bp.height);
+                /*
+                 * Deal with edge-cases so we can keep making forward progres.
+                 */
+                bool clamped;
+                clamped = FPoint_Clamp(&mob->cmd.target,
+                                       0.0f, myFleetAI->bp.width,
+                                       0.0f, myFleetAI->bp.height);
                 if (clamped) {
                     rPos.theta += 1.0f;
                     FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
                 }
+
+                clamped = FPoint_Clamp(&mob->cmd.target,
+                                       0.0f, myFleetAI->bp.width,
+                                       0.0f, myFleetAI->bp.height);
+                if (clamped) {
+                    FleetUtil_RandomPointInRange(&myRandomState,
+                                                 &mob->cmd.target, &base->pos,
+                                                 baseRadius);
+                }
             }
         }
+    }
+
+    virtual void runMob(Mob *mob) {
+        BasicAIGovernor::runMob(mob);
     }
 };
 

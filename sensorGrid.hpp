@@ -56,6 +56,13 @@ public:
      */
     void updateTick(FleetAI *ai);
 
+    /**
+     * How many friends do we have?
+     */
+    int numFriends() {
+        return myFriends.size();
+    }
+
 
     /**
      * Find the friendly mob closest to the specified point.

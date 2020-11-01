@@ -155,8 +155,7 @@ void BasicAIGovernor::runMob(Mob *mob)
             }
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
             ship->state = BSAI_STATE_IDLE;
-            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            doIdle(mob);
         }
     } else {
         NOT_IMPLEMENTED();

@@ -450,6 +450,8 @@ void MainConstructScenario(void)
          *    BasicFleet
          *    HoldFleet
          *
+         *    CircleFleet (prototype, unranked)
+         *
          *    BobFleet (prototype, varies)
          */
 
