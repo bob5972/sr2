@@ -88,6 +88,11 @@ void BasicAIGovernor::runMob(Mob *mob)
                                                        MOB_FLAG_POWER_CORE,
                                                        myConfig.gatherRange);
 
+        if (powerCoreTarget == NULL && ship->state == BSAI_STATE_GATHER) {
+            ship->state = BSAI_STATE_IDLE;
+            redoIdle = TRUE;
+        }
+
         /*
          * Find enemy targets to shoot.
          */

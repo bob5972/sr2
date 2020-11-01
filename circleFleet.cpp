@@ -41,8 +41,9 @@ public:
             const char *key;
             const char *value;
         } configs[] = {
-            { "gatherRange",          "100", },
-            { "attackRange",          "250", },
+            { "gatherRange",          "100",  },
+            { "gatherAbandonStale",   "TRUE", },
+            { "attackRange",          "250",  },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
