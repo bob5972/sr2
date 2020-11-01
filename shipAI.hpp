@@ -54,6 +54,14 @@ public:
         RandomState_Destroy(&myRandomState);
     }
 
+    virtual void runTick() {
+        FleetAI *ai = myFleetAI;
+        CMobIt mit;
+
+        CMobIt_Start(&ai->mobs, &mit);
+        runAllMobs(&mit);
+    }
+
     /**
      * Run all the mobs from the iterator
      * that have been added to this ShipAIGovernor.
@@ -219,6 +227,13 @@ public:
 
     virtual void runMob(Mob *mob);
 
+    virtual void runTick() {
+        FleetAI *ai = myFleetAI;
+        SensorGrid *sg = mySensorGrid;
+
+        sg->updateTick(ai);
+        ShipAIGovernor::runTick();
+    }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;

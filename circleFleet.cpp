@@ -147,7 +147,6 @@ public:
 
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
         this->gov.loadRegistry(mreg);
-
     }
 
     ~CircleFleet() {
@@ -160,6 +159,8 @@ public:
     SensorGrid sg;
     CircleAIGovernor gov;
     MBRegistry *mreg;
+
+    //MBMap<MobID, float> orbitalMap;
 };
 
 static void *CircleFleetCreate(FleetAI *ai);
@@ -220,10 +221,5 @@ static void CircleFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 static void CircleFleetRunAITick(void *aiHandle)
 {
     CircleFleet *sf = (CircleFleet *)aiHandle;
-    FleetAI *ai = sf->ai;
-    CMobIt mit;
-
-    sf->sg.updateTick(ai);
-    CMobIt_Start(&ai->mobs, &mit);
-    sf->gov.runAllMobs(&mit);
+    sf->gov.runTick();
 }
