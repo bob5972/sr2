@@ -25,10 +25,13 @@ extern "C" {
 
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"
+#include "MBMap.hpp"
 
 class CircleAIGovernor : public BasicAIGovernor
 {
 public:
+    MBMap<MobID, float> orbitalMap;
+
     CircleAIGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     { }
@@ -59,7 +62,28 @@ public:
         MBRegistry_Free(mreg);
     }
 
+    float getOrbital(Mob *mob) {
+        float radius;
+        if (orbitalMap.containsKey(mob->mobid)) {
+            radius = orbitalMap.get(mob->mobid);
+        } else {
+            float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+            radius = baseRadius;
+
+            int numFriends = mySensorGrid->numFriends();
+            uint maxDim = sqrtf(myFleetAI->bp.width * myFleetAI->bp.width +
+                                myFleetAI->bp.height * myFleetAI->bp.height);
+            radius *= expf(logf(1.05f) * (1 + numFriends));
+            radius = MAX(50.0f, radius);
+            radius = MIN(radius, maxDim);
+
+            orbitalMap.put(mob->mobid, radius);
+        }
+        return radius;
+    }
+
     virtual void doIdle(Mob *mob, bool newlyIdle) {
+        float radialTolerance = 50.0f;
         FleetAI *ai = myFleetAI;
         RandomState *rs = &myRandomState;
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
@@ -78,16 +102,7 @@ public:
         }
 
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        float radius = baseRadius;
-
-        //XXX: Per-ship radius?
-        int numFriends = mySensorGrid->numFriends();
-        uint maxDim = sqrtf(myFleetAI->bp.width * myFleetAI->bp.width +
-                            myFleetAI->bp.height * myFleetAI->bp.height);
-        radius *= expf(logf(1.01f) * (1 + numFriends));
-        radius = MAX(50.0f, radius);
-        radius = MIN(radius, maxDim);
-
+        float radius = getOrbital(mob);
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         float angularSpeed = Float_AngularSpeed(radius, speed);
 
@@ -96,7 +111,7 @@ public:
 
         if (FPoint_Distance(&base->pos, &mob->pos) <= 10.0f) {
             FleetUtil_RandomPointInRange(rs, &mob->cmd.target, &base->pos, baseRadius);
-        } else if (!Float_Compare(rPos.radius, radius, MICRON)) {
+        } else if (!Float_Compare(rPos.radius, radius, radialTolerance)) {
             rPos.radius = radius;
             FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
         } else {
@@ -108,8 +123,8 @@ public:
         ASSERT(!isnanf(mob->cmd.target.y));
 
         /*
-        * Deal with edge-cases so we can keep making forward progress.
-        */
+         * Deal with edge-cases so we can keep making forward progress.
+         */
         bool clamped;
         clamped = FPoint_Clamp(&mob->cmd.target,
                                0.0f, ai->bp.width,
@@ -125,10 +140,42 @@ public:
                                    0.0f, ai->bp.height);
         }
 
+        /*
+         * If we still can't make enough forward progress, go somewhere random.
+         */
         if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= speed/4.0f) {
             mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
             mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
         }
+    }
+
+    virtual void runTick() {
+        FleetAI *ai = myFleetAI;
+        SensorGrid *sg = mySensorGrid;
+
+        Mob *base = sg->friendBase();
+        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+
+        if (base != NULL) {
+            Mob *enemy = sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
+
+            if (enemy != NULL &&
+                FPoint_Distance(&enemy->pos, &base->pos) <= baseRadius) {
+                CMobIt mit;
+                CMobIt_Start(&ai->mobs, &mit);
+
+                while (CMobIt_HasNext(&mit)) {
+                    Mob *mob = CMobIt_Next(&mit);
+                    ASSERT(mob != NULL);
+
+                    if (orbitalMap.containsKey(mob->mobid)) {
+                        orbitalMap.put(mob->mobid, baseRadius / 1.5f);
+                    }
+                }
+            }
+        }
+
+        BasicAIGovernor::runTick();
     }
 
     virtual void runMob(Mob *mob) {
@@ -159,8 +206,6 @@ public:
     SensorGrid sg;
     CircleAIGovernor gov;
     MBRegistry *mreg;
-
-    //MBMap<MobID, float> orbitalMap;
 };
 
 static void *CircleFleetCreate(FleetAI *ai);
