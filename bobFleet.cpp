@@ -176,21 +176,8 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 static void BobFleetRunAITick(void *aiHandle)
 {
     BobFleet *sf = (BobFleet *)aiHandle;
-    FleetAI *ai = sf->ai;
-    //const BattleParams *bp = &sf->ai->bp;
-    //uint targetScanFilter = MOB_FLAG_SHIP;
-    //float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
-    //                    MobType_GetMaxFuel(MOB_TYPE_MISSILE);
-    //float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE);
-    CMobIt mit;
 
-    ASSERT(ai->player.aiType == FLEET_AI_BOB);
+    ASSERT(sf->ai->player.aiType == FLEET_AI_BOB);
 
-    sf->sg.updateTick(ai);
-
-    CMobIt_Start(&ai->mobs, &mit);
-    while (CMobIt_HasNext(&mit)) {
-        Mob *mob = CMobIt_Next(&mit);
-        sf->gov.runMob(mob);
-    }
+    sf->gov.runTick();
 }
