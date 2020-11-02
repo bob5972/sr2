@@ -154,30 +154,39 @@ public:
         //FleetAI *ai = myFleetAI;
         SensorGrid *sg = mySensorGrid;
 
+        BasicAIGovernor::runTick();
+
         Mob *base = sg->friendBase();
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
 
         if (base != NULL) {
             int numEnemies = sg->numTargetsInRange(MOB_FLAG_SHIP, &base->pos,
                                                    baseRadius);
-            int i = 0;
+            int f = 0;
+            int e = 0;
 
             Mob *fighter = sg->findNthClosestFriend(&base->pos,
-                                                      MOB_FLAG_FIGHTER, i++);
+                                                    MOB_FLAG_FIGHTER, f++);
+            Mob *enemyTarget = sg->findNthClosestTarget(&base->pos,
+                                                        MOB_FLAG_SHIP, e++);
 
             while (numEnemies > 0 && fighter != NULL) {
+                BasicShipAI *ship = (BasicShipAI *)getShip(fighter->mobid);
                 orbitalMap.put(fighter->mobid, baseRadius / 1.5f);
 
-                doIdle(fighter, TRUE);
+                if (enemyTarget != NULL) {
+                    ship->attack(enemyTarget);
+                }
 
                 fighter = sg->findNthClosestFriend(&base->pos,
-                                                   MOB_FLAG_FIGHTER, i++);
+                                                   MOB_FLAG_FIGHTER, f++);
+
+                enemyTarget = sg->findNthClosestTarget(&base->pos,
+                                                       MOB_FLAG_SHIP, e++);
 
                 numEnemies--;
             }
         }
-
-        BasicAIGovernor::runTick();
     }
 
     virtual void runMob(Mob *mob) {

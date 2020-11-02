@@ -446,11 +446,10 @@ void MainConstructScenario(void)
          *    CloudFleet
          *    MapperFleet
          *    RunAwayFleet
+         *    CircleFleet
          *    CowardFleet
          *    BasicFleet
          *    HoldFleet
-         *
-         *    CircleFleet (prototype, unranked)
          *
          *    BobFleet (prototype, varies)
          */

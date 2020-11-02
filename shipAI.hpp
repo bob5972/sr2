@@ -238,10 +238,45 @@ public:
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;
         RandomState *rs = &myRandomState;
+        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+
+        ship->state = BSAI_STATE_IDLE;
 
         if (newlyIdle) {
             mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
             mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+        }
+    }
+
+    virtual void doAttack(Mob *mob, Mob *enemyTarget) {
+        RandomState *rs = &myRandomState;
+        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+
+        float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
+                            MobType_GetMaxFuel(MOB_TYPE_MISSILE);
+        float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+
+        bool beAggressive = FALSE;
+
+        ship->state = BSAI_STATE_ATTACK;
+        ship->attackData.pos = enemyTarget->pos;
+
+        if (FPoint_Distance(&mob->pos, &enemyTarget->pos) <= firingRange) {
+            mob->cmd.spawnType = MOB_TYPE_MISSILE;
+        }
+
+        if (myConfig.attackRange > 0 &&
+            FPoint_Distance(&mob->pos, &enemyTarget->pos) <
+            myConfig.attackRange) {
+            beAggressive = TRUE;
+        } else if (enemyTarget->type == MOB_TYPE_BASE) {
+            beAggressive = TRUE;
+        }
+
+        if (beAggressive) {
+            float range = MIN(firingRange, scanningRange) - 1;
+            FleetUtil_RandomPointInRange(rs, &mob->cmd.target,
+                                         &enemyTarget->pos, range);
         }
     }
 
@@ -257,8 +292,8 @@ protected:
     class BasicShipAI : public ShipAI
     {
     public:
-        BasicShipAI(MobID mobid)
-        :ShipAI(mobid)
+        BasicShipAI(MobID mobid, BasicAIGovernor *gov)
+        :ShipAI(mobid), myGov(gov)
         {
             MBUtil_Zero(&attackData, sizeof(attackData));
             MBUtil_Zero(&evadeData, sizeof(evadeData));
@@ -277,6 +312,14 @@ protected:
             holdData.count = holdCount;
         }
 
+        void attack(Mob *enemyTarget) {
+            Mob *mob = myGov->getMob(mobid);
+            state = BSAI_STATE_ATTACK;
+            mob->cmd.target = enemyTarget->pos;
+            myGov->doAttack(mob, enemyTarget);
+        }
+
+        BasicAIGovernor *myGov;
         BasicShipAIState oldState;
         BasicShipAIState state;
         bool stateChanged;
