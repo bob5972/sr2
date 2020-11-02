@@ -81,7 +81,7 @@ public:
 
     }
 
-    int numTargetsInRange(const FPoint *pos, MobTypeFlags filter, float range) {
+    int numTargetsInRange(MobTypeFlags filter, const FPoint *pos, float range) {
         return myTargets.numMobsInRange(filter, pos, range);
     }
 

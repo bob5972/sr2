@@ -464,8 +464,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_GATHER;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_CLOUD;
-        p++;
+//         mainData.players[p].aiType = FLEET_AI_CLOUD;
+//         p++;
 
 //         mainData.players[p].mreg = MBRegistry_Alloc();
 //         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
@@ -489,8 +489,8 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_CIRCLE;
         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_BOB;
-//         p++;
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
 
 //         mainData.players[p].playerName = "Stale";
 //         mainData.players[p].aiType = FLEET_AI_BOB;

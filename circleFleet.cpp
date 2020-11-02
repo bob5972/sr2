@@ -150,28 +150,27 @@ public:
     }
 
     virtual void runTick() {
-        FleetAI *ai = myFleetAI;
+        //FleetAI *ai = myFleetAI;
         SensorGrid *sg = mySensorGrid;
 
         Mob *base = sg->friendBase();
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
 
         if (base != NULL) {
-            Mob *enemy = sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
+            int numEnemies = sg->numTargetsInRange(MOB_FLAG_SHIP, &base->pos,
+                                                   baseRadius);
+            int i = 0;
 
-            if (enemy != NULL &&
-                FPoint_Distance(&enemy->pos, &base->pos) <= baseRadius) {
-                CMobIt mit;
-                CMobIt_Start(&ai->mobs, &mit);
+            Mob *fighter = sg->findNthClosestFriend(&base->pos,
+                                                      MOB_FLAG_FIGHTER, i++);
 
-                while (CMobIt_HasNext(&mit)) {
-                    Mob *mob = CMobIt_Next(&mit);
-                    ASSERT(mob != NULL);
+            while (numEnemies > 0 && fighter != NULL) {
+                orbitalMap.put(fighter->mobid, baseRadius / 1.5f);
 
-                    if (orbitalMap.containsKey(mob->mobid)) {
-                        orbitalMap.put(mob->mobid, baseRadius / 1.5f);
-                    }
-                }
+                fighter = sg->findNthClosestFriend(&base->pos,
+                                                   MOB_FLAG_FIGHTER, i++);
+
+                numEnemies--;
             }
         }
 
