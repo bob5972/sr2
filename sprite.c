@@ -992,12 +992,12 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_GATHER,  0x00FF00, }, // GREEN
         { FLEET_AI_CLOUD,   0x0000FF, }, // BLUE
         { FLEET_AI_MAPPER,  0x808000, }, // YELLOW
+        { FLEET_AI_CIRCLE,  0x048488, }, // TEAL-ish
         { FLEET_AI_RUNAWAY, 0x800080, }, // PURPLE
         { FLEET_AI_COWARD,  0x008080, }, // TEAL
         { FLEET_AI_BASIC,   0x808080, }, // DARK GRAY
         { FLEET_AI_HOLD,    0xF00080, }, // PURPLE
         { FLEET_AI_BOB,     0x80F080, }, // GREENISH-YELLOW
-        { FLEET_AI_CIRCLE,  0x048488, }, // TEAL-ish
     };
     uint32 color;
 
