@@ -70,7 +70,7 @@ public:
             float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
             radius = baseRadius;
 
-            int numFriends = mySensorGrid->numFriends();
+            int numFriends = mySensorGrid->numFriends(MOB_FLAG_FIGHTER);
             uint maxDim = sqrtf(myFleetAI->bp.width * myFleetAI->bp.width +
                                 myFleetAI->bp.height * myFleetAI->bp.height);
             radius *= expf(logf(1.05f) * (1 + numFriends));
@@ -90,7 +90,8 @@ public:
         Mob *base = mySensorGrid->friendBase();
 
         ASSERT(ship != NULL);
-        ASSERT(ship->state == BSAI_STATE_IDLE);
+
+        ship->state = BSAI_STATE_IDLE;
 
         if (mob->type != MOB_TYPE_FIGHTER || base == NULL) {
             BasicAIGovernor::doIdle(mob, newlyIdle);
@@ -166,6 +167,8 @@ public:
 
             while (numEnemies > 0 && fighter != NULL) {
                 orbitalMap.put(fighter->mobid, baseRadius / 1.5f);
+
+                doIdle(fighter, TRUE);
 
                 fighter = sg->findNthClosestFriend(&base->pos,
                                                    MOB_FLAG_FIGHTER, i++);
