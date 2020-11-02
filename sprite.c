@@ -999,17 +999,23 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_HOLD,    0xF00080, }, // PURPLE
         { FLEET_AI_BOB,     0x80F080, }, // GREENISH-YELLOW
     };
-    uint32 color;
 
-    uint32 shipAlpha = 0x88;
-
-    ASSERT(ARRAYSIZE(colors) == FLEET_AI_MAX);
-    ASSERT(aiType < ARRAYSIZE(colors));
-    ASSERT(colors[aiType].aiType == aiType);
     ASSERT(repeatCount > 0);
 
-    uint i  = aiType % ARRAYSIZE(colors);
-    color = colors[i].color;
+    /*
+     * Use WHITE for any missing fleets.
+     */
+    uint32 color = 0xFFFFFF; // WHITE
+    uint i = 0;
+    while (i < ARRAYSIZE(colors)) {
+        if (colors[i].aiType == aiType) {
+            color = colors[i].color;
+            break;
+        }
+        i++;
+    }
+
+    uint32 shipAlpha = 0x88;
     color /= (1 + (repeatCount - 1));
     return color | ((shipAlpha & 0xFF) << 24);
 }
