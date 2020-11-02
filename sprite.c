@@ -688,9 +688,10 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
 
 void Sprite_Free(Sprite *s)
 {
-    ASSERT(s != NULL);
-    SpriteReleaseBacking(s->backingID);
-    free(s);
+    if (s != NULL) {
+        SpriteReleaseBacking(s->backingID);
+        free(s);
+    }
 }
 
 

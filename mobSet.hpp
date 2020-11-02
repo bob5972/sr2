@@ -79,6 +79,40 @@ public:
         return myMobs.size();
     }
 
+    int numMobs(MobTypeFlags filter) {
+        int mobs = 0;
+
+        MobIt mit = iterator();
+        while (mit.hasNext()) {
+            Mob *m = mit.next();
+
+            if (((1 << m->type) & filter) != 0) {
+                mobs++;
+            }
+        }
+
+        return mobs;
+    }
+
+    int numMobsInRange(MobTypeFlags filter, const FPoint *pos, float range) {
+        int mobs = 0;
+
+        MobIt mit = iterator();
+        while (mit.hasNext()) {
+            Mob *m = mit.next();
+
+            if (((1 << m->type) & filter) != 0) {
+                if (FPoint_Distance(&m->pos, pos) <= range) {
+                    mobs++;
+                }
+            }
+        }
+
+        return mobs;
+    }
+
+
+
     /**
      * Find the Nth closest mob to the specified point.
      * This is 0-based, so the closest mob is found when n=0.

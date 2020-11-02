@@ -63,6 +63,28 @@ public:
         return myFriends.size();
     }
 
+    int numFriends(MobTypeFlags filter) {
+        return myFriends.numMobs(filter);
+    }
+
+
+    int numTargets() {
+        return myTargets.size();
+    }
+
+    int numTargets(MobTypeFlags filter) {
+        return myTargets.numMobs(filter);
+    }
+
+    int numFriendsInRange(MobTypeFlags filter, const FPoint *pos, float range) {
+        return myFriends.numMobsInRange(filter, pos, range);
+
+    }
+
+    int numTargetsInRange(const FPoint *pos, MobTypeFlags filter, float range) {
+        return myTargets.numMobsInRange(filter, pos, range);
+    }
+
 
     /**
      * Find the friendly mob closest to the specified point.
