@@ -77,6 +77,7 @@ struct MainData {
     uint tickLimit;
     bool tournament;
     bool optimize;
+    bool startPaused;
     const char *scenario;
 
     bool reuseSeed;
@@ -101,6 +102,218 @@ struct MainData {
 
 static void MainRunBattle(MainEngineThreadData *tData,
                           MainEngineWorkUnit *wu);
+static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
+
+void MainConstructScenario(void)
+{
+    uint p;
+    MBRegistry *mreg;
+    BattleScenario bsc;
+
+    mreg = MBRegistry_Alloc();
+    MainLoadScenario(mreg, NULL);
+    if (mainData.scenario != NULL) {
+        MainLoadScenario(mreg, mainData.scenario);
+    }
+
+    MBUtil_Zero(&bsc, sizeof(bsc));
+
+    bsc.bp.width = MBRegistry_GetUint(mreg, "width");
+    bsc.bp.height = MBRegistry_GetUint(mreg, "height");
+    bsc.bp.startingCredits = MBRegistry_GetUint(mreg, "startingCredits");
+    bsc.bp.creditsPerTick = MBRegistry_GetUint(mreg, "creditsPerTick");
+    bsc.bp.tickLimit = MBRegistry_GetUint(mreg, "tickLimit");
+    bsc.bp.powerCoreDropRate = MBRegistry_GetFloat(mreg, "powerCoreDropRate");
+    bsc.bp.powerCoreSpawnRate = MBRegistry_GetFloat(mreg, "powerCoreSpawnRate");
+    bsc.bp.minPowerCoreSpawn = MBRegistry_GetUint(mreg, "minPowerCoreSpawn");
+    bsc.bp.maxPowerCoreSpawn = MBRegistry_GetUint(mreg, "maxPowerCoreSpawn");
+    bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
+    bsc.bp.startingBases = MBRegistry_GetUint(mreg, "startingBases");
+    bsc.bp.startingFighters = MBRegistry_GetUint(mreg, "startingFighters");
+
+    MBRegistry_Free(mreg);
+    mreg = NULL;
+
+    if (mainData.tickLimit != 0) {
+        bsc.bp.tickLimit = mainData.tickLimit;
+    }
+
+    /*
+     * The NEUTRAL fleet always needs to be there.
+     */
+    p = 0;
+    mainData.players[p].aiType = FLEET_AI_NEUTRAL;
+    p++;
+
+    if (mainData.optimize) {
+        /*
+         * Customize as needed.
+         */
+        float v[] = {
+           70, 100,
+        };
+
+        mainData.players[p].aiType = FLEET_AI_BASIC;
+        p++;
+
+        for (uint i = 0; i < ARRAYSIZE(v); i++) {
+            char *vstr = NULL;
+            asprintf(&vstr, "%1.0f", v[i]);
+            mainData.players[p].mreg = MBRegistry_Alloc();
+            MBRegistry_Put(mainData.players[p].mreg, "holdCount",
+                            vstr);
+            mainData.players[p].aiType = FLEET_AI_BOB;
+
+            char *name = NULL;
+            asprintf(&name, "%s %s",
+                     Fleet_GetName(mainData.players[p].aiType), vstr);
+            mainData.players[p].playerName = name;
+
+            p++;
+
+            // XXX: Leak!
+            //free(vstr);
+            //free(name);
+        }
+    } else if (mainData.tournament) {
+        uint i = FLEET_AI_NEUTRAL + 1;
+        ASSERT(p == FLEET_AI_NEUTRAL);
+
+        while (i < FLEET_AI_MAX) {
+            if (i != FLEET_AI_DUMMY) {
+                mainData.players[p].aiType = i;
+                p++;
+            }
+
+            i++;
+        }
+    } else {
+        /*
+         * Rough order of difficulty:
+         *    DummyFleet
+         *    SimpleFleet
+         *    GatherFleet
+         *    CloudFleet
+         *    MapperFleet
+         *    RunAwayFleet
+         *    CircleFleet
+         *    CowardFleet
+         *    BasicFleet
+         *    HoldFleet
+         *
+         *    BobFleet (prototype, varies)
+         */
+
+//         mainData.players[p].aiType = FLEET_AI_DUMMY;
+//         p++;
+
+//         mainData.players[p].aiType = FLEET_AI_SIMPLE;
+//         p++;
+
+//         mainData.players[p].aiType = FLEET_AI_GATHER;
+//         p++;
+
+//         mainData.players[p].aiType = FLEET_AI_CLOUD;
+//         p++;
+
+//         mainData.players[p].mreg = MBRegistry_Alloc();
+//         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
+//         MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
+//         MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
+//         mainData.players[p].aiType = FLEET_AI_MAPPER;
+//         p++;
+
+//         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
+//         p++;
+
+//         mainData.players[p].aiType = FLEET_AI_COWARD;
+//         p++;
+
+//         mainData.players[p].aiType = FLEET_AI_BASIC;
+//         p++;
+
+        mainData.players[p].aiType = FLEET_AI_HOLD;
+        p++;
+
+//         mainData.players[p].aiType = FLEET_AI_CIRCLE;
+//         p++;
+
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
+
+//         mainData.players[p].playerName = "Stale";
+//         mainData.players[p].aiType = FLEET_AI_BOB;
+//         mainData.players[p].mreg = MBRegistry_Alloc();
+//         MBRegistry_Put(mainData.players[p].mreg, "gatherAbandonStale", "TRUE");
+//         p++;
+    }
+
+    ASSERT(p <= ARRAYSIZE(mainData.players));
+    mainData.numPlayers = p;
+
+    for (uint i = 0; i < p; i++) {
+        mainData.players[i].playerUID = i;
+        if (mainData.players[i].playerName == NULL) {
+            FleetAIType aiType = mainData.players[i].aiType;
+            mainData.players[i].playerName = Fleet_GetName(aiType);
+        }
+    }
+
+    if (mainData.optimize) {
+        // This is too big, but it works.
+        uint maxBscs = mainData.numPlayers;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
+
+        mainData.numBSCs = 0;
+        ASSERT(mainData.numPlayers > 0);
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+        for (uint y = 2; y < mainData.numPlayers; y++) {
+            uint b = mainData.numBSCs++;
+            mainData.bscs[b].bp = bsc.bp;
+            mainData.bscs[b].bp.numPlayers = 3;
+            ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+            mainData.bscs[b].players[0] = mainData.players[0];
+            mainData.bscs[b].players[1] = mainData.players[1];
+            mainData.bscs[b].players[2] = mainData.players[y];
+        }
+
+        ASSERT(mainData.numBSCs <= maxBscs);
+    } else if (mainData.tournament) {
+        // This is too big, but it works.
+        uint maxBscs = mainData.numPlayers * mainData.numPlayers;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
+
+        mainData.numBSCs = 0;
+        ASSERT(mainData.numPlayers > 0);
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+        for (uint x = 1; x < mainData.numPlayers; x++) {
+            for (uint y = 1; y < mainData.numPlayers; y++) {
+                if (x == y) {
+                    continue;
+                }
+
+                uint b = mainData.numBSCs++;
+                mainData.bscs[b].bp = bsc.bp;
+                mainData.bscs[b].bp.numPlayers = 3;
+                ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+                mainData.bscs[b].players[0] = mainData.players[0];
+                mainData.bscs[b].players[1] = mainData.players[x];
+                mainData.bscs[b].players[2] = mainData.players[y];
+            }
+        }
+
+        ASSERT(mainData.numBSCs <= maxBscs);
+    } else {
+        mainData.numBSCs = 1;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]));
+        mainData.bscs[0] = bsc;
+        ASSERT(sizeof(mainData.players) ==
+               sizeof(mainData.bscs[0].players));
+        mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
+        memcpy(&mainData.bscs[0].players, &mainData.players,
+               sizeof(mainData.players));
+    }
+}
 
 static void
 MainPrintBattleStatus(MainEngineThreadData *tData,
@@ -354,217 +567,6 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
     }
 }
 
-void MainConstructScenario(void)
-{
-    uint p;
-    MBRegistry *mreg;
-    BattleScenario bsc;
-
-    mreg = MBRegistry_Alloc();
-    MainLoadScenario(mreg, NULL);
-    if (mainData.scenario != NULL) {
-        MainLoadScenario(mreg, mainData.scenario);
-    }
-
-    MBUtil_Zero(&bsc, sizeof(bsc));
-
-    bsc.bp.width = MBRegistry_GetUint(mreg, "width");
-    bsc.bp.height = MBRegistry_GetUint(mreg, "height");
-    bsc.bp.startingCredits = MBRegistry_GetUint(mreg, "startingCredits");
-    bsc.bp.creditsPerTick = MBRegistry_GetUint(mreg, "creditsPerTick");
-    bsc.bp.tickLimit = MBRegistry_GetUint(mreg, "tickLimit");
-    bsc.bp.powerCoreDropRate = MBRegistry_GetFloat(mreg, "powerCoreDropRate");
-    bsc.bp.powerCoreSpawnRate = MBRegistry_GetFloat(mreg, "powerCoreSpawnRate");
-    bsc.bp.minPowerCoreSpawn = MBRegistry_GetUint(mreg, "minPowerCoreSpawn");
-    bsc.bp.maxPowerCoreSpawn = MBRegistry_GetUint(mreg, "maxPowerCoreSpawn");
-    bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
-    bsc.bp.startingBases = MBRegistry_GetUint(mreg, "startingBases");
-    bsc.bp.startingFighters = MBRegistry_GetUint(mreg, "startingFighters");
-
-    MBRegistry_Free(mreg);
-    mreg = NULL;
-
-    if (mainData.tickLimit != 0) {
-        bsc.bp.tickLimit = mainData.tickLimit;
-    }
-
-    /*
-     * The NEUTRAL fleet always needs to be there.
-     */
-    p = 0;
-    mainData.players[p].aiType = FLEET_AI_NEUTRAL;
-    p++;
-
-    if (mainData.optimize) {
-        /*
-         * Customize as needed.
-         */
-        float v[] = {
-           70, 100,
-        };
-
-        mainData.players[p].aiType = FLEET_AI_BASIC;
-        p++;
-
-        for (uint i = 0; i < ARRAYSIZE(v); i++) {
-            char *vstr = NULL;
-            asprintf(&vstr, "%1.0f", v[i]);
-            mainData.players[p].mreg = MBRegistry_Alloc();
-            MBRegistry_Put(mainData.players[p].mreg, "holdCount",
-                            vstr);
-            mainData.players[p].aiType = FLEET_AI_BOB;
-
-            char *name = NULL;
-            asprintf(&name, "%s %s",
-                     Fleet_GetName(mainData.players[p].aiType), vstr);
-            mainData.players[p].playerName = name;
-
-            p++;
-
-            // XXX: Leak!
-            //free(vstr);
-            //free(name);
-        }
-    } else if (mainData.tournament) {
-        uint i = FLEET_AI_NEUTRAL + 1;
-        ASSERT(p == FLEET_AI_NEUTRAL);
-
-        while (i < FLEET_AI_MAX) {
-            if (i != FLEET_AI_DUMMY) {
-                mainData.players[p].aiType = i;
-                p++;
-            }
-
-            i++;
-        }
-    } else {
-        /*
-         * Rough order of difficulty:
-         *    DummyFleet
-         *    SimpleFleet
-         *    GatherFleet
-         *    CloudFleet
-         *    MapperFleet
-         *    RunAwayFleet
-         *    CircleFleet
-         *    CowardFleet
-         *    BasicFleet
-         *    HoldFleet
-         *
-         *    BobFleet (prototype, varies)
-         */
-
-//         mainData.players[p].aiType = FLEET_AI_DUMMY;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_SIMPLE;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_GATHER;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_CLOUD;
-//         p++;
-
-//         mainData.players[p].mreg = MBRegistry_Alloc();
-//         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
-//         MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
-//         MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
-//         mainData.players[p].aiType = FLEET_AI_MAPPER;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_COWARD;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_BASIC;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_HOLD;
-//         p++;
-
-        mainData.players[p].aiType = FLEET_AI_CIRCLE;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
-
-//         mainData.players[p].playerName = "Stale";
-//         mainData.players[p].aiType = FLEET_AI_BOB;
-//         mainData.players[p].mreg = MBRegistry_Alloc();
-//         MBRegistry_Put(mainData.players[p].mreg, "gatherAbandonStale", "TRUE");
-//         p++;
-    }
-
-    ASSERT(p <= ARRAYSIZE(mainData.players));
-    mainData.numPlayers = p;
-
-    for (uint i = 0; i < p; i++) {
-        mainData.players[i].playerUID = i;
-        if (mainData.players[i].playerName == NULL) {
-            FleetAIType aiType = mainData.players[i].aiType;
-            mainData.players[i].playerName = Fleet_GetName(aiType);
-        }
-    }
-
-    if (mainData.optimize) {
-        // This is too big, but it works.
-        uint maxBscs = mainData.numPlayers;
-        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
-
-        mainData.numBSCs = 0;
-        ASSERT(mainData.numPlayers > 0);
-        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-        for (uint y = 2; y < mainData.numPlayers; y++) {
-            uint b = mainData.numBSCs++;
-            mainData.bscs[b].bp = bsc.bp;
-            mainData.bscs[b].bp.numPlayers = 3;
-            ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-            mainData.bscs[b].players[0] = mainData.players[0];
-            mainData.bscs[b].players[1] = mainData.players[1];
-            mainData.bscs[b].players[2] = mainData.players[y];
-        }
-
-        ASSERT(mainData.numBSCs <= maxBscs);
-    } else if (mainData.tournament) {
-        // This is too big, but it works.
-        uint maxBscs = mainData.numPlayers * mainData.numPlayers;
-        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
-
-        mainData.numBSCs = 0;
-        ASSERT(mainData.numPlayers > 0);
-        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-        for (uint x = 1; x < mainData.numPlayers; x++) {
-            for (uint y = 1; y < mainData.numPlayers; y++) {
-                if (x == y) {
-                    continue;
-                }
-
-                uint b = mainData.numBSCs++;
-                mainData.bscs[b].bp = bsc.bp;
-                mainData.bscs[b].bp.numPlayers = 3;
-                ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-                mainData.bscs[b].players[0] = mainData.players[0];
-                mainData.bscs[b].players[1] = mainData.players[x];
-                mainData.bscs[b].players[2] = mainData.players[y];
-            }
-        }
-
-        ASSERT(mainData.numBSCs <= maxBscs);
-    } else {
-        mainData.numBSCs = 1;
-        mainData.bscs = malloc(sizeof(mainData.bscs[0]));
-        mainData.bscs[0] = bsc;
-        ASSERT(sizeof(mainData.players) ==
-               sizeof(mainData.bscs[0].players));
-        mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
-        memcpy(&mainData.bscs[0].players, &mainData.players,
-               sizeof(mainData.players));
-    }
-}
-
 void MainUnitTests()
 {
     Warning("Starting Unit Tests ...\n");
@@ -575,19 +577,20 @@ void MainUnitTests()
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",       FALSE, "Print help text"               },
-        { "-H", "--headless",   FALSE, "Run headless"                  },
-        { "-F", "--frameSkip",  FALSE, "Allow frame skipping"          },
-        { "-l", "--loop",       TRUE,  "Loop <arg> times"              },
-        { "-S", "--scenario",   TRUE,  "Scenario type"                 },
-        { "-T", "--tournament", FALSE, "Tournament mode"               },
-        { "-O", "--optimize",   FALSE, "Optimize mode"                 },
-        { "-s", "--seed",       TRUE,  "Set random seed"               },
-        { "-L", "--tickLimit",  TRUE,  "Time limit in ticks"           },
-        { "-t", "--numThreads", TRUE,  "Number of engine threads"      },
-        { "-R", "--reuseSeed",  FALSE, "Reuse the seed across battles" },
-        { "-u", "--unitTests",  FALSE, "Run unit tests"                },
-        { "-p", "--dumpPNG",    TRUE,  "Dump a PNG of sprites"         },
+        { "-h", "--help",        FALSE, "Print help text"               },
+        { "-H", "--headless",    FALSE, "Run headless"                  },
+        { "-F", "--frameSkip",   FALSE, "Allow frame skipping"          },
+        { "-l", "--loop",        TRUE,  "Loop <arg> times"              },
+        { "-S", "--scenario",    TRUE,  "Scenario type"                 },
+        { "-T", "--tournament",  FALSE, "Tournament mode"               },
+        { "-O", "--optimize",    FALSE, "Optimize mode"                 },
+        { "-s", "--seed",        TRUE,  "Set random seed"               },
+        { "-L", "--tickLimit",   TRUE,  "Time limit in ticks"           },
+        { "-t", "--numThreads",  TRUE,  "Number of engine threads"      },
+        { "-R", "--reuseSeed",   FALSE, "Reuse the seed across battles" },
+        { "-u", "--unitTests",   FALSE, "Run unit tests"                },
+        { "-p", "--dumpPNG",     TRUE,  "Dump a PNG of sprites"         },
+        { "-P", "--startPaused", FALSE, "Start paused"                  },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -627,6 +630,12 @@ void MainParseCmdLine(int argc, char **argv)
         mainData.tournament = TRUE;
     } else {
         mainData.optimize = FALSE;
+    }
+
+    if (MBOpt_IsPresent("startPaused")) {
+        mainData.startPaused = TRUE;
+    } else {
+        mainData.startPaused = FALSE;
     }
 
     mainData.seed = MBOpt_GetUint64("seed");
@@ -731,7 +740,7 @@ int main(int argc, char **argv)
     }
 
     if (!mainData.headless) {
-        Display_Main();
+        Display_Main(mainData.startPaused);
         mainData.asyncExit = TRUE;
         Display_Exit();
     }

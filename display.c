@@ -380,7 +380,7 @@ static uint64 DisplayGetTimerUS(void)
     return retVal;
 }
 
-void Display_Main(void)
+void Display_Main(bool startPaused)
 {
     SDL_Event event;
     int done = 0;
@@ -393,7 +393,9 @@ void Display_Main(void)
     display.inMain = TRUE;
 
     // Start paused
-    //display.paused = TRUE;
+    if (startPaused) {
+        display.paused = TRUE;
+    }
 
     while (!done) {
         startTimeUS = DisplayGetTimerUS();
