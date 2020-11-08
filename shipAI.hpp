@@ -194,7 +194,7 @@ public:
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
             { "attackRange",            "100",   },
-            { "attackExtendedRange",    "FALSE", },
+            { "attackExtendedRange",    "TRUE",  },
             { "guardRange",             "0",     },
             { "gatherRange",            "50",    },
             { "gatherAbandonStale",     "FALSE", },
