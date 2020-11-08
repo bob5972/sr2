@@ -107,5 +107,5 @@ static void BasicFleetRunAITick(void *aiHandle)
 
     ASSERT(sf->ai->player.aiType == FLEET_AI_BASIC);
 
-    sf->gov.runTick();
+    sf->basicGov.runTick();
 }

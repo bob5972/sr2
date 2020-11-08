@@ -17,11 +17,11 @@
  */
 
 #include "sensorGrid.hpp"
+#include "mobSet.hpp"
 
 void SensorGrid::updateTick(FleetAI *ai)
 {
     CMobIt mit;
-    Mob *enemyBase = myTargets.getBase();
     int trackedEnemyBases = myTargets.getNumTrackedBases();
 
     myLastTick = ai->tick;
@@ -48,20 +48,23 @@ void SensorGrid::updateTick(FleetAI *ai)
             myTargetLastSeenMap.put(m->mobid, ai->tick);
         }
 
-        if (enemyBase != NULL) {
-            ASSERT(enemyBase->type == MOB_TYPE_BASE);
-            if (Mob_CanScanPoint(m, &enemyBase->pos)) {
-                /*
-                 * If we can scan where the enemyBase was, remove it,
-                 * since it's either gone now, or we'll re-add it below
-                 * if it shows up in the scan.
-                 *
-                 * XXX: If there's more than one enemyBase, we'll only
-                 * clear one at a time...
-                 */
-                myTargets.removeMob(enemyBase->mobid);
-                myTargetLastSeenMap.remove(enemyBase->mobid);
-                enemyBase = myTargets.getBase();
+        MobSet::MobIt tmit = myTargets.iterator();
+        while (tmit.hasNext()) {
+            Mob *tMob = tmit.next();
+            if (tMob->type == MOB_TYPE_BASE ||
+                tMob->type == MOB_TYPE_POWER_CORE) {
+                if (Mob_CanScanPoint(m, &tMob->pos)) {
+                    /*
+                     * If we can scan where the target was, remove it,
+                     * since it's either gone now, or we'll re-add it below
+                     * if it shows up in the scan.
+                     *
+                     * XXX: Don't do this for fighters, since we're
+                     * relying on the stale images to orient missiles.
+                     */
+                    myTargets.removeMob(tMob->mobid);
+                    myTargetLastSeenMap.remove(tMob->mobid);
+                }
             }
         }
     }
@@ -98,7 +101,7 @@ void SensorGrid::updateTick(FleetAI *ai)
         if (m->type == MOB_TYPE_BASE) {
             staleAge = MAX_UINT;
         } else if (m->type == MOB_TYPE_POWER_CORE) {
-            staleAge = 50;
+            staleAge = 40;
         } else {
             staleAge = 2;
         }
