@@ -101,6 +101,7 @@ public:
     }
 
     void addMobid(MobID mobid) {
+        ASSERT(!containsMobid(mobid));
         int i = myAIData.push(createShip(mobid));
         myMap.put(mobid, i);
     }

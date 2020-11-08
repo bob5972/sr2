@@ -69,9 +69,12 @@ public:
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "TRUE",  },
             { "evadeStrictDistance",    "10",    },
-            { "holdCount",              "10",    },
             { "evadeRange",             "50",    },
             { "attackRange",            "100",   },
+
+            // Bob-fleet specific options
+            { "holdCount",              "10",    },
+            { "rotateStartingAngle",    "TRUE",  },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -82,7 +85,9 @@ public:
             }
         }
 
-        defaultHoldCount = MBRegistry_GetUint(mreg, "holdCount");
+        this->defaultHoldCount = MBRegistry_GetUint(mreg, "holdCount");
+        this->rotateStartingAngle =
+            MBRegistry_GetBool(mreg, "rotateStartingAngle");
 
         this->BasicAIGovernor::loadRegistry(mreg);
 
@@ -90,6 +95,7 @@ public:
     }
 
     uint defaultHoldCount;
+    bool rotateStartingAngle;
 };
 
 
@@ -105,6 +111,8 @@ public:
 
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
         this->gov.loadRegistry(mreg);
+
+        this->startingAngle = RandomState_Float(&this->rs, 0.0f, M_PI * 2.0f);
     }
 
     ~BobFleet() {
@@ -117,6 +125,7 @@ public:
     SensorGrid sg;
     BobFleetGovernor gov;
     MBRegistry *mreg;
+    float startingAngle;
 };
 
 static void *BobFleetCreate(FleetAI *ai);
@@ -153,14 +162,34 @@ static void BobFleetDestroy(void *handle)
     delete(sf);
 }
 
-static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
+static void *BobFleetMobSpawned(void *aiHandle, Mob *mob)
 {
     BobFleet *sf = (BobFleet *)aiHandle;
 
     ASSERT(sf != NULL);
-    ASSERT(m != NULL);
+    ASSERT(mob != NULL);
 
-    sf->gov.addMobid(m->mobid);
+    sf->gov.addMobid(mob->mobid);
+
+    if (sf->gov.rotateStartingAngle) {
+        if (mob->type == MOB_TYPE_FIGHTER) {
+            FRPoint p;
+
+            do {
+                sf->startingAngle += M_PI * (3 - sqrtf(5.0f));
+                p.radius = 1000.0f;
+                p.theta = sf->startingAngle;
+
+                do {
+                    p.radius /= 1.1f;
+                    FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
+                } while (p.radius > 300.0f &&
+                         FPoint_Clamp(&mob->cmd.target, 0.0f, sf->ai->bp.width,
+                                      0.0f, sf->ai->bp.height));
+            } while (p.radius <= 300.0f);
+        }
+    }
+
     return NULL;
 }
 

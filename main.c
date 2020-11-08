@@ -241,10 +241,10 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
-//         mainData.players[p].playerName = "Stale";
+//         mainData.players[p].playerName = "BobMod";
 //         mainData.players[p].aiType = FLEET_AI_BOB;
 //         mainData.players[p].mreg = MBRegistry_Alloc();
-//         MBRegistry_Put(mainData.players[p].mreg, "gatherAbandonStale", "TRUE");
+//         MBRegistry_Put(mainData.players[p].mreg, "rotateStartingAngle", "TRUE");
 //         p++;
     }
 
