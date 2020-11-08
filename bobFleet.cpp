@@ -66,13 +66,16 @@ public:
             const char *key;
             const char *value;
         } configs[] = {
+            // Override BasicFleet defaults
             { "evadeFighters",          "FALSE", },
             { "evadeUseStrictDistance", "TRUE",  },
             { "evadeStrictDistance",    "10",    },
             { "evadeRange",             "50",    },
             { "attackRange",            "100",   },
+            { "attackExtendedRange",    "TRUE",  },
+            { "guardRange",             "200",   },
 
-            // Bob-fleet specific options
+            // BobFleet-specific options
             { "holdCount",              "10",    },
             { "rotateStartingAngle",    "TRUE",  },
         };

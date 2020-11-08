@@ -194,6 +194,8 @@ public:
             { "evadeUseStrictDistance", "FALSE", },
             { "evadeStrictDistance",    "50",    },
             { "attackRange",            "100",   },
+            { "attackExtendedRange",    "FALSE", },
+            { "guardRange",             "0",     },
             { "gatherRange",            "50",    },
             { "gatherAbandonStale",     "FALSE", },
         };
@@ -211,8 +213,11 @@ public:
             MBRegistry_GetBool(mreg, "evadeUseStrictDistance");
         myConfig.evadeStrictDistance =
             MBRegistry_GetFloat(mreg, "evadeStrictDistance");
-        myConfig.attackRange =
-            MBRegistry_GetFloat(mreg, "attackRange");
+        myConfig.attackRange = MBRegistry_GetFloat(mreg, "attackRange");
+        myConfig.attackExtendedRange =
+            MBRegistry_GetBool(mreg, "attackExtendedRange");
+        myConfig.guardRange =
+            MBRegistry_GetFloat(mreg, "guardRange");
         myConfig.gatherRange =
             MBRegistry_GetFloat(mreg, "gatherRange");
         myConfig.gatherAbandonStale =
@@ -252,6 +257,8 @@ public:
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
         RandomState *rs = &myRandomState;
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+        SensorGrid *sg = mySensorGrid;
+        Mob *friendBase = sg->friendBase();
 
         float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                             MobType_GetMaxFuel(MOB_TYPE_MISSILE);
@@ -272,7 +279,12 @@ public:
             beAggressive = TRUE;
         } else if (enemyTarget->type == MOB_TYPE_BASE) {
             beAggressive = TRUE;
+        } else if (friendBase != NULL && myConfig.guardRange > 0 &&
+                   FPoint_Distance(&enemyTarget->pos, &friendBase->pos) <=
+                   myConfig.guardRange) {
+            beAggressive = TRUE;
         }
+
 
         if (beAggressive) {
             float range = MIN(firingRange, scanningRange) - 1;
@@ -348,6 +360,8 @@ protected:
         bool evadeUseStrictDistance;
         float evadeStrictDistance;
         float attackRange;
+        bool attackExtendedRange;
+        float guardRange;
         float gatherRange;
         bool gatherAbandonStale;
     } myConfig;

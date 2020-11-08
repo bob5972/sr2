@@ -77,6 +77,19 @@ void BasicAIGovernor::runMob(Mob *mob)
         Mob *powerCoreTarget = NULL;
         Mob *enemyTarget = NULL;
         bool redoIdle = FALSE;
+        Mob *friendBase = sg->friendBase();
+
+        float attackRange = firingRange;
+
+        if (myConfig.attackRange > 0 && myConfig.attackExtendedRange) {
+            attackRange = MAX(firingRange, myConfig.attackRange);
+        }
+
+
+        if (friendBase != NULL && myConfig.guardRange > 0 &&
+            FPoint_Distance(&mob->pos, &friendBase->pos) <= myConfig.guardRange) {
+            attackRange = MAX(attackRange, myConfig.guardRange);
+        }
 
         ASSERT(ship != NULL);
         ASSERT(ship->mobid == mob->mobid);
@@ -97,7 +110,7 @@ void BasicAIGovernor::runMob(Mob *mob)
          * Find enemy targets to shoot.
          */
         enemyTarget = sg->findClosestTargetInRange(&mob->pos, MOB_FLAG_SHIP,
-                                                   firingRange);
+                                                   attackRange);
         if (enemyTarget != NULL) {
             ship->state = BSAI_STATE_ATTACK;
             doAttack(mob, enemyTarget);
