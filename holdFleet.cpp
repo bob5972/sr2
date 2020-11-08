@@ -64,9 +64,11 @@ public:
             const char *value;
         } configs[] = {
             { "evadeFighters",          "FALSE", },
-            { "evadeUseStrictDistance", "TRUE",  },
-            { "evadeStrictDistance",    "10",    },
-            { "holdCount",              "100",   },
+            { "evadeUseStrictDistance",  "TRUE", },
+            { "evadeStrictDistance",       "10", },
+            { "attackRange",              "100", },
+            { "attackExtendedRange",     "TRUE", },
+            { "holdCount",                 "50", },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
