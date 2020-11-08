@@ -104,10 +104,8 @@ static void BasicFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 static void BasicFleetRunAITick(void *aiHandle)
 {
     BasicFleet *sf = (BasicFleet *)aiHandle;
-    FleetAI *ai = sf->ai;
-    CMobIt mit;
 
-    sf->sg.updateTick(ai);
-    CMobIt_Start(&ai->mobs, &mit);
-    sf->basicGov.runAllMobs(&mit);
+    ASSERT(sf->ai->player.aiType == FLEET_AI_BASIC);
+
+    sf->gov.runTick();
 }
