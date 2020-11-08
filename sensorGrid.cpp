@@ -39,15 +39,6 @@ void SensorGrid::updateTick(FleetAI *ai)
 
         myFriends.updateMob(m);
 
-        if (m->type == MOB_TYPE_POWER_CORE) {
-            /*
-             * Also add PowerCores to the targets list, since fleets
-             * collect their own boxes as powerCore.
-             */
-            myTargets.updateMob(m);
-            myTargetLastSeenMap.put(m->mobid, ai->tick);
-        }
-
         MobSet::MobIt tmit = myTargets.iterator();
         while (tmit.hasNext()) {
             Mob *tMob = tmit.next();
@@ -66,6 +57,15 @@ void SensorGrid::updateTick(FleetAI *ai)
                     myTargetLastSeenMap.remove(tMob->mobid);
                 }
             }
+        }
+
+        if (m->type == MOB_TYPE_POWER_CORE) {
+            /*
+             * Also add PowerCores to the targets list, since fleets
+             * collect their own boxes as powerCore.
+             */
+            myTargets.updateMob(m);
+            myTargetLastSeenMap.put(m->mobid, ai->tick);
         }
     }
 
