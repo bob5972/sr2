@@ -107,10 +107,9 @@ static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
 void MainConstructScenario(void)
 {
     uint p;
-    MBRegistry *mreg;
+    MBRegistry *mreg = MBRegistry_Alloc();
     BattleScenario bsc;
 
-    mreg = MBRegistry_Alloc();
     MainLoadScenario(mreg, NULL);
     if (mainData.scenario != NULL) {
         MainLoadScenario(mreg, mainData.scenario);
@@ -139,6 +138,24 @@ void MainConstructScenario(void)
     }
 
     /*
+     * controlPlayers are the fleets for tournaments, and the control
+     * fleets for optimize-mode.
+     *
+     * targetPlayers are the ones used in optimize mode to optimize.
+     */
+    BattlePlayer controlPlayers[MAX_PLAYERS];
+    uint cp = 0;
+    BattlePlayer targetPlayers[MAX_PLAYERS];
+    uint tp = 0;
+    for (uint i = FLEET_AI_MIN; i < FLEET_AI_MAX; i++) {
+        if (i != FLEET_AI_DUMMY) {
+            ASSERT(cp < ARRAYSIZE(controlPlayers));
+            controlPlayers[cp].aiType = i;
+            cp++;
+        }
+    }
+
+    /*
      * The NEUTRAL fleet always needs to be there.
      */
     p = 0;
@@ -147,46 +164,54 @@ void MainConstructScenario(void)
 
     if (mainData.optimize) {
         /*
+         * Target fleets to optimize.
          * Customize as needed.
          */
         float v[] = {
-           10, 40, 50, 60, 70, 100,
+           100,
         };
-
-        mainData.players[p].aiType = FLEET_AI_BASIC;
-        p++;
 
         for (uint i = 0; i < ARRAYSIZE(v); i++) {
             char *vstr = NULL;
             asprintf(&vstr, "%1.0f", v[i]);
-            mainData.players[p].mreg = MBRegistry_Alloc();
-            MBRegistry_Put(mainData.players[p].mreg, "holdCount",
-                            vstr);
-            mainData.players[p].aiType = FLEET_AI_BOB;
-            //mainData.players[p].aiType = FLEET_AI_HOLD;
+            targetPlayers[tp].mreg = MBRegistry_Alloc();
+            MBRegistry_Put(targetPlayers[tp].mreg, "holdCount", vstr);
+            targetPlayers[tp].aiType = FLEET_AI_HOLD;
 
             char *name = NULL;
             asprintf(&name, "%s %s",
-                     Fleet_GetName(mainData.players[p].aiType), vstr);
-            mainData.players[p].playerName = name;
+                     Fleet_GetName(targetPlayers[tp].aiType), vstr);
+            targetPlayers[tp].playerName = name;
 
-            p++;
+            tp++;
 
             // XXX: Leak!
             //free(vstr);
             //free(name);
         }
+
+        /*
+         * Copy over control/target players.
+         */
+        for (uint i = 0; i < cp; i++) {
+            ASSERT(p < ARRAYSIZE(mainData.players));
+            mainData.players[p] = controlPlayers[i];
+            p++;
+        }
+        for (uint i = 0; i < tp; i++) {
+            ASSERT(p < ARRAYSIZE(mainData.players));
+            mainData.players[p] = targetPlayers[i];
+            p++;
+        }
     } else if (mainData.tournament) {
-        uint i = FLEET_AI_NEUTRAL + 1;
+        /*
+         * Copy over control players.
+         */
         ASSERT(p == FLEET_AI_NEUTRAL);
 
-        while (i < FLEET_AI_MAX) {
-            if (i != FLEET_AI_DUMMY) {
-                mainData.players[p].aiType = i;
-                p++;
-            }
-
-            i++;
+        for (uint i = 0; i < cp; i++) {
+            mainData.players[p] = controlPlayers[i];
+            p++;
         }
     } else {
         /*
@@ -261,21 +286,25 @@ void MainConstructScenario(void)
     }
 
     if (mainData.optimize) {
-        // This is too big, but it works.
-        uint maxBscs = mainData.numPlayers;
+        uint maxBscs = cp * tp;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
 
         mainData.numBSCs = 0;
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-        for (uint y = 2; y < mainData.numPlayers; y++) {
-            uint b = mainData.numBSCs++;
-            mainData.bscs[b].bp = bsc.bp;
-            mainData.bscs[b].bp.numPlayers = 3;
-            ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-            mainData.bscs[b].players[0] = mainData.players[0];
-            mainData.bscs[b].players[1] = mainData.players[1];
-            mainData.bscs[b].players[2] = mainData.players[y];
+        for (uint ti = 0; ti < tp; ti++) {
+            uint t = ti + 1 + cp;
+            for (uint ci = 0; ci < cp; ci++) {
+                uint c = 1 + ci;
+                uint b = mainData.numBSCs++;
+                ASSERT(b < maxBscs);
+                mainData.bscs[b].bp = bsc.bp;
+                mainData.bscs[b].bp.numPlayers = 3;
+                ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+                mainData.bscs[b].players[0] = mainData.players[0];
+                mainData.bscs[b].players[1] = mainData.players[t];
+                mainData.bscs[b].players[2] = mainData.players[c];
+            }
         }
 
         ASSERT(mainData.numBSCs <= maxBscs);

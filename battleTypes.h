@@ -128,6 +128,7 @@ typedef enum FleetAIType {
     FLEET_AI_INVALID = 0,
     FLEET_AI_NEUTRAL = 1,
     FLEET_AI_DUMMY   = 2,
+    FLEET_AI_MIN     = 2,
     FLEET_AI_SIMPLE  = 3,
     FLEET_AI_GATHER  = 4,
     FLEET_AI_CLOUD   = 5,
