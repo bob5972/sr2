@@ -260,12 +260,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_CLOUD;
 //         p++;
 
-//         mainData.players[p].mreg = MBRegistry_Alloc();
-//         MBRegistry_Put(mainData.players[p].mreg, "StartingWaveSize", "5");
-//         MBRegistry_Put(mainData.players[p].mreg, "WaveSizeIncrement", "0");
-//         MBRegistry_Put(mainData.players[p].mreg, "RandomWaves", "FALSE");
-//         mainData.players[p].aiType = FLEET_AI_MAPPER;
-//         p++;
+        mainData.players[p].aiType = FLEET_AI_MAPPER;
+        p++;
 
 //         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
 //         p++;
@@ -279,8 +275,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_HOLD;
-        p++;
+//         mainData.players[p].aiType = FLEET_AI_HOLD;
+//         p++;
 
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;

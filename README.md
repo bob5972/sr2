@@ -10,10 +10,10 @@ The latest version of SpaceRobots2 can be obtained online at
 https://github.com/bob5972/sr2 .
 
 To build/run, this program may require:
-* MBLib <https://github.com/bob5972/MBLib>
-* libpng <http://libpng.org/>
-* SDL <https://libsdl.org/>
-* Doxygen <https://www.doxygen.nl/index.html>
+* MBLib:   <https://github.com/bob5972/MBLib>
+* libpng:  <http://libpng.org/>
+* SDL:     <https://libsdl.org/>
+* Doxygen: <https://www.doxygen.nl/index.html>
 ----------------------------------------------------------------------
 
 How to add a new fleet:
