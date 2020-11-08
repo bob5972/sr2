@@ -131,9 +131,6 @@ void BasicAIGovernor::runMob(Mob *mob)
             mob->cmd.target.x = mob->pos.x - dx;
             mob->cmd.target.y = mob->pos.y - dy;
             ship->evadeData.pos = mob->cmd.target;
-        } else if (powerCoreTarget != NULL) {
-            ship->state = BSAI_STATE_GATHER;
-            mob->cmd.target = powerCoreTarget->pos;
         } else if (ship->state == BSAI_STATE_HOLD) {
             if (ship->holdData.count == 0) {
                 ship->state = BSAI_STATE_IDLE;
@@ -142,6 +139,9 @@ void BasicAIGovernor::runMob(Mob *mob)
                 ASSERT(ship->holdData.count > 0);
                 ship->holdData.count--;
             }
+        } else if (powerCoreTarget != NULL) {
+            ship->state = BSAI_STATE_GATHER;
+            mob->cmd.target = powerCoreTarget->pos;
         } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
             ship->state = BSAI_STATE_IDLE;
             redoIdle = TRUE;
