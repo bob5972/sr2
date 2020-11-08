@@ -273,11 +273,11 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_COWARD;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BASIC;
-        p++;
-
-//         mainData.players[p].aiType = FLEET_AI_HOLD;
+//         mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
+
+        mainData.players[p].aiType = FLEET_AI_HOLD;
+        p++;
 
 //         mainData.players[p].aiType = FLEET_AI_CIRCLE;
 //         p++;
@@ -569,7 +569,7 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
         const char *key;
         const char *value;
     } defaultValues[] = {
-        { "width", "1600",             },
+        { "width",  "1600",            },
         { "height", "1200",            },
         { "startingCredits", "1000",   },
         { "creditsPerTick", "1",       },
