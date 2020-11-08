@@ -97,6 +97,8 @@ void SensorGrid::updateTick(FleetAI *ai)
 
         if (m->type == MOB_TYPE_BASE) {
             staleAge = MAX_UINT;
+        } else if (m->type == MOB_TYPE_POWER_CORE) {
+            staleAge = 50;
         } else {
             staleAge = 2;
         }
