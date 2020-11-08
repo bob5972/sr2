@@ -270,20 +270,20 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
 //         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_COWARD;
-//         p++;
+        mainData.players[p].aiType = FLEET_AI_CIRCLE;
+        p++;
 
-//         mainData.players[p].aiType = FLEET_AI_BASIC;
-//         p++;
+        mainData.players[p].aiType = FLEET_AI_COWARD;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_BASIC;
+        p++;
 
         mainData.players[p].aiType = FLEET_AI_HOLD;
         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_CIRCLE;
+//         mainData.players[p].aiType = FLEET_AI_BOB;
 //         p++;
-
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
 
 //         mainData.players[p].playerName = "BobMod";
 //         mainData.players[p].aiType = FLEET_AI_BOB;
@@ -579,7 +579,7 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
         { "minPowerCoreSpawn", "10",   },
         { "maxPowerCoreSpawn", "20",   },
         { "restrictedStart", "TRUE",   },
-        { "startingBases", "1",        },
+        { "startingBases",    "1",     },
         { "startingFighters", "0",     },
     };
 

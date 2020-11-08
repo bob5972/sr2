@@ -80,12 +80,14 @@ Battle *Battle_Create(const BattleScenario *bsc,
     MobVector_Create(&battle->mobs, 0, 1024);
     MobVector_CreateEmpty(&battle->pendingSpawns);
 
+    uint randomShift = RandomState_Int(&battle->rs, 0, numPlayers - 1);
     for (uint i = 0; i < numPlayers; i++) {
         if (i == PLAYER_ID_NEUTRAL) {
             continue;
         }
 
-        for (uint s = 0; s < battle->bsc.bp.startingBases + battle->bsc.bp.startingFighters;
+        for (uint s = 0;
+             s < battle->bsc.bp.startingBases + battle->bsc.bp.startingFighters;
              s++) {
             MobVector_Grow(&battle->mobs);
             Mob *mob = MobVector_GetLastPtr(&battle->mobs);
@@ -97,17 +99,17 @@ Battle *Battle_Create(const BattleScenario *bsc,
             mob->mobid = ++battle->lastMobID;
             if (battle->bsc.bp.restrictedStart) {
                 // account for NEUTRAL
-                uint p = i - 1;
+                uint p = (i + randomShift) % (numPlayers - 1);
                 float slotW = battle->bsc.bp.width / (numPlayers - 1);
                 mob->pos.x = RandomState_Float(&battle->rs, p * slotW,
-                                            (p + 1) * slotW);
+                                               (p + 1) * slotW);
                 mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
-                                            battle->bsc.bp.height);
+                                               battle->bsc.bp.height);
             } else {
                 mob->pos.x = RandomState_Float(&battle->rs, 0.0f,
-                                            battle->bsc.bp.width);
+                                               battle->bsc.bp.width);
                 mob->pos.y = RandomState_Float(&battle->rs, 0.0f,
-                                            battle->bsc.bp.height);
+                                               battle->bsc.bp.height);
             }
             mob->cmd.target = mob->pos;
         }
