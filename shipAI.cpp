@@ -56,8 +56,39 @@ void BasicAIGovernor::runMob(Mob *mob)
     //float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
 
     if (mob->type == MOB_TYPE_POWER_CORE) {
+        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+        FPoint *friendBasePos = sg->friendBasePos();
         Mob *friendMob = sg->findClosestFriend(&mob->pos, MOB_FLAG_SHIP);
+        float baseD = INFINITY;
+        float friendD = INFINITY;
+        float friendFromBaseD = INFINITY;
+        bool friendMovingCloser = FALSE;
+
+        if (friendBasePos != NULL) {
+            baseD = FPoint_Distance(friendBasePos, &mob->pos);
+        }
+
         if (friendMob != NULL) {
+            friendD = FPoint_Distance(&friendMob->pos, &mob->pos);
+
+            if (friendD <= FPoint_Distance(&mob->pos, &friendMob->lastPos)) {
+                friendMovingCloser = TRUE;
+            }
+        }
+
+        if (friendBasePos != NULL && friendMob != NULL) {
+            friendFromBaseD = FPoint_Distance(friendBasePos, &friendMob->pos);
+        }
+
+        if (friendFromBaseD <= baseD) {
+            mob->cmd.target = friendMob->pos;
+        } else if (baseD <= friendD || baseD <= baseRadius) {
+            mob->cmd.target = *friendBasePos;
+        } else if (friendD <= myConfig.gatherRange && friendMovingCloser) {
+            mob->cmd.target = friendMob->pos;
+        } else if (friendBasePos != NULL) {
+            mob->cmd.target = *friendBasePos;
+        } else if (friendMob != NULL) {
             mob->cmd.target = friendMob->pos;
         }
     } else if (mob->type == MOB_TYPE_MISSILE) {
