@@ -71,16 +71,16 @@ public:
 
                 do {
                     startingAngle += M_PI * (3 - sqrtf(5.0f));
-                    p.radius = 1000.0f;
+                    p.radius = startingMaxRadius;
                     p.theta = startingAngle;
 
                     do {
                         p.radius /= 1.1f;
                         FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
-                    } while (p.radius > 300.0f &&
+                    } while (p.radius > startingMinRadius &&
                             FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
                                         0.0f, ai->bp.height));
-                } while (p.radius <= 300.0f);
+                } while (p.radius <= startingMinRadius);
             }
         }
     }
@@ -102,6 +102,8 @@ public:
             // BobFleet-specific options
             { "holdCount",              "10",    },
             { "rotateStartingAngle",    "TRUE",  },
+            { "startingMaxRadius",      "1000",  },
+            { "startingMinRadius",      "300",   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -116,6 +118,11 @@ public:
         this->rotateStartingAngle =
             MBRegistry_GetBool(mreg, "rotateStartingAngle");
 
+        this->startingMaxRadius =
+            MBRegistry_GetFloat(mreg, "startingMaxRadius");
+        this->startingMinRadius =
+            MBRegistry_GetFloat(mreg, "startingMinRadius");
+
         this->BasicAIGovernor::loadRegistry(mreg);
 
         MBRegistry_Free(mreg);
@@ -123,6 +130,8 @@ public:
 
     uint defaultHoldCount;
     float startingAngle;
+    float startingMaxRadius;
+    float startingMinRadius;
     bool rotateStartingAngle;
 };
 
