@@ -130,65 +130,6 @@ void Fleet_Destroy(Fleet *fleet)
     free(fleet);
 }
 
-const char *Fleet_GetName(FleetAIType aiType)
-{
-    FleetAIOps ops;
-    FleetGetOps(aiType, &ops);
-    return ops.aiName;
-}
-
-
-static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
-{
-    MBUtil_Zero(ops, sizeof(*ops));
-
-    switch(aiType) {
-        case FLEET_AI_NEUTRAL:
-            DummyFleet_GetOps(ops);
-            ops->aiName = "Neutral";
-            break;
-        case FLEET_AI_DUMMY:
-            DummyFleet_GetOps(ops);
-            break;
-        case FLEET_AI_SIMPLE:
-            SimpleFleet_GetOps(ops);
-            break;
-        case FLEET_AI_BOB:
-            BobFleet_GetOps(ops);
-            break;
-        case FLEET_AI_MAPPER:
-            MapperFleet_GetOps(ops);
-            break;
-        case FLEET_AI_CLOUD:
-            CloudFleet_GetOps(ops);
-            break;
-        case FLEET_AI_GATHER:
-            GatherFleet_GetOps(ops);
-            break;
-        case FLEET_AI_COWARD:
-            CowardFleet_GetOps(ops);
-            break;
-        case FLEET_AI_RUNAWAY:
-            RunAwayFleet_GetOps(ops);
-            break;
-        case FLEET_AI_BASIC:
-            BasicFleet_GetOps(ops);
-            break;
-        case FLEET_AI_HOLD:
-            HoldFleet_GetOps(ops);
-            break;
-        case FLEET_AI_CIRCLE:
-            CircleFleet_GetOps(ops);
-            break;
-        case FLEET_AI_FLOCK:
-            FlockFleet_GetOps(ops);
-            break;
-        default:
-            PANIC("Unknown AI type=%d\n", aiType);
-    }
-}
-
-
 void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
                    Mob *mobs, uint32 numMobs)
 {

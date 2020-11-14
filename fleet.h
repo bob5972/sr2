@@ -26,7 +26,6 @@
 struct Fleet;
 typedef struct Fleet Fleet;
 
-const char *Fleet_GetName(FleetAIType fleetAI);
 Fleet *Fleet_Create(const BattleScenario *bsc, uint64 seed);
 void Fleet_Destroy(Fleet *fleet);
 void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
@@ -53,5 +52,52 @@ void CowardFleet_GetOps(FleetAIOps *ops);
 void RunAwayFleet_GetOps(FleetAIOps *ops);
 void CircleFleet_GetOps(FleetAIOps *ops);
 void FlockFleet_GetOps(FleetAIOps *ops);
+
+static inline void NeutralFleet_GetOps(FleetAIOps *ops)
+{
+    DummyFleet_GetOps(ops);
+    ops->aiName = "Neutral";
+}
+
+static inline void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
+{
+    struct {
+        FleetAIType aiType;
+        void (*getOps)(FleetAIOps *ops);
+    } fleets[] = {
+        { FLEET_AI_NEUTRAL, NeutralFleet_GetOps },
+        { FLEET_AI_DUMMY,   DummyFleet_GetOps   },
+        { FLEET_AI_SIMPLE,  SimpleFleet_GetOps  },
+        { FLEET_AI_BOB,     BobFleet_GetOps     },
+        { FLEET_AI_MAPPER,  MapperFleet_GetOps  },
+        { FLEET_AI_CLOUD,   CloudFleet_GetOps   },
+        { FLEET_AI_GATHER,  GatherFleet_GetOps  },
+        { FLEET_AI_COWARD,  CowardFleet_GetOps  },
+        { FLEET_AI_RUNAWAY, RunAwayFleet_GetOps },
+        { FLEET_AI_BASIC,   BasicFleet_GetOps   },
+        { FLEET_AI_HOLD,    HoldFleet_GetOps    },
+        { FLEET_AI_CIRCLE,  CircleFleet_GetOps  },
+        { FLEET_AI_FLOCK,   FlockFleet_GetOps   },
+    };
+
+    MBUtil_Zero(ops, sizeof(*ops));
+
+    for (uint i = 0; i < ARRAYSIZE(fleets); i++ ) {
+        if (fleets[i].aiType == aiType) {
+            fleets[i].getOps(ops);
+            return;
+        }
+    }
+
+    PANIC("Unknown AI type=%d\n", aiType);
+}
+
+
+static inline const char *Fleet_GetName(FleetAIType aiType)
+{
+    FleetAIOps ops;
+    FleetGetOps(aiType, &ops);
+    return ops.aiName;
+}
 
 #endif // _FLEET_H_202005311442

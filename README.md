@@ -19,8 +19,7 @@ To build/run, this program may require:
 How to add a new fleet:
 <ol>
 <li>battleTypes.h: Add a new enum value to FleetAIType</li>
-<li>fleet.h: Declare your GetOps function</li>
-<li>fleet.c: Call your new GetOps function in FleetGetOps</li>
+<li>fleet.h: Declare your GetOps function and add it to FleetGetOps</li>
 <li>Makefile: Add your new fleet to the C_SOURCES/CPP_SOURCES list</li>
 <li>main.c: Configure a battle scenario in MainConstructScenario</li>
 <li>sprite.c: Add a color in Sprite_GetColor</li>
