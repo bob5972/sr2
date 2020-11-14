@@ -229,10 +229,13 @@ public:
     BasicAIGovernor(FleetAI *ai, SensorGrid *sg)
     :ShipAIGovernor(ai)
     {
+        RandomState *rs = &myRandomState;
         mySensorGrid = sg;
 
         MBUtil_Zero(&myConfig, sizeof(myConfig));
         loadRegistry(ai->player.mreg);
+
+        myStartingAngle = RandomState_Float(rs, 0.0f, M_PI * 2.0f);
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
@@ -248,6 +251,9 @@ public:
             { "guardRange",             "0",     },
             { "gatherRange",            "50",    },
             { "gatherAbandonStale",     "FALSE", },
+            { "rotateStartingAngle",    "TRUE",  },
+            { "startingMaxRadius",      "300",   },
+            { "startingMinRadius",      "250",   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -273,6 +279,13 @@ public:
         myConfig.gatherAbandonStale =
             MBRegistry_GetBool(mreg, "gatherAbandonStale");
 
+        myConfig.rotateStartingAngle =
+            MBRegistry_GetBool(mreg, "rotateStartingAngle");
+        myConfig.startingMaxRadius =
+            MBRegistry_GetFloat(mreg, "startingMaxRadius");
+        myConfig.startingMinRadius =
+            MBRegistry_GetFloat(mreg, "startingMinRadius");
+
         MBRegistry_Free(mreg);
     }
 
@@ -289,6 +302,37 @@ public:
 
         sg->updateTick(ai);
         ShipAIGovernor::runTick();
+    }
+
+    virtual void doSpawn(Mob *mob) {
+        FleetAI *ai = myFleetAI;
+
+        if (myConfig.rotateStartingAngle &&
+            mob->type == MOB_TYPE_FIGHTER) {
+            FRPoint p;
+            uint i = 0;
+
+            do {
+                // Rotate by the Golden Angle
+                myStartingAngle += M_PI * (3 - sqrtf(5.0f));
+                p.radius = myConfig.startingMaxRadius;
+                p.theta = myStartingAngle;
+
+                do {
+                    FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
+                    p.radius /= 1.1f;
+
+                    /*
+                     * If the min/max radius are set wrong,
+                     * we could loop here forever.
+                     */
+                    i++;
+                    ASSERT(i < 1000 * 1000);
+                } while (p.radius >= myConfig.startingMinRadius &&
+                         FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
+                                      0.0f, ai->bp.height));
+            } while (p.radius < myConfig.startingMinRadius);
+        }
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
@@ -414,7 +458,13 @@ protected:
         float guardRange;
         float gatherRange;
         bool gatherAbandonStale;
+
+        bool rotateStartingAngle;
+        float startingMaxRadius;
+        float startingMinRadius;
     } myConfig;
+
+    float myStartingAngle;
 };
 
 

@@ -32,9 +32,7 @@ public:
     BobFleetGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     {
-        RandomState *rs = &myRandomState;
         this->setAutoAdd(TRUE);
-        startingAngle = RandomState_Float(rs, 0.0f, M_PI * 2.0f);
     }
 
     virtual ~BobFleetGovernor() { }
@@ -62,29 +60,6 @@ public:
         }
     }
 
-    virtual void doSpawn(Mob *mob) {
-        FleetAI *ai = myFleetAI;
-
-        if (rotateStartingAngle) {
-            if (mob->type == MOB_TYPE_FIGHTER) {
-                FRPoint p;
-
-                do {
-                    startingAngle += M_PI * (3 - sqrtf(5.0f));
-                    p.radius = startingMaxRadius;
-                    p.theta = startingAngle;
-
-                    do {
-                        p.radius /= 1.1f;
-                        FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
-                    } while (p.radius > startingMinRadius &&
-                            FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
-                                        0.0f, ai->bp.height));
-                } while (p.radius <= startingMinRadius);
-            }
-        }
-    }
-
     virtual void loadRegistry(MBRegistry *mreg) {
         struct {
             const char *key;
@@ -98,12 +73,12 @@ public:
             { "attackRange",            "100",   },
             { "attackExtendedRange",    "TRUE",  },
             { "guardRange",             "200",   },
-
-            // BobFleet-specific options
-            { "holdCount",              "10",    },
             { "rotateStartingAngle",    "TRUE",  },
             { "startingMaxRadius",      "1000",  },
             { "startingMinRadius",      "300",   },
+
+            // BobFleet-specific options
+            { "holdCount",              "10",    },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -115,24 +90,12 @@ public:
         }
 
         this->defaultHoldCount = MBRegistry_GetUint(mreg, "holdCount");
-        this->rotateStartingAngle =
-            MBRegistry_GetBool(mreg, "rotateStartingAngle");
-
-        this->startingMaxRadius =
-            MBRegistry_GetFloat(mreg, "startingMaxRadius");
-        this->startingMinRadius =
-            MBRegistry_GetFloat(mreg, "startingMinRadius");
-
         this->BasicAIGovernor::loadRegistry(mreg);
 
         MBRegistry_Free(mreg);
     }
 
     uint defaultHoldCount;
-    float startingAngle;
-    float startingMaxRadius;
-    float startingMinRadius;
-    bool rotateStartingAngle;
 };
 
 
