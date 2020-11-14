@@ -98,6 +98,7 @@ typedef struct Mob {
     uint lastSpawnTick;
     int rechargeTime;
     int powerCoreCredits;
+    FPoint lastPos;
     MobID parentMobid;
     MobCmd cmd;
 

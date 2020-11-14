@@ -178,6 +178,7 @@ static Mob *BattleQueueSpawn(Battle *battle, MobID parentMobid,
     spawn->playerID = p;
     spawn->mobid = ++battle->lastMobID;
     spawn->pos = *pos;
+    spawn->lastPos = *pos;
     spawn->cmd.target = *pos;
     spawn->birthTick = battle->bs.tick;
     spawn->parentMobid = parentMobid;
@@ -287,6 +288,7 @@ static void BattleRunMobMove(Battle *battle, Mob *mob)
 
         //XXX: This ASSERT is hitting for resonable-seeming micron values...?
         ASSERT(FPoint_Distance(&newPos, &origin) <= speed + MICRON);
+        mob->lastPos = mob->pos;
         mob->pos = newPos;
     }
     ASSERT(BattleCheckMobInvariants(battle, mob));

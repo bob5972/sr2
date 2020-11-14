@@ -213,6 +213,62 @@ public:
         return myTargetLastSeenMap.get(mobid);
     }
 
+//     float friendAvgHeading(const FPoint *p, float radius, MobTypeFlags filter) {
+//         uint n = 0;
+//         Mob *f = findNthClosestFriend(p, filter, n++);
+//         FPoint heading;
+//         FRPoint rheading;
+//         heading.x = 0.0f;
+//         heading.y = 0.0f;
+//
+//         while (f != NULL && FPoint_Distance(&f->pos, p) <= radius) {
+//             heading.x += (f->pos.x - f->lastPos.x);
+//             heading.y += (f->pos.y - f->lastPos.y);
+//             f = findNthClosestFriend(p, filter, n++);
+//         }
+//
+//         FPoint_ToFRPoint(&heading, NULL, &rheading);
+//         return rheading.theta;
+//     }
+
+    void friendAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
+                           MobTypeFlags filter) {
+        uint n = 0;
+        Mob *f = findNthClosestFriend(p, filter, n++);
+
+        ASSERT(avgVel != NULL);
+        avgVel->x = 0.0f;
+        avgVel->y = 0.0f;
+
+        while (f != NULL && FPoint_Distance(&f->pos, p) <= radius) {
+            avgVel->x += (f->pos.x - f->lastPos.x);
+            avgVel->y += (f->pos.y - f->lastPos.y);
+            f = findNthClosestFriend(p, filter, n++);
+        }
+
+        avgVel->x /= n;
+        avgVel->y /= n;
+    }
+
+    void friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
+                      MobTypeFlags filter) {
+        uint n = 0;
+        Mob *f = findNthClosestFriend(p, filter, n++);
+
+        ASSERT(avgPos != NULL);
+        avgPos->x = 0.0f;
+        avgPos->y = 0.0f;
+
+        while (f != NULL && FPoint_Distance(&f->pos, p) <= radius) {
+            avgPos->x += f->pos.x;
+            avgPos->y += f->pos.y;
+            f = findNthClosestFriend(p, filter, n++);
+        }
+
+        avgPos->x /= n;
+        avgPos->y /= n;
+    }
+
 private:
     int myEnemyBaseDestroyedCount;
     FPoint myFriendBasePos;

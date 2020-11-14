@@ -116,9 +116,16 @@ static inline void FPoint_Midpoint(FPoint *m, const FPoint *a, const FPoint *b)
 
 static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
 {
+    FPoint zero;
+
     ASSERT(p != NULL);
-    ASSERT(c != NULL);
     ASSERT(rp != NULL);
+
+    if (c == NULL) {
+        c = &zero;
+        zero.x = 0.0f;
+        zero.y = 0.0f;
+    }
 
     FPoint temp = *p;
     temp.x -= c->x;
@@ -136,9 +143,16 @@ static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *r
 
 static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
 {
+    FPoint zero;
+
     ASSERT(p != NULL);
-    ASSERT(c != NULL);
     ASSERT(rp != NULL);
+
+    if (c == NULL) {
+        c = &zero;
+        zero.x = 0.0f;
+        zero.y = 0.0f;
+    }
 
     FPoint temp;
 
@@ -148,6 +162,21 @@ static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *
     temp.y += c->y;
 
     *p = temp;
+}
+
+static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
+                               FRPoint *result)
+{
+    FPoint vl, vr;
+    FPoint vs;
+
+    FRPoint_ToFPoint(lhs, NULL, &vl);
+    FRPoint_ToFPoint(rhs, NULL, &vr);
+
+    vs.x = vl.x + vr.x;
+    vs.y = vl.y + vr.y;
+
+    FPoint_ToFRPoint(&vs, NULL, result);
 }
 
 static inline bool FQuad_Intersect(const FQuad *a, const FQuad *b)

@@ -59,18 +59,76 @@ public:
         MBRegistry_Free(mreg);
     }
 
+    void matchHeading(Mob *mob, FRPoint *rPos) {
+        SensorGrid *sg = mySensorGrid;
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+        float flockRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+
+        FPoint avgVel;
+        sg->friendAvgVelocity(&avgVel, &mob->pos, flockRadius, MOB_FLAG_FIGHTER);
+
+        FRPoint ravgVel;
+        FPoint_ToFRPoint(&avgVel, NULL, &ravgVel);
+        ravgVel.radius = speed;
+
+        FRPoint_Add(&ravgVel, rPos, rPos);
+        rPos->radius /= 2.0f;
+    }
+
+    void repulseNeighbors(Mob *mob, FRPoint *rPos) {
+        SensorGrid *sg = mySensorGrid;
+        RandomState *rs = &myRandomState;
+        float repulseRadius = 2.0f * MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+
+        uint n = 0;
+        Mob *f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
+
+        while (f != NULL && FPoint_Distance(&f->pos, &mob->pos) <= repulseRadius) {
+            if (f->mobid != mob->mobid) {
+                FRPoint drp;
+
+                FPoint_ToFRPoint(&f->pos, &mob->pos, &drp);
+
+                float repulsion;
+
+                if (drp.radius <= MICRON) {
+                    drp.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+                    drp.radius = speed;
+                } else {
+                    float k = (drp.radius / repulseRadius) + 1.0f;
+                    repulsion = 2.0f / (k * k);
+                    drp.radius = -1.0f * speed * repulsion;
+                }
+
+                FRPoint_Add(&drp, rPos, rPos);
+            }
+
+            f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
+        }
+
+
+    }
+
     virtual void doIdle(Mob *mob, bool newlyIdle) {
-        float radialTolerance = 50.0f;
         FleetAI *ai = myFleetAI;
         RandomState *rs = &myRandomState;
+        SensorGrid *sg = mySensorGrid;
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
-        Mob *base = mySensorGrid->friendBase();
+        //Mob *base = sg->friendBase();
+        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+        float flockRadius = baseRadius;
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
         ASSERT(ship != NULL);
 
         ship->state = BSAI_STATE_IDLE;
 
-        if (mob->type != MOB_TYPE_FIGHTER || base == NULL) {
+        if (mob->type != MOB_TYPE_FIGHTER) {
             BasicAIGovernor::doIdle(mob, newlyIdle);
             return;
         }
@@ -79,90 +137,82 @@ public:
             return;
         }
 
-        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        float radius = baseRadius;
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-        float angularSpeed = Float_AngularSpeed(radius, speed);
+        if (sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
+            FRPoint rPos;
+            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+            matchHeading(mob, &rPos);
+            repulseNeighbors(mob, &rPos);
+            //pullGroup(mob, &rPos);
 
-        FRPoint rPos;
-        FPoint_ToFRPoint(&mob->pos, &base->pos, &rPos);
+            rPos.radius = speed;
+            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+            ASSERT(!isnanf(mob->cmd.target.x));
+            ASSERT(!isnanf(mob->cmd.target.y));
 
-        if (FPoint_Distance(&base->pos, &mob->pos) <= 10.0f) {
-            FleetUtil_RandomPointInRange(rs, &mob->cmd.target, &base->pos, baseRadius);
-        } else if (!Float_Compare(rPos.radius, radius, radialTolerance)) {
-            rPos.radius = radius;
-            FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
-        } else {
-            rPos.theta += angularSpeed;
-            FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
+            /*
+            * Deal with edge-cases so we can keep making forward progress.
+            */
+            bool clamped;
+            clamped = FPoint_Clamp(&mob->cmd.target,
+                                   0.0f, ai->bp.width,
+                                   0.0f, ai->bp.height);
+            if (clamped) {
+                FleetUtil_RandomPointInRange(rs, &mob->cmd.target,&mob->pos,
+                                            flockRadius);
+            }
+
+            /*
+            * If we still can't make enough forward progress, go somewhere random.
+            */
+            if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= speed/4.0f) {
+                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            }
+        } else if (newlyIdle) {
+            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
         }
 
         ASSERT(!isnanf(mob->cmd.target.x));
         ASSERT(!isnanf(mob->cmd.target.y));
-
-        /*
-         * Deal with edge-cases so we can keep making forward progress.
-         */
-        bool clamped;
-        clamped = FPoint_Clamp(&mob->cmd.target,
-                               0.0f, ai->bp.width,
-                               0.0f, ai->bp.height);
-        if (clamped) {
-            FPoint_ToFRPoint(&mob->cmd.target, &base->pos, &rPos);
-            angularSpeed = Float_AngularSpeed(rPos.radius, speed);
-            rPos.theta += MAX(0.5f, angularSpeed);
-            FRPoint_ToFPoint(&rPos, &base->pos, &mob->cmd.target);
-
-            clamped = FPoint_Clamp(&mob->cmd.target,
-                                   0.0f, ai->bp.width,
-                                   0.0f, ai->bp.height);
-        }
-
-        /*
-         * If we still can't make enough forward progress, go somewhere random.
-         */
-        if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= speed/4.0f) {
-            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
-        }
     }
 
     virtual void runTick() {
         //FleetAI *ai = myFleetAI;
-        SensorGrid *sg = mySensorGrid;
+        //SensorGrid *sg = mySensorGrid;
 
         BasicAIGovernor::runTick();
 
-        Mob *base = sg->friendBase();
-        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-
-        if (base != NULL) {
-            int numEnemies = sg->numTargetsInRange(MOB_FLAG_SHIP, &base->pos,
-                                                   baseRadius);
-            int f = 0;
-            int e = 0;
-
-            Mob *fighter = sg->findNthClosestFriend(&base->pos,
-                                                    MOB_FLAG_FIGHTER, f++);
-            Mob *enemyTarget = sg->findNthClosestTarget(&base->pos,
-                                                        MOB_FLAG_SHIP, e++);
-
-            while (numEnemies > 0 && fighter != NULL) {
-                BasicShipAI *ship = (BasicShipAI *)getShip(fighter->mobid);
-
-                if (enemyTarget != NULL) {
-                    ship->attack(enemyTarget);
-                }
-
-                fighter = sg->findNthClosestFriend(&base->pos,
-                                                   MOB_FLAG_FIGHTER, f++);
-
-                enemyTarget = sg->findNthClosestTarget(&base->pos,
-                                                       MOB_FLAG_SHIP, e++);
-
-                numEnemies--;
-            }
-        }
+//         Mob *base = sg->friendBase();
+//         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+//
+//         if (base != NULL) {
+//             int numEnemies = sg->numTargetsInRange(MOB_FLAG_SHIP, &base->pos,
+//                                                    baseRadius);
+//             int f = 0;
+//             int e = 0;
+//
+//             Mob *fighter = sg->findNthClosestFriend(&base->pos,
+//                                                     MOB_FLAG_FIGHTER, f++);
+//             Mob *enemyTarget = sg->findNthClosestTarget(&base->pos,
+//                                                         MOB_FLAG_SHIP, e++);
+//
+//             while (numEnemies > 0 && fighter != NULL) {
+//                 BasicShipAI *ship = (BasicShipAI *)getShip(fighter->mobid);
+//
+//                 if (enemyTarget != NULL) {
+//                     ship->attack(enemyTarget);
+//                 }
+//
+//                 fighter = sg->findNthClosestFriend(&base->pos,
+//                                                    MOB_FLAG_FIGHTER, f++);
+//
+//                 enemyTarget = sg->findNthClosestTarget(&base->pos,
+//                                                        MOB_FLAG_SHIP, e++);
+//
+//                 numEnemies--;
+//             }
+//         }
     }
 
     virtual void runMob(Mob *mob) {
