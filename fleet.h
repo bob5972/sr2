@@ -52,5 +52,6 @@ void GatherFleet_GetOps(FleetAIOps *ops);
 void CowardFleet_GetOps(FleetAIOps *ops);
 void RunAwayFleet_GetOps(FleetAIOps *ops);
 void CircleFleet_GetOps(FleetAIOps *ops);
+void FlockFleet_GetOps(FleetAIOps *ops);
 
 #endif // _FLEET_H_202005311442

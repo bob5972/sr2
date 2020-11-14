@@ -59,6 +59,7 @@ CPP_SOURCES = basicFleet.cpp \
               bobFleet.cpp \
               circleFleet.cpp \
               cowardFleet.cpp \
+              flockFleet.cpp \
               holdFleet.cpp \
               mobSet.cpp \
               sensorGrid.cpp \

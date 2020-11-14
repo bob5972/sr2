@@ -180,6 +180,9 @@ static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
         case FLEET_AI_CIRCLE:
             CircleFleet_GetOps(ops);
             break;
+        case FLEET_AI_FLOCK:
+            FlockFleet_GetOps(ops);
+            break;
         default:
             PANIC("Unknown AI type=%d\n", aiType);
     }

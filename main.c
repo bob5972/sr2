@@ -245,7 +245,9 @@ void MainConstructScenario(void)
          *    BasicFleet
          *    HoldFleet
          *
+         *    -- unrated --
          *    BobFleet (prototype, varies)
+         *    FlockFleet
          */
 
 //         mainData.players[p].aiType = FLEET_AI_DUMMY;
@@ -260,8 +262,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_CLOUD;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_MAPPER;
-        p++;
+//         mainData.players[p].aiType = FLEET_AI_MAPPER;
+//         p++;
 
 //         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
 //         p++;
@@ -279,6 +281,9 @@ void MainConstructScenario(void)
 //         p++;
 
         mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_FLOCK;
         p++;
 
 //         mainData.players[p].playerName = "BobMod";
