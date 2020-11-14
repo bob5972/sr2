@@ -49,7 +49,7 @@ public:
         int i;
         for (i = 0; i < myAIData.size(); i++) {
             ShipAI *ship = myAIData[i];
-            destroyShip(ship);
+            deleteShip(ship);
         }
 
         RandomState_Destroy(&myRandomState);
@@ -81,6 +81,10 @@ public:
 
             if (haveMob) {
                 runMob(mob);
+            }
+
+            if (myAutoAdd && !mob->alive) {
+                removeMobid(mob->mobid);
             }
         }
     }
@@ -118,8 +122,9 @@ public:
 
     void addMobid(MobID mobid) {
         if (!containsMobid(mobid)) {
-            int i = myAIData.push(createShip(mobid));
+            int i = myAIData.push(newShip(mobid));
             myMap.put(mobid, i);
+            doSpawn(getMob(mobid));
         }
     }
 
@@ -129,6 +134,8 @@ public:
         if (i == -1) {
             return;
         }
+
+        doDestroy(getMob(mobid));
 
         ShipAI *delShip = myAIData[i];
 
@@ -144,7 +151,7 @@ public:
 
         myMap.remove(mobid);
 
-        destroyShip(delShip);
+        deleteShip(delShip);
     }
 
 protected:
@@ -162,12 +169,37 @@ protected:
         MobID mobid;
     };
 
-    virtual ShipAI *createShip(MobID mobid) {
+    virtual ShipAI *newShip(MobID mobid) {
         return new ShipAI(mobid);
     }
 
-    virtual void destroyShip(ShipAI *ship) {
+    virtual void deleteShip(ShipAI *ship) {
         delete ship;
+    }
+
+
+    /**
+     * Fires when a mob is added to the governor.
+     */
+    virtual void doSpawn(Mob *mob) {
+        ASSERT(mob != NULL);
+        ASSERT(containsMobid(mob->mobid));
+
+        /*
+         * By default, do nothing.
+         */
+    }
+
+    /**
+     * Fires when a mob is removed from the governor.
+     */
+    virtual void doDestroy(Mob *mob) {
+        ASSERT(mob != NULL);
+        ASSERT(containsMobid(mob->mobid));
+
+        /*
+         * By default, do nothing.
+         */
     }
 
     Mob *getMob(MobID mobid) {
@@ -369,7 +401,7 @@ protected:
         } holdData;
     };
 
-    virtual ShipAI *createShip(MobID mobid);
+    virtual ShipAI *newShip(MobID mobid);
 
     SensorGrid *mySensorGrid;
 

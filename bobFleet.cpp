@@ -32,7 +32,9 @@ public:
     BobFleetGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     {
+        RandomState *rs = &myRandomState;
         this->setAutoAdd(TRUE);
+        startingAngle = RandomState_Float(rs, 0.0f, M_PI * 2.0f);
     }
 
     virtual ~BobFleetGovernor() { }
@@ -60,6 +62,28 @@ public:
         }
     }
 
+    virtual void doSpawn(Mob *mob) {
+        FleetAI *ai = myFleetAI;
+
+        if (rotateStartingAngle) {
+            if (mob->type == MOB_TYPE_FIGHTER) {
+                FRPoint p;
+
+                do {
+                    startingAngle += M_PI * (3 - sqrtf(5.0f));
+                    p.radius = 1000.0f;
+                    p.theta = startingAngle;
+
+                    do {
+                        p.radius /= 1.1f;
+                        FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
+                    } while (p.radius > 300.0f &&
+                            FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
+                                        0.0f, ai->bp.height));
+                } while (p.radius <= 300.0f);
+            }
+        }
+    }
 
     virtual void loadRegistry(MBRegistry *mreg) {
         struct {
@@ -98,6 +122,7 @@ public:
     }
 
     uint defaultHoldCount;
+    float startingAngle;
     bool rotateStartingAngle;
 };
 
@@ -114,8 +139,6 @@ public:
 
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
         this->gov.loadRegistry(mreg);
-
-        this->startingAngle = RandomState_Float(&this->rs, 0.0f, M_PI * 2.0f);
     }
 
     ~BobFleet() {
@@ -128,14 +151,11 @@ public:
     SensorGrid sg;
     BobFleetGovernor gov;
     MBRegistry *mreg;
-    float startingAngle;
 };
 
 static void *BobFleetCreate(FleetAI *ai);
 static void BobFleetDestroy(void *aiHandle);
 static void BobFleetRunAITick(void *aiHandle);
-static void *BobFleetMobSpawned(void *aiHandle, Mob *m);
-static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
 void BobFleet_GetOps(FleetAIOps *ops)
 {
@@ -148,8 +168,6 @@ void BobFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &BobFleetCreate;
     ops->destroyFleet = &BobFleetDestroy;
     ops->runAITick = &BobFleetRunAITick;
-    ops->mobSpawned = BobFleetMobSpawned;
-    ops->mobDestroyed = BobFleetMobDestroyed;
 }
 
 static void *BobFleetCreate(FleetAI *ai)
@@ -163,46 +181,6 @@ static void BobFleetDestroy(void *handle)
     BobFleet *sf = (BobFleet *)handle;
     ASSERT(sf != NULL);
     delete(sf);
-}
-
-static void *BobFleetMobSpawned(void *aiHandle, Mob *mob)
-{
-    BobFleet *sf = (BobFleet *)aiHandle;
-
-    ASSERT(sf != NULL);
-    ASSERT(mob != NULL);
-
-    //sf->gov.addMobid(mob->mobid);
-
-    if (sf->gov.rotateStartingAngle) {
-        if (mob->type == MOB_TYPE_FIGHTER) {
-            FRPoint p;
-
-            do {
-                sf->startingAngle += M_PI * (3 - sqrtf(5.0f));
-                p.radius = 1000.0f;
-                p.theta = sf->startingAngle;
-
-                do {
-                    p.radius /= 1.1f;
-                    FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
-                } while (p.radius > 300.0f &&
-                         FPoint_Clamp(&mob->cmd.target, 0.0f, sf->ai->bp.width,
-                                      0.0f, sf->ai->bp.height));
-            } while (p.radius <= 300.0f);
-        }
-    }
-
-    return NULL;
-}
-
-/*
- * Potentially invalidates any outstanding ship references.
- */
-static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
-{
-    BobFleet *sf = (BobFleet *)aiHandle;
-    sf->gov.removeMobid(m->mobid);
 }
 
 static void BobFleetRunAITick(void *aiHandle)

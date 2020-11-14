@@ -23,7 +23,7 @@ extern "C" {
 
 #include "shipAI.hpp"
 
-BasicAIGovernor::ShipAI *BasicAIGovernor::createShip(MobID mobid)
+BasicAIGovernor::ShipAI *BasicAIGovernor::newShip(MobID mobid)
 {
         BasicShipAI *ship = new BasicShipAI(mobid, this);
 
