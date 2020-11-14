@@ -30,8 +30,6 @@ extern "C" {
 class FlockAIGovernor : public BasicAIGovernor
 {
 public:
-    MBMap<MobID, float> orbitalMap;
-
     FlockAIGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     { }
@@ -44,7 +42,6 @@ public:
             const char *key;
             const char *value;
         } configs[] = {
-            { "gatherRange",          "100",  },
             { "gatherAbandonStale",   "TRUE", },
             { "attackRange",          "250",  },
         };
@@ -60,26 +57,6 @@ public:
         this->BasicAIGovernor::loadRegistry(mreg);
 
         MBRegistry_Free(mreg);
-    }
-
-    float getOrbital(Mob *mob) {
-        float radius;
-        if (orbitalMap.containsKey(mob->mobid)) {
-            radius = orbitalMap.get(mob->mobid);
-        } else {
-            float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-            radius = baseRadius;
-
-            int numFriends = mySensorGrid->numFriends(MOB_FLAG_FIGHTER);
-            uint maxDim = sqrtf(myFleetAI->bp.width * myFleetAI->bp.width +
-                                myFleetAI->bp.height * myFleetAI->bp.height);
-            radius *= expf(logf(1.05f) * (1 + numFriends));
-            radius = MAX(50.0f, radius);
-            radius = MIN(radius, maxDim);
-
-            orbitalMap.put(mob->mobid, radius);
-        }
-        return radius;
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
@@ -103,7 +80,7 @@ public:
         }
 
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        float radius = getOrbital(mob);
+        float radius = baseRadius;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         float angularSpeed = Float_AngularSpeed(radius, speed);
 
@@ -172,7 +149,6 @@ public:
 
             while (numEnemies > 0 && fighter != NULL) {
                 BasicShipAI *ship = (BasicShipAI *)getShip(fighter->mobid);
-                orbitalMap.put(fighter->mobid, baseRadius / 1.5f);
 
                 if (enemyTarget != NULL) {
                     ship->attack(enemyTarget);
