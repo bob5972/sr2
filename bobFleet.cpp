@@ -32,7 +32,7 @@ public:
     BobFleetGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     {
-
+        this->setAutoAdd(TRUE);
     }
 
     virtual ~BobFleetGovernor() { }
@@ -172,7 +172,7 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *mob)
     ASSERT(sf != NULL);
     ASSERT(mob != NULL);
 
-    sf->gov.addMobid(mob->mobid);
+    //sf->gov.addMobid(mob->mobid);
 
     if (sf->gov.rotateStartingAngle) {
         if (mob->type == MOB_TYPE_FIGHTER) {

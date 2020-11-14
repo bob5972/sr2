@@ -39,6 +39,7 @@ public:
         myFleetAI = ai;
         RandomState_Create(&myRandomState);
         myMap.setEmptyValue(-1);
+        myAutoAdd = FALSE;
     }
 
     /**
@@ -71,10 +72,25 @@ public:
             Mob *mob = CMobIt_Next(mit);
             ASSERT(mob != NULL);
 
-            if (containsMobid(mob->mobid)) {
+            bool haveMob = containsMobid(mob->mobid);
+
+            if (!haveMob && myAutoAdd) {
+                addMobid(mob->mobid);
+                haveMob = TRUE;
+            }
+
+            if (haveMob) {
                 runMob(mob);
             }
         }
+    }
+
+    /**
+     * Sets whether the governor should automatically
+     * add unfamiliar mobs and run them.
+     */
+    void setAutoAdd(bool autoAdd) {
+        myAutoAdd = autoAdd;
     }
 
     /**
@@ -101,9 +117,10 @@ public:
     }
 
     void addMobid(MobID mobid) {
-        ASSERT(!containsMobid(mobid));
-        int i = myAIData.push(createShip(mobid));
-        myMap.put(mobid, i);
+        if (!containsMobid(mobid)) {
+            int i = myAIData.push(createShip(mobid));
+            myMap.put(mobid, i);
+        }
     }
 
     void removeMobid(MobID mobid) {
@@ -168,6 +185,7 @@ protected:
 private:
     IntMap myMap;
     MBVector<ShipAI *> myAIData;
+    bool myAutoAdd;
 };
 
 class BasicAIGovernor : public ShipAIGovernor
