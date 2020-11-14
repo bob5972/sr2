@@ -213,24 +213,6 @@ public:
         return myTargetLastSeenMap.get(mobid);
     }
 
-//     float friendAvgHeading(const FPoint *p, float radius, MobTypeFlags filter) {
-//         uint n = 0;
-//         Mob *f = findNthClosestFriend(p, filter, n++);
-//         FPoint heading;
-//         FRPoint rheading;
-//         heading.x = 0.0f;
-//         heading.y = 0.0f;
-//
-//         while (f != NULL && FPoint_Distance(&f->pos, p) <= radius) {
-//             heading.x += (f->pos.x - f->lastPos.x);
-//             heading.y += (f->pos.y - f->lastPos.y);
-//             f = findNthClosestFriend(p, filter, n++);
-//         }
-//
-//         FPoint_ToFRPoint(&heading, NULL, &rheading);
-//         return rheading.theta;
-//     }
-
     void friendAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
                            MobTypeFlags filter) {
         uint n = 0;
