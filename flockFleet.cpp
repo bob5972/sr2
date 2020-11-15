@@ -59,7 +59,7 @@ public:
         MBRegistry_Free(mreg);
     }
 
-    void matchHeading(Mob *mob, FRPoint *rPos) {
+    void flockAlign(Mob *mob, FRPoint *rPos) {
         SensorGrid *sg = mySensorGrid;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         float flockRadius = MobType_GetSensorRadius(MOB_TYPE_BASE) / 1.5f;
@@ -73,11 +73,13 @@ public:
         FPoint_ToFRPoint(&avgVel, NULL, &ravgVel);
         ravgVel.radius = speed;
 
-        FRPoint_Add(&ravgVel, rPos, rPos);
-        rPos->radius /= 2.0f;
+        FRPoint_WAvg(rPos, 2.0f, &ravgVel, 1.0f, rPos);
+        //rPos->radius *= 9.0f;
+        //FRPoint_Add(&ravgVel, rPos, rPos);
+        //rPos->radius /= 10.0f;
     }
 
-    void repulseNeighbors(Mob *mob, FRPoint *rPos) {
+    void flockSeparate(Mob *mob, FRPoint *rPos) {
         SensorGrid *sg = mySensorGrid;
         RandomState *rs = &myRandomState;
         float repulseRadius = 2.0f * MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
@@ -110,9 +112,20 @@ public:
 
             f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
         }
-
-
     }
+
+   virtual void doAttack(Mob *mob, Mob *enemyTarget) {
+       float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+       BasicAIGovernor::doAttack(mob, enemyTarget);
+       FRPoint rPos;
+       FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+       //flockAlign(mob, &rPos);
+       flockSeparate(mob, &rPos);
+       //flockCohere(mob, &rPos);
+
+       rPos.radius = speed;
+       FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+   }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;
@@ -140,9 +153,9 @@ public:
         if (sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
             FRPoint rPos;
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-            matchHeading(mob, &rPos);
-            repulseNeighbors(mob, &rPos);
-            //pullGroup(mob, &rPos);
+            flockAlign(mob, &rPos);
+            flockSeparate(mob, &rPos);
+            //flockCohere(mob, &rPos);
 
             rPos.radius = speed;
             FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);

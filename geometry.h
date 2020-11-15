@@ -179,6 +179,30 @@ static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
     FPoint_ToFRPoint(&vs, NULL, result);
 }
 
+static inline void FRPoint_WAvg(const FRPoint *lhs, float lw,
+                                const FRPoint *rhs, float rw,
+                                FRPoint *result)
+{
+    FRPoint lhsW, rhsW;
+    FPoint vl, vr;
+    FPoint vs;
+
+    lhsW = *lhs;
+    lhsW.radius *= lw;
+
+    rhsW = *rhs;
+    rhsW.radius *= rw;
+
+    FRPoint_ToFPoint(&lhsW, NULL, &vl);
+    FRPoint_ToFPoint(&rhsW, NULL, &vr);
+
+    vs.x = vl.x + vr.x;
+    vs.y = vl.y + vr.y;
+
+    FPoint_ToFRPoint(&vs, NULL, result);
+    result->radius /= (lw + rw);
+}
+
 static inline bool FQuad_Intersect(const FQuad *a, const FQuad *b)
 {
     if (a->x + a->w <= b->x) {
