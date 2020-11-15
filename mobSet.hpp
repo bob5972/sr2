@@ -30,9 +30,9 @@ extern "C" {
 class MobSet {
 public:
     MobSet() {
-        myNumTrackedBases = 0;
         myCachedBase = -1;
         myMap.setEmptyValue(-1);
+        myTypeCounts.setEmptyValue(0);
         myMobs.pin();
     }
 
@@ -69,7 +69,7 @@ public:
     }
 
     int getNumTrackedBases() {
-        return myNumTrackedBases;
+        return myTypeCounts.get(MOB_TYPE_BASE);
     }
 
     /**
@@ -81,13 +81,12 @@ public:
 
     int numMobs(MobTypeFlags filter) {
         int mobs = 0;
+        int i;
 
-        MobIt mit = iterator();
-        while (mit.hasNext()) {
-            Mob *m = mit.next();
-
-            if (((1 << m->type) & filter) != 0) {
-                mobs++;
+        for (i = MOB_TYPE_MIN; i < MOB_TYPE_MAX; i++) {
+            MobTypeFlags f = (1 << i);
+            if ((f & filter) != 0) {
+                mobs += myTypeCounts.get(i);
             }
         }
 
@@ -121,10 +120,18 @@ public:
                             MobTypeFlags filter, int n);
     class MobIt {
     public:
+//         MobIt(MobSet *ms, MobTypeFlags filter) {
+//             myMobSet = ms;
+//             i = 0;
+//             myLastMobid = MOB_ID_INVALID;
+//             myFilter = filter;
+//         }
+
         MobIt(MobSet *ms) {
             myMobSet = ms;
             i = 0;
             myLastMobid = MOB_ID_INVALID;
+//             myFilter = MOB_FLAG_ALL;
         }
 
         bool hasNext() {
@@ -149,6 +156,7 @@ public:
     private:
         MobSet *myMobSet;
         MobID myLastMobid;
+//         MobTypeFlags myFilter;
         int i;
     };
 
@@ -157,10 +165,14 @@ public:
         return MobIt(this);
     }
 
+//     MobIt iterator(MobTypeFlags filter) {
+//         return MobIt(this, filter);
+//     }
+
 private:
-    int myNumTrackedBases;
     int myCachedBase;
     IntMap myMap;
+    IntMap myTypeCounts;
     MBVector<Mob> myMobs;
 };
 

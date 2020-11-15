@@ -22,7 +22,7 @@ void MobSet::makeEmpty()
 {
     myMobs.makeEmpty();
     myMap.makeEmpty();
-    myNumTrackedBases = 0;
+    myTypeCounts.makeEmpty();
     myCachedBase = -1;
 }
 
@@ -37,8 +37,15 @@ void MobSet::updateMob(Mob *m)
 
         if (m->type == MOB_TYPE_BASE) {
             myCachedBase = i;
-            myNumTrackedBases++;
         }
+        myTypeCounts.increment(m->type);
+    } else {
+        /*
+        * Otherwise we need to update myTypeCounts.
+        */
+        ASSERT(i < myMobs.size());
+        ASSERT(myMobs[i].type == m->type);
+        ASSERT(myTypeCounts.get(myMobs[i].type) > 0);
     }
 
     ASSERT(i < myMobs.size());
@@ -53,11 +60,8 @@ void MobSet::removeMob(MobID badMobid)
         return;
     }
 
-    if (myMobs[i].type == MOB_TYPE_BASE) {
-        ASSERT(myNumTrackedBases > 0);
-        myNumTrackedBases--;
-    }
-
+    ASSERT(myTypeCounts.get(myMobs[i].type) > 0);
+    myTypeCounts.decrement(myMobs[i].type);
 
     if (i == myCachedBase) {
         myCachedBase = -1;
@@ -111,12 +115,12 @@ Mob *MobSet::findNthClosestMob(const FPoint *pos,
 Mob *MobSet::getBase()
 {
     if (myCachedBase != -1) {
-        ASSERT(myNumTrackedBases > 0);
+        ASSERT(myTypeCounts.get(MOB_TYPE_BASE) > 0);
         ASSERT(myCachedBase >= 0 && myCachedBase < myMobs.size());
         return &myMobs[myCachedBase];
     }
 
-    if (myNumTrackedBases > 0) {
+    if (myTypeCounts.get(MOB_TYPE_BASE) > 0) {
         for (uint i = 0; i < myMobs.size(); i++) {
             if (myMobs[i].type == MOB_TYPE_BASE) {
                 myCachedBase = i;
