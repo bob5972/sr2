@@ -263,6 +263,7 @@ static void BattleRunMobMove(Battle *battle, Mob *mob)
 
     speed = Mob_GetSpeed(mob);
 
+    mob->lastPos = mob->pos;
     if (distance <= speed) {
         mob->pos = mob->cmd.target;
     } else {
@@ -288,7 +289,6 @@ static void BattleRunMobMove(Battle *battle, Mob *mob)
 
         //XXX: This ASSERT is hitting for resonable-seeming micron values...?
         ASSERT(FPoint_Distance(&newPos, &origin) <= speed + MICRON);
-        mob->lastPos = mob->pos;
         mob->pos = newPos;
     }
     ASSERT(BattleCheckMobInvariants(battle, mob));

@@ -59,12 +59,19 @@ public:
         MBRegistry_Free(mreg);
     }
 
-    void flockAlign(Mob *mob, FRPoint *rPos) {
+    void flockAlign(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-        float flockRadius = MobType_GetSensorRadius(MOB_TYPE_BASE) / 1.5f;
 
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+//         {
+//             FPoint vel;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
+
 
         FPoint avgVel;
         sg->friendAvgVelocity(&avgVel, &mob->pos, flockRadius, MOB_FLAG_FIGHTER);
@@ -73,59 +80,234 @@ public:
         FPoint_ToFRPoint(&avgVel, NULL, &ravgVel);
         ravgVel.radius = speed;
 
-        FRPoint_WAvg(rPos, 2.0f, &ravgVel, 1.0f, rPos);
-        //rPos->radius *= 9.0f;
-        //FRPoint_Add(&ravgVel, rPos, rPos);
-        //rPos->radius /= 10.0f;
+        FRPoint_WAvg(rPos, (1.0f - weight), &ravgVel, weight, rPos);
+
+//         {
+//             FPoint vel;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
     }
 
-    void flockSeparate(Mob *mob, FRPoint *rPos) {
+    void flockCohere(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
-        RandomState *rs = &myRandomState;
-        float repulseRadius = 2.0f * MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
+//         {
+//             FPoint vel;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
+
+        FPoint avgPos;
+        sg->friendAvgPos(&avgPos, &mob->pos, flockRadius, MOB_FLAG_FIGHTER);
+
+        FRPoint ravgPos;
+        FPoint_ToFRPoint(&avgPos, NULL, &ravgPos);
+        ravgPos.radius = speed;
+
+        FRPoint_WAvg(rPos, (1.0f - weight), &ravgPos, weight, rPos);
+
+//         {
+//             FPoint vel;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
+    }
+
+    void repulseVector(FRPoint *repulseVec, FPoint *pos, FPoint *c,
+                       float repulseRadius) {
+        RandomState *rs = &myRandomState;
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+
+        FRPoint drp;
+
+        FPoint_ToFRPoint(pos, c, &drp);
+
+        ASSERT(drp.radius >= 0.0f);
+        ASSERT(repulseRadius >= 0.0f);
+
+        if (drp.radius <= MICRON) {
+            drp.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+            drp.radius = speed;
+        } else {
+            float repulsion;
+            float k = (drp.radius / repulseRadius) + 1.0f;
+            repulsion = 1.0f / (k * k);
+            drp.radius = -1.0f * speed * repulsion;
+        }
+
+        FRPoint_Add(&drp, repulseVec, repulseVec);
+    }
+
+    void flockSeparate(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        SensorGrid *sg = mySensorGrid;
+
+//         {
+//             FPoint vel;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
 
         uint n = 0;
+        FRPoint repulseVec;
         Mob *f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
 
-        while (f != NULL && FPoint_Distance(&f->pos, &mob->pos) <= repulseRadius) {
+        repulseVec.radius = 0.0f;
+        repulseVec.theta = 0.0f;
+
+        while (f != NULL && FPoint_Distance(&f->pos, &mob->pos) <= flockRadius) {
             if (f->mobid != mob->mobid) {
-                FRPoint drp;
-
-                FPoint_ToFRPoint(&f->pos, &mob->pos, &drp);
-
-                float repulsion;
-
-                if (drp.radius <= MICRON) {
-                    drp.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
-                    drp.radius = speed;
-                } else {
-                    float k = (drp.radius / repulseRadius) + 1.0f;
-                    repulsion = 2.0f / (k * k);
-                    drp.radius = -1.0f * speed * repulsion;
-                }
-
-                FRPoint_Add(&drp, rPos, rPos);
+                repulseVector(&repulseVec, &f->pos, &mob->pos,
+                              flockRadius);
             }
 
             f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
         }
+
+        FRPoint_WAvg(rPos, (1.0f - weight), &repulseVec, weight, rPos);
+
+//         {
+//             FPoint vel;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
     }
 
-   virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-       float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-       BasicAIGovernor::doAttack(mob, enemyTarget);
-       FRPoint rPos;
-       FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-       //flockAlign(mob, &rPos);
-       flockSeparate(mob, &rPos);
-       //flockCohere(mob, &rPos);
+    float edgeDistance(FPoint *pos) {
+        FleetAI *ai = myFleetAI;
+        float edgeDistance;
+        FPoint edgePoint;
 
-       rPos.radius = speed;
-       FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
-   }
+        edgePoint = *pos;
+        edgePoint.x = 0.0f;
+        edgeDistance = FPoint_Distance(pos, &edgePoint);
+
+        edgePoint = *pos;
+        edgePoint.x = ai->bp.width;
+        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
+
+        edgePoint = *pos;
+        edgePoint.y = 0.0f;
+        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
+
+        edgePoint = *pos;
+        edgePoint.y = ai->bp.height;
+        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
+
+        return edgeDistance;
+    }
+
+    void avoidEdges(Mob *mob, FRPoint *rPos, float repulseRadius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        FleetAI *ai = myFleetAI;
+
+        if (edgeDistance(&mob->pos) > repulseRadius) {
+            return;
+        }
+
+//         {
+//             FPoint vel;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
+
+        FRPoint repulseVec;
+
+        repulseVec.radius = 0.0f;
+        repulseVec.theta = 0.0f;
+
+        FPoint edgePoint;
+
+        edgePoint = mob->pos;
+        edgePoint.x = 0.0f;
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+            repulseVector(&repulseVec, &edgePoint, &mob->pos,
+                          repulseRadius);
+        }
+
+        edgePoint = mob->pos;
+        edgePoint.x = ai->bp.width;
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+            repulseVector(&repulseVec, &edgePoint, &mob->pos,
+                          repulseRadius);
+        }
+
+        /*
+         * Top Edge
+         */
+        edgePoint = mob->pos;
+        edgePoint.y = 0.0f;
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+            repulseVector(&repulseVec, &edgePoint, &mob->pos,
+                          repulseRadius);
+        }
+
+        edgePoint = mob->pos;
+        edgePoint.y = ai->bp.height;
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+            repulseVector(&repulseVec, &edgePoint, &mob->pos,
+                          repulseRadius);
+        }
+
+
+        FRPoint_WAvg(rPos, (1.0f - weight), &repulseVec, weight, rPos);
+        //*rPos = repulseVec;
+
+         FPoint target;
+         FRPoint_ToFPoint(rPos, &mob->pos, &target);
+         ASSERT(edgeDistance(&mob->pos) <= edgeDistance(&target));
+
+//         float clampRadius = repulseRadius / 2.0f;
+//         FPoint_Clamp(&target, clampRadius,
+//                      MAX(0.0f, ai->bp.width - clampRadius),
+//                      clampRadius,
+//                      MAX(0.0f, ai->bp.height - clampRadius));
+//         FPoint_ToFRPoint(&target, &mob->pos, rPos);
+
+//         {
+//             FPoint vel;
+//             FPoint linearRepulse;
+//             FRPoint_ToFPoint(rPos, NULL, &vel);
+//             FRPoint_ToFPoint(&repulseVec, NULL, &linearRepulse);
+//             Warning("%s:%d repulseVec(%0.1f, %0.1f) linear(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__,
+//                     repulseVec.radius, repulseVec.theta,
+//                     linearRepulse.x, linearRepulse.y);
+//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                     __FUNCTION__, __LINE__, mob->mobid,
+//                     rPos->radius, rPos->theta, vel.x, vel.y);
+//         }
+    }
+
+//    virtual void doAttack(Mob *mob, Mob *enemyTarget) {
+//        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+//        float flockRadius = baseRadius / 1.5f;
+//        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+//        BasicAIGovernor::doAttack(mob, enemyTarget);
+//        FRPoint rPos;
+//        FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+//        //flockAlign(mob, &rPos);
+//        flockSeparate(mob, &rPos, flockRadius, 0.5f);
+//        //flockCohere(mob, &rPos);
+//
+//        rPos.radius = speed;
+//        FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+//    }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;
@@ -134,7 +316,9 @@ public:
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
         //Mob *base = sg->friendBase();
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        float flockRadius = baseRadius;
+        float fighterRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+        float repulseRadius = 2 * fighterRadius;
+        float flockRadius = baseRadius / 1.5f;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
         ASSERT(ship != NULL);
@@ -146,41 +330,67 @@ public:
             return;
         }
 
-        if (!newlyIdle) {
-            return;
-        }
+//         if (!newlyIdle) {
+//             return;
+//         }
 
         if (sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
             FRPoint rPos;
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-            flockAlign(mob, &rPos);
-            flockSeparate(mob, &rPos);
-            //flockCohere(mob, &rPos);
+
+//             {
+//                 FPoint vel;
+//                 FRPoint_ToFPoint(&rPos, NULL, &vel);
+//                 Warning("\n%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                         __FUNCTION__, __LINE__, mob->mobid,
+//                         rPos.radius, rPos.theta, vel.x, vel.y);
+//                 Warning("%s:%d  pos(%0.1f, %0.1f) lastPos(%0.1f,%0.1f)\n",
+//                         __FUNCTION__, __LINE__, mob->mobid,
+//                         mob->pos.x, mob->pos.y, mob->lastPos.x, mob->lastPos.y);
+//             }
+
+            flockAlign(mob, &rPos, flockRadius, 0.2f);
+            flockCohere(mob, &rPos, flockRadius, 0.1f);
+            flockSeparate(mob, &rPos, repulseRadius, 0.2f);
+            avoidEdges(mob, &rPos, repulseRadius, 0.9f);
 
             rPos.radius = speed;
             FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
 
-            /*
-            * Deal with edge-cases so we can keep making forward progress.
-            */
-            bool clamped;
-            clamped = FPoint_Clamp(&mob->cmd.target,
-                                   0.0f, ai->bp.width,
-                                   0.0f, ai->bp.height);
-            if (clamped) {
-                FleetUtil_RandomPointInRange(rs, &mob->cmd.target,&mob->pos,
-                                             flockRadius);
-            }
+//             {
+//                 FPoint vel;
+//                 FRPoint_ToFPoint(&rPos, NULL, &vel);
+//                 Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                         __FUNCTION__, __LINE__, mob->mobid,
+//                         rPos.radius, rPos.theta, vel.x, vel.y);
+//                 Warning("%s:%d  pos(%0.1f, %0.1f) lastPos(%0.1f,%0.1f) "
+//                         "target(%0.1f, %0.1f)\n\n",
+//                         __FUNCTION__, __LINE__, mob->mobid,
+//                         mob->pos.x, mob->pos.y, mob->lastPos.x, mob->lastPos.y,
+//                         mob->cmd.target.x, mob->cmd.target.y);
+//             }
 
-            /*
-            * If we still can't make enough forward progress, go somewhere random.
-            */
-            if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= speed/4.0f) {
-                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
-            }
+//             /*
+//              * Deal with edge-cases so we can keep making forward progress.
+//              */
+//             bool clamped;
+//             clamped = FPoint_Clamp(&mob->cmd.target,
+//                                    0.0f, ai->bp.width,
+//                                    0.0f, ai->bp.height);
+//             if (clamped) {
+//                 FleetUtil_RandomPointInRange(rs, &mob->cmd.target,&mob->pos,
+//                                              flockRadius);
+//             }
+
+//             /*
+//             * If we still can't make enough forward progress, go somewhere random.
+//             */
+//             if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= speed/4.0f) {
+//                 mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+//                 mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+//             }
         } else if (newlyIdle) {
             mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
             mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);

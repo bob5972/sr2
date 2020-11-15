@@ -113,6 +113,13 @@ static inline void FPoint_Midpoint(FPoint *m, const FPoint *a, const FPoint *b)
     m->y = (a->y + b->y) / 2.0f;
 }
 
+static inline void FPoint_Subtract(const FPoint *a, const FPoint *b,
+                                   FPoint *result)
+{
+    result->x = a->x - b->x;
+    result->y = a->y - b->y;
+}
+
 
 static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
 {
@@ -136,9 +143,16 @@ static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *r
 
     if (isnanf(rp->theta)) {
         rp->theta = 0.0f;
-    } else if (temp.x <= 0.0f) {
+    } else if (temp.x < 0.0f) {
         rp->theta += M_PI;
+    } else if (rp->theta < 0.0f) {
+        rp->theta += 2.0f * M_PI;
     }
+
+    ASSERT(rp->theta <= 2.0f * M_PI);
+    ASSERT(rp->theta >= -2.0f * M_PI);
+    ASSERT(rp->theta >= 0.0f);
+    ASSERT(rp->radius >= 0.0f);
 }
 
 static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
@@ -260,6 +274,175 @@ static inline void FCircle_CenterToIPoint(const FCircle *c, IPoint *p)
 
     p->x = (int)(c->center.x + 0.5f);
     p->y = (int)(c->center.y + 0.5f);
+}
+
+static inline void Geometry_UnitTest()
+{
+    bool print = FALSE;
+    FPoint p, p2, p3, c;
+    FRPoint r, r2, r3;
+
+    p.x = 1.0f;
+    p.y = 1.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = -1.0f;
+    p.y = 1.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = -1.0f;
+    p.y = -1.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = 1.0f;
+    p.y = -1.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = 0.0f;
+    p.y = -1.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = 0.0f;
+    p.y = 1.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = 1.0f;
+    p.y = 0.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = -1.0f;
+    p.y = 0.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FRPoint_ToFPoint(&r, NULL, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("%s:%d p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    p.x = 1.0f;
+    p.y = 1.0f;
+    p2.x = -1.0f;
+    p2.y = -1.0f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    FRPoint_Add(&r, &r2, &r);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), p2.xy(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, p2.x, p2.y);
+        Warning("%s:%d p + p2=rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, r.radius, r.theta);
+        Warning("\n");
+    }
+
+    p.x = 0.0f;
+    p.y = -95.4f;
+    FPoint_ToFRPoint(&p, NULL, &r);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, r.radius, r.theta);
+        Warning("\n");
+    }
+
+    c.x = 1092.5;
+    c.y = 95.4;
+    p.x = c.x;
+    p.y = 0.0;
+
+    FPoint_Subtract(&p, &c, &p2);
+    FPoint_ToFRPoint(&p2, NULL, &r2);
+    FPoint_ToFRPoint(&p, &c, &r);
+    if (print) {
+        Warning("%s:%d  p.xy(%0.1f, %0.1f), c.xy(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p.x, p.y, c.x, c.y);
+
+        Warning("%s:%d  p - c = xy(%0.1f, %0.1f) rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r.radius, r.theta);
+        Warning("%s:%d                      r2.rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, r2.radius, r2.theta);
+    }
+
+    r2 = r;
+    r2.radius *= -1.0f;
+    FRPoint_ToFPoint(&r2, NULL, &p2);
+    if (print) {
+        Warning("%s:%d  p2.xy(%0.1f, %0.1f), rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p2.x, p2.y, r2.radius, r2.theta);
+    }
+
+    FPoint_ToFRPoint(&p2, NULL, &r3);
+    if (print) {
+        Warning("%s:%d  r3 rt(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, r3.radius, r3.theta);
+    }
+
+    FRPoint_ToFPoint(&r3, NULL, &p3);
+    if (print) {
+        Warning("%s:%d  p3.xy(%0.1f, %0.1f)\n",
+                __FUNCTION__, __LINE__, p3.x, p3.y);
+    }
+
+    if (print) {
+        NOT_IMPLEMENTED();
+    }
 }
 
 #endif // _GEOMETRY_H_202005310649
