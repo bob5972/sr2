@@ -334,61 +334,41 @@ public:
 
         if (!nearBase &&
             sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
-            FRPoint rPos;
-            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+            FRPoint rForce;
+            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rForce);
 
 //             {
 //                 FPoint vel;
-//                 FRPoint_ToFPoint(&rPos, NULL, &vel);
-//                 Warning("\n%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                 FRPoint_ToFPoint(&rForce, NULL, &vel);
+//                 Warning("\n%s:%d  IN mobid=%d, rForce(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
 //                         __FUNCTION__, __LINE__, mob->mobid,
-//                         rPos.radius, rPos.theta, vel.x, vel.y);
+//                         rForce.radius, rForce.theta, vel.x, vel.y);
 //                 Warning("%s:%d  pos(%0.1f, %0.1f) lastPos(%0.1f,%0.1f)\n",
 //                         __FUNCTION__, __LINE__, mob->mobid,
 //                         mob->pos.x, mob->pos.y, mob->lastPos.x, mob->lastPos.y);
 //             }
 
-            flockAlign(mob, &rPos, flockRadius, 0.2f);
-            flockCohere(mob, &rPos, flockRadius, 0.1f);
-            flockSeparate(mob, &rPos, repulseRadius, 0.2f);
-            avoidEdges(mob, &rPos, repulseRadius, 0.9f);
+            flockAlign(mob, &rForce, flockRadius, 0.2f);
+            flockCohere(mob, &rForce, flockRadius, 0.1f);
+            flockSeparate(mob, &rForce, repulseRadius, 0.2f);
+            avoidEdges(mob, &rForce, repulseRadius, 0.9f);
 
-            rPos.radius = speed;
-            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+            rForce.radius = speed;
+            FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
 
 //             {
 //                 FPoint vel;
-//                 FRPoint_ToFPoint(&rPos, NULL, &vel);
-//                 Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
+//                 FRPoint_ToFPoint(&rForce, NULL, &vel);
+//                 Warning("%s:%d OUT mobid=%d, rForce(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
 //                         __FUNCTION__, __LINE__, mob->mobid,
-//                         rPos.radius, rPos.theta, vel.x, vel.y);
+//                         rForce.radius, rForce.theta, vel.x, vel.y);
 //                 Warning("%s:%d  pos(%0.1f, %0.1f) lastPos(%0.1f,%0.1f) "
 //                         "target(%0.1f, %0.1f)\n\n",
 //                         __FUNCTION__, __LINE__, mob->mobid,
 //                         mob->pos.x, mob->pos.y, mob->lastPos.x, mob->lastPos.y,
 //                         mob->cmd.target.x, mob->cmd.target.y);
-//             }
-
-//             /*
-//              * Deal with edge-cases so we can keep making forward progress.
-//              */
-//             bool clamped;
-//             clamped = FPoint_Clamp(&mob->cmd.target,
-//                                    0.0f, ai->bp.width,
-//                                    0.0f, ai->bp.height);
-//             if (clamped) {
-//                 FleetUtil_RandomPointInRange(rs, &mob->cmd.target,&mob->pos,
-//                                              flockRadius);
-//             }
-
-//             /*
-//             * If we still can't make enough forward progress, go somewhere random.
-//             */
-//             if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= speed/4.0f) {
-//                 mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-//                 mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
 //             }
         } else if (newlyIdle) {
             mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
