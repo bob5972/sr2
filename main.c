@@ -169,6 +169,7 @@ void MainConstructScenario(void)
          */
         if (TRUE) {
             targetPlayers[tp].aiType = FLEET_AI_FLOCK;
+            targetPlayers[tp].playerName = "FlockFleet Test";
             tp++;
         } else {
             struct {

@@ -155,20 +155,22 @@ public:
 //                     rPos->radius, rPos->theta, vel.x, vel.y);
 //         }
 
-        uint n = 0;
+        MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
         FRPoint repulseVec;
-        Mob *f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
 
         repulseVec.radius = 0.0f;
         repulseVec.theta = 0.0f;
 
-        while (f != NULL && FPoint_Distance(&f->pos, &mob->pos) <= flockRadius) {
-            if (f->mobid != mob->mobid) {
+        while (mit.hasNext()) {
+            Mob *f = mit.next();
+            ASSERT(f != NULL);
+
+
+            if (f->mobid != mob->mobid &&
+                FPoint_Distance(&f->pos, &mob->pos) <= flockRadius) {
                 repulseVector(&repulseVec, &f->pos, &mob->pos,
                               flockRadius);
             }
-
-            f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
         }
 
         repulseVec.radius = weight;

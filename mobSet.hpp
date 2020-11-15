@@ -120,26 +120,29 @@ public:
                             MobTypeFlags filter, int n);
     class MobIt {
     public:
-//         MobIt(MobSet *ms, MobTypeFlags filter) {
-//             myMobSet = ms;
-//             i = 0;
-//             myLastMobid = MOB_ID_INVALID;
-//             myFilter = filter;
-//         }
+        MobIt(MobSet *ms, MobTypeFlags filter) {
+            myMobSet = ms;
+            i = 0;
+            myLastMobid = MOB_ID_INVALID;
+            myFilter = filter;
+        }
 
         MobIt(MobSet *ms) {
             myMobSet = ms;
             i = 0;
             myLastMobid = MOB_ID_INVALID;
-//             myFilter = MOB_FLAG_ALL;
+            myFilter = MOB_FLAG_ALL;
         }
 
         bool hasNext() {
-            return i < myMobSet->size();
+            return i < myMobSet->numMobs(myFilter);
         }
 
         Mob *next() {
-            Mob *m = &myMobSet->myMobs[i++];
+            Mob *m;
+            do {
+                m = &myMobSet->myMobs[i++];
+            } while (((1 << m->type) & myFilter) == 0);
             myLastMobid = m->mobid;
             return m;
         }
@@ -156,7 +159,7 @@ public:
     private:
         MobSet *myMobSet;
         MobID myLastMobid;
-//         MobTypeFlags myFilter;
+        MobTypeFlags myFilter;
         int i;
     };
 
@@ -165,9 +168,9 @@ public:
         return MobIt(this);
     }
 
-//     MobIt iterator(MobTypeFlags filter) {
-//         return MobIt(this, filter);
-//     }
+    MobIt iterator(MobTypeFlags filter) {
+        return MobIt(this, filter);
+    }
 
 private:
     int myCachedBase;

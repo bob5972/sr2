@@ -201,6 +201,10 @@ public:
         return &myFriendBasePos;
     }
 
+    MobSet::MobIt friendsIterator(MobTypeFlags filter) {
+        return myFriends.iterator(filter);
+    }
+
     /**
      * Return the tick we last scanned the specified mob at, if it's
      * still tracked on the SensorGrid.
@@ -216,16 +220,22 @@ public:
     void friendAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
                            MobTypeFlags filter) {
         uint n = 0;
-        Mob *f = findNthClosestFriend(p, filter, n++);
+        MobSet::MobIt mit = myFriends.iterator(filter);
 
         ASSERT(avgVel != NULL);
         avgVel->x = 0.0f;
         avgVel->y = 0.0f;
 
-        while (f != NULL && FPoint_Distance(&f->pos, p) <= radius) {
-            avgVel->x += (f->pos.x - f->lastPos.x);
-            avgVel->y += (f->pos.y - f->lastPos.y);
-            f = findNthClosestFriend(p, filter, n++);
+        while (mit.hasNext()) {
+            Mob *f = mit.next();
+            ASSERT(f != NULL);
+
+
+            if (FPoint_Distance(&f->pos, p) <= radius) {
+                n++;
+                avgVel->x += (f->pos.x - f->lastPos.x);
+                avgVel->y += (f->pos.y - f->lastPos.y);
+            }
         }
 
         avgVel->x /= n;
@@ -235,16 +245,20 @@ public:
     void friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
         uint n = 0;
-        Mob *f = findNthClosestFriend(p, filter, n++);
+        MobSet::MobIt mit = myFriends.iterator(filter);
 
         ASSERT(avgPos != NULL);
         avgPos->x = 0.0f;
         avgPos->y = 0.0f;
 
-        while (f != NULL && FPoint_Distance(&f->pos, p) <= radius) {
-            avgPos->x += f->pos.x;
-            avgPos->y += f->pos.y;
-            f = findNthClosestFriend(p, filter, n++);
+        while (mit.hasNext()) {
+            Mob *f = mit.next();
+            ASSERT(f != NULL);
+
+            if (FPoint_Distance(&f->pos, p) <= radius) {
+                avgPos->x += f->pos.x;
+                avgPos->y += f->pos.y;
+            }
         }
 
         avgPos->x /= n;
