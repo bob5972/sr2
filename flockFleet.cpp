@@ -264,13 +264,12 @@ public:
                           repulseRadius);
         }
 
+        FPoint target;
+        FRPoint_ToFPoint(rPos, &mob->pos, &target);
+        ASSERT(edgeDistance(&mob->pos) >= repulseRadius ||
+               edgeDistance(&mob->pos) <= edgeDistance(&target));
 
         FRPoint_WAvg(rPos, (1.0f - weight), &repulseVec, weight, rPos);
-        //*rPos = repulseVec;
-
-         FPoint target;
-         FRPoint_ToFPoint(rPos, &mob->pos, &target);
-         ASSERT(edgeDistance(&mob->pos) <= edgeDistance(&target));
 
 //         float clampRadius = repulseRadius / 2.0f;
 //         FPoint_Clamp(&target, clampRadius,
@@ -294,32 +293,33 @@ public:
 //         }
     }
 
-//    virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-//        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-//        float flockRadius = baseRadius / 1.5f;
-//        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-//        BasicAIGovernor::doAttack(mob, enemyTarget);
-//        FRPoint rPos;
-//        FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-//        //flockAlign(mob, &rPos);
-//        flockSeparate(mob, &rPos, flockRadius, 0.5f);
-//        //flockCohere(mob, &rPos);
+//   virtual void doAttack(Mob *mob, Mob *enemyTarget) {
+//       float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+//       float flockRadius = baseRadius / 1.5f;
+//       float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+//       BasicAIGovernor::doAttack(mob, enemyTarget);
+//       FRPoint rPos;
+//       FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+//       //flockAlign(mob, &rPos);
+//       flockSeparate(mob, &rPos, flockRadius, 0.5f);
+//       //flockCohere(mob, &rPos);
 //
-//        rPos.radius = speed;
-//        FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
-//    }
+//       rPos.radius = speed;
+//       FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+//   }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;
         RandomState *rs = &myRandomState;
         SensorGrid *sg = mySensorGrid;
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
-        //Mob *base = sg->friendBase();
+        Mob *base = sg->friendBase();
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
         float fighterRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
         float repulseRadius = 2 * fighterRadius;
         float flockRadius = baseRadius / 1.5f;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+        bool nearBase;
 
         ASSERT(ship != NULL);
 
@@ -334,7 +334,14 @@ public:
 //             return;
 //         }
 
-        if (sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
+        nearBase = FALSE;
+        if (base != NULL &&
+            FPoint_Distance(&base->pos, &mob->pos) < baseRadius) {
+            nearBase = TRUE;
+        }
+
+        if (!nearBase &&
+            sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
             FRPoint rPos;
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 

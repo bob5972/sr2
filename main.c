@@ -167,45 +167,50 @@ void MainConstructScenario(void)
          * Target fleets to optimize.
          * Customize as needed.
          */
-        struct {
-            float attackRange;
-            bool attackExtendedRange;
-            float holdCount;
-        } v[] = {
-            { 100, TRUE,  100, },
-            { 100, TRUE,   50, },
-            { 100, FALSE,  50, },
-        };
-
-        for (uint i = 0; i < ARRAYSIZE(v); i++) {
-            char *vstr[3];
-
-            MBUtil_Zero(&vstr, sizeof(vstr));
-
-            targetPlayers[tp].mreg = MBRegistry_Alloc();
-
-            asprintf(&vstr[0], "%1.0f", v[i].attackRange);
-            MBRegistry_Put(targetPlayers[tp].mreg, "attackRange", vstr[0]);
-
-            asprintf(&vstr[1], "%d", v[i].attackExtendedRange);
-            MBRegistry_Put(targetPlayers[tp].mreg, "attackExtendedRange", vstr[1]);
-
-            asprintf(&vstr[2], "%1.0f", v[i].holdCount);
-            MBRegistry_Put(targetPlayers[tp].mreg, "holdCount", vstr[2]);
-
-            targetPlayers[tp].aiType = FLEET_AI_HOLD;
-
-            char *name = NULL;
-            asprintf(&name, "%s %s:%s:%s",
-                     Fleet_GetName(targetPlayers[tp].aiType),
-                     vstr[0], vstr[1], vstr[2]);
-            targetPlayers[tp].playerName = name;
-
+        if (TRUE) {
+            targetPlayers[tp].aiType = FLEET_AI_FLOCK;
             tp++;
+        } else {
+            struct {
+                float attackRange;
+                bool attackExtendedRange;
+                float holdCount;
+            } v[] = {
+                { 100, TRUE,  100, },
+                { 100, TRUE,   50, },
+                { 100, FALSE,  50, },
+            };
 
-            // XXX: Leak!
-            //free(vstr);
-            //free(name);
+            for (uint i = 0; i < ARRAYSIZE(v); i++) {
+                char *vstr[3];
+
+                MBUtil_Zero(&vstr, sizeof(vstr));
+
+                targetPlayers[tp].mreg = MBRegistry_Alloc();
+
+                asprintf(&vstr[0], "%1.0f", v[i].attackRange);
+                MBRegistry_Put(targetPlayers[tp].mreg, "attackRange", vstr[0]);
+
+                asprintf(&vstr[1], "%d", v[i].attackExtendedRange);
+                MBRegistry_Put(targetPlayers[tp].mreg, "attackExtendedRange", vstr[1]);
+
+                asprintf(&vstr[2], "%1.0f", v[i].holdCount);
+                MBRegistry_Put(targetPlayers[tp].mreg, "holdCount", vstr[2]);
+
+                targetPlayers[tp].aiType = FLEET_AI_HOLD;
+
+                char *name = NULL;
+                asprintf(&name, "%s %s:%s:%s",
+                        Fleet_GetName(targetPlayers[tp].aiType),
+                        vstr[0], vstr[1], vstr[2]);
+                targetPlayers[tp].playerName = name;
+
+                tp++;
+
+                // XXX: Leak!
+                //free(vstr);
+                //free(name);
+            }
         }
 
         /*
