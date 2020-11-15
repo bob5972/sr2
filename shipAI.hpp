@@ -37,7 +37,7 @@ public:
     ShipAIGovernor(FleetAI *ai)
     {
         myFleetAI = ai;
-        RandomState_Create(&myRandomState);
+        RandomState_CreateWithSeed(&myRandomState, ai->seed);
         myMap.setEmptyValue(-1);
         myAutoAdd = FALSE;
     }
