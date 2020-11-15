@@ -62,7 +62,6 @@ public:
     void flockAlign(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
 //         {
 //             FPoint vel;
@@ -78,9 +77,9 @@ public:
 
         FRPoint ravgVel;
         FPoint_ToFRPoint(&avgVel, NULL, &ravgVel);
-        ravgVel.radius = speed;
+        ravgVel.radius = weight;
 
-        FRPoint_WAvg(rPos, (1.0f - weight), &ravgVel, weight, rPos);
+        FRPoint_Add(rPos, &ravgVel, rPos);
 
 //         {
 //             FPoint vel;
@@ -94,7 +93,6 @@ public:
     void flockCohere(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
 //         {
 //             FPoint vel;
@@ -109,9 +107,8 @@ public:
 
         FRPoint ravgPos;
         FPoint_ToFRPoint(&avgPos, NULL, &ravgPos);
-        ravgPos.radius = speed;
-
-        FRPoint_WAvg(rPos, (1.0f - weight), &ravgPos, weight, rPos);
+        ravgPos.radius = weight;
+        FRPoint_Add(rPos, &ravgPos, rPos);
 
 //         {
 //             FPoint vel;
@@ -125,7 +122,6 @@ public:
     void repulseVector(FRPoint *repulseVec, FPoint *pos, FPoint *c,
                        float repulseRadius) {
         RandomState *rs = &myRandomState;
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
         FRPoint drp;
 
@@ -136,12 +132,12 @@ public:
 
         if (drp.radius <= MICRON) {
             drp.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
-            drp.radius = speed;
+            drp.radius = 1.0f;
         } else {
             float repulsion;
             float k = (drp.radius / repulseRadius) + 1.0f;
             repulsion = 1.0f / (k * k);
-            drp.radius = -1.0f * speed * repulsion;
+            drp.radius = -1.0f * repulsion;
         }
 
         FRPoint_Add(&drp, repulseVec, repulseVec);
@@ -175,7 +171,8 @@ public:
             f = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
         }
 
-        FRPoint_WAvg(rPos, (1.0f - weight), &repulseVec, weight, rPos);
+        repulseVec.radius = weight;
+        FRPoint_Add(rPos, &repulseVec, rPos);
 
 //         {
 //             FPoint vel;
@@ -268,7 +265,8 @@ public:
         FRPoint_ToFPoint(&repulseVec, &mob->pos, &target);
         ASSERT(edgeDistance(&mob->pos) <= edgeDistance(&target));
 
-        FRPoint_WAvg(rPos, (1.0f - weight), &repulseVec, weight, rPos);
+        repulseVec.radius = weight;
+        FRPoint_Add(rPos, &repulseVec, rPos);
 
 //         {
 //             FPoint vel;
@@ -334,8 +332,10 @@ public:
 
         if (!nearBase &&
             sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
-            FRPoint rForce;
-            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rForce);
+            FRPoint rForce, rPos;
+
+            FRPoint_Zero(&rForce);
+            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
 //             {
 //                 FPoint vel;
@@ -353,8 +353,10 @@ public:
             flockSeparate(mob, &rForce, repulseRadius, 0.2f);
             avoidEdges(mob, &rForce, repulseRadius, 0.9f);
 
-            rForce.radius = speed;
-            FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
+            rPos.radius = 0.5f;
+            FRPoint_Add(&rPos, &rForce, &rPos);
+            rPos.radius = speed;
+            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
 

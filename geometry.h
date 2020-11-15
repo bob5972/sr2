@@ -120,6 +120,19 @@ static inline void FPoint_Subtract(const FPoint *a, const FPoint *b,
     result->y = a->y - b->y;
 }
 
+static inline void FRPoint_Zero(FRPoint *rp)
+{
+    ASSERT(rp != NULL);
+    rp->radius = 0.0f;
+    rp->theta = 0.0f;
+}
+
+static inline void FPoint_Zero(FPoint *p)
+{
+    ASSERT(p != NULL);
+    p->x = 0.0f;
+    p->y = 0.0f;
+}
 
 static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
 {
@@ -129,9 +142,8 @@ static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *r
     ASSERT(rp != NULL);
 
     if (c == NULL) {
+        FPoint_Zero(&zero);
         c = &zero;
-        zero.x = 0.0f;
-        zero.y = 0.0f;
     }
 
     FPoint temp = *p;
@@ -163,9 +175,8 @@ static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *
     ASSERT(rp != NULL);
 
     if (c == NULL) {
+        FPoint_Zero(&zero);
         c = &zero;
-        zero.x = 0.0f;
-        zero.y = 0.0f;
     }
 
     FPoint temp;
