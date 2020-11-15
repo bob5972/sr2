@@ -32,7 +32,12 @@ public:
     MobSet() {
         myCachedBase = -1;
         myMap.setEmptyValue(-1);
-        myTypeCounts.setEmptyValue(0);
+
+        myTypeCounts.resize(MOB_TYPE_MAX);
+        for (uint i = 0; i < myTypeCounts.size(); i++) {
+            myTypeCounts[i] = 0;
+        }
+
         myMobs.pin();
     }
 
@@ -175,7 +180,7 @@ public:
 private:
     int myCachedBase;
     IntMap myMap;
-    IntMap myTypeCounts;
+    MBVector<uint> myTypeCounts;
     MBVector<Mob> myMobs;
 };
 

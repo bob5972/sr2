@@ -22,8 +22,11 @@ void MobSet::makeEmpty()
 {
     myMobs.makeEmpty();
     myMap.makeEmpty();
-    myTypeCounts.makeEmpty();
     myCachedBase = -1;
+
+    for (uint i = 0; i < myTypeCounts.size(); i++) {
+        myTypeCounts[i] = 0;
+    }
 }
 
 void MobSet::updateMob(Mob *m)
@@ -38,7 +41,7 @@ void MobSet::updateMob(Mob *m)
         if (m->type == MOB_TYPE_BASE) {
             myCachedBase = i;
         }
-        myTypeCounts.increment(m->type);
+        myTypeCounts[m->type]++;
     } else {
         /*
         * Otherwise we need to update myTypeCounts.
@@ -61,7 +64,7 @@ void MobSet::removeMob(MobID badMobid)
     }
 
     ASSERT(myTypeCounts.get(myMobs[i].type) > 0);
-    myTypeCounts.decrement(myMobs[i].type);
+    myTypeCounts[myMobs[i].type]--;
 
     if (i == myCachedBase) {
         myCachedBase = -1;
