@@ -265,18 +265,10 @@ public:
         }
 
         FPoint target;
-        FRPoint_ToFPoint(rPos, &mob->pos, &target);
-        ASSERT(edgeDistance(&mob->pos) >= repulseRadius ||
-               edgeDistance(&mob->pos) <= edgeDistance(&target));
+        FRPoint_ToFPoint(&repulseVec, &mob->pos, &target);
+        ASSERT(edgeDistance(&mob->pos) <= edgeDistance(&target));
 
         FRPoint_WAvg(rPos, (1.0f - weight), &repulseVec, weight, rPos);
-
-//         float clampRadius = repulseRadius / 2.0f;
-//         FPoint_Clamp(&target, clampRadius,
-//                      MAX(0.0f, ai->bp.width - clampRadius),
-//                      clampRadius,
-//                      MAX(0.0f, ai->bp.height - clampRadius));
-//         FPoint_ToFRPoint(&target, &mob->pos, rPos);
 
 //         {
 //             FPoint vel;
@@ -293,20 +285,20 @@ public:
 //         }
     }
 
-//   virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-//       float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-//       float flockRadius = baseRadius / 1.5f;
-//       float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-//       BasicAIGovernor::doAttack(mob, enemyTarget);
-//       FRPoint rPos;
-//       FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-//       //flockAlign(mob, &rPos);
-//       flockSeparate(mob, &rPos, flockRadius, 0.5f);
-//       //flockCohere(mob, &rPos);
+//  virtual void doAttack(Mob *mob, Mob *enemyTarget) {
+//      float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+//      float flockRadius = baseRadius / 1.5f;
+//      float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+//      BasicAIGovernor::doAttack(mob, enemyTarget);
+//      FRPoint rPos;
+//      FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+//      //flockAlign(mob, &rPos);
+//      flockSeparate(mob, &rPos, flockRadius, 0.5f);
+//      //flockCohere(mob, &rPos);
 //
-//       rPos.radius = speed;
-//       FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
-//   }
+//      rPos.radius = speed;
+//      FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+//  }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;

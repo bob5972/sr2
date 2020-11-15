@@ -273,8 +273,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
 //         p++;
 //
-        mainData.players[p].aiType = FLEET_AI_CIRCLE;
-        p++;
+//         mainData.players[p].aiType = FLEET_AI_CIRCLE;
+//         p++;
 //
 //         mainData.players[p].aiType = FLEET_AI_COWARD;
 //         p++;
@@ -285,8 +285,8 @@ void MainConstructScenario(void)
 //         mainData.players[p].aiType = FLEET_AI_HOLD;
 //         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_BOB;
-//         p++;
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
 
 //         mainData.players[p].aiType = FLEET_AI_FLOCK;
 //         p++;
