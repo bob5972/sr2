@@ -219,6 +219,24 @@ public:
         FRPoint_Add(rPos, &repulseVec, rPos);
     }
 
+
+    void findEnemies(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        SensorGrid *sg = mySensorGrid;
+        Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
+        int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                               &mob->pos, flockRadius);
+
+        if (enemy != NULL && numFriends >= 5) {
+            FPoint eVec;
+            FRPoint reVec;
+            FPoint_Subtract(&enemy->pos, &mob->pos, &eVec);
+            FPoint_ToFRPoint(&eVec, NULL, &reVec);
+            reVec.radius = weight;
+            FRPoint_Add(rPos, &reVec, rPos);
+        }
+    }
+
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
         float flockRadius = baseRadius / 1.5f;
@@ -275,6 +293,7 @@ public:
             flockCohere(mob, &rForce, flockRadius, -0.1f);
             flockSeparate(mob, &rForce, repulseRadius, 0.2f);
             avoidEdges(mob, &rForce, edgeRadius, 0.9f);
+            findEnemies(mob, &rForce, flockRadius, 0.3f);
 
             rPos.radius = 0.5f;
             FRPoint_Add(&rPos, &rForce, &rPos);
