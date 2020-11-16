@@ -213,7 +213,7 @@ public:
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;
 
-        if (edgeDistance(&mob->pos) > repulseRadius) {
+        if (edgeDistance(&mob->pos) >= repulseRadius) {
             return;
         }
 
@@ -232,6 +232,9 @@ public:
 
         FPoint edgePoint;
 
+        /*
+         * Left Edge
+         */
         edgePoint = mob->pos;
         edgePoint.x = 0.0f;
         if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
@@ -239,6 +242,9 @@ public:
                           repulseRadius);
         }
 
+        /*
+         * Right Edge
+         */
         edgePoint = mob->pos;
         edgePoint.x = ai->bp.width;
         if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
@@ -256,16 +262,15 @@ public:
                           repulseRadius);
         }
 
+        /*
+         * Bottom edge
+         */
         edgePoint = mob->pos;
         edgePoint.y = ai->bp.height;
         if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
             repulseVector(&repulseVec, &edgePoint, &mob->pos,
                           repulseRadius);
         }
-
-        FPoint target;
-        FRPoint_ToFPoint(&repulseVec, &mob->pos, &target);
-        ASSERT(edgeDistance(&mob->pos) <= edgeDistance(&target));
 
         repulseVec.radius = weight;
         FRPoint_Add(rPos, &repulseVec, rPos);
@@ -285,20 +290,20 @@ public:
 //         }
     }
 
-//  virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-//      float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-//      float flockRadius = baseRadius / 1.5f;
-//      float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-//      BasicAIGovernor::doAttack(mob, enemyTarget);
-//      FRPoint rPos;
-//      FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-//      //flockAlign(mob, &rPos);
-//      flockSeparate(mob, &rPos, flockRadius, 0.5f);
-//      //flockCohere(mob, &rPos);
-//
-//      rPos.radius = speed;
-//      FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
-//  }
+    virtual void doAttack(Mob *mob, Mob *enemyTarget) {
+        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+        float flockRadius = baseRadius / 1.5f;
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+        BasicAIGovernor::doAttack(mob, enemyTarget);
+        FRPoint rPos;
+        FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+        //flockAlign(mob, &rPos);
+        flockSeparate(mob, &rPos, flockRadius, 0.5f);
+        //flockCohere(mob, &rPos);
+
+        rPos.radius = speed;
+        FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+    }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         FleetAI *ai = myFleetAI;
@@ -309,6 +314,7 @@ public:
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
         float fighterRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
         float repulseRadius = 2 * fighterRadius;
+        float edgeRadius = fighterRadius;
         float flockRadius = baseRadius / 1.5f;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         bool nearBase;
@@ -353,7 +359,7 @@ public:
             flockAlign(mob, &rForce, flockRadius, 0.2f);
             flockCohere(mob, &rForce, flockRadius, 0.1f);
             flockSeparate(mob, &rForce, repulseRadius, 0.2f);
-            avoidEdges(mob, &rForce, repulseRadius, 0.9f);
+            avoidEdges(mob, &rForce, edgeRadius, 0.9f);
 
             rPos.radius = 0.5f;
             FRPoint_Add(&rPos, &rForce, &rPos);
