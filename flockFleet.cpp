@@ -224,16 +224,39 @@ public:
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
-        int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                               &mob->pos, flockRadius);
 
-        if (enemy != NULL && numFriends >= 5) {
-            FPoint eVec;
-            FRPoint reVec;
-            FPoint_Subtract(&enemy->pos, &mob->pos, &eVec);
-            FPoint_ToFRPoint(&eVec, NULL, &reVec);
-            reVec.radius = weight;
-            FRPoint_Add(rPos, &reVec, rPos);
+        if (enemy != NULL) {
+            int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                                   &mob->pos, flockRadius);
+
+            if (numFriends >= 5) {
+                FPoint eVec;
+                FRPoint reVec;
+                FPoint_Subtract(&enemy->pos, &mob->pos, &eVec);
+                FPoint_ToFRPoint(&eVec, NULL, &reVec);
+                reVec.radius = weight;
+                FRPoint_Add(rPos, &reVec, rPos);
+            }
+        }
+    }
+
+    void findCores(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        SensorGrid *sg = mySensorGrid;
+        Mob *core = sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
+
+        if (core != NULL) {
+            int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                                   &mob->pos, flockRadius);
+
+            if (numFriends >= 5) {
+                FPoint eVec;
+                FRPoint reVec;
+                FPoint_Subtract(&core->pos, &mob->pos, &eVec);
+                FPoint_ToFRPoint(&eVec, NULL, &reVec);
+                reVec.radius = weight;
+                FRPoint_Add(rPos, &reVec, rPos);
+            }
         }
     }
 
@@ -294,6 +317,7 @@ public:
             flockSeparate(mob, &rForce, repulseRadius, 0.2f);
             avoidEdges(mob, &rForce, edgeRadius, 0.9f);
             findEnemies(mob, &rForce, flockRadius, 0.3f);
+            findCores(mob, &rForce, flockRadius, 0.1f);
 
             rPos.radius = 0.5f;
             FRPoint_Add(&rPos, &rForce, &rPos);
