@@ -63,15 +63,6 @@ public:
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
 
-//         {
-//             FPoint vel;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
-
-
         FPoint avgVel;
         sg->friendAvgVelocity(&avgVel, &mob->pos, flockRadius, MOB_FLAG_FIGHTER);
 
@@ -80,27 +71,11 @@ public:
         ravgVel.radius = weight;
 
         FRPoint_Add(rPos, &ravgVel, rPos);
-
-//         {
-//             FPoint vel;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
     }
 
     void flockCohere(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
-
-//         {
-//             FPoint vel;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
 
         FPoint avgPos;
         sg->friendAvgPos(&avgPos, &mob->pos, flockRadius, MOB_FLAG_FIGHTER);
@@ -109,14 +84,6 @@ public:
         FPoint_ToFRPoint(&avgPos, NULL, &ravgPos);
         ravgPos.radius = weight;
         FRPoint_Add(rPos, &ravgPos, rPos);
-
-//         {
-//             FPoint vel;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
     }
 
     void repulseVector(FRPoint *repulseVec, FPoint *pos, FPoint *c,
@@ -147,14 +114,6 @@ public:
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
 
-//         {
-//             FPoint vel;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
-
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
         FRPoint repulseVec;
 
@@ -175,14 +134,6 @@ public:
 
         repulseVec.radius = weight;
         FRPoint_Add(rPos, &repulseVec, rPos);
-
-//         {
-//             FPoint vel;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
     }
 
     float edgeDistance(FPoint *pos) {
@@ -216,14 +167,6 @@ public:
         if (edgeDistance(&mob->pos) >= repulseRadius) {
             return;
         }
-
-//         {
-//             FPoint vel;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             Warning("%s:%d  IN mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
 
         FRPoint repulseVec;
 
@@ -274,20 +217,6 @@ public:
 
         repulseVec.radius = weight;
         FRPoint_Add(rPos, &repulseVec, rPos);
-
-//         {
-//             FPoint vel;
-//             FPoint linearRepulse;
-//             FRPoint_ToFPoint(rPos, NULL, &vel);
-//             FRPoint_ToFPoint(&repulseVec, NULL, &linearRepulse);
-//             Warning("%s:%d repulseVec(%0.1f, %0.1f) linear(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__,
-//                     repulseVec.radius, repulseVec.theta,
-//                     linearRepulse.x, linearRepulse.y);
-//             Warning("%s:%d OUT mobid=%d, rPos(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                     __FUNCTION__, __LINE__, mob->mobid,
-//                     rPos->radius, rPos->theta, vel.x, vel.y);
-//         }
     }
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
@@ -328,10 +257,6 @@ public:
             return;
         }
 
-//         if (!newlyIdle) {
-//             return;
-//         }
-
         nearBase = FALSE;
         if (base != NULL &&
             FPoint_Distance(&base->pos, &mob->pos) < baseRadius) {
@@ -345,17 +270,6 @@ public:
             FRPoint_Zero(&rForce);
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-//             {
-//                 FPoint vel;
-//                 FRPoint_ToFPoint(&rForce, NULL, &vel);
-//                 Warning("\n%s:%d  IN mobid=%d, rForce(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                         __FUNCTION__, __LINE__, mob->mobid,
-//                         rForce.radius, rForce.theta, vel.x, vel.y);
-//                 Warning("%s:%d  pos(%0.1f, %0.1f) lastPos(%0.1f,%0.1f)\n",
-//                         __FUNCTION__, __LINE__, mob->mobid,
-//                         mob->pos.x, mob->pos.y, mob->lastPos.x, mob->lastPos.y);
-//             }
-
             flockAlign(mob, &rForce, flockRadius, 0.2f);
             flockCohere(mob, &rForce, flockRadius, 0.1f);
             flockSeparate(mob, &rForce, repulseRadius, 0.2f);
@@ -367,19 +281,6 @@ public:
             FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
-
-//             {
-//                 FPoint vel;
-//                 FRPoint_ToFPoint(&rForce, NULL, &vel);
-//                 Warning("%s:%d OUT mobid=%d, rForce(%0.1f, %0.1f) vel(%0.1f,%0.1f)\n",
-//                         __FUNCTION__, __LINE__, mob->mobid,
-//                         rForce.radius, rForce.theta, vel.x, vel.y);
-//                 Warning("%s:%d  pos(%0.1f, %0.1f) lastPos(%0.1f,%0.1f) "
-//                         "target(%0.1f, %0.1f)\n\n",
-//                         __FUNCTION__, __LINE__, mob->mobid,
-//                         mob->pos.x, mob->pos.y, mob->lastPos.x, mob->lastPos.y,
-//                         mob->cmd.target.x, mob->cmd.target.y);
-//             }
         } else if (newlyIdle) {
             mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
             mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
