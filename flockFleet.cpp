@@ -226,6 +226,7 @@ public:
         BasicAIGovernor::doAttack(mob, enemyTarget);
         FRPoint rPos;
         FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+
         //flockAlign(mob, &rPos);
         flockSeparate(mob, &rPos, flockRadius, 0.5f);
         //flockCohere(mob, &rPos);
@@ -271,7 +272,7 @@ public:
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
             flockAlign(mob, &rForce, flockRadius, 0.2f);
-            flockCohere(mob, &rForce, flockRadius, 0.1f);
+            flockCohere(mob, &rForce, flockRadius, -0.1f);
             flockSeparate(mob, &rForce, repulseRadius, 0.2f);
             avoidEdges(mob, &rForce, edgeRadius, 0.9f);
 

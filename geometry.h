@@ -161,8 +161,8 @@ static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *r
         rp->theta += 2.0f * M_PI;
     }
 
-    ASSERT(rp->theta <= 2.0f * M_PI);
-    ASSERT(rp->theta >= -2.0f * M_PI);
+    ASSERT(rp->theta <= 2.0f * (float)M_PI);
+    ASSERT(rp->theta >= -2.0f * (float)M_PI);
     ASSERT(rp->theta >= 0.0f);
     ASSERT(rp->radius >= 0.0f);
 }
