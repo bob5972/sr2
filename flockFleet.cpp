@@ -43,6 +43,7 @@ public:
             const char *value;
         } configs[] = {
             { "gatherAbandonStale",   "TRUE", },
+            { "gatherRange",          "100",  },
             { "attackRange",          "250",  },
         };
 
@@ -249,7 +250,8 @@ public:
             int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
                                                    &mob->pos, flockRadius);
 
-            if (numFriends >= 5) {
+            if (FPoint_Distance(&mob->pos, &core->pos) <= flockRadius ||
+                numFriends >= 5) {
                 FPoint eVec;
                 FRPoint reVec;
                 FPoint_Subtract(&core->pos, &mob->pos, &eVec);
