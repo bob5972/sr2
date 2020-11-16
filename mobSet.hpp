@@ -128,6 +128,7 @@ public:
         MobIt(MobSet *ms, MobTypeFlags filter) {
             myMobSet = ms;
             i = 0;
+            numReturned = 0;
             myLastMobid = MOB_ID_INVALID;
             myFilter = filter;
         }
@@ -135,12 +136,13 @@ public:
         MobIt(MobSet *ms) {
             myMobSet = ms;
             i = 0;
+            numReturned = 0;
             myLastMobid = MOB_ID_INVALID;
             myFilter = MOB_FLAG_ALL;
         }
 
         bool hasNext() {
-            return i < myMobSet->numMobs(myFilter);
+            return numReturned < myMobSet->numMobs(myFilter);
         }
 
         Mob *next() {
@@ -149,6 +151,7 @@ public:
                 m = &myMobSet->myMobs[i++];
             } while (((1 << m->type) & myFilter) == 0);
             myLastMobid = m->mobid;
+            numReturned++;
             return m;
         }
 
@@ -159,6 +162,9 @@ public:
 
             ASSERT(i > 0);
             i--;
+
+            ASSERT(numReturned > 0);
+            numReturned--;
         }
 
     private:
@@ -166,6 +172,7 @@ public:
         MobID myLastMobid;
         MobTypeFlags myFilter;
         int i;
+        uint numReturned;
     };
 
 

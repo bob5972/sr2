@@ -230,7 +230,6 @@ public:
             Mob *f = mit.next();
             ASSERT(f != NULL);
 
-
             if (FPoint_Distance(&f->pos, p) <= radius) {
                 n++;
                 avgVel->x += (f->pos.x - f->lastPos.x);
@@ -238,8 +237,10 @@ public:
             }
         }
 
-        avgVel->x /= n;
-        avgVel->y /= n;
+        if (n != 0) {
+            avgVel->x /= n;
+            avgVel->y /= n;
+        }
     }
 
     void friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
@@ -261,8 +262,10 @@ public:
             }
         }
 
-        avgPos->x /= n;
-        avgPos->y /= n;
+        if (n != 0) {
+            avgPos->x /= n;
+            avgPos->y /= n;
+        }
     }
 
 private:
