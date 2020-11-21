@@ -19,9 +19,12 @@ TARGET=sr2
 CFLAGS = ${DEFAULT_CFLAGS} -I $(BUILDROOT) $(INCLUDE_FLAGS)
 CPPFLAGS = ${CFLAGS}
 
-LIBFLAGS = -lm -lpng -lSDL2 -lSDL2_ttf -rdynamic
-ifeq ($(OPENGL), 1)
-LIGFLAGS = ${LIBFLAGS} -lGL
+LIBFLAGS = -lm -lpng -lSDL2 -rdynamic
+ifeq ($(SR2_GUI), 1)
+	LIBFLAGS += -lSDL2_ttf
+	ifeq ($(OPENGL), 1)
+		LIBFLAGS += -lGL
+	endif
 endif
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
