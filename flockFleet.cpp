@@ -54,12 +54,17 @@ public:
             { "edgesWeight",          "0.9",  },
             { "enemyWeight",          "0.3",  },
             { "coresWeight",          "0.1",  },
+
+            { "flockRadius",          NULL,   },
+            { "repulseRadius",        NULL,   },
+            { "edgeRadius",           NULL,   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
 
         for (uint i = 0; i < ARRAYSIZE(configs); i++) {
-            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
+            if (configs[i].value != NULL &&
+                !MBRegistry_ContainsKey(mreg, configs[i].key)) {
                 MBRegistry_Put(mreg, configs[i].key, configs[i].value);
             }
         }
@@ -70,6 +75,22 @@ public:
         this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
         this->myConfig.enemyWeight = MBRegistry_GetFloat(mreg, "enemyWeight");
         this->myConfig.coresWeight = MBRegistry_GetFloat(mreg, "coresWeight");
+
+        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
+        float fighterRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+        this->myConfig.flockRadius = baseRadius / 1.5f;
+        this->myConfig.edgeRadius = fighterRadius;
+        this->myConfig.repulseRadius = 2 * fighterRadius;
+
+        if (MBRegistry_ContainsKey(mreg, "flockRadius")) {
+            this->myConfig.flockRadius = MBRegistry_GetFloat(mreg, "flockRadius");
+        }
+        if (MBRegistry_ContainsKey(mreg, "repulseRadius")) {
+            this->myConfig.repulseRadius = MBRegistry_GetFloat(mreg, "repulseRadius");
+        }
+        if (MBRegistry_ContainsKey(mreg, "edgeRadius")) {
+            this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
+        }
 
         this->BasicAIGovernor::loadRegistry(mreg);
 
@@ -401,6 +422,10 @@ public:
         float edgesWeight;
         float enemyWeight;
         float coresWeight;
+
+        float flockRadius;
+        float repulseRadius;
+        float edgeRadius;
     } myConfig;
 };
 
