@@ -163,15 +163,20 @@ void MainConstructScenario(void)
     p++;
 
     if (mainData.optimize) {
+        const int doSimple = 0;
+        const int doTable = 1;
+        const int doRandom = 2;
+        int method = doRandom;
+
         /*
          * Target fleets to optimize.
          * Customize as needed.
          */
-        if (TRUE) {
+        if (method == doSimple) {
             targetPlayers[tp].aiType = FLEET_AI_FLOCK;
             targetPlayers[tp].playerName = "FlockFleet Test";
             tp++;
-        } else {
+        } else if (method == doTable) {
             struct {
                 float attackRange;
                 bool attackExtendedRange;
@@ -208,9 +213,59 @@ void MainConstructScenario(void)
 
                 tp++;
 
-                // XXX: Leak!
-                //free(vstr);
-                //free(name);
+                // XXX: Leak strings!
+            }
+        } else {
+            ASSERT(method == doRandom);
+
+            struct {
+                const char *param;
+                float minValue;
+                float maxValue;
+            } v[] = {
+                { "gatherRange", 50.0f, 300.0f, },
+                { "attackRange", 50.0f, 400.0f, },
+
+                { "alignWeight",         -1.0f, 1.0f, },
+                { "cohereWeight",        -1.0f, 1.0f, },
+                { "separateWeight",      -1.0f, 1.0f, },
+                { "edgesWeight",         -1.0f, 1.0f, },
+                { "enemyWeight",         -1.0f, 1.0f, },
+                { "coresWeight",         -1.0f, 1.0f, },
+
+                { "curHeadingWeight",     -1.0f, 1.0f, },
+                { "attackSeparateWeight", -1.0f, 1.0f, },
+
+                { "flockRadius",   50.0f, 300.0f, },
+                { "repulseRadius", 10.0f, 300.0f, },
+                { "edgeRadius",    20.0f, 200.0f, },
+            };
+
+            for (uint f = 0; f < 10; f++) {
+                char *vstr[13];
+                ASSERT(ARRAYSIZE(vstr) == ARRAYSIZE(v));
+                MBUtil_Zero(&vstr, sizeof(vstr));
+
+                targetPlayers[tp].mreg = MBRegistry_Alloc();
+
+                for (uint i = 0; i < ARRAYSIZE(v); i++) {
+                    float value = Random_Float(v[i].minValue, v[i].maxValue);
+                    asprintf(&vstr[i], "%1.2f", value);
+                    MBRegistry_Put(targetPlayers[tp].mreg, v[i].param, vstr[i]);
+                }
+
+                targetPlayers[tp].aiType = FLEET_AI_FLOCK;
+                char *name = NULL;
+                    asprintf(&name, "%s %s:%s %s:%s:%s:%s:%s:%s %s:%s %s:%s:%s",
+                            Fleet_GetName(targetPlayers[tp].aiType),
+                            vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
+                            vstr[5], vstr[6], vstr[7], vstr[8], vstr[9],
+                            vstr[10], vstr[11], vstr[12]);
+                targetPlayers[tp].playerName = name;
+
+                tp++;
+
+                // XXX: Leak strings!
             }
         }
 
