@@ -58,7 +58,7 @@ public:
             { "curHeadingWeight",     "0.5",  },
             { "attackSeparateWeight", "0.5",  },
 
-            { "flockRadius",          NULL,   }, // ~166.7f
+            { "flockRadius",          NULL,   }, //  166.7f
             { "repulseRadius",        NULL,   }, //   50.0f
             { "edgeRadius",           NULL,   }, //  100.0f
         };
