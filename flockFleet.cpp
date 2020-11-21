@@ -42,9 +42,18 @@ public:
             const char *key;
             const char *value;
         } configs[] = {
+            // Override BasicFleet defaults
             { "gatherAbandonStale",   "TRUE", },
             { "gatherRange",          "100",  },
             { "attackRange",          "250",  },
+
+            // FlockFleet specific options
+            { "alignWeight",          "0.2",  },
+            { "cohereWeight",         "-0.1", },
+            { "separateWeight",       "0.2",  },
+            { "edgesWeight",          "0.9",  },
+            { "enemyWeight",          "0.3",  },
+            { "coresWeight",          "0.1",  },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -54,6 +63,13 @@ public:
                 MBRegistry_Put(mreg, configs[i].key, configs[i].value);
             }
         }
+
+        this->myConfig.alignWeight = MBRegistry_GetFloat(mreg, "alignWeight");
+        this->myConfig.cohereWeight = MBRegistry_GetFloat(mreg, "cohereWeight");
+        this->myConfig.separateWeight = MBRegistry_GetFloat(mreg, "separateWeight");
+        this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
+        this->myConfig.enemyWeight = MBRegistry_GetFloat(mreg, "enemyWeight");
+        this->myConfig.coresWeight = MBRegistry_GetFloat(mreg, "coresWeight");
 
         this->BasicAIGovernor::loadRegistry(mreg);
 
@@ -314,12 +330,12 @@ public:
             FRPoint_Zero(&rForce);
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-            flockAlign(mob, &rForce, flockRadius, 0.2f);
-            flockCohere(mob, &rForce, flockRadius, -0.1f);
-            flockSeparate(mob, &rForce, repulseRadius, 0.2f);
-            avoidEdges(mob, &rForce, edgeRadius, 0.9f);
-            findEnemies(mob, &rForce, flockRadius, 0.3f);
-            findCores(mob, &rForce, flockRadius, 0.1f);
+            flockAlign(mob, &rForce, flockRadius, myConfig.alignWeight);
+            flockCohere(mob, &rForce, flockRadius, myConfig.cohereWeight);
+            flockSeparate(mob, &rForce, repulseRadius, myConfig.separateWeight);
+            avoidEdges(mob, &rForce, edgeRadius, myConfig.edgesWeight);
+            findEnemies(mob, &rForce, flockRadius, myConfig.enemyWeight);
+            findCores(mob, &rForce, flockRadius, myConfig.coresWeight);
 
             rPos.radius = 0.5f;
             FRPoint_Add(&rPos, &rForce, &rPos);
@@ -377,6 +393,15 @@ public:
     virtual void runMob(Mob *mob) {
         BasicAIGovernor::runMob(mob);
     }
+
+    struct {
+        float alignWeight;
+        float cohereWeight;
+        float separateWeight;
+        float edgesWeight;
+        float enemyWeight;
+        float coresWeight;
+    } myConfig;
 };
 
 class FlockFleet {
