@@ -725,6 +725,10 @@ void MainParseCmdLine(int argc, char **argv)
     }
 
     mainData.headless = MBOpt_GetBool("headless");
+    if (!SR2_GUI) {
+        mainData.headless = TRUE;
+    }
+
     mainData.frameSkip = MBOpt_GetBool("frameSkip");
 
     if (MBOpt_IsPresent("loop")) {

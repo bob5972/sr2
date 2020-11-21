@@ -78,6 +78,10 @@ if [ "$DEVEL" == "" ]; then
     DEVEL="1";
 fi;
 
+if [ "$SR2_GUI" == "" ]; then
+    SR2_GUI="1";
+fi;
+
 echo '#define DEBUG ' $DEBUG >> $CONFIG_H
 echo DEBUG=$DEBUG >> $CONFIG_MK;
 
@@ -86,6 +90,9 @@ echo DEVEL=$DEVEL >> $CONFIG_MK;
 
 echo '#define OPENGL ' $OPENGL >> $CONFIG_H
 echo OPENGL=$OPENGL >> $CONFIG_MK;
+
+echo '#define SR2_GUI ' $SR2_GUI >> $CONFIG_H
+echo SR2_GUI=$SR2_GUI >> $CONFIG_MK;
 
 DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native"
 

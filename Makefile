@@ -44,7 +44,6 @@ endif
 C_SOURCES = main.c \
             battle.c \
             cloudFleet.c \
-            display.c \
             dummyFleet.c \
             runAwayFleet.c \
             fleet.c \
@@ -64,6 +63,10 @@ CPP_SOURCES = basicFleet.cpp \
               mobSet.cpp \
               sensorGrid.cpp \
               shipAI.cpp
+
+ifeq ($(SR2_GUI), 1)
+	C_SOURCES += display.c
+endif
 
 #For reasons I cannot fathom, MBLIB_OBJ has to be last
 # or things don't link right...

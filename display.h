@@ -22,7 +22,7 @@
 #include "battle.h"
 #include "mob.h"
 
-#ifndef NO_DISPLAY
+#if SR2_GUI
 void Display_Init(const BattleScenario *bsc);
 void Display_Exit();
 Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip);
@@ -32,14 +32,10 @@ void Display_DumpPNG(const char *fileName);
 #else
 static inline void
 Display_Init(const BattleScenario *bsc)
-{
-    NOT_IMPLEMENTED();
-}
+{ }
 
 static inline void Display_Exit()
-{
-    NOT_IMPLEMENTED();
-}
+{ }
 
 static inline Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip)
 {
