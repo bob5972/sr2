@@ -22,11 +22,45 @@
 #include "battle.h"
 #include "mob.h"
 
+#ifndef NO_DISPLAY
 void Display_Init(const BattleScenario *bsc);
 void Display_Exit();
 Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip);
 void Display_ReleaseMobs();
 void Display_Main(bool startPaused);
 void Display_DumpPNG(const char *fileName);
+#else
+static inline void
+Display_Init(const BattleScenario *bsc)
+{
+    NOT_IMPLEMENTED();
+}
+
+static inline void Display_Exit()
+{
+    NOT_IMPLEMENTED();
+}
+
+static inline Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip)
+{
+    NOT_IMPLEMENTED();
+}
+
+static inline void Display_ReleaseMobs()
+{
+    NOT_IMPLEMENTED();
+}
+
+static inline void Display_Main(bool startPaused)
+{
+    NOT_IMPLEMENTED();
+}
+
+static inline void Display_DumpPNG(const char *fileName)
+{
+    NOT_IMPLEMENTED();
+}
+
+#endif //NO_DISPLAY
 
 #endif // _DISPLAY_H_202005252017
