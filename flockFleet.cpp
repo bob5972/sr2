@@ -55,6 +55,9 @@ public:
             { "enemyWeight",          "0.3",  },
             { "coresWeight",          "0.1",  },
 
+            { "curHeadingWeight",     "0.5",  },
+            { "attackSeparateWeight", "0.5",  },
+
             { "flockRadius",          NULL,   },
             { "repulseRadius",        NULL,   },
             { "edgeRadius",           NULL,   },
@@ -75,6 +78,11 @@ public:
         this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
         this->myConfig.enemyWeight = MBRegistry_GetFloat(mreg, "enemyWeight");
         this->myConfig.coresWeight = MBRegistry_GetFloat(mreg, "coresWeight");
+
+        this->myConfig.curHeadingWeight =
+            MBRegistry_GetFloat(mreg, "curHeadingWeight");
+        this->myConfig.attackSeparateWeight =
+            MBRegistry_GetFloat(mreg, "attackSeparateWeight");
 
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
         float fighterRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
@@ -300,15 +308,14 @@ public:
     }
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        float flockRadius = baseRadius / 1.5f;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         BasicAIGovernor::doAttack(mob, enemyTarget);
         FRPoint rPos;
         FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
         //flockAlign(mob, &rPos);
-        flockSeparate(mob, &rPos, flockRadius, 0.5f);
+        flockSeparate(mob, &rPos, myConfig.flockRadius,
+                      myConfig.attackSeparateWeight);
         //flockCohere(mob, &rPos);
 
         rPos.radius = speed;
@@ -322,10 +329,6 @@ public:
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
         Mob *base = sg->friendBase();
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        float fighterRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
-        float repulseRadius = 2 * fighterRadius;
-        float edgeRadius = fighterRadius;
-        float flockRadius = baseRadius / 1.5f;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         bool nearBase;
 
@@ -345,20 +348,22 @@ public:
         }
 
         if (!nearBase &&
-            sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, flockRadius) > 1) {
+            sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos,
+                                  myConfig.flockRadius) > 1) {
             FRPoint rForce, rPos;
 
             FRPoint_Zero(&rForce);
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-            flockAlign(mob, &rForce, flockRadius, myConfig.alignWeight);
-            flockCohere(mob, &rForce, flockRadius, myConfig.cohereWeight);
-            flockSeparate(mob, &rForce, repulseRadius, myConfig.separateWeight);
-            avoidEdges(mob, &rForce, edgeRadius, myConfig.edgesWeight);
-            findEnemies(mob, &rForce, flockRadius, myConfig.enemyWeight);
-            findCores(mob, &rForce, flockRadius, myConfig.coresWeight);
+            flockAlign(mob, &rForce, myConfig.flockRadius, myConfig.alignWeight);
+            flockCohere(mob, &rForce, myConfig.flockRadius, myConfig.cohereWeight);
+            flockSeparate(mob, &rForce, myConfig.repulseRadius,
+                          myConfig.separateWeight);
+            avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
+            findEnemies(mob, &rForce, myConfig.flockRadius, myConfig.enemyWeight);
+            findCores(mob, &rForce, myConfig.flockRadius, myConfig.coresWeight);
 
-            rPos.radius = 0.5f;
+            rPos.radius = myConfig.curHeadingWeight;
             FRPoint_Add(&rPos, &rForce, &rPos);
             rPos.radius = speed;
             FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
@@ -422,6 +427,9 @@ public:
         float edgesWeight;
         float enemyWeight;
         float coresWeight;
+
+        float curHeadingWeight;
+        float attackSeparateWeight;
 
         float flockRadius;
         float repulseRadius;
