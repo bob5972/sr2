@@ -894,6 +894,8 @@ static void SpriteCalcMobSpriteRect(MobType mobType,
 
         d += 1 + (2 * radius);
     }
+
+    NOT_REACHED();
 }
 
 
