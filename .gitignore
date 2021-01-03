@@ -7,3 +7,4 @@ perf.data.old
 .cproject
 .project
 local/
+*.kate-swp
