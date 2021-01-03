@@ -19,11 +19,11 @@ sub Main() {
     my $defines = {};
 
     if (! -f '/usr/lib64/libX11.so') {
-        Warning("No libX11 detected, disabling GUI...\n");
+        Warning("No libX11 detected: disabling GUI\n");
         $defines->{'SR2_GUI'} = FALSE;
         $defines->{'OPENGL'} = FALSE;
     } else {
-        Warning("libX11 detected, enabling GUI...\n");
+        Warning("libX11 detected: enabling GUI\n");
         $defines->{'SR2_GUI'} = TRUE;
         $defines->{'OPENGL'} = TRUE;
     }
