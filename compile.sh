@@ -17,6 +17,13 @@ else
     else
         export DEBUG=0;
     fi;
+
+    cat config.mk | grep SR2_GUI=1 > /dev/null
+    if [ "$?" == "0" ]; then
+        export SR2_GUI=1;
+    else
+        export SR2_GUI=0;
+    fi;
 fi;
 
 if [ "$WANTDEBUG" != "" ] &&
