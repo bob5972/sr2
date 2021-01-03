@@ -21,6 +21,10 @@ sub Main() {
         'SR2_GUI' => TRUE,
     };
 
+    if (! -f '/usr/lib64/libX11.so') {
+        $defines->{'SR2_GUI'} = FALSE;
+    }
+
     MBBuild::Configure($defines);
     MBBuild::Exit();
 }
