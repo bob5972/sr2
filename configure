@@ -16,13 +16,16 @@ sub Main() {
     MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
     MBBuild::Init();
 
-    my $defines = {
-        'OPENGL'  => TRUE,
-        'SR2_GUI' => TRUE,
-    };
+    my $defines = {};
 
     if (! -f '/usr/lib64/libX11.so') {
+        Warning("No libX11 detected, disabling GUI...\n");
         $defines->{'SR2_GUI'} = FALSE;
+        $defines->{'OPENGL'} = FALSE;
+    } else {
+        Warning("libX11 detected, enabling GUI...\n");
+        $defines->{'SR2_GUI'} = TRUE;
+        $defines->{'OPENGL'} = TRUE;
     }
 
     MBBuild::Configure($defines);
