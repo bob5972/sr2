@@ -1,122 +1,34 @@
-#!/bin/bash
-## configure --
+#!/usr/bin/perl
+## configure -- part of SpaceRobots2
 
-if [ "$BUILDROOT" == "" ]; then
-	BUILDROOT="build";
-fi;
+use FindBin qw($Bin);
+use lib "$Bin/MBLib/MBPerl";
 
-if [ "$TMPDIR" == "" ]; then
-	TMPDIR="$BUILDROOT/tmp"
-fi;
+use MBBasic;
+use MBBuild;
 
-if [ "$DEPROOT" == "" ]; then
-	DEPROOT="$BUILDROOT/deps";
-fi;
+$MBBasic::PROGRAM_AUTHOR = "Michael Banack";
+$MBBasic::PROGRAM_COPYRIGHT_DATE = "2021";
 
-if [ "$MBLIB_BUILDDIR" == "" ]; then
-	MBLIB_BUILDDIR="$BUILDROOT/MBLib";
-fi;
+my $gScriptOptions = {};
 
-if [ "$MBLIB_DEPDIR" == "" ]; then
-	MBLIB_DEPDIR="$DEPROOT/MBLib";
-fi;
+sub Main() {
+    MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
+    MBBuild::Init();
 
-if [ "$MBLIB_SRCDIR" == "" ]; then
-	MBLIB_SRCDIR="./MBLib";
-fi;
+    my $defines = {
+        'OPENGL'  => TRUE,
+        'SR2_GUI' => TRUE,
+    };
 
-mkdir -p "$BUILDROOT"
-mkdir -p "$TMPDIR"
-mkdir -p "$DEPROOT"
+    MBBuild::Configure($defines);
+    MBBuild::Exit();
+}
 
-for i in MBLib; do
-	mkdir -p "$BUILDROOT/$i"
-	mkdir -p "$BUILDROOT/deps/$i"
-done;
+# Call the Main function.
+my $exitCode;
+eval {
+   $exitCode = Main();
+}; Panic($@) if $@;
+exit $exitCode;
 
-CONFIG_MK="config.mk"
-CONFIG_H="$BUILDROOT/config.h"
-
-cat /dev/null > $CONFIG_H;
-cat /dev/null > $CONFIG_MK;
-
-echo "BUILDROOT=$BUILDROOT" >> $CONFIG_MK;
-echo "TMPDIR=$TMPDIR" >> $CONFIG_MK;
-echo "DEPROOT=$DEPROOT" >> $CONFIG_MK;
-echo "MBLIB_BUILDDIR=$MBLIB_BUILDDIR" >> $CONFIG_MK;
-echo "MBLIB_DEPDIR=$MBLIB_DEPDIR" >> $CONFIG_MK;
-echo "MBLIB_SRCDIR=$MBLIB_SRCDIR" >> $CONFIG_MK;
-
-if [ `uname -a | cut -c 1-5` == "Linux" ]; then
-	echo '#define LINUX 1' >> $CONFIG_H;
-	echo 'LINUX=1' >> $CONFIG_MK;
-else
-	echo '#define MACOS 1' >> $CONFIG_H;
-	echo 'MACOS=1' >> $CONFIG_MK;
-fi;
-
-DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -D _GNU_SOURCE"
-
-if [ "$USE_CLANG" != "" ]; then
-    echo CC=clang >> $CONFIG_MK;
-    echo CXX=clang++ >> $CONFIG_MK;
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-constant-logical-operand"
-else
-    echo CC=gcc >> $CONFIG_MK;
-    echo CXX=g++ >> $CONFIG_MK;
-fi;
-
-if [ "$DEBUG" == "" ]; then
-    DEBUG="1";
-fi;
-
-if [ "$OPENGL" == "" ]; then
-    OPENGL="1";
-fi;
-
-if [ "$DEVEL" == "" ]; then
-    DEVEL="1";
-fi;
-
-if [ "$SR2_GUI" == "" ]; then
-    SR2_GUI="1";
-fi;
-
-echo '#define DEBUG ' $DEBUG >> $CONFIG_H
-echo DEBUG=$DEBUG >> $CONFIG_MK;
-
-echo '#define DEVEL ' $DEVEL >> $CONFIG_H
-echo DEVEL=$DEVEL >> $CONFIG_MK;
-
-echo '#define OPENGL ' $OPENGL >> $CONFIG_H
-echo OPENGL=$OPENGL >> $CONFIG_MK;
-
-echo '#define SR2_GUI ' $SR2_GUI >> $CONFIG_H
-echo SR2_GUI=$SR2_GUI >> $CONFIG_MK;
-
-DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -march=native"
-
-if [ "$DEVEL" != "0" ]; then
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wall -Wextra -Werror -g"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-attributes"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-parameter"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-sign-compare"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-format-truncation"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-result"
-fi;
-
-if [ "$DEBUG" != "0" ]; then
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Og"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-type-limits"
-else
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -O2"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-variable"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-unused-function"
-fi;
-
-if [ "$DEVEL" != "0" ]; then
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -fno-omit-frame-pointer"
-    DEFAULT_CFLAGS="${DEFAULT_CFLAGS} -Wno-clobbered"
-fi;
-
-echo DEFAULT_CFLAGS=${DEFAULT_CFLAGS} >> $CONFIG_MK;
