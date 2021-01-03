@@ -179,6 +179,9 @@ void DisplayInitText(const BattleScenario *bsc)
     TTF_Init();
 
     display.font = TTF_OpenFont("/usr/share/fonts/corefonts/arial.ttf", 20);
+    if (display.font == NULL) {
+        display.font = TTF_OpenFont("/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf", 20);
+    }
     VERIFY(display.font != NULL);
 
     if (bsc->bp.numPlayers == 3) {
