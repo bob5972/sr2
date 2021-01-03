@@ -21,9 +21,9 @@
 #include <time.h>
 #include <png.h>
 
-#include "config.h"
 #include "SDL.h"
 #include "SDL_ttf.h"
+#include "mbconfig.h"
 #include "mbbasic.h"
 #include "mbtypes.h"
 #include "mbassert.h"

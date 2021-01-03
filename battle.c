@@ -303,7 +303,7 @@ BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
     bool lhsAmmo = (MOB_FLAG_AMMO & lhsFlag) != 0;
     bool rhsAmmo = (MOB_FLAG_AMMO & rhsFlag) != 0;
 
-    if (DEBUG) {
+    if (mb_debug) {
         bool lhsShip = (MOB_FLAG_SHIP & lhsFlag) != 0;
         bool rhsShip = (MOB_FLAG_SHIP & rhsFlag) != 0;
         ASSERT(lhsAmmo == !lhsShip);

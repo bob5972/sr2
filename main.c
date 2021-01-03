@@ -22,6 +22,7 @@
 
 #include <SDL.h>
 
+#include "mbconfig.h"
 #include "mbtypes.h"
 #include "mbutil.h"
 #include "mbassert.h"
@@ -811,7 +812,7 @@ int main(int argc, char **argv)
     MainParseCmdLine(argc, argv);
 
     // Setup
-    Warning("Starting SpaceRobots2 %s...\n", DEBUG ? "(debug enabled)" : "");
+    Warning("Starting SpaceRobots2 %s...\n", mb_debug ? "(debug enabled)" : "");
     Warning("\n");
 
     Random_Init();

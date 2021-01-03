@@ -19,6 +19,7 @@
 #ifndef _MOB_H_202006041753
 #define _MOB_H_202006041753
 
+#include "mbconfig.h"
 #include "geometry.h"
 #include "MBVector.h"
 #include "battleTypes.h"
@@ -116,7 +117,7 @@ static inline bool Mob_CanScanPoint(const Mob *mob, const FPoint *p)
 
 static inline bool Mob_CheckInvariants(const Mob *m)
 {
-    if (DEBUG) {
+    if (mb_debug) {
         ASSERT(m != NULL);
 
         ASSERT(m->mobid != MOB_ID_INVALID);

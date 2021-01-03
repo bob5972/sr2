@@ -13,9 +13,9 @@ if [ ! -f config.mk ]; then
 else
     cat config.mk | grep DEBUG=1 > /dev/null
     if [ "$?" == "0" ]; then
-        export DEBUG=1;
+        export MB_DEBUG=1;
     else
-        export DEBUG=0;
+        export MB_DEBUG=0;
     fi;
 
     cat config.mk | grep SR2_GUI=1 > /dev/null
@@ -27,9 +27,9 @@ else
 fi;
 
 if [ "$WANTDEBUG" != "" ] &&
-   [ "$WANTDEBUG" != "$DEBUG" ]; then
+   [ "$WANTDEBUG" != "$MB_DEBUG" ]; then
     CLEAN=1;
-    export DEBUG="$WANTDEBUG"
+    export MB_DEBUG="$WANTDEBUG"
 fi;
 
 if [ "$CLEAN" != "" ]; then
