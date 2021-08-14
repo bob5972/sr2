@@ -20,7 +20,7 @@
 #include "mbbasic.h"
 #include "random.h"
 #include "BitVector.h"
-#include "SDL_thread.h"
+#include <SDL2/SDL_thread.h>
 #include "workQueue.h"
 
 typedef struct Battle {

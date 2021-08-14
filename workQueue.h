@@ -20,8 +20,8 @@
 #define _WORKQUEUE_H_202006241219
 
 #include "MBVector.h"
-#include "SDL_mutex.h"
-#include "SDL_atomic.h"
+#include <SDL2/SDL_mutex.h>
+#include <SDL2/SDL_atomic.h>
 
 typedef struct WorkQueue {
     uint itemSize;

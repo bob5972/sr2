@@ -6,7 +6,7 @@ include config.mk
 -include local.mk
 
 SRCROOT=.
-INCLUDE_FLAGS=-I MBLib/public -I /usr/include/SDL2
+INCLUDE_FLAGS=-I MBLib/public
 
 SRCDIR=$(SRCROOT)
 BUILDDIR=$(BUILDROOT)

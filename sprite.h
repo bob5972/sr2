@@ -19,7 +19,7 @@
 #ifndef _SPRITE_H_202010251053
 #define _SPRITE_H_202010251053
 
-#include "SDL.h"
+#include <SDL2/SDL.h>
 #include "mbtypes.h"
 #include "mob.h"
 
