@@ -472,12 +472,12 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
      * Copy over control/target players.
      */
     for (uint i = 0; i < *cpIndex; i++) {
-        ASSERT(*mpIndex < ARRAYSIZE(mpSize));
+        ASSERT(*mpIndex < mpSize);
         mainPlayers[*mpIndex] = controlPlayers[i];
         (*mpIndex)++;
     }
     for (uint i = 0; i < *tpIndex; i++) {
-        ASSERT(*mpIndex < ARRAYSIZE(mpSize));
+        ASSERT(*mpIndex < mpSize);
         mainPlayers[*mpIndex] = targetPlayers[i];
         (*mpIndex)++;
     }
@@ -560,8 +560,8 @@ static void MainPrintWinners(void)
         Warning("Winner Breakdown:\n");
         for (uint p1 = 0; p1 < mainData.numPlayers; p1++) {
             Warning("Fleet %s:\n", mainData.players[p1].playerName);
-        for (uint p2 = 0; p2 < mainData.numPlayers; p2++) {
-                    if (mainData.winnerBreakdown[p1][p2].battles > 0) {
+            for (uint p2 = 0; p2 < mainData.numPlayers; p2++) {
+                if (mainData.winnerBreakdown[p1][p2].battles > 0) {
                     Warning("\tvs %s:\n", mainData.players[p2].playerName,
                             mainData.players[p2].playerName);
                     MainPrintWinnerData(&mainData.winnerBreakdown[p1][p2]);
@@ -583,6 +583,48 @@ static void MainPrintWinners(void)
     }
 
     Warning("Total Battles: %d\n", totalBattles);
+}
+
+static void MainDumpPopulation(void)
+{
+    uint32 i;
+    MBRegistry *popReg;
+    MBString prefix;
+    MBString key;
+    MBString tmp;
+
+    MBString_Create(&prefix);
+    MBString_Create(&key);
+    MBString_Create(&tmp);
+
+    popReg = MBRegistry_Alloc();
+    VERIFY(popReg != NULL);
+
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    for (i = 1; i < mainData.numPlayers; i++) {
+        const char *fleetName = Fleet_GetName(mainData.players[i].aiType);
+
+        MBString_CopyCStr(&prefix, "fleet");
+        MBString_IntToString(&tmp, i);
+        MBString_AppendStr(&prefix, &tmp);
+        MBString_AppendCStr(&prefix, ".");
+        MBString_Copy(&key, &prefix);
+        MBString_AppendCStr(&key, "name");
+
+        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key), fleetName);
+        if (mainData.players[i].mreg != NULL) {
+            ASSERT(!MBRegistry_ContainsKey(mainData.players[i].mreg, "name"));
+            MBRegistry_PutAll(popReg, mainData.players[i].mreg,
+                              MBString_GetCStr(&prefix));
+        }
+    }
+
+    MBRegistry_Save(popReg, MBOpt_GetCStr("dumpPopulation"));
+
+    MBString_Destroy(&prefix);
+    MBString_Destroy(&key);
+    MBString_Destroy(&tmp);
+    MBRegistry_Free(popReg);
 }
 
 static int MainEngineThreadMain(void *data)
@@ -746,20 +788,21 @@ void MainUnitTests()
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",        FALSE, "Print help text"               },
-        { "-H", "--headless",    FALSE, "Run headless"                  },
-        { "-F", "--frameSkip",   FALSE, "Allow frame skipping"          },
-        { "-l", "--loop",        TRUE,  "Loop <arg> times"              },
-        { "-S", "--scenario",    TRUE,  "Scenario type"                 },
-        { "-T", "--tournament",  FALSE, "Tournament mode"               },
-        { "-O", "--optimize",    FALSE, "Optimize mode"                 },
-        { "-s", "--seed",        TRUE,  "Set random seed"               },
-        { "-L", "--tickLimit",   TRUE,  "Time limit in ticks"           },
-        { "-t", "--numThreads",  TRUE,  "Number of engine threads"      },
-        { "-R", "--reuseSeed",   FALSE, "Reuse the seed across battles" },
-        { "-u", "--unitTests",   FALSE, "Run unit tests"                },
-        { "-p", "--dumpPNG",     TRUE,  "Dump a PNG of sprites"         },
-        { "-P", "--startPaused", FALSE, "Start paused"                  },
+        { "-h", "--help",           FALSE, "Print help text"               },
+        { "-H", "--headless",       FALSE, "Run headless"                  },
+        { "-F", "--frameSkip",      FALSE, "Allow frame skipping"          },
+        { "-l", "--loop",           TRUE,  "Loop <arg> times"              },
+        { "-S", "--scenario",       TRUE,  "Scenario type"                 },
+        { "-T", "--tournament",     FALSE, "Tournament mode"               },
+        { "-O", "--optimize",       FALSE, "Optimize mode"                 },
+        { "-D", "--dumpPopulation", TRUE,  "Dump Population to file"       },
+        { "-s", "--seed",           TRUE,  "Set random seed"               },
+        { "-L", "--tickLimit",      TRUE,  "Time limit in ticks"           },
+        { "-t", "--numThreads",     TRUE,  "Number of engine threads"      },
+        { "-R", "--reuseSeed",      FALSE, "Reuse the seed across battles" },
+        { "-u", "--unitTests",      FALSE, "Run unit tests"                },
+        { "-p", "--dumpPNG",        TRUE,  "Dump a PNG of sprites"         },
+        { "-P", "--startPaused",    FALSE, "Start paused"                  },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
@@ -955,6 +998,10 @@ int main(int argc, char **argv)
     WorkQueue_Unlock(&mainData.resultQ);
 
     MainPrintWinners();
+
+    if (MBOpt_IsPresent("dumpPopulation")) {
+        MainDumpPopulation();
+    }
 
     for (uint p = 0; p < mainData.numPlayers; p++) {
         if (mainData.players[p].mreg != NULL) {
