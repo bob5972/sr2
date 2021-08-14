@@ -1,7 +1,7 @@
 #!/bin/bash
 
 POP="build/tmp/popDump.txt";
-OPTS="--dumpPopulation $POP"
+OPTS="-L 1000 --dumpPopulation $POP"
 
 if [ "$DISPLAY" == "" ]; then
     OPTS="${OPTS} -H"
