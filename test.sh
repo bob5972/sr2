@@ -7,7 +7,8 @@ if [ "$DISPLAY" == "" ]; then
     OPTS="${OPTS} -H"
 fi;
 
-./compile.sh debug && build/sr2 -u && build/sr2 $OPTS "$@"
+./compile.sh debug && build/MBLib/test.bin && build/sr2 -u && \
+    build/sr2 $OPTS "$@"
 
 if [ $? == 0 ]; then
     echo
