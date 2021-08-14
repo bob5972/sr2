@@ -456,10 +456,10 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
             targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK;
             char *name = NULL;
                 asprintf(&name, "%s %s:%s %s:%s:%s:%s:%s:%s %s:%s %s:%s:%s",
-                        Fleet_GetName(targetPlayers[*tpIndex].aiType),
-                        vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
-                        vstr[5], vstr[6], vstr[7], vstr[8], vstr[9],
-                        vstr[10], vstr[11], vstr[12]);
+                         Fleet_GetName(targetPlayers[*tpIndex].aiType),
+                         vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
+                         vstr[5], vstr[6], vstr[7], vstr[8], vstr[9],
+                         vstr[10], vstr[11], vstr[12]);
             targetPlayers[*tpIndex].playerName = name;
 
             (*tpIndex)++;
@@ -469,8 +469,8 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
     }
 
     /*
-        * Copy over control/target players.
-        */
+     * Copy over control/target players.
+     */
     for (uint i = 0; i < *cpIndex; i++) {
         ASSERT(*mpIndex < ARRAYSIZE(mpSize));
         mainPlayers[*mpIndex] = controlPlayers[i];
