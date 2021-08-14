@@ -1,6 +1,6 @@
 /*
  * main.c -- part of SpaceRobots2
- * Copyright (C) 2020 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,6 +105,13 @@ static void MainRunBattle(MainEngineThreadData *tData,
                           MainEngineWorkUnit *wu);
 static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
 
+static void MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
+                                      uint32 cpSize, uint32 *cpIndex,
+                                      BattlePlayer *targetPlayers,
+                                      uint32 tpSize, uint32 *tpIndex,
+                                      BattlePlayer *mainPlayers,
+                                      uint32 mpSize, uint32 *mpIndex);
+
 void MainConstructScenario(void)
 {
     uint p;
@@ -164,144 +171,12 @@ void MainConstructScenario(void)
     p++;
 
     if (mainData.optimize) {
-        const int doSimple = 0;
-        const int doTable = 1;
-        const int doRandom = 2;
-        int method = doSimple;
-
-        /*
-         * Target fleets to optimize.
-         * Customize as needed.
-         */
-        if (method == doSimple) {
-            targetPlayers[tp].aiType = FLEET_AI_FLOCK;
-            targetPlayers[tp].playerName = "FlockFleet Test";
-
-            targetPlayers[tp].mreg = MBRegistry_Alloc();
-            MBRegistry_Put(targetPlayers[tp].mreg, "gatherRange", "200");
-            MBRegistry_Put(targetPlayers[tp].mreg, "attackRange", "100");
-
-            MBRegistry_Put(targetPlayers[tp].mreg, "alignWeight", "0.7");
-            MBRegistry_Put(targetPlayers[tp].mreg, "cohereWeight", "-0.15");
-            MBRegistry_Put(targetPlayers[tp].mreg, "separateWeight", "0.95");
-            MBRegistry_Put(targetPlayers[tp].mreg, "edgesWeight", "0.85");
-            MBRegistry_Put(targetPlayers[tp].mreg, "enemyWeight", "0.6");
-            MBRegistry_Put(targetPlayers[tp].mreg, "coresWeight", "0.10");
-
-            MBRegistry_Put(targetPlayers[tp].mreg, "curHeadingWeight", "0.10");
-            MBRegistry_Put(targetPlayers[tp].mreg, "attackSeparateWeight", "0.50");
-
-            MBRegistry_Put(targetPlayers[tp].mreg, "flockRadius", "171");
-            MBRegistry_Put(targetPlayers[tp].mreg, "repulseRadius", "100");
-            MBRegistry_Put(targetPlayers[tp].mreg, "edgeRadius", "50");
-
-            tp++;
-        } else if (method == doTable) {
-            struct {
-                float attackRange;
-                bool attackExtendedRange;
-                float holdCount;
-            } v[] = {
-                { 100, TRUE,  100, },
-                { 100, TRUE,   50, },
-                { 100, FALSE,  50, },
-            };
-
-            for (uint i = 0; i < ARRAYSIZE(v); i++) {
-                char *vstr[3];
-
-                MBUtil_Zero(&vstr, sizeof(vstr));
-
-                targetPlayers[tp].mreg = MBRegistry_Alloc();
-
-                asprintf(&vstr[0], "%1.0f", v[i].attackRange);
-                MBRegistry_Put(targetPlayers[tp].mreg, "attackRange", vstr[0]);
-
-                asprintf(&vstr[1], "%d", v[i].attackExtendedRange);
-                MBRegistry_Put(targetPlayers[tp].mreg, "attackExtendedRange", vstr[1]);
-
-                asprintf(&vstr[2], "%1.0f", v[i].holdCount);
-                MBRegistry_Put(targetPlayers[tp].mreg, "holdCount", vstr[2]);
-
-                targetPlayers[tp].aiType = FLEET_AI_HOLD;
-
-                char *name = NULL;
-                asprintf(&name, "%s %s:%s:%s",
-                        Fleet_GetName(targetPlayers[tp].aiType),
-                        vstr[0], vstr[1], vstr[2]);
-                targetPlayers[tp].playerName = name;
-
-                tp++;
-
-                // XXX: Leak strings!
-            }
-        } else {
-            ASSERT(method == doRandom);
-
-            struct {
-                const char *param;
-                float minValue;
-                float maxValue;
-            } v[] = {
-                { "gatherRange", 50.0f, 300.0f, },
-                { "attackRange", 50.0f, 400.0f, },
-
-                { "alignWeight",         -1.0f, 1.0f, },
-                { "cohereWeight",        -1.0f, 1.0f, },
-                { "separateWeight",      -1.0f, 1.0f, },
-                { "edgesWeight",         -1.0f, 1.0f, },
-                { "enemyWeight",         -1.0f, 1.0f, },
-                { "coresWeight",         -1.0f, 1.0f, },
-
-                { "curHeadingWeight",     -1.0f, 1.0f, },
-                { "attackSeparateWeight", -1.0f, 1.0f, },
-
-                { "flockRadius",   50.0f, 300.0f, },
-                { "repulseRadius", 10.0f, 300.0f, },
-                { "edgeRadius",    20.0f, 200.0f, },
-            };
-
-            for (uint f = 0; f < 10; f++) {
-                char *vstr[13];
-                ASSERT(ARRAYSIZE(vstr) == ARRAYSIZE(v));
-                MBUtil_Zero(&vstr, sizeof(vstr));
-
-                targetPlayers[tp].mreg = MBRegistry_Alloc();
-
-                for (uint i = 0; i < ARRAYSIZE(v); i++) {
-                    float value = Random_Float(v[i].minValue, v[i].maxValue);
-                    asprintf(&vstr[i], "%1.2f", value);
-                    MBRegistry_Put(targetPlayers[tp].mreg, v[i].param, vstr[i]);
-                }
-
-                targetPlayers[tp].aiType = FLEET_AI_FLOCK;
-                char *name = NULL;
-                    asprintf(&name, "%s %s:%s %s:%s:%s:%s:%s:%s %s:%s %s:%s:%s",
-                            Fleet_GetName(targetPlayers[tp].aiType),
-                            vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
-                            vstr[5], vstr[6], vstr[7], vstr[8], vstr[9],
-                            vstr[10], vstr[11], vstr[12]);
-                targetPlayers[tp].playerName = name;
-
-                tp++;
-
-                // XXX: Leak strings!
-            }
-        }
-
-        /*
-         * Copy over control/target players.
-         */
-        for (uint i = 0; i < cp; i++) {
-            ASSERT(p < ARRAYSIZE(mainData.players));
-            mainData.players[p] = controlPlayers[i];
-            p++;
-        }
-        for (uint i = 0; i < tp; i++) {
-            ASSERT(p < ARRAYSIZE(mainData.players));
-            mainData.players[p] = targetPlayers[i];
-            p++;
-        }
+        MainAddPlayersForOptimize(controlPlayers,
+                                  ARRAYSIZE(controlPlayers), &cp,
+                                  targetPlayers,
+                                  ARRAYSIZE(targetPlayers), &tp,
+                                  &mainData.players[0],
+                                  ARRAYSIZE(mainData.players), &p);
     } else if (mainData.tournament) {
         /*
          * Copy over control players.
@@ -457,6 +332,154 @@ void MainConstructScenario(void)
         mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
         memcpy(&mainData.bscs[0].players, &mainData.players,
                sizeof(mainData.players));
+    }
+}
+
+static void
+MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
+                          uint32 cpSize, uint32 *cpIndex,
+                          BattlePlayer *targetPlayers,
+                          uint32 tpSize, uint32 *tpIndex,
+                          BattlePlayer *mainPlayers,
+                          uint32 mpSize, uint32 *mpIndex)
+{
+    const int doSimple = 0;
+    const int doTable = 1;
+    const int doRandom = 2;
+    int method = doSimple;
+
+    /*
+     * Target fleets to optimize.
+     * Customize as needed.
+     */
+    if (method == doSimple) {
+        targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK;
+        targetPlayers[*tpIndex].playerName = "FlockFleet Test";
+
+        targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackRange", "100");
+
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "alignWeight", "0.7");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "cohereWeight", "-0.15");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "separateWeight", "0.95");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "edgesWeight", "0.85");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "enemyWeight", "0.6");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "coresWeight", "0.10");
+
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "curHeadingWeight", "0.10");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackSeparateWeight", "0.50");
+
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "flockRadius", "171");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "repulseRadius", "100");
+        MBRegistry_Put(targetPlayers[*tpIndex].mreg, "edgeRadius", "50");
+
+        (*tpIndex)++;
+
+    } else if (method == doTable) {
+        struct {
+            float attackRange;
+            bool attackExtendedRange;
+            float holdCount;
+        } v[] = {
+            { 100, TRUE,  100, },
+            { 100, TRUE,   50, },
+            { 100, FALSE,  50, },
+        };
+
+        for (uint i = 0; i < ARRAYSIZE(v); i++) {
+            char *vstr[3];
+
+            MBUtil_Zero(&vstr, sizeof(vstr));
+
+            targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
+
+            asprintf(&vstr[0], "%1.0f", v[i].attackRange);
+            MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackRange", vstr[0]);
+
+            asprintf(&vstr[1], "%d", v[i].attackExtendedRange);
+            MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackExtendedRange", vstr[1]);
+
+            asprintf(&vstr[2], "%1.0f", v[i].holdCount);
+            MBRegistry_Put(targetPlayers[*tpIndex].mreg, "holdCount", vstr[2]);
+
+            targetPlayers[*tpIndex].aiType = FLEET_AI_HOLD;
+
+            char *name = NULL;
+            asprintf(&name, "%s %s:%s:%s",
+                    Fleet_GetName(targetPlayers[*tpIndex].aiType),
+                    vstr[0], vstr[1], vstr[2]);
+            targetPlayers[*tpIndex].playerName = name;
+
+            (*tpIndex)++;
+
+            // XXX: Leak strings!
+        }
+    } else {
+        ASSERT(method == doRandom);
+
+        struct {
+            const char *param;
+            float minValue;
+            float maxValue;
+        } v[] = {
+            { "gatherRange", 50.0f, 300.0f, },
+            { "attackRange", 50.0f, 400.0f, },
+            { "alignWeight",         -1.0f, 1.0f, },
+            { "cohereWeight",        -1.0f, 1.0f, },
+            { "separateWeight",      -1.0f, 1.0f, },
+            { "edgesWeight",         -1.0f, 1.0f, },
+            { "enemyWeight",         -1.0f, 1.0f, },
+            { "coresWeight",         -1.0f, 1.0f, },
+
+            { "curHeadingWeight",     -1.0f, 1.0f, },
+            { "attackSeparateWeight", -1.0f, 1.0f, },
+
+            { "flockRadius",   50.0f, 300.0f, },
+            { "repulseRadius", 10.0f, 300.0f, },
+            { "edgeRadius",    20.0f, 200.0f, },
+        };
+
+        for (uint f = 0; f < 10; f++) {
+            char *vstr[13];
+            ASSERT(ARRAYSIZE(vstr) == ARRAYSIZE(v));
+            MBUtil_Zero(&vstr, sizeof(vstr));
+
+            targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
+
+            for (uint i = 0; i < ARRAYSIZE(v); i++) {
+                float value = Random_Float(v[i].minValue, v[i].maxValue);
+                asprintf(&vstr[i], "%1.2f", value);
+                MBRegistry_Put(targetPlayers[*tpIndex].mreg, v[i].param, vstr[i]);
+            }
+
+            targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK;
+            char *name = NULL;
+                asprintf(&name, "%s %s:%s %s:%s:%s:%s:%s:%s %s:%s %s:%s:%s",
+                        Fleet_GetName(targetPlayers[*tpIndex].aiType),
+                        vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
+                        vstr[5], vstr[6], vstr[7], vstr[8], vstr[9],
+                        vstr[10], vstr[11], vstr[12]);
+            targetPlayers[*tpIndex].playerName = name;
+
+            (*tpIndex)++;
+
+            // XXX: Leak strings!
+        }
+    }
+
+    /*
+        * Copy over control/target players.
+        */
+    for (uint i = 0; i < *cpIndex; i++) {
+        ASSERT(*mpIndex < ARRAYSIZE(mpSize));
+        mainPlayers[*mpIndex] = controlPlayers[i];
+        (*mpIndex)++;
+    }
+    for (uint i = 0; i < *tpIndex; i++) {
+        ASSERT(*mpIndex < ARRAYSIZE(mpSize));
+        mainPlayers[*mpIndex] = targetPlayers[i];
+        (*mpIndex)++;
     }
 }
 
@@ -923,8 +946,10 @@ int main(int argc, char **argv)
             PlayerUID puid1 = ru.bs.players[1].playerUID;
             PlayerUID puid2 = ru.bs.players[2].playerUID;
             ASSERT(ru.bs.players[0].playerUID == PLAYER_ID_NEUTRAL);
-            MainRecordWinner(&mainData.winnerBreakdown[puid1][puid2], puid1, &ru.bs);
-            MainRecordWinner(&mainData.winnerBreakdown[puid2][puid1], puid2, &ru.bs);
+            MainRecordWinner(&mainData.winnerBreakdown[puid1][puid2],
+                             puid1, &ru.bs);
+            MainRecordWinner(&mainData.winnerBreakdown[puid2][puid1],
+                             puid2, &ru.bs);
         }
     }
     WorkQueue_Unlock(&mainData.resultQ);
