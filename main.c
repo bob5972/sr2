@@ -300,7 +300,9 @@ void MainConstructScenario(void)
                 ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
                 mainData.bscs[b].players[0] = mainData.players[0];
                 mainData.bscs[b].players[1] = mainData.players[t];
+                ASSERT(mainData.players[t].playerType == PLAYER_TYPE_TARGET);
                 mainData.bscs[b].players[2] = mainData.players[c];
+                ASSERT(mainData.players[c].playerType == PLAYER_TYPE_CONTROL);
             }
         }
 
