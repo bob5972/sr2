@@ -619,6 +619,7 @@ static void MainDumpPopulation(void)
 
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
     for (i = 1; i < mainData.numPlayers; i++) {
+        MainWinnerData *wd = &mainData.winners[i];
         const char *fleetName = Fleet_GetName(mainData.players[i].aiType);
 
         MBString_CopyCStr(&prefix, "fleet");
@@ -627,8 +628,32 @@ static void MainDumpPopulation(void)
         MBString_AppendCStr(&prefix, ".");
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "name");
-
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key), fleetName);
+
+        MBString_Copy(&key, &prefix);
+        MBString_AppendCStr(&key, "numBattles");
+        MBString_IntToString(&tmp, wd->battles);
+        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
+                           MBString_GetCStr(&tmp));
+
+        MBString_Copy(&key, &prefix);
+        MBString_AppendCStr(&key, "numWins");
+        MBString_IntToString(&tmp, wd->wins);
+        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
+                           MBString_GetCStr(&tmp));
+
+        MBString_Copy(&key, &prefix);
+        MBString_AppendCStr(&key, "numLosses");
+        MBString_IntToString(&tmp, wd->losses);
+        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
+                           MBString_GetCStr(&tmp));
+
+        MBString_Copy(&key, &prefix);
+        MBString_AppendCStr(&key, "numDraws");
+        MBString_IntToString(&tmp, wd->draws);
+        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
+                           MBString_GetCStr(&tmp));
+
         if (mainData.players[i].mreg != NULL) {
             ASSERT(!MBRegistry_ContainsKey(mainData.players[i].mreg, "name"));
             MBRegistry_PutAll(popReg, mainData.players[i].mreg,
