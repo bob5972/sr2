@@ -146,9 +146,22 @@ typedef enum FleetAIType {
 
 struct FleetAI;
 
+/*
+ * Used by the optimization frameworks to decide which players
+ * are being focused on for the run.
+ */
+typedef enum PlayerType {
+    PLAYER_TYPE_INVALID = 0,
+    PLAYER_TYPE_NEUTRAL = 1,
+    PLAYER_TYPE_CONTROL = 2,
+    PLAYER_TYPE_TARGET = 3,
+    PLAYER_TYPE_MAX,
+} PlayerType;
+
 typedef struct BattlePlayer {
     uint playerUID;
     const char *playerName;
+    PlayerType playerType;
     FleetAIType aiType;
     MBRegistry *mreg;
 } BattlePlayer;

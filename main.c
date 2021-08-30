@@ -159,6 +159,7 @@ void MainConstructScenario(void)
         if (i != FLEET_AI_DUMMY) {
             ASSERT(cp < ARRAYSIZE(controlPlayers));
             controlPlayers[cp].aiType = i;
+            controlPlayers[cp].playerType = PLAYER_TYPE_CONTROL;
             cp++;
         }
     }
@@ -168,6 +169,7 @@ void MainConstructScenario(void)
      */
     p = 0;
     mainData.players[p].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[p].playerType = PLAYER_TYPE_NEUTRAL;
     p++;
 
     if (mainData.optimize) {
@@ -273,6 +275,11 @@ void MainConstructScenario(void)
             FleetAIType aiType = mainData.players[i].aiType;
             mainData.players[i].playerName = Fleet_GetName(aiType);
         }
+
+        ASSERT(mainData.players[i].playerType < PLAYER_TYPE_MAX);
+        if (mainData.players[i].playerType == PLAYER_TYPE_INVALID) {
+            mainData.players[i].playerType = PLAYER_TYPE_TARGET;
+        }
     }
 
     if (mainData.optimize) {
@@ -307,6 +314,8 @@ void MainConstructScenario(void)
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
         for (uint x = 1; x < mainData.numPlayers; x++) {
+            ASSERT(mainData.players[x].playerType == PLAYER_TYPE_CONTROL);
+
             for (uint y = 1; y < mainData.numPlayers; y++) {
                 if (x == y) {
                     continue;
@@ -324,6 +333,12 @@ void MainConstructScenario(void)
 
         ASSERT(mainData.numBSCs <= maxBscs);
     } else {
+        ASSERT(mainData.numPlayers > 0);
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+        for (uint x = 1; x < mainData.numPlayers; x++) {
+            ASSERT(mainData.players[x].playerType == PLAYER_TYPE_TARGET);
+        }
+
         mainData.numBSCs = 1;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]));
         mainData.bscs[0] = bsc;
