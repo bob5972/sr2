@@ -631,6 +631,12 @@ static void MainDumpPopulation(void)
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key), fleetName);
 
         MBString_Copy(&key, &prefix);
+        MBString_AppendCStr(&key, "playerType");
+        MBString_IntToString(&tmp, mainData.players[i].playerType);
+        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
+                           MBString_GetCStr(&tmp));
+
+        MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numBattles");
         MBString_IntToString(&tmp, wd->battles);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
