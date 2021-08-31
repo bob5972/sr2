@@ -111,6 +111,8 @@ static void MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
                                       uint32 tpSize, uint32 *tpIndex,
                                       BattlePlayer *mainPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
+static void MainUsePopulation(BattlePlayer *mainPlayers,
+                              uint32 mpSize, uint32 *mpIndex);
 
 void MainConstructScenario(void)
 {
@@ -172,7 +174,10 @@ void MainConstructScenario(void)
     mainData.players[p].playerType = PLAYER_TYPE_NEUTRAL;
     p++;
 
-    if (mainData.optimize) {
+    if (MBOpt_IsPresent("usePopulation")) {
+        MainUsePopulation(&mainData.players[0],
+                          ARRAYSIZE(mainData.players), &p);
+    } else if (mainData.optimize) {
         MainAddPlayersForOptimize(controlPlayers,
                                   ARRAYSIZE(controlPlayers), &cp,
                                   targetPlayers,
@@ -282,7 +287,19 @@ void MainConstructScenario(void)
         }
     }
 
-    if (mainData.optimize) {
+    if (MBOpt_IsPresent("usePopulation")) {
+        ASSERT(mainData.numPlayers > 0);
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+
+        mainData.numBSCs = 1;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]));
+        mainData.bscs[0] = bsc;
+        ASSERT(sizeof(mainData.players) ==
+               sizeof(mainData.bscs[0].players));
+        mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
+        memcpy(&mainData.bscs[0].players, &mainData.players,
+               sizeof(mainData.players));
+    } else if (mainData.optimize) {
         uint maxBscs = cp * tp;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
 
@@ -675,6 +692,23 @@ static void MainDumpPopulation(void)
     MBRegistry_Free(popReg);
 }
 
+static void MainUsePopulation(BattlePlayer *mainPlayers,
+                              uint32 mpSize, uint32 *mpIndex)
+{
+    MBRegistry *popReg;
+
+    popReg = MBRegistry_Alloc();
+    VERIFY(popReg != NULL);
+
+    MBRegistry_Load(popReg, MBOpt_GetCStr("usePopulation"));
+
+    MBRegistry_DebugDump(popReg);//XXX bob5972
+
+    NOT_IMPLEMENTED();//XXX bob5972
+
+    MBRegistry_Free(popReg);
+}
+
 static int MainEngineThreadMain(void *data)
 {
     MainEngineThreadData *tData = data;
@@ -844,6 +878,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-T", "--tournament",     FALSE, "Tournament mode"               },
         { "-O", "--optimize",       FALSE, "Optimize mode"                 },
         { "-D", "--dumpPopulation", TRUE,  "Dump Population to file"       },
+        { "-U", "--usePopulation",  TRUE,  "Use Population from file"      },
         { "-s", "--seed",           TRUE,  "Set random seed"               },
         { "-L", "--tickLimit",      TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads",     TRUE,  "Number of engine threads"      },
