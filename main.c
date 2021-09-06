@@ -626,6 +626,7 @@ static void MainDumpPopulation(void)
     MBString prefix;
     MBString key;
     MBString tmp;
+    uint32 numFleets = 0;
 
     MBString_Create(&prefix);
     MBString_Create(&key);
@@ -638,6 +639,8 @@ static void MainDumpPopulation(void)
     for (i = 1; i < mainData.numPlayers; i++) {
         MainWinnerData *wd = &mainData.winners[i];
         const char *fleetName = Fleet_GetName(mainData.players[i].aiType);
+
+        numFleets++;
 
         MBString_CopyCStr(&prefix, "fleet");
         MBString_IntToString(&tmp, i);
@@ -678,11 +681,13 @@ static void MainDumpPopulation(void)
                            MBString_GetCStr(&tmp));
 
         if (mainData.players[i].mreg != NULL) {
-            ASSERT(!MBRegistry_ContainsKey(mainData.players[i].mreg, "name"));
             MBRegistry_PutAll(popReg, mainData.players[i].mreg,
                               MBString_GetCStr(&prefix));
         }
     }
+
+    MBString_IntToString(&tmp, numFleets);
+    MBRegistry_PutCopy(popReg, "numFleets", MBString_GetCStr(&tmp));
 
     MBRegistry_Save(popReg, MBOpt_GetCStr("dumpPopulation"));
 
@@ -691,22 +696,59 @@ static void MainDumpPopulation(void)
     MBString_Destroy(&tmp);
     MBRegistry_Free(popReg);
 }
-
 static void MainUsePopulation(BattlePlayer *mainPlayers,
                               uint32 mpSize, uint32 *mpIndex)
 {
     MBRegistry *popReg;
+    MBRegistry *fleetReg;
+    uint32 numFleets;
+    uint32 i;
+    MBString tmp;
+
+    MBString_Create(&tmp);
 
     popReg = MBRegistry_Alloc();
     VERIFY(popReg != NULL);
 
+    fleetReg = MBRegistry_Alloc();
+    VERIFY(popReg != NULL);
+
     MBRegistry_Load(popReg, MBOpt_GetCStr("usePopulation"));
 
-    MBRegistry_DebugDump(popReg);//XXX bob5972
+    numFleets = MBRegistry_GetInt(popReg, "numFleets");
+    if (numFleets <= 0) {
+        PANIC("Missing key: numFleets\n");
+    }
 
-    NOT_IMPLEMENTED();//XXX bob5972
+    for (i = 1; i <= numFleets; i++) {
+        MBRegistry_MakeEmpty(fleetReg);
+
+        MBString_IntToString(&tmp, i);
+        MBString_PrependCStr(&tmp, "fleet");
+        MBString_AppendCStr(&tmp, ".");
+
+        MBRegistry_SplitOnPrefix(fleetReg, popReg, MBString_GetCStr(&tmp),
+                                 FALSE);
+
+        ASSERT(*mpIndex < mpSize);
+
+        if (MBRegistry_GetCStr(fleetReg, "name") == NULL) {
+            MBRegistry_DebugDump(fleetReg);
+            PANIC("Missing key: name\n");
+        }
+        mainPlayers[*mpIndex].playerName =
+            strdup(MBRegistry_GetCStr(fleetReg, "name"));
+
+        mainPlayers[*mpIndex].mreg = MBRegistry_AllocCopy(fleetReg);
+
+        mainPlayers[*mpIndex].aiType =
+            Fleet_GetTypeFromName(mainPlayers[*mpIndex].playerName);
+        (*mpIndex)++;
+    }
 
     MBRegistry_Free(popReg);
+    MBRegistry_Free(fleetReg);
+    MBString_Destroy(&tmp);
 }
 
 static int MainEngineThreadMain(void *data)

@@ -100,4 +100,19 @@ static inline const char *Fleet_GetName(FleetAIType aiType)
     return ops.aiName;
 }
 
+static inline FleetAIType Fleet_GetTypeFromName(const char *name)
+{
+    uint32 i;
+
+    ASSERT(FLEET_AI_NEUTRAL == 1);
+    for (i = FLEET_AI_NEUTRAL; i < FLEET_AI_MAX; i++) {
+        const char *fleetName = Fleet_GetName((FleetAIType)i);
+        if (fleetName != NULL && strcmp(fleetName, name) == 0) {
+            return (FleetAIType)i;
+        }
+    }
+
+    return FLEET_AI_INVALID;
+}
+
 #endif // _FLEET_H_202005311442
