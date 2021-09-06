@@ -780,6 +780,8 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
         uint32 popLimit = MBOpt_GetUint("populationLimit");
         float killRatio = MBOpt_GetFloat("populationKillRatio");
         uint32 killCount = numTargetFleets * killRatio;
+
+        killCount = MIN(numTargetFleets - 1, killCount);
         uint32 mutateCount = popLimit - numFleets + killCount;
 
         VERIFY(popLimit > 0);
@@ -816,6 +818,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
                                             TRUE);
             MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi);
             (*mpIndex)++;
+            mutateCount--;
         }
     }
 
@@ -906,6 +909,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     ASSERT(src->playerType == PLAYER_TYPE_TARGET);
 
     MBRegistry_Free(dest->mreg);
+    *dest =*src;
     dest->mreg = MBRegistry_AllocCopy(src->mreg);
 
     VERIFY(src->aiType == FLEET_AI_FLOCK);

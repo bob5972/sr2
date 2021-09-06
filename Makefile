@@ -112,7 +112,6 @@ $(BUILDROOT)/$(TARGET): $(TARGET_OBJ)
 # clean leaves the dep files
 clean:
 	$(MAKE) -f $(MBLIB_SRCDIR)/Makefile clean
-	rm -f $(TMPDIR)/*
 	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*.opp
 	rm -f $(BUILDROOT)/$(TARGET)
 
