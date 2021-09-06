@@ -4,7 +4,7 @@ OPTS="-H"
 OPTS="${OPTS} -t 14"
 OPTS="${OPTS} -l 4"
 
-POPLIMIT=100
+POPLIMIT=50
 KILLRATIO=0.5
 
 POPFILE="build/tmp/popMutate.txt";

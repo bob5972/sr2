@@ -890,7 +890,7 @@ static void MainMutateValue(MBRegistry *mreg, MainMutationParams *mp)
             value = Random_Float(mp->minValue, mp->maxValue);
         } else {
             if (Random_Bit()) {
-                value *= mp->magnitude;
+                value *= 1.0f - mp->magnitude;
             } else {
                 value *= 1.0f + mp->magnitude;
             }
