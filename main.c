@@ -301,39 +301,36 @@ void MainConstructScenario(void)
         }
     }
 
-    if (MBOpt_IsPresent("usePopulation")) {
-        ASSERT(mainData.numPlayers > 0);
-        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-
-        mainData.numBSCs = 1;
-        mainData.bscs = malloc(sizeof(mainData.bscs[0]));
-        mainData.bscs[0] = bsc;
-        ASSERT(sizeof(mainData.players) ==
-               sizeof(mainData.bscs[0].players));
-        mainData.bscs[0].bp.numPlayers = mainData.numPlayers;
-        memcpy(&mainData.bscs[0].players, &mainData.players,
-               sizeof(mainData.players));
-    } else if (mainData.optimize) {
-        uint maxBscs = cp * tp;
+    if (mainData.optimize ||
+        (MBOpt_IsPresent("usePopulation") &&
+         MBOpt_IsPresent("mutatePopulation"))) {
+        uint maxBscs = p * p;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
 
         mainData.numBSCs = 0;
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-        for (uint ti = 0; ti < tp; ti++) {
-            uint t = ti + 1 + cp;
-            for (uint ci = 0; ci < cp; ci++) {
-                uint c = 1 + ci;
+
+        for (uint ti = 0; ti < p; ti++) {
+            if (mainData.players[ti].playerType != PLAYER_TYPE_TARGET) {
+                continue;
+            }
+
+            for (uint ci = 0; ci < p; ci++) {
+                if (mainData.players[ci].playerType != PLAYER_TYPE_CONTROL) {
+                    continue;
+                }
+
                 uint b = mainData.numBSCs++;
                 ASSERT(b < maxBscs);
                 mainData.bscs[b].bp = bsc.bp;
                 mainData.bscs[b].bp.numPlayers = 3;
                 ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
                 mainData.bscs[b].players[0] = mainData.players[0];
-                mainData.bscs[b].players[1] = mainData.players[t];
-                ASSERT(mainData.players[t].playerType == PLAYER_TYPE_TARGET);
-                mainData.bscs[b].players[2] = mainData.players[c];
-                ASSERT(mainData.players[c].playerType == PLAYER_TYPE_CONTROL);
+                mainData.bscs[b].players[1] = mainData.players[ti];
+                ASSERT(mainData.players[ti].playerType == PLAYER_TYPE_TARGET);
+                mainData.bscs[b].players[2] = mainData.players[ci];
+                ASSERT(mainData.players[ci].playerType == PLAYER_TYPE_CONTROL);
             }
         }
 
@@ -368,9 +365,6 @@ void MainConstructScenario(void)
     } else {
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-        for (uint x = 1; x < mainData.numPlayers; x++) {
-            ASSERT(mainData.players[x].playerType == PLAYER_TYPE_TARGET);
-        }
 
         mainData.numBSCs = 1;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]));
@@ -921,21 +915,21 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Remove(dest->mreg, "numDraws");
 
     MainMutationParams v[] = {
-        { "gatherRange",          10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
-        { "attackRange",          10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
-        { "alignWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
-        { "cohereWeight",         -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
-        { "separateWeight",       -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
-        { "edgesWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
-        { "enemyWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
-        { "coresWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "gatherRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.3f},
+        { "attackRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.3f},
+        { "alignWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
+        { "cohereWeight",         -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
+        { "separateWeight",       -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
+        { "edgesWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
+        { "enemyWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
+        { "coresWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
 
-        { "curHeadingWeight",     -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
-        { "attackSeparateWeight", -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "curHeadingWeight",     -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
+        { "attackSeparateWeight", -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
 
-        { "flockRadius",          10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
-        { "repulseRadius",        10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
-        { "edgeRadius",           10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
+        { "flockRadius",          10.0f, 500.0f, 0.1f, 0.05f, 0.3f},
+        { "repulseRadius",        10.0f, 500.0f, 0.1f, 0.05f, 0.3f},
+        { "edgeRadius",           10.0f, 500.0f, 0.1f, 0.05f, 0.3f},
     };
 
     for (uint32 i = 0; i < ARRAYSIZE(v); i++) {
@@ -1296,7 +1290,6 @@ int main(int argc, char **argv)
 
     WorkQueue_Lock(&mainData.resultQ);
     uint qSize = WorkQueue_QueueSizeLocked(&mainData.resultQ);
-    ASSERT(qSize == mainData.loop);
     for (uint i = 0; i < qSize; i++) {
         MainEngineResultUnit ru;
         WorkQueue_GetItemLocked(&mainData.resultQ, &ru, sizeof(ru));

@@ -2,10 +2,10 @@
 
 OPTS="-H"
 OPTS="${OPTS} -t 14"
-OPTS="${OPTS} -l 1"
+OPTS="${OPTS} -l 3"
 
-POPLIMIT=10
-KILLRATIO=0.1
+POPLIMIT=100
+KILLRATIO=0.3
 
 POPFILE="build/tmp/popMutate.txt";
 OPTS="${OPTS} --dumpPopulation $POPFILE --usePopulation $POPFILE"
@@ -16,8 +16,7 @@ OPTS="${OPTS} --populationLimit $POPLIMIT"
 
 cp -f $POPFILE $POPFILE.old
 
-#BUILDTYPE="release";
-BUILDTYPE="debug";
+BUILDTYPE="release";
 ./compile.sh $BUILDTYPE && echo && \
     echo build/sr2 $OPTS "$@" && \
     build/sr2 $OPTS "$@"
