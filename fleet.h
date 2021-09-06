@@ -80,6 +80,8 @@ static inline void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
         { FLEET_AI_FLOCK,   FlockFleet_GetOps   },
     };
 
+    ASSERT(aiType != FLEET_AI_INVALID);
+    ASSERT(aiType < FLEET_AI_MAX);
     MBUtil_Zero(ops, sizeof(*ops));
 
     for (uint i = 0; i < ARRAYSIZE(fleets); i++ ) {

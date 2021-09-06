@@ -96,6 +96,7 @@ struct MainData {
 
     uint numBSCs;
     BattleScenario *bscs;
+    uint totalBattles;
 
     int numPlayers;
     BattlePlayer players[MAX_PLAYERS];
@@ -579,6 +580,12 @@ static void MainRecordWinner(MainWinnerData *wd, PlayerUID puid,
         wd->losses++;
     }
     wd->battles++;
+
+    ASSERT(wd->wins >= 0);
+    ASSERT(wd->losses >= 0);
+    ASSERT(wd->draws >= 0);
+    ASSERT(wd->battles >= 0);
+    ASSERT(wd->wins + wd->losses + wd->draws == wd->battles);
 }
 
 static void MainPrintWinnerData(MainWinnerData *wd)
@@ -588,6 +595,12 @@ static void MainPrintWinnerData(MainWinnerData *wd)
     int battles = wd->battles;
     int draws = wd->draws;
     float percent = 100.0f * wins / (float)battles;
+
+    ASSERT(wd->wins >= 0);
+    ASSERT(wd->losses >= 0);
+    ASSERT(wd->draws >= 0);
+    ASSERT(wd->battles >= 0);
+    ASSERT(wd->wins + wd->losses + wd->draws == wd->battles);
 
     Warning("\t%3d wins, %3d losses, %3d draws => %4.1f\% wins\n",
             wins, losses, draws, percent);
@@ -771,35 +784,37 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
      * Mutate fleets.
      */
     if (MBOpt_IsPresent("mutatePopulation")) {
-        uint32 popLimit = MBOpt_GetUint("populationLimit");
+        uint popLimit = MBOpt_GetUint("populationLimit");
         float killRatio = MBOpt_GetFloat("populationKillRatio");
-        uint32 killCount = numTargetFleets * killRatio;
+        uint killCount = numTargetFleets * killRatio;
+
+        if (numFleets > popLimit) {
+            killCount = MAX(numFleets - popLimit, killCount);
+        }
 
         killCount = MIN(numTargetFleets - 1, killCount);
-        uint32 mutateCount = popLimit - numFleets + killCount;
+        int mutateCount = popLimit - numFleets + killCount;
 
         VERIFY(popLimit > 0);
         VERIFY(killRatio > 0.0f && killRatio <= 1.0f);
         VERIFY(killCount < numTargetFleets);
-        VERIFY(mutateCount > 0);
+        VERIFY(mutateCount >= 0);
 
         while (killCount > 0) {
-            uint32 fi = MainFindRandomFleet(mainPlayers, mpSize,
-                                            startingMPIndex, numFleets,
-                                            FALSE);
+            uint lastI = startingMPIndex + numFleets - 1;
+            uint fi = MainFindRandomFleet(mainPlayers, mpSize,
+                                          startingMPIndex, numFleets,
+                                          FALSE);
             ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
-            mainPlayers[fi].playerType = PLAYER_TYPE_INVALID;
-            killCount--;
-        }
+            mainPlayers[fi] = mainPlayers[lastI];
+            MBUtil_Zero(&mainPlayers[lastI], sizeof(mainPlayers[lastI]));
+            mainPlayers[lastI].playerType = PLAYER_TYPE_INVALID;
 
-        for (i = 0; i < numFleets; i++) {
-            uint32 fi = i + startingMPIndex;
-            if (mainPlayers[fi].playerType == PLAYER_TYPE_INVALID) {
-                uint32 mi = MainFindRandomFleet(mainPlayers, mpSize,
-                                                startingMPIndex, numFleets,
-                                                TRUE);
-                MainMutateFleet(mainPlayers, mpSize, fi, mi);
-            }
+            killCount--;
+            ASSERT(numFleets > 0);
+            numFleets--;
+            ASSERT(*mpIndex > 0);
+            (*mpIndex)--;
         }
 
         ASSERT(*mpIndex == startingMPIndex + numFleets);
@@ -810,6 +825,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             uint32 mi = MainFindRandomFleet(mainPlayers, mpSize,
                                             startingMPIndex, numFleets,
                                             TRUE);
+            ASSERT(*mpIndex < mpSize);
             MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi);
             (*mpIndex)++;
             mutateCount--;
@@ -847,6 +863,7 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         sProb = MAX(0.0f, sProb);
         if (mainPlayers[fi].playerType == PLAYER_TYPE_TARGET) {
             if (Random_Flip(sProb)) {
+                ASSERT(fi < mpSize);
                 return fi;
             }
         }
@@ -968,7 +985,8 @@ static void MainRunBattle(MainEngineThreadData *tData,
     tData->bsc = wu->bsc;
     tData->battle = Battle_Create(&tData->bsc, wu->seed);
 
-    Warning("Starting Battle %d ...\n", tData->battleId);
+    Warning("Starting Battle %d of %d...\n", tData->battleId,
+            mainData.totalBattles);
     Warning("\n");
 
     tData->startTimeMS = SDL_GetTicks();
@@ -1017,7 +1035,7 @@ static void MainRunBattle(MainEngineThreadData *tData,
         Battle_ReleaseStatus(tData->battle);
     }
 
-    Warning("Battle %d %s!\n", tData->battleId,
+    Warning("Battle %d of %d %s!\n", tData->battleId, mainData.totalBattles,
             finished ? "Finished" : "Aborted");
     Warning("\n");
 
@@ -1269,6 +1287,7 @@ int main(int argc, char **argv)
             WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
         }
     }
+    mainData.totalBattles = mainData.loop * mainData.numBSCs;
 
     if (!mainData.headless) {
         Display_Main(mainData.startPaused);

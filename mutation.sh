@@ -2,10 +2,10 @@
 
 OPTS="-H"
 OPTS="${OPTS} -t 14"
-OPTS="${OPTS} -l 3"
+OPTS="${OPTS} -l 4"
 
 POPLIMIT=100
-KILLRATIO=0.3
+KILLRATIO=0.5
 
 POPFILE="build/tmp/popMutate.txt";
 OPTS="${OPTS} --dumpPopulation $POPFILE --usePopulation $POPFILE"
@@ -21,8 +21,8 @@ BUILDTYPE="release";
     echo build/sr2 $OPTS "$@" && \
     build/sr2 $OPTS "$@"
 
-if [ $? == 0 ]; then
-    echo
-    echo "$POPFILE: "
-    cat $POPFILE
-fi;
+#if [ $? == 0 ]; then
+#    echo
+#    echo "$POPFILE: "
+#    cat $POPFILE
+#fi;
