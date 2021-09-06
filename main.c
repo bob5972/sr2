@@ -35,6 +35,15 @@
 #include "workQueue.h"
 #include "MBString.h"
 
+typedef struct MainMutationParams {
+    const char *key;
+    float minValue;
+    float maxValue;
+    float magnitude;
+    float jumpRate;
+    float mutationRate;
+} MainMutationParams;
+
 typedef enum MainEngineWorkType {
     MAIN_WORK_INVALID = 0,
     MAIN_WORK_EXIT    = 1,
@@ -113,8 +122,11 @@ static void MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
 static void MainUsePopulation(BattlePlayer *mainPlayers,
                               uint32 mpSize, uint32 *mpIndex);
+static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
+                                  uint32 startingMPIndex, uint32 numFleets,
+                                  bool useWinRatio);
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
-                            uint32 fi, uint32 startingMPIndex, uint32 numFleets);
+                            uint32 fi, uint32 mi);
 
 void MainConstructScenario(void)
 {
@@ -775,36 +787,22 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
         VERIFY(killCount < numTargetFleets);
         VERIFY(mutateCount > 0);
 
-        uint32 iterations = 0;
-        i = Random_Int(0, numFleets - 1);
         while (killCount > 0) {
-            uint32 fi = i + startingMPIndex;
-            uint32 numLosses = MBRegistry_GetUint(fleetReg, "numLosses");
-            uint32 numBattles = MBRegistry_GetUint(fleetReg, "numBattles");
-            float lossRatio = numBattles > 0 ?
-                                numLosses / (float)numBattles : 0.0f;
-            lossRatio = MAX(0.01, lossRatio * killRatio);
-            ASSERT(lossRatio >= 0.0f && lossRatio <= 1.0f);
-            if (mainPlayers[fi].playerType == PLAYER_TYPE_TARGET) {
-                if (killCount > 0 && Random_Flip(lossRatio)) {
-                    mainPlayers[fi].playerType = PLAYER_TYPE_INVALID;
-                    killCount--;
-                }
-            }
-
-            i = (i + 1) % numFleets;
-            iterations++;
-
-            if (iterations > numFleets * 200) {
-                PANIC("Unable to kill enough fleets\n");
-            }
+            uint32 fi = MainFindRandomFleet(mainPlayers, mpSize,
+                                            startingMPIndex, numFleets,
+                                            FALSE);
+            ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
+            mainPlayers[fi].playerType = PLAYER_TYPE_INVALID;
+            killCount--;
         }
 
         for (i = 0; i < numFleets; i++) {
             uint32 fi = i + startingMPIndex;
             if (mainPlayers[fi].playerType == PLAYER_TYPE_INVALID) {
-                MainMutateFleet(mainPlayers, mpSize, fi,
-                                startingMPIndex, numFleets);
+                uint32 mi = MainFindRandomFleet(mainPlayers, mpSize,
+                                                startingMPIndex, numFleets,
+                                                TRUE);
+                MainMutateFleet(mainPlayers, mpSize, fi, mi);
             }
         }
 
@@ -813,8 +811,10 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             /*
              * Only mutate the original fleets ?
              */
-            MainMutateFleet(mainPlayers, mpSize, *mpIndex,
-                            startingMPIndex, numFleets);
+            uint32 mi = MainFindRandomFleet(mainPlayers, mpSize,
+                                            startingMPIndex, numFleets,
+                                            TRUE);
+            MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi);
             (*mpIndex)++;
         }
     }
@@ -825,11 +825,118 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
 }
 
 
-static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
-                            uint32 fi,
-                            uint32 startingMPIndex, uint32 numFleets)
+static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
+                                  uint32 startingMPIndex, uint32 numFleets,
+                                  bool useWinRatio)
 {
-    NOT_IMPLEMENTED();
+    uint32 iterations = 0;
+    uint32 i = Random_Int(0, numFleets - 1);
+    while (TRUE) {
+        uint32 fi = i + startingMPIndex;
+        MBRegistry *fleetReg = mainPlayers[fi].mreg;
+        float sProb;
+        uint32 numBattles = MBRegistry_GetUint(fleetReg, "numBattles");
+        uint32 weight;
+
+        if (useWinRatio) {
+            weight = MBRegistry_GetUint(fleetReg, "numWins");
+        } else {
+            weight = MBRegistry_GetUint(fleetReg, "numLosses");
+        }
+
+        sProb = numBattles > 0 ? weight / (float)numBattles : 0.0f;
+        sProb += (iterations / numFleets) + 0.01;
+        sProb = MIN(1.0f, sProb);
+        sProb = MAX(0.0f, sProb);
+        if (mainPlayers[fi].playerType == PLAYER_TYPE_TARGET) {
+            if (Random_Flip(sProb)) {
+                return fi;
+            }
+        }
+
+        i = (i + 1) % numFleets;
+        iterations++;
+
+        if (iterations > numFleets * 101) {
+            PANIC("Unable to select enough fleets\n");
+        }
+    }
+
+    NOT_REACHED();
+}
+
+static void MainMutateValue(MBRegistry *mreg, MainMutationParams *mp)
+{
+    ASSERT(mp != NULL);
+
+    float value = MBRegistry_GetFloat(mreg, mp->key);
+
+    if (Random_Flip(mp->mutationRate)) {
+        if (Random_Flip(mp->jumpRate)) {
+            value = Random_Float(mp->minValue, mp->maxValue);
+        } else {
+            if (Random_Bit()) {
+                value *= mp->magnitude;
+            } else {
+                value *= 1.0f + mp->magnitude;
+            }
+        }
+
+        value = MAX(mp->minValue, value);
+        value = MIN(mp->maxValue, value);
+
+        char *vStr = NULL;
+        asprintf(&vStr, "%f", value);
+        ASSERT(vStr != NULL);
+        MBRegistry_PutCopy(mreg, mp->key, vStr);
+        free(vStr);
+    }
+}
+
+static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
+                            uint32 fi, uint32 mi)
+{
+    BattlePlayer *dest = &mainPlayers[fi];
+    BattlePlayer *src = &mainPlayers[mi];
+
+    ASSERT(fi < mpSize);
+    ASSERT(mi < mpSize);
+
+    ASSERT(dest->playerType == PLAYER_TYPE_INVALID);
+    ASSERT(src->playerType == PLAYER_TYPE_TARGET);
+
+    MBRegistry_Free(dest->mreg);
+    dest->mreg = MBRegistry_AllocCopy(src->mreg);
+
+    VERIFY(src->aiType == FLEET_AI_FLOCK);
+    dest->playerType = PLAYER_TYPE_TARGET;
+
+    MBRegistry_Remove(dest->mreg, "numBattles");
+    MBRegistry_Remove(dest->mreg, "numWins");
+    MBRegistry_Remove(dest->mreg, "numLosses");
+    MBRegistry_Remove(dest->mreg, "numDraws");
+
+    MainMutationParams v[] = {
+        { "gatherRange",          10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
+        { "attackRange",          10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
+        { "alignWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "cohereWeight",         -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "separateWeight",       -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "edgesWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "enemyWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "coresWeight",          -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+
+        { "curHeadingWeight",     -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+        { "attackSeparateWeight", -1.0f,   1.0f, 0.1f, 0.01f, 0.2f},
+
+        { "flockRadius",          10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
+        { "repulseRadius",        10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
+        { "edgeRadius",           10.0f, 500.0f, 0.1f, 0.01f, 0.2f},
+    };
+
+    for (uint32 i = 0; i < ARRAYSIZE(v); i++) {
+        MainMutateValue(dest->mreg, &v[i]);
+    }
 }
 
 static int MainEngineThreadMain(void *data)
