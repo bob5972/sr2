@@ -113,6 +113,8 @@ static void MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
 static void MainUsePopulation(BattlePlayer *mainPlayers,
                               uint32 mpSize, uint32 *mpIndex);
+static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
+                            uint32 fi, uint32 startingMPIndex, uint32 numFleets);
 
 void MainConstructScenario(void)
 {
@@ -702,8 +704,10 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
     MBRegistry *popReg;
     MBRegistry *fleetReg;
     uint32 numFleets;
+    uint32 numTargetFleets = 0;
     uint32 i;
     MBString tmp;
+    uint32 startingMPIndex = *mpIndex;
 
     MBString_Create(&tmp);
 
@@ -720,6 +724,9 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
         PANIC("Missing key: numFleets\n");
     }
 
+    /*
+     * Load fleets.
+     */
     for (i = 1; i <= numFleets; i++) {
         MBRegistry_MakeEmpty(fleetReg);
 
@@ -740,15 +747,89 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             strdup(MBRegistry_GetCStr(fleetReg, "name"));
 
         mainPlayers[*mpIndex].mreg = MBRegistry_AllocCopy(fleetReg);
+        mainPlayers[*mpIndex].playerType =
+            MBRegistry_GetInt(fleetReg, "playerType");
+        VERIFY(mainPlayers[*mpIndex].playerType != PLAYER_TYPE_INVALID);
+        VERIFY(mainPlayers[*mpIndex].playerType < PLAYER_TYPE_MAX);
+
+        if (mainPlayers[*mpIndex].playerType == PLAYER_TYPE_TARGET) {
+            numTargetFleets++;
+        }
 
         mainPlayers[*mpIndex].aiType =
             Fleet_GetTypeFromName(mainPlayers[*mpIndex].playerName);
         (*mpIndex)++;
     }
 
+    /*
+     * Mutate fleets.
+     */
+    if (MBOpt_IsPresent("mutatePopulation")) {
+        uint32 popLimit = MBOpt_GetUint("populationLimit");
+        float killRatio = MBOpt_GetFloat("populationKillRatio");
+        uint32 killCount = numTargetFleets * killRatio;
+        uint32 mutateCount = popLimit - numFleets + killCount;
+
+        VERIFY(popLimit > 0);
+        VERIFY(killRatio > 0.0f && killRatio <= 1.0f);
+        VERIFY(killCount < numTargetFleets);
+        VERIFY(mutateCount > 0);
+
+        uint32 iterations = 0;
+        i = Random_Int(0, numFleets - 1);
+        while (killCount > 0) {
+            uint32 fi = i + startingMPIndex;
+            uint32 numLosses = MBRegistry_GetUint(fleetReg, "numLosses");
+            uint32 numBattles = MBRegistry_GetUint(fleetReg, "numBattles");
+            float lossRatio = numBattles > 0 ?
+                                numLosses / (float)numBattles : 0.0f;
+            lossRatio = MAX(0.01, lossRatio * killRatio);
+            ASSERT(lossRatio >= 0.0f && lossRatio <= 1.0f);
+            if (mainPlayers[fi].playerType == PLAYER_TYPE_TARGET) {
+                if (killCount > 0 && Random_Flip(lossRatio)) {
+                    mainPlayers[fi].playerType = PLAYER_TYPE_INVALID;
+                    killCount--;
+                }
+            }
+
+            i = (i + 1) % numFleets;
+            iterations++;
+
+            if (iterations > numFleets * 200) {
+                PANIC("Unable to kill enough fleets\n");
+            }
+        }
+
+        for (i = 0; i < numFleets; i++) {
+            uint32 fi = i + startingMPIndex;
+            if (mainPlayers[fi].playerType == PLAYER_TYPE_INVALID) {
+                MainMutateFleet(mainPlayers, mpSize, fi,
+                                startingMPIndex, numFleets);
+            }
+        }
+
+        ASSERT(*mpIndex == startingMPIndex + numFleets);
+        while (mutateCount > 0) {
+            /*
+             * Only mutate the original fleets ?
+             */
+            MainMutateFleet(mainPlayers, mpSize, *mpIndex,
+                            startingMPIndex, numFleets);
+            (*mpIndex)++;
+        }
+    }
+
     MBRegistry_Free(popReg);
     MBRegistry_Free(fleetReg);
     MBString_Destroy(&tmp);
+}
+
+
+static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
+                            uint32 fi,
+                            uint32 startingMPIndex, uint32 numFleets)
+{
+    NOT_IMPLEMENTED();
 }
 
 static int MainEngineThreadMain(void *data)
@@ -912,22 +993,26 @@ void MainUnitTests()
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",           FALSE, "Print help text"               },
-        { "-H", "--headless",       FALSE, "Run headless"                  },
-        { "-F", "--frameSkip",      FALSE, "Allow frame skipping"          },
-        { "-l", "--loop",           TRUE,  "Loop <arg> times"              },
-        { "-S", "--scenario",       TRUE,  "Scenario type"                 },
-        { "-T", "--tournament",     FALSE, "Tournament mode"               },
-        { "-O", "--optimize",       FALSE, "Optimize mode"                 },
-        { "-D", "--dumpPopulation", TRUE,  "Dump Population to file"       },
-        { "-U", "--usePopulation",  TRUE,  "Use Population from file"      },
-        { "-s", "--seed",           TRUE,  "Set random seed"               },
-        { "-L", "--tickLimit",      TRUE,  "Time limit in ticks"           },
-        { "-t", "--numThreads",     TRUE,  "Number of engine threads"      },
-        { "-R", "--reuseSeed",      FALSE, "Reuse the seed across battles" },
-        { "-u", "--unitTests",      FALSE, "Run unit tests"                },
-        { "-p", "--dumpPNG",        TRUE,  "Dump a PNG of sprites"         },
-        { "-P", "--startPaused",    FALSE, "Start paused"                  },
+        { "-h", "--help",              FALSE, "Print help text"               },
+        { "-H", "--headless",          FALSE, "Run headless"                  },
+        { "-F", "--frameSkip",         FALSE, "Allow frame skipping"          },
+        { "-l", "--loop",              TRUE,  "Loop <arg> times"              },
+        { "-S", "--scenario",          TRUE,  "Scenario type"                 },
+        { "-T", "--tournament",        FALSE, "Tournament mode"               },
+        { "-O", "--optimize",          FALSE, "Optimize mode"                 },
+        { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
+        { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
+        { "-M", "--mutatePopulation",  FALSE, "Mutate population"             },
+        { "-Z", "--populationLimit",   TRUE,  "Population limit for mutating" },
+        { "-K", "--populationKillRatio",
+                                       TRUE,  "Kill ratio for population"     },
+        { "-s", "--seed",              TRUE,  "Set random seed"               },
+        { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
+        { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
+        { "-R", "--reuseSeed",         FALSE, "Reuse the seed across battles" },
+        { "-u", "--unitTests",         FALSE, "Run unit tests"                },
+        { "-p", "--dumpPNG",           TRUE,  "Dump a PNG of sprites"         },
+        { "-P", "--startPaused",       FALSE, "Start paused"                  },
     };
 
     MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
