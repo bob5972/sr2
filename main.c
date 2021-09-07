@@ -888,11 +888,19 @@ static void MainMutateValue(MBRegistry *mreg, MainMutationParams *mp)
     if (Random_Flip(mp->mutationRate)) {
         if (Random_Flip(mp->jumpRate)) {
             value = Random_Float(mp->minValue, mp->maxValue);
-        } else {
+        } else if (Random_Bit()) {
             if (Random_Bit()) {
                 value *= 1.0f - mp->magnitude;
             } else {
                 value *= 1.0f + mp->magnitude;
+            }
+        } else {
+            float range = fabsf(mp->maxValue - mp->minValue);
+            float adj = Random_Float(0.0f, range);
+            if (Random_Bit()) {
+                value += mp->magnitude * adj;
+            } else {
+                value -= mp->magnitude * adj;
             }
         }
 
@@ -932,6 +940,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Remove(dest->mreg, "numDraws");
 
     MainMutationParams v[] = {
+        // key                     min    max    mag   jump   mutation
         { "gatherRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.3f},
         { "attackRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.3f},
         { "alignWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.3f},
