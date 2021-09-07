@@ -2,7 +2,7 @@
 
 OPTS="-H"
 OPTS="${OPTS} -t 14"
-OPTS="${OPTS} -l 8"
+OPTS="${OPTS} -l 2"
 
 POPLIMIT=50
 KILLRATIO=0.5
