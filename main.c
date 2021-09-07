@@ -776,6 +776,14 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
                 strdup(MBRegistry_GetCStr(fleetReg, "fleetName"));
         }
 
+        if (MBRegistry_ContainsKey(fleetReg, "age")) {
+            uint age = MBRegistry_GetUint(fleetReg, "age");
+            MBString_IntToString(&tmp, age + 1);
+            MBRegistry_PutCopy(fleetReg, "age", MBString_GetCStr(&tmp));
+        } else {
+            MBRegistry_PutCopy(fleetReg, "age", "0");
+        }
+
         mainPlayers[*mpIndex].mreg = MBRegistry_AllocCopy(fleetReg);
         mainPlayers[*mpIndex].playerType =
             MBRegistry_GetInt(fleetReg, "playerType");
@@ -950,6 +958,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Remove(dest->mreg, "numWins");
     MBRegistry_Remove(dest->mreg, "numLosses");
     MBRegistry_Remove(dest->mreg, "numDraws");
+    MBRegistry_Put(dest->mreg, "age", "0");
 
     MainMutationParams v[] = {
         // key                     min    max    mag   jump   mutation
