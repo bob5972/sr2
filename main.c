@@ -667,9 +667,15 @@ static void MainDumpPopulation(void)
         MBString_IntToString(&tmp, i);
         MBString_AppendStr(&prefix, &tmp);
         MBString_AppendCStr(&prefix, ".");
+
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "name");
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key), fleetName);
+
+        MBString_Copy(&key, &prefix);
+        MBString_AppendCStr(&key, "playerName");
+        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
+                           mainData.players[i].playerName);
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "playerType");
@@ -762,8 +768,13 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             MBRegistry_DebugDump(fleetReg);
             PANIC("Missing key: name\n");
         }
-        mainPlayers[*mpIndex].playerName =
-            strdup(MBRegistry_GetCStr(fleetReg, "name"));
+        if (MBRegistry_ContainsKey(fleetReg, "playerName")) {
+            mainPlayers[*mpIndex].playerName =
+                strdup(MBRegistry_GetCStr(fleetReg, "playerName"));
+        } else {
+            mainPlayers[*mpIndex].playerName =
+                strdup(MBRegistry_GetCStr(fleetReg, "name"));
+        }
 
         mainPlayers[*mpIndex].mreg = MBRegistry_AllocCopy(fleetReg);
         mainPlayers[*mpIndex].playerType =
@@ -776,7 +787,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
         }
 
         mainPlayers[*mpIndex].aiType =
-            Fleet_GetTypeFromName(mainPlayers[*mpIndex].playerName);
+            Fleet_GetTypeFromName(MBRegistry_GetCStr(fleetReg, "name"));
         (*mpIndex)++;
     }
 
