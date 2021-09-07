@@ -896,11 +896,10 @@ static void MainMutateValue(MBRegistry *mreg, MainMutationParams *mp)
             }
         } else {
             float range = fabsf(mp->maxValue - mp->minValue);
-            float adj = Random_Float(0.0f, range);
             if (Random_Bit()) {
-                value += mp->magnitude * adj;
+                value += mp->magnitude * range;
             } else {
-                value -= mp->magnitude * adj;
+                value -= mp->magnitude * range;
             }
         }
 
