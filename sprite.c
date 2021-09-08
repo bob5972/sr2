@@ -683,6 +683,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_BLUE2);
         case FLEET_AI_FLOCK:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
+        case FLEET_AI_FLOCK_LITE:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE2);
         default:
             return SPRITE_INVALID;
     }
@@ -989,20 +991,21 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         FleetAIType aiType;
         uint32 color;
     } colors[] = {
-        { FLEET_AI_INVALID, 0x000000, }, // 0x(AA)RRGGBB
-        { FLEET_AI_NEUTRAL, 0x888888, }, // GRAY
-        { FLEET_AI_DUMMY,   0xFFFFFF, }, // WHITE
-        { FLEET_AI_SIMPLE,  0xFF0000, }, // RED
-        { FLEET_AI_GATHER,  0x00FF00, }, // GREEN
-        { FLEET_AI_CLOUD,   0x0000FF, }, // BLUE
-        { FLEET_AI_MAPPER,  0x808000, }, // YELLOW
-        { FLEET_AI_CIRCLE,  0x048488, }, // TEAL-ish
-        { FLEET_AI_RUNAWAY, 0x800080, }, // PURPLE
-        { FLEET_AI_COWARD,  0x008080, }, // TEAL
-        { FLEET_AI_BASIC,   0x808080, }, // DARK GRAY
-        { FLEET_AI_HOLD,    0xF00080, }, // PURPLE
-        { FLEET_AI_BOB,     0x80F080, }, // GREENISH-YELLOW
-        { FLEET_AI_FLOCK,   0xFF3388, },
+        { FLEET_AI_INVALID,    0x000000, }, // 0x(AA)RRGGBB
+        { FLEET_AI_NEUTRAL,    0x888888, }, // GRAY
+        { FLEET_AI_DUMMY,      0xFFFFFF, }, // WHITE
+        { FLEET_AI_SIMPLE,     0xFF0000, }, // RED
+        { FLEET_AI_GATHER,     0x00FF00, }, // GREEN
+        { FLEET_AI_CLOUD,      0x0000FF, }, // BLUE
+        { FLEET_AI_MAPPER,     0x808000, }, // YELLOW
+        { FLEET_AI_CIRCLE,     0x048488, }, // TEAL-ish
+        { FLEET_AI_RUNAWAY,    0x800080, }, // PURPLE
+        { FLEET_AI_COWARD,     0x008080, }, // TEAL
+        { FLEET_AI_BASIC,      0x808080, }, // DARK GRAY
+        { FLEET_AI_HOLD,       0xF00080, }, // PURPLE
+        { FLEET_AI_BOB,        0x80F080, }, // GREENISH-YELLOW
+        { FLEET_AI_FLOCK,      0xFF3388, }, // BLUEISH-GRAY?
+        { FLEET_AI_FLOCK_LITE, 0xFF3322, }, // YELLOWISH-GRAY?
     };
 
     ASSERT(repeatCount > 0);
