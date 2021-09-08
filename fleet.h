@@ -51,6 +51,7 @@ void GatherFleet_GetOps(FleetAIOps *ops);
 void CowardFleet_GetOps(FleetAIOps *ops);
 void RunAwayFleet_GetOps(FleetAIOps *ops);
 void CircleFleet_GetOps(FleetAIOps *ops);
+void FlockFleetLite_GetOps(FleetAIOps *ops);
 void FlockFleet_GetOps(FleetAIOps *ops);
 
 static inline void NeutralFleet_GetOps(FleetAIOps *ops)
@@ -65,19 +66,20 @@ static inline void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
         FleetAIType aiType;
         void (*getOps)(FleetAIOps *ops);
     } fleets[] = {
-        { FLEET_AI_NEUTRAL, NeutralFleet_GetOps },
-        { FLEET_AI_DUMMY,   DummyFleet_GetOps   },
-        { FLEET_AI_SIMPLE,  SimpleFleet_GetOps  },
-        { FLEET_AI_BOB,     BobFleet_GetOps     },
-        { FLEET_AI_MAPPER,  MapperFleet_GetOps  },
-        { FLEET_AI_CLOUD,   CloudFleet_GetOps   },
-        { FLEET_AI_GATHER,  GatherFleet_GetOps  },
-        { FLEET_AI_COWARD,  CowardFleet_GetOps  },
-        { FLEET_AI_RUNAWAY, RunAwayFleet_GetOps },
-        { FLEET_AI_BASIC,   BasicFleet_GetOps   },
-        { FLEET_AI_HOLD,    HoldFleet_GetOps    },
-        { FLEET_AI_CIRCLE,  CircleFleet_GetOps  },
-        { FLEET_AI_FLOCK,   FlockFleet_GetOps   },
+        { FLEET_AI_NEUTRAL,    NeutralFleet_GetOps   },
+        { FLEET_AI_DUMMY,      DummyFleet_GetOps     },
+        { FLEET_AI_SIMPLE,     SimpleFleet_GetOps    },
+        { FLEET_AI_BOB,        BobFleet_GetOps       },
+        { FLEET_AI_MAPPER,     MapperFleet_GetOps    },
+        { FLEET_AI_CLOUD,      CloudFleet_GetOps     },
+        { FLEET_AI_GATHER,     GatherFleet_GetOps    },
+        { FLEET_AI_COWARD,     CowardFleet_GetOps    },
+        { FLEET_AI_RUNAWAY,    RunAwayFleet_GetOps   },
+        { FLEET_AI_BASIC,      BasicFleet_GetOps     },
+        { FLEET_AI_HOLD,       HoldFleet_GetOps      },
+        { FLEET_AI_CIRCLE,     CircleFleet_GetOps    },
+        { FLEET_AI_FLOCK_LITE, FlockFleetLite_GetOps },
+        { FLEET_AI_FLOCK,      FlockFleet_GetOps     },
     };
 
     ASSERT(aiType != FLEET_AI_INVALID);

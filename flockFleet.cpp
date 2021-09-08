@@ -36,8 +36,7 @@ public:
 
     virtual ~FlockAIGovernor() { }
 
-
-    virtual void loadRegistry(MBRegistry *mreg) {
+    virtual void putLiteDefaults(MBRegistry *mreg) {
         struct {
             const char *key;
             const char *value;
@@ -58,9 +57,44 @@ public:
             { "curHeadingWeight",     "0.5",  },
             { "attackSeparateWeight", "0.5",  },
 
-            { "flockRadius",          NULL,   }, //  166.7f
-            { "repulseRadius",        NULL,   }, //   50.0f
-            { "edgeRadius",           NULL,   }, //  100.0f
+            { "flockRadius",          "166.7",   }, // baseSensorRadius / 1.5
+            { "repulseRadius",        "50.0",    }, // 2 * fighterSensorRadius
+            { "edgeRadius",           "100.0",   }, // fighterSensorRadius
+        };
+
+        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
+            if (configs[i].value != NULL &&
+                !MBRegistry_ContainsKey(mreg, configs[i].key)) {
+                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+            }
+        }
+    }
+
+
+    virtual void loadRegistry(MBRegistry *mreg) {
+        struct {
+            const char *key;
+            const char *value;
+        } configs[] = {
+            // Override BasicFleet defaults
+            { "gatherAbandonStale",   "TRUE",        },
+            { "gatherRange",          "68.465767",   },
+            { "attackRange",          "32.886688",   },
+
+            // FlockFleet specific options
+            { "alignWeight",          "0.239648",   },
+            { "cohereWeight",         "-0.006502",  },
+            { "separateWeight",       "0.781240",   },
+            { "edgesWeight",          "0.704170",   },
+            { "enemyWeight",          "0.556688",   },
+            { "coresWeight",          "0.122679",   },
+
+            { "curHeadingWeight",     "0.838760",   },
+            { "attackSeparateWeight", "0.188134",   },
+
+            { "flockRadius",          "398.545197", },
+            { "repulseRadius",        "121.312904", },
+            { "edgeRadius",           "161.593430", },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -84,21 +118,9 @@ public:
         this->myConfig.attackSeparateWeight =
             MBRegistry_GetFloat(mreg, "attackSeparateWeight");
 
-        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        float fighterRadius = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
-        this->myConfig.flockRadius = baseRadius / 1.5f;
-        this->myConfig.edgeRadius = fighterRadius;
-        this->myConfig.repulseRadius = 2 * fighterRadius;
-
-        if (MBRegistry_ContainsKey(mreg, "flockRadius")) {
-            this->myConfig.flockRadius = MBRegistry_GetFloat(mreg, "flockRadius");
-        }
-        if (MBRegistry_ContainsKey(mreg, "repulseRadius")) {
-            this->myConfig.repulseRadius = MBRegistry_GetFloat(mreg, "repulseRadius");
-        }
-        if (MBRegistry_ContainsKey(mreg, "edgeRadius")) {
-            this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
-        }
+        this->myConfig.flockRadius = MBRegistry_GetFloat(mreg, "flockRadius");
+        this->myConfig.repulseRadius = MBRegistry_GetFloat(mreg, "repulseRadius");
+        this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
 
         this->BasicAIGovernor::loadRegistry(mreg);
 
@@ -439,7 +461,7 @@ public:
 
 class FlockFleet {
 public:
-    FlockFleet(FleetAI *ai)
+    FlockFleet(FleetAI *ai, bool lite)
     :sg(), gov(ai, &sg)
     {
         this->ai = ai;
@@ -447,6 +469,11 @@ public:
         gov.setSeed(RandomState_Uint64(&this->rs));
 
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
+
+        if (lite) {
+            this->gov.putLiteDefaults(mreg);
+        }
+
         this->gov.loadRegistry(mreg);
     }
 
@@ -463,6 +490,7 @@ public:
 };
 
 static void *FlockFleetCreate(FleetAI *ai);
+static void *FlockFleetLiteCreate(FleetAI *ai);
 static void FlockFleetDestroy(void *aiHandle);
 static void FlockFleetRunAITick(void *aiHandle);
 static void *FlockFleetMobSpawned(void *aiHandle, Mob *m);
@@ -483,10 +511,32 @@ void FlockFleet_GetOps(FleetAIOps *ops)
     ops->mobDestroyed = FlockFleetMobDestroyed;
 }
 
+
+void FlockFleetLite_GetOps(FleetAIOps *ops)
+{
+    ASSERT(ops != NULL);
+    MBUtil_Zero(ops, sizeof(*ops));
+
+    ops->aiName = "FlockFleetLite";
+    ops->aiAuthor = "Michael Banack";
+
+    ops->createFleet = &FlockFleetLiteCreate;
+    ops->destroyFleet = &FlockFleetDestroy;
+    ops->runAITick = &FlockFleetRunAITick;
+    ops->mobSpawned = FlockFleetMobSpawned;
+    ops->mobDestroyed = FlockFleetMobDestroyed;
+}
+
+static void *FlockFleetLiteCreate(FleetAI *ai)
+{
+    ASSERT(ai != NULL);
+    return new FlockFleet(ai, TRUE);
+}
+
 static void *FlockFleetCreate(FleetAI *ai)
 {
     ASSERT(ai != NULL);
-    return new FlockFleet(ai);
+    return new FlockFleet(ai, FALSE);
 }
 
 static void FlockFleetDestroy(void *handle)
