@@ -229,43 +229,43 @@ void MainConstructScenario(void)
          *    BobFleet (prototype, varies)
          */
 
-//         mainData.players[p].aiType = FLEET_AI_DUMMY;
+//        mainData.players[p].aiType = FLEET_AI_DUMMY;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_SIMPLE;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_GATHER;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_CLOUD;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_MAPPER;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_RUNAWAY;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_CIRCLE;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_FLOCK_LITE;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_COWARD;
+//        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-//         mainData.players[p].aiType = FLEET_AI_SIMPLE;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_GATHER;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_CLOUD;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_MAPPER;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_RUNAWAY;
-//         p++;
-//
-//         mainData.players[p].aiType = FLEET_AI_CIRCLE;
-//         p++;
-//
-//         mainData.players[p].aiType = FLEET_AI_COWARD;
-//         p++;
-//
-        mainData.players[p].aiType = FLEET_AI_FLOCK_LITE;
-        p++;
-//
-        // mainData.players[p].aiType = FLEET_AI_BASIC;
-        // p++;
-//
-//         mainData.players[p].aiType = FLEET_AI_HOLD;
-//         p++;
-
-//         mainData.players[p].aiType = FLEET_AI_BOB;
-//         p++;
+//        mainData.players[p].aiType = FLEET_AI_HOLD;
+//        p++;
 
         mainData.players[p].aiType = FLEET_AI_FLOCK;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
 
         // mainData.players[p].playerName = "FlockMod";
