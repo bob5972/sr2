@@ -219,8 +219,8 @@ void MainConstructScenario(void)
          *    MapperFleet
          *    RunAwayFleet
          *    CircleFleet
-         *    CowardFleet
          *    FlockFleetLite
+         *    CowardFleet
          *    BasicFleet
          *    HoldFleet
          *    FlockFleet
