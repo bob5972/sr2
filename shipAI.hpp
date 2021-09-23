@@ -283,8 +283,12 @@ public:
             MBRegistry_GetBool(mreg, "rotateStartingAngle");
         myConfig.startingMaxRadius =
             MBRegistry_GetFloat(mreg, "startingMaxRadius");
+        ASSERT(myConfig.startingMaxRadius > 0.0f);
         myConfig.startingMinRadius =
             MBRegistry_GetFloat(mreg, "startingMinRadius");
+        ASSERT(myConfig.startingMaxRadius > 0.0f);
+
+        ASSERT(myConfig.startingMinRadius < myConfig.startingMaxRadius);
 
         MBRegistry_Free(mreg);
     }
