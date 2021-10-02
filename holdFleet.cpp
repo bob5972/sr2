@@ -63,12 +63,22 @@ public:
             const char *key;
             const char *value;
         } configs[] = {
-            { "evadeFighters",          "FALSE", },
-            { "evadeUseStrictDistance",  "TRUE", },
-            { "evadeStrictDistance",       "10", },
-            { "attackRange",              "100", },
-            { "attackExtendedRange",     "TRUE", },
-            { "holdCount",                 "50", },
+            // Override BasicFleet defaults
+            { "evadeFighters",          "FALSE",  },
+            { "evadeUseStrictDistance", "FALSE",  },
+            { "evadeStrictDistance",    "397",    },
+            { "evadeRange",             "140",    },
+            { "attackRange",            "121",    },
+            { "attackExtendedRange",    "TRUE",   },
+            { "guardRange",             "-1.0",   },
+            { "gatherAbandonStale",     "TRUE",   },
+            { "gatherRange",            "73.21"   },
+            { "rotateStartingAngle",    "TRUE",   },
+            { "startingMaxRadius",      "1000",   },
+            { "startingMinRadius",      "300",    },
+
+            // HoldFleet-specific options
+            { "holdCount",              "42",     },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);

@@ -264,35 +264,20 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-//        mainData.players[p].aiType = FLEET_AI_HOLD;
-//        p++;
+       mainData.players[p].aiType = FLEET_AI_HOLD;
+       p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
-
-        // mainData.players[p].playerName = "FlockMod";
         // mainData.players[p].aiType = FLEET_AI_FLOCK;
-        // mainData.players[p].mreg = MBRegistry_Alloc();
-        // MBRegistry_Put(mainData.players[p].mreg, "gatherRange", "200");
-        // MBRegistry_Put(mainData.players[p].mreg, "attackRange", "100");
-
-        // MBRegistry_Put(mainData.players[p].mreg, "alignWeight", "0.7");
-        // MBRegistry_Put(mainData.players[p].mreg, "cohereWeight", "-0.15");
-        // MBRegistry_Put(mainData.players[p].mreg, "separateWeight", "0.95");
-        // MBRegistry_Put(mainData.players[p].mreg, "edgesWeight", "0.85");
-        // MBRegistry_Put(mainData.players[p].mreg, "enemyWeight", "0.6");
-        // MBRegistry_Put(mainData.players[p].mreg, "coresWeight", "0.10");
-
-        // MBRegistry_Put(mainData.players[p].mreg, "curHeadingWeight", "0.10");
-        // MBRegistry_Put(mainData.players[p].mreg, "attackSeparateWeight", "0.50");
-
-        // MBRegistry_Put(mainData.players[p].mreg, "flockRadius", "171");
-        // MBRegistry_Put(mainData.players[p].mreg, "repulseRadius", "100");
-        // MBRegistry_Put(mainData.players[p].mreg, "edgeRadius", "50");
         // p++;
+
+        // mainData.players[p].aiType = FLEET_AI_BOB;
+        // p++;
+
+        mainData.players[p].playerName = "HoldMod";
+        mainData.players[p].aiType = FLEET_AI_HOLD;
+        mainData.players[p].mreg = MBRegistry_Alloc();
+        MBRegistry_Put(mainData.players[p].mreg, "holdCount", "1");
+        p++;
     }
 
     ASSERT(p <= ARRAYSIZE(mainData.players));
