@@ -34,4 +34,37 @@ void Battle_ReleaseMobs(Battle *battle);
 const BattleStatus *Battle_AcquireStatus(Battle *battle);
 void Battle_ReleaseStatus(Battle *battle);
 
+static INLINE const char *
+PlayerType_ToString(PlayerType type)
+{
+    switch (type) {
+        case PLAYER_TYPE_INVALID:
+            return "PlayerTypeInvalid";
+        case PLAYER_TYPE_NEUTRAL:
+            return "Neutral";
+        case PLAYER_TYPE_CONTROL:
+            return "Control";
+        case PLAYER_TYPE_TARGET:
+            return "Target";
+        default:
+            NOT_IMPLEMENTED();
+    }
+}
+
+static INLINE PlayerType
+PlayerType_FromString(const char *str)
+{
+    if (strcmp(str, "PlayerTypeInvalid") == 0) {
+        return PLAYER_TYPE_INVALID;
+    } else if (strcmp(str, "Neutral") == 0) {
+        return PLAYER_TYPE_NEUTRAL;
+    } else if (strcmp(str, "Control") == 0) {
+        return PLAYER_TYPE_CONTROL;
+    } else if (strcmp(str, "Target") == 0) {
+        return PLAYER_TYPE_TARGET;
+    } else {
+        NOT_IMPLEMENTED();
+    }
+}
+
 #endif // _BATTLE_H_202005310644

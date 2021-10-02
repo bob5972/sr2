@@ -581,6 +581,7 @@ static void MainRecordWinner(MainWinnerData *wd, PlayerUID puid,
     BattlePlayer *bpp = &mainData.players[puid];
     ASSERT(puid < ARRAYSIZE(mainData.players));
     ASSERT(puid == bpp->playerUID);
+
     if (puid == bs->winnerUID) {
         wd->wins++;
     } else if (bs->winnerUID == PLAYER_ID_NEUTRAL) {
@@ -688,9 +689,8 @@ static void MainDumpPopulation(void)
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "playerType");
-        MBString_IntToString(&tmp, mainData.players[i].playerType);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
-                           MBString_GetCStr(&tmp));
+                           PlayerType_ToString(mainData.players[i].playerType));
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numBattles");
@@ -795,7 +795,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
 
         mainPlayers[*mpIndex].mreg = MBRegistry_AllocCopy(fleetReg);
         mainPlayers[*mpIndex].playerType =
-            MBRegistry_GetInt(fleetReg, "playerType");
+            PlayerType_FromString(MBRegistry_GetCStr(fleetReg, "playerType"));
         VERIFY(mainPlayers[*mpIndex].playerType != PLAYER_TYPE_INVALID);
         VERIFY(mainPlayers[*mpIndex].playerType < PLAYER_TYPE_MAX);
 
@@ -971,15 +971,14 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     *dest =*src;
     dest->mreg = MBRegistry_AllocCopy(src->mreg);
 
+    dest->playerType = PLAYER_TYPE_TARGET;
+    MBRegistry_Remove(dest->mreg, "numBattles");
+    MBRegistry_Remove(dest->mreg, "numWins");
+    MBRegistry_Remove(dest->mreg, "numLosses");
+    MBRegistry_Remove(dest->mreg, "numDraws");
+    MBRegistry_Put(dest->mreg, "age", "0");
+
     if (src->aiType == FLEET_AI_FLOCK) {
-        dest->playerType = PLAYER_TYPE_TARGET;
-
-        MBRegistry_Remove(dest->mreg, "numBattles");
-        MBRegistry_Remove(dest->mreg, "numWins");
-        MBRegistry_Remove(dest->mreg, "numLosses");
-        MBRegistry_Remove(dest->mreg, "numDraws");
-        MBRegistry_Put(dest->mreg, "age", "0");
-
         MainMutationFParams v[] = {
             // key                     min    max    mag   jump   mutation
             { "gatherRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
