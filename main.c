@@ -988,15 +988,15 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         }
     } else if (src->aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
-            // key                     min    max     mag   jump   mutation
-            { "evadeStrictDistance",  -1.0f,  500.0f, 0.1f, 0.05f, 0.25f},
-            { "evadeRange",           -1.0f,  500.0f, 0.1f, 0.05f, 0.25f},
-            { "attackRange",          -1.0f,  500.0f, 0.1f, 0.05f, 0.25f},
-            { "guardRange",           -1.0f,  500.0f, 0.1f, 0.05f, 0.25f},
-            { "gatherRange",          -1.0f,  500.0f, 0.1f, 0.05f, 0.25f},
-            //{ "startingMaxRadius",    -1.0f, 2000.0f, 0.1f, 0.05f, 0.25f},
-            //{ "startingMinRadius",    -1.0f, 2000.0f, 0.1f, 0.05f, 0.25f},
-            { "holdCount",            -1.0f,  500.0f, 0.1f, 0.05f, 0.25f},
+            // key                     min    max       mag   jump   mutation
+            { "evadeStrictDistance",  -1.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "evadeRange",           -1.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "attackRange",          -1.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "guardRange",           -1.0f,   500.0f,  0.1f, 0.05f, 0.05f},
+            { "gatherRange",          -1.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "startingMaxRadius",    1000.0f, 2000.0f, 0.1f, 0.05f, 0.25f},
+            { "startingMinRadius",    300.0f,  999.0f,  0.1f, 0.05f, 0.25f},
+            { "holdCount",            1.0f,    500.0f,  0.1f, 0.05f, 0.25f},
         };
 
         MainMutationBParams vb[] = {
