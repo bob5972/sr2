@@ -264,20 +264,20 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-       mainData.players[p].aiType = FLEET_AI_HOLD;
-       p++;
-
-        // mainData.players[p].aiType = FLEET_AI_FLOCK;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_BOB;
-        // p++;
-
-        mainData.players[p].playerName = "HoldMod";
         mainData.players[p].aiType = FLEET_AI_HOLD;
-        mainData.players[p].mreg = MBRegistry_Alloc();
-        MBRegistry_Put(mainData.players[p].mreg, "holdCount", "1");
         p++;
+
+        mainData.players[p].aiType = FLEET_AI_FLOCK;
+        p++;
+
+//        mainData.players[p].aiType = FLEET_AI_BOB;
+//        p++;
+
+        //mainData.players[p].playerName = "HoldMod";
+        //mainData.players[p].aiType = FLEET_AI_HOLD;
+        //mainData.players[p].mreg = MBRegistry_Alloc();
+        //MBRegistry_Put(mainData.players[p].mreg, "holdCount", "1");
+        //p++;
     }
 
     ASSERT(p <= ARRAYSIZE(mainData.players));
