@@ -328,10 +328,10 @@ public:
                     p.radius /= 1.1f;
 
                     i++;
-                    if (i >= 1000 * 1000) {
+                    if (i >= 10 * 1000) {
                         /*
                          * If the min/max radius are set wrong,
-                         * we could othrewise loop here forever.
+                         * we could otherwise loop here forever.
                          */
                         mob->cmd.target = mob->pos;
                         keepGoing = FALSE;
