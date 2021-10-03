@@ -2,10 +2,11 @@
 
 OPTS="-H"
 OPTS="${OPTS} -t 14"
-OPTS="${OPTS} -l 5"
 
-POPLIMIT=50
-KILLRATIO=0.5
+POPLIMIT=100
+KILLRATIO=0.12
+STALE_IT=1
+NEW_IT=3
 
 POPFILE="build/tmp/popMutate.txt";
 OPTS="${OPTS} --dumpPopulation $POPFILE --usePopulation $POPFILE"
@@ -13,6 +14,8 @@ OPTS="${OPTS} --usePopulation $POPFILE"
 OPTS="${OPTS} --mutatePopulation"
 OPTS="${OPTS} --populationKillRatio $KILLRATIO"
 OPTS="${OPTS} --populationLimit $POPLIMIT"
+OPTS="${OPTS} --mutationNewIterations $NEW_IT"
+OPTS="${OPTS} --mutationStaleIterations $STALE_IT"
 
 cp -f $POPFILE $POPFILE.old
 

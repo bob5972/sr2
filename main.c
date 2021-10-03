@@ -307,25 +307,34 @@ void MainConstructScenario(void)
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
 
         for (uint ti = 0; ti < p; ti++) {
+            uint itCount;
             if (mainData.players[ti].playerType != PLAYER_TYPE_TARGET) {
                 continue;
             }
 
-            for (uint ci = 0; ci < p; ci++) {
-                if (mainData.players[ci].playerType != PLAYER_TYPE_CONTROL) {
-                    continue;
-                }
+            if (MBRegistry_GetInt(mainData.players[ti].mreg, "numBattles") == 0) {
+                itCount = MBOpt_GetUint("mutationNewIterations");
+            } else {
+                itCount = MBOpt_GetUint("mutationStaleIterations");
+            }
 
-                uint b = mainData.numBSCs++;
-                ASSERT(b < maxBscs);
-                mainData.bscs[b].bp = bsc.bp;
-                mainData.bscs[b].bp.numPlayers = 3;
-                ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-                mainData.bscs[b].players[0] = mainData.players[0];
-                mainData.bscs[b].players[1] = mainData.players[ti];
-                ASSERT(mainData.players[ti].playerType == PLAYER_TYPE_TARGET);
-                mainData.bscs[b].players[2] = mainData.players[ci];
-                ASSERT(mainData.players[ci].playerType == PLAYER_TYPE_CONTROL);
+            for (uint ii = 0; ii < itCount; ii++) {
+                for (uint ci = 0; ci < p; ci++) {
+                    if (mainData.players[ci].playerType != PLAYER_TYPE_CONTROL) {
+                        continue;
+                    }
+
+                    uint b = mainData.numBSCs++;
+                    ASSERT(b < maxBscs);
+                    mainData.bscs[b].bp = bsc.bp;
+                    mainData.bscs[b].bp.numPlayers = 3;
+                    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+                    mainData.bscs[b].players[0] = mainData.players[0];
+                    mainData.bscs[b].players[1] = mainData.players[ti];
+                    ASSERT(mainData.players[ti].playerType == PLAYER_TYPE_TARGET);
+                    mainData.bscs[b].players[2] = mainData.players[ci];
+                    ASSERT(mainData.players[ci].playerType == PLAYER_TYPE_CONTROL);
+                }
             }
         }
 
@@ -1199,6 +1208,12 @@ void MainParseCmdLine(int argc, char **argv)
         { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
         { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
         { "-M", "--mutatePopulation",  FALSE, "Mutate population"             },
+        { "-I", "--mutationNewIterations",
+                                       TRUE,  "New fleet iterations per "
+                                              "Mutation round"                },
+        { "-J", "--mutationStaleIterations",
+                                       TRUE,  "Stale fleet Iterations per "
+                                              "Mutation round"                },
         { "-Z", "--populationLimit",   TRUE,  "Population limit for mutating" },
         { "-K", "--populationKillRatio",
                                        TRUE,  "Kill ratio for population"     },
