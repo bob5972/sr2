@@ -315,6 +315,7 @@ public:
             mob->type == MOB_TYPE_FIGHTER) {
             FRPoint p;
             uint i = 0;
+            bool keepGoing = TRUE;
 
             do {
                 // Rotate by the Golden Angle
@@ -326,16 +327,21 @@ public:
                     FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
                     p.radius /= 1.1f;
 
-                    /*
-                     * If the min/max radius are set wrong,
-                     * we could loop here forever.
-                     */
                     i++;
-                    ASSERT(i < 1000 * 1000);
-                } while (p.radius >= myConfig.startingMinRadius &&
+                    if (i >= 1000 * 1000) {
+                        /*
+                         * If the min/max radius are set wrong,
+                         * we could othrewise loop here forever.
+                         */
+                        mob->cmd.target = mob->pos;
+                        keepGoing = FALSE;
+                    }
+                } while (keepGoing &&
+                         p.radius >= myConfig.startingMinRadius &&
                          FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
                                       0.0f, ai->bp.height));
-            } while (p.radius < myConfig.startingMinRadius);
+            } while (keepGoing &&
+                     p.radius < myConfig.startingMinRadius);
         }
     }
 
