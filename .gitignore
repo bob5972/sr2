@@ -9,4 +9,3 @@ perf.data.old
 local/
 *.kate-swp
 .vscode/
-summarize.sh
