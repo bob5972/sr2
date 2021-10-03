@@ -1,3 +1,4 @@
+MReg::MBLib::Version=5
 width = 1600
 height = 1200
 startingCredits = 1000
