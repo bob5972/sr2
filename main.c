@@ -653,6 +653,7 @@ static void MainDumpPopulation(void)
 
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
     for (i = 1; i < mainData.numPlayers; i++) {
+        uint x;
         MainWinnerData *wd = &mainData.winners[i];
         const char *fleetName = Fleet_GetName(mainData.players[i].aiType);
 
@@ -662,6 +663,14 @@ static void MainDumpPopulation(void)
         MBString_IntToString(&tmp, i);
         MBString_AppendStr(&prefix, &tmp);
         MBString_AppendCStr(&prefix, ".");
+
+        /*
+         * Copy them over first, so we can override some of them.
+         */
+        if (mainData.players[i].mreg != NULL) {
+            MBRegistry_PutAll(popReg, mainData.players[i].mreg,
+                              MBString_GetCStr(&prefix));
+        }
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "fleetName");
@@ -679,32 +688,31 @@ static void MainDumpPopulation(void)
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numBattles");
-        MBString_IntToString(&tmp, wd->battles);
+        x = MBRegistry_GetUint(mainData.players[i].mreg, "numBattles");
+        MBString_IntToString(&tmp, wd->battles + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numWins");
-        MBString_IntToString(&tmp, wd->wins);
+        x = MBRegistry_GetUint(mainData.players[i].mreg, "numWins");
+        MBString_IntToString(&tmp, wd->wins + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numLosses");
-        MBString_IntToString(&tmp, wd->losses);
+        x = MBRegistry_GetUint(mainData.players[i].mreg, "numLosses");
+        MBString_IntToString(&tmp, wd->losses + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numDraws");
-        MBString_IntToString(&tmp, wd->draws);
+        x = MBRegistry_GetUint(mainData.players[i].mreg, "numDraws");
+        MBString_IntToString(&tmp, wd->draws + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
-
-        if (mainData.players[i].mreg != NULL) {
-            MBRegistry_PutAll(popReg, mainData.players[i].mreg,
-                              MBString_GetCStr(&prefix));
-        }
     }
 
     MBString_IntToString(&tmp, numFleets);
