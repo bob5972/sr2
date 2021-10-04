@@ -227,8 +227,8 @@ void MainConstructScenario(void)
          *    FlockFleetLite
          *    CowardFleet
          *    BasicFleet
-         *    HoldFleet
          *    FlockFleet
+         *    HoldFleet
          *
          *    -- unrated --
          *    BobFleet (prototype, varies)
@@ -697,28 +697,44 @@ static void MainDumpPopulation(void)
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numBattles");
-        x = MBRegistry_GetUint(mainData.players[i].mreg, "numBattles");
+        if (mainData.players[i].mreg != NULL) {
+            x = MBRegistry_GetUint(mainData.players[i].mreg, "numBattles");
+        } else {
+            x = 0;
+        }
         MBString_IntToString(&tmp, wd->battles + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numWins");
-        x = MBRegistry_GetUint(mainData.players[i].mreg, "numWins");
+        if (mainData.players[i].mreg != NULL) {
+            x = MBRegistry_GetUint(mainData.players[i].mreg, "numWins");
+        } else {
+            x = 0;
+        }
         MBString_IntToString(&tmp, wd->wins + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numLosses");
-        x = MBRegistry_GetUint(mainData.players[i].mreg, "numLosses");
+        if (mainData.players[i].mreg != NULL) {
+            x = MBRegistry_GetUint(mainData.players[i].mreg, "numLosses");
+        } else {
+            x = 0;
+        }
         MBString_IntToString(&tmp, wd->losses + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
 
         MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "numDraws");
-        x = MBRegistry_GetUint(mainData.players[i].mreg, "numDraws");
+        if (mainData.players[i].mreg != NULL) {
+            x = MBRegistry_GetUint(mainData.players[i].mreg, "numDraws");
+        } else {
+            x = 0;
+        }
         MBString_IntToString(&tmp, wd->draws + x);
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            MBString_GetCStr(&tmp));
@@ -1012,8 +1028,8 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
             { "guardRange",           -1.0f,   500.0f,  0.1f, 0.05f, 0.05f},
             { "gatherRange",          -1.0f,   500.0f,  0.1f, 0.05f, 0.25f},
             { "startingMaxRadius",    1000.0f, 2000.0f, 0.1f, 0.05f, 0.25f},
-            { "startingMinRadius",    300.0f,  999.0f,  0.1f, 0.05f, 0.25f},
-            { "holdCount",            1.0f,    500.0f,  0.1f, 0.05f, 0.25f},
+            { "startingMinRadius",    300.0f,  800.0f,  0.1f, 0.05f, 0.25f},
+            { "holdCount",            1.0f,    200.0f,  0.1f, 0.05f, 0.25f},
         };
 
         MainMutationBParams vb[] = {

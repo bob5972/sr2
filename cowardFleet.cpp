@@ -157,7 +157,7 @@ static void CowardFleetRunAITick(void *aiHandle)
         enemyTarget = sf->sg.findClosestTargetInRange(&mob->pos,
                                                       MOB_FLAG_SHIP, firingRange);
         if (enemyTarget != NULL) {
-            ASSERT(FPoint_Distance(&mob->pos, &enemyTarget->pos) < firingRange);
+            ASSERT(FPoint_Distance(&mob->pos, &enemyTarget->pos) <= firingRange);
             mob->cmd.spawnType = MOB_TYPE_MISSILE;
         }
 
