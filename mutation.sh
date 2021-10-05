@@ -3,10 +3,10 @@
 OPTS="-H"
 OPTS="${OPTS} -t 14"
 
-POPLIMIT=200
-KILLRATIO=0.05
+POPLIMIT=100
+KILLRATIO=0.20
 STALE_IT=1
-NEW_IT=3
+NEW_IT=5
 
 POPFILE="build/tmp/popMutate.txt";
 OPTS="${OPTS} --dumpPopulation $POPFILE --usePopulation $POPFILE"
