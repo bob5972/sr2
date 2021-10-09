@@ -264,10 +264,10 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_HOLD;
+        mainData.players[p].aiType = FLEET_AI_FLOCK;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK;
+        mainData.players[p].aiType = FLEET_AI_HOLD;
         p++;
 
 //        mainData.players[p].aiType = FLEET_AI_BOB;
