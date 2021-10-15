@@ -277,8 +277,8 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_HOLD;
         p++;
 
-       mainData.players[p].aiType = FLEET_AI_BOB;
-       p++;
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
 
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;
@@ -1030,7 +1030,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Put(dest->mreg, "age", "0");
 
     if (src->aiType == FLEET_AI_FLOCK) {
-        MainMutationFParams v[] = {
+        MainMutationFParams vf[] = {
             // key                     min    max    mag   jump   mutation
             { "gatherRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
             { "attackRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
@@ -1049,10 +1049,53 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
             { "edgeRadius",           10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
         };
 
-        for (uint32 i = 0; i < ARRAYSIZE(v); i++) {
-            MainMutateFValue(dest->mreg, &v[i]);
+        for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
+            MainMutateFValue(dest->mreg, &vf[i]);
         }
     } else if (src->aiType == FLEET_AI_BOB) {
+        MainMutationFParams vf[] = {
+            // key                     min     max       mag   jump   mutation
+            { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+            { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+            { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+            { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
+            { "holdCount",             1.0f,   200.0f,  0.05f, 0.10f, 0.20f},
+
+            { "gatherRange",          10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
+            { "attackRange",          10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
+            { "alignWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "cohereWeight",         -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "separateWeight",       -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "edgesWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "enemyWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "coresWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+
+            { "curHeadingWeight",     -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "attackSeparateWeight", -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+
+            { "flockRadius",          10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
+            { "repulseRadius",        10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
+            { "edgeRadius",           10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
+
+            { "holdFleetSpawnRate",   0.0f, 1.0f,       0.1f, 0.05f, 0.5f},
+        };
+
+        MainMutationBParams vb[] = {
+            // key                       mutation
+            { "evadeFighters",           0.05f},
+            { "evadeUseStrictDistance",  0.05f},
+            { "attackExtendedRange",     0.05f},
+            { "rotateStartingAngle",     0.05f},
+            { "gatherAbandonStale",      0.05f},
+        };
+
+        for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
+            MainMutateFValue(dest->mreg, &vf[i]);
+        }
+        for (uint32 i = 0; i < ARRAYSIZE(vb); i++) {
+            MainMutateBValue(dest->mreg, &vb[i]);
+        }
+    } else if (src->aiType == FLEET_AI_HOLD) {
         MainMutationFParams vf[] = {
             // key                     min    max       mag   jump   mutation
             { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},

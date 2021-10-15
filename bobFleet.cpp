@@ -37,7 +37,10 @@ public:
         this->myAI = ai;
         RandomState_CreateWithSeed(&this->rs, ai->seed);
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
-        this->spawnCount = 0;
+        loadRegistry();
+
+        this->holdFleetSpawnRate =
+            MBRegistry_GetFloat(mreg, "holdFleetSpawnRate");
 
         MBUtil_Zero(&this->squadAI, sizeof(this->squadAI));
         ASSERT(ARRAYSIZE(this->squadAI) == 2);
@@ -61,6 +64,22 @@ public:
         MBRegistry_Free(mreg);
     }
 
+    void loadRegistry(void) {
+        struct {
+            const char *key;
+            const char *value;
+        } configs[] = {
+            // BobFleet-specific options
+            { "holdFleetSpawnRate",  "0.25", },
+        };
+
+        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
+            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
+                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+            }
+        }
+    }
+
     FleetAI *myAI;
     RandomState rs;
     SensorGrid sg;
@@ -69,7 +88,7 @@ public:
     FleetAI squadAI[2];
 
 
-    uint spawnCount;
+    float holdFleetSpawnRate;
     MBRegistry *mreg;
 };
 
@@ -114,9 +133,7 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
 
-    sf->spawnCount++;
-
-    if (TRUE || sf->spawnCount % 8 == 0) {
+    if (RandomState_Flip(&sf->rs, sf->holdFleetSpawnRate)) {
         i = 0;
         ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_HOLD);
     } else {

@@ -72,7 +72,7 @@ public:
             { "attackExtendedRange",    "TRUE",   },
             { "guardRange",             "-1.0",   },
             { "gatherAbandonStale",     "TRUE",   },
-            { "gatherRange",            "73.21"   },
+            { "gatherRange",            "73.21",  },
             { "rotateStartingAngle",    "TRUE",   },
             { "startingMaxRadius",      "1000",   },
             { "startingMinRadius",      "300",    },
