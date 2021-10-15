@@ -134,7 +134,10 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
                               uint32 mpSize, uint32 *mpIndex);
 static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                                   uint32 startingMPIndex, uint32 numFleets,
-                                  bool useWinRatio);
+                                  bool useWinRatio, float *weightOut);
+static uint32 MainFleetCompetition(BattlePlayer *mainPlayers, uint32 mpSize,
+                                   uint32 startingMPIndex, uint32 numFleets,
+                                   bool useWinRatio);
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                             uint32 fi, uint32 mi);
 
@@ -855,9 +858,9 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
 
         while (killCount > 0) {
             uint lastI = startingMPIndex + numFleets - 1;
-            uint fi = MainFindRandomFleet(mainPlayers, mpSize,
-                                          startingMPIndex, numFleets,
-                                          FALSE);
+            uint fi = MainFleetCompetition(mainPlayers, mpSize,
+                                           startingMPIndex, numFleets,
+                                           FALSE);
             ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
             mainPlayers[fi] = mainPlayers[lastI];
             MBUtil_Zero(&mainPlayers[lastI], sizeof(mainPlayers[lastI]));
@@ -875,9 +878,9 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             /*
              * Only mutate the original fleets ?
              */
-            uint32 mi = MainFindRandomFleet(mainPlayers, mpSize,
-                                            startingMPIndex, numFleets,
-                                            TRUE);
+            uint32 mi = MainFleetCompetition(mainPlayers, mpSize,
+                                             startingMPIndex, numFleets,
+                                             TRUE);
             ASSERT(*mpIndex < mpSize);
             MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi);
             (*mpIndex)++;
@@ -890,10 +893,29 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
     MBString_Destroy(&tmp);
 }
 
+static uint32 MainFleetCompetition(BattlePlayer *mainPlayers, uint32 mpSize,
+                                   uint32 startingMPIndex, uint32 numFleets,
+                                   bool useWinRatio)
+{
+    float w1, w2;
+    uint f1 = MainFindRandomFleet(mainPlayers, mpSize,
+                                  startingMPIndex, numFleets,
+                                  useWinRatio, &w1);
+
+    uint f2 = MainFindRandomFleet(mainPlayers, mpSize,
+                                  startingMPIndex, numFleets,
+                                  useWinRatio, &w2);
+
+    if (w1 >= w2) {
+        return f1;
+    } else {
+        return f2;
+    }
+}
 
 static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                                   uint32 startingMPIndex, uint32 numFleets,
-                                  bool useWinRatio)
+                                  bool useWinRatio, float *weightOut)
 {
     uint32 iterations = 0;
     uint32 i;
@@ -919,6 +941,7 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         if (mainPlayers[fi].playerType == PLAYER_TYPE_TARGET) {
             if (Random_Flip(sProb)) {
                 ASSERT(fi < mpSize);
+                *weightOut = sProb;
                 return fi;
             }
         }

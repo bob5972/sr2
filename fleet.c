@@ -202,9 +202,7 @@ void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
         Mob *m = MobVector_GetPtr(&fleet->aiMobs, i);
 
 
-        if (mob->mobid != m->mobid) {
-            PANIC("Fleet mob list corruption!\n");
-        }
+        ASSERT(mob->mobid == m->mobid);
 
         FPoint_Clamp(&m->cmd.target, 0.0f, bp->width, 0.0f, bp->height);
         mob->cmd = m->cmd;

@@ -7,8 +7,10 @@ POPLIMIT=100
 KILLRATIO=0.20
 STALE_IT=1
 NEW_IT=5
+TICK_LIMIT=30000
 
 POPFILE="build/tmp/popMutate.txt";
+OPTS="${OPTS} --tickLimit $TICK_LIMIT";
 OPTS="${OPTS} --dumpPopulation $POPFILE --usePopulation $POPFILE"
 OPTS="${OPTS} --usePopulation $POPFILE"
 OPTS="${OPTS} --mutatePopulation"
