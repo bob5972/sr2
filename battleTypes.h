@@ -216,6 +216,7 @@ typedef struct BattleStatus {
 } BattleStatus;
 
 typedef struct FleetAIOps {
+    FleetAIType aiType;
     const char *aiName;
     const char *aiAuthor;
     void *(*createFleet)(struct FleetAI *ai);

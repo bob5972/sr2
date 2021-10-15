@@ -244,8 +244,8 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_DUMMY;
 //        p++;
 
-//        mainData.players[p].aiType = FLEET_AI_SIMPLE;
-//        p++;
+       mainData.players[p].aiType = FLEET_AI_SIMPLE;
+       p++;
 
 //        mainData.players[p].aiType = FLEET_AI_GATHER;
 //        p++;
@@ -271,14 +271,14 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_FLOCK;
+        // p++;
 
-        mainData.players[p].aiType = FLEET_AI_HOLD;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_HOLD;
+        // p++;
 
-//        mainData.players[p].aiType = FLEET_AI_BOB;
-//        p++;
+       mainData.players[p].aiType = FLEET_AI_BOB;
+       p++;
 
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;

@@ -22,9 +22,19 @@
 void SensorGrid::updateTick(FleetAI *ai)
 {
     CMobIt mit;
+
+    ASSERT(myLastTick <= ai->tick);
+    if (myLastTick == ai->tick) {
+        /*
+         * Assume we already updated this tick.
+         */
+        return;
+    }
+
     int trackedEnemyBases = myTargets.getNumTrackedBases();
 
     myLastTick = ai->tick;
+
 
     myFriends.unpin();
     myTargets.unpin();

@@ -122,9 +122,11 @@ public:
 
     void addMobid(MobID mobid) {
         if (!containsMobid(mobid)) {
-            int i = myAIData.push(newShip(mobid));
+            ShipAI *sai = newShip(mobid);
+            int i = myAIData.push(sai);
             myMap.put(mobid, i);
-            doSpawn(getMob(mobid));
+            Mob *m = getMob(mobid);
+            doSpawn(m);
         }
     }
 

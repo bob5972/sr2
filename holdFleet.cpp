@@ -183,16 +183,6 @@ static void HoldFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 static void HoldFleetRunAITick(void *aiHandle)
 {
     HoldFleet *sf = (HoldFleet *)aiHandle;
-    FleetAI *ai = sf->ai;
-    CMobIt mit;
-
-    ASSERT(ai->player.aiType == FLEET_AI_HOLD);
-
-    sf->sg.updateTick(ai);
-
-    CMobIt_Start(&ai->mobs, &mit);
-    while (CMobIt_HasNext(&mit)) {
-        Mob *mob = CMobIt_Next(&mit);
-        sf->gov.runMob(mob);
-    }
+    ASSERT(sf->ai->ops.aiType == FLEET_AI_HOLD);
+    sf->gov.runTick();
 }

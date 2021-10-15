@@ -26,102 +26,50 @@ extern "C" {
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"
 
-class BobFleetGovernor : public BasicAIGovernor
-{
-public:
-    BobFleetGovernor(FleetAI *ai, SensorGrid *sg)
-    :BasicAIGovernor(ai, sg)
-    {
-        this->setAutoAdd(TRUE);
-    }
-
-    virtual ~BobFleetGovernor() { }
-
-    virtual void runMob(Mob *mob) {
-        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
-        SensorGrid *sg = mySensorGrid;
-        //FleetAI *ai = myFleetAI;
-        //RandomState *rs = &myRandomState;
-
-        this->BasicAIGovernor::runMob(mob);
-
-        if (ship->stateChanged) {
-            if (ship->oldState == BSAI_STATE_EVADE &&
-                ship->state == BSAI_STATE_IDLE) {
-                FPoint holdPos = ship->attackData.pos;
-                ship->hold(&holdPos, defaultHoldCount);
-            } else if (ship->state == BSAI_STATE_IDLE) {
-                Mob *eBase = sg->enemyBase();
-
-                if (eBase != NULL && mob->mobid % 2 == 0) {
-                    mob->cmd.target = eBase->pos;
-                }
-            }
-        }
-    }
-
-    virtual void loadRegistry(MBRegistry *mreg) {
-        struct {
-            const char *key;
-            const char *value;
-        } configs[] = {
-            // Override BasicFleet defaults
-            { "evadeFighters",          "FALSE", },
-            { "evadeUseStrictDistance", "TRUE",  },
-            { "evadeStrictDistance",    "10",    },
-            { "evadeRange",             "50",    },
-            { "attackRange",            "100",   },
-            { "attackExtendedRange",    "TRUE",  },
-            { "guardRange",             "200",   },
-            { "rotateStartingAngle",    "TRUE",  },
-            { "startingMaxRadius",      "1000",  },
-            { "startingMinRadius",      "300",   },
-
-            // BobFleet-specific options
-            { "holdCount",              "10",    },
-        };
-
-        mreg = MBRegistry_AllocCopy(mreg);
-
-        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
-            if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
-                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
-            }
-        }
-
-        this->defaultHoldCount = MBRegistry_GetUint(mreg, "holdCount");
-        this->BasicAIGovernor::loadRegistry(mreg);
-
-        MBRegistry_Free(mreg);
-    }
-
-    uint defaultHoldCount;
-};
-
+static void *BobFleetMobSpawned(void *aiHandle, Mob *m);
+static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
 class BobFleet {
 public:
     BobFleet(FleetAI *ai)
-    :sg(), gov(ai, &sg)
+    :sg()
     {
-        this->ai = ai;
+        this->myAI = ai;
         RandomState_CreateWithSeed(&this->rs, ai->seed);
-
-        this->gov.setSeed(RandomState_Uint64(&this->rs));
-
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
-        this->gov.loadRegistry(mreg);
+        this->spawnCount = 0;
+
+        MBUtil_Zero(&this->squadAI, sizeof(this->squadAI));
+        ASSERT(ARRAYSIZE(this->squadAI) == 2);
+        this->squadAI[0].ops.aiType = FLEET_AI_HOLD;
+        this->squadAI[1].ops.aiType = FLEET_AI_FLOCK;
+
+        for (uint i = 0; i < ARRAYSIZE(this->squadAI); i++) {
+            FleetAI *squadAI = &this->squadAI[i];
+            uint64 seed = RandomState_Uint64(&this->rs);
+            Fleet_CreateAI(squadAI, squadAI->ops.aiType,
+                           ai->id, &ai->bp, &ai->player, seed);
+        }
     }
 
     ~BobFleet() {
+        for (uint i = 0; i <ARRAYSIZE(this->squadAI); i++) {
+            Fleet_DestroyAI(&this->squadAI[i]);
+        }
+
         RandomState_Destroy(&this->rs);
         MBRegistry_Free(mreg);
     }
 
-    FleetAI *ai;
+    FleetAI *myAI;
     RandomState rs;
     SensorGrid sg;
-    BobFleetGovernor gov;
+    IntMap mobMap;
+
+    FleetAI squadAI[2];
+
+
+    uint spawnCount;
     MBRegistry *mreg;
 };
 
@@ -140,6 +88,8 @@ void BobFleet_GetOps(FleetAIOps *ops)
     ops->createFleet = &BobFleetCreate;
     ops->destroyFleet = &BobFleetDestroy;
     ops->runAITick = &BobFleetRunAITick;
+    ops->mobSpawned = &BobFleetMobSpawned;
+    ops->mobDestroyed = &BobFleetMobDestroyed;
 }
 
 static void *BobFleetCreate(FleetAI *ai)
@@ -155,11 +105,94 @@ static void BobFleetDestroy(void *handle)
     delete(sf);
 }
 
-static void BobFleetRunAITick(void *aiHandle)
+static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
+{
+    BobFleet *sf = (BobFleet *)aiHandle;
+    uint i;
+    FleetAI *squadAI;
+
+    ASSERT(sf != NULL);
+    ASSERT(m != NULL);
+
+    sf->spawnCount++;
+
+    if (TRUE || sf->spawnCount % 8 == 0) {
+        i = 0;
+        ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_HOLD);
+    } else {
+        i = 1;
+        ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_FLOCK);
+    }
+
+    ASSERT(!sf->mobMap.containsKey(m->mobid));
+    sf->mobMap.put(m->mobid, i);
+
+    squadAI = &sf->squadAI[i];
+    MobPSet_Add(&squadAI->mobs, m);
+
+    if (squadAI->ops.mobSpawned != NULL) {
+        void *aiMobHandle;
+        aiMobHandle = squadAI->ops.mobSpawned(squadAI->aiHandle, m);
+        ASSERT(aiMobHandle == NULL);
+    }
+
+    return NULL;
+}
+
+/*
+ * Potentially invalidates any outstanding ship references.
+ */
+static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
     BobFleet *sf = (BobFleet *)aiHandle;
 
-    ASSERT(sf->ai->player.aiType == FLEET_AI_BOB);
+    ASSERT(sf->mobMap.containsKey(m->mobid));
 
-    sf->gov.runTick();
+    uint i = sf->mobMap.get(m->mobid);
+    FleetAI *squadAI = &sf->squadAI[i];
+    if (squadAI->ops.mobDestroyed != NULL) {
+        squadAI->ops.mobDestroyed(squadAI->aiHandle, m, aiMobHandle);
+    }
+    sf->mobMap.remove(m->mobid);
+}
+
+static void BobFleetRunAITick(void *aiHandle)
+{
+    BobFleet *sf = (BobFleet *)aiHandle;
+    CMobIt mit;
+
+    ASSERT(sf->myAI->player.aiType == FLEET_AI_BOB);
+
+    for (uint i = 0; i < ARRAYSIZE(sf->squadAI); i++) {
+        FleetAI *squadAI = &sf->squadAI[i];
+        MobPSet_MakeEmpty(&squadAI->mobs);
+        MobPSet_MakeEmpty(&squadAI->sensors);
+        squadAI->credits = sf->myAI->credits;
+        squadAI->tick = sf->myAI->tick;
+    }
+
+    CMobIt_Start(&sf->myAI->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *m = CMobIt_Next(&mit);
+        ASSERT(sf->mobMap.containsKey(m->mobid));
+        uint i = sf->mobMap.get(m->mobid);
+        FleetAI *squadAI = &sf->squadAI[i];
+        MobPSet_Add(&squadAI->mobs, m);
+    }
+
+    CMobIt_Start(&sf->myAI->sensors, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *m = CMobIt_Next(&mit);
+        for (uint i = 0; i < ARRAYSIZE(sf->squadAI); i++) {
+            FleetAI *squadAI = &sf->squadAI[i];
+            MobPSet_Add(&squadAI->sensors, m);
+        }
+    }
+
+    for (uint i = 0; i <ARRAYSIZE(sf->squadAI); i++) {
+        FleetAI *squadAI = &sf->squadAI[i];
+        if (squadAI->ops.runAITick != NULL) {
+            squadAI->ops.runAITick(squadAI->aiHandle);
+        }
+    }
 }

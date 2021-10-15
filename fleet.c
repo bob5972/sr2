@@ -33,7 +33,6 @@ typedef struct Fleet {
     RandomState rs;
 } Fleet;
 
-static void FleetGetOps(FleetAIType aiType, FleetAIOps *ops);
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
 
 Fleet *Fleet_Create(const BattleScenario *bsc,
@@ -55,15 +54,8 @@ Fleet *Fleet_Create(const BattleScenario *bsc,
     ASSERT(fleet->numAIs >= 3);
 
     for (uint32 i = 0; i < fleet->numAIs; i++) {
+        uint64 seed = RandomState_Uint64(&fleet->rs);
         ASSERT(MBUtil_IsZero(&fleet->ais[i], sizeof(fleet->ais[i])));
-
-        fleet->ais[i].id = i;
-
-        fleet->ais[i].player = bsc->players[i];
-        if (bsc->players[i].mreg != NULL) {
-            fleet->ais[i].player.mreg =
-                MBRegistry_AllocCopy(bsc->players[i].mreg);
-        }
 
         ASSERT(bsc->players[i].aiType < FLEET_AI_MAX);
         ASSERT(bsc->players[i].aiType != FLEET_AI_INVALID);
@@ -72,18 +64,8 @@ Fleet *Fleet_Create(const BattleScenario *bsc,
         ASSERT(bsc->players[i].aiType != FLEET_AI_NEUTRAL ||
                i == PLAYER_ID_NEUTRAL);
 
-        MobPSet_Create(&fleet->ais[i].mobs);
-        MobPSet_Create(&fleet->ais[i].sensors);
-
-        fleet->ais[i].bp = fleet->bsc.bp;
-        fleet->ais[i].seed = RandomState_Uint64(&fleet->rs);
-
-        FleetGetOps(fleet->ais[i].player.aiType, &fleet->ais[i].ops);
-        if (fleet->ais[i].ops.createFleet != NULL) {
-            fleet->ais[i].aiHandle = fleet->ais[i].ops.createFleet(&fleet->ais[i]);
-        } else {
-            fleet->ais[i].aiHandle = &fleet->ais[i];
-        }
+        Fleet_CreateAI(&fleet->ais[i], bsc->players[i].aiType,
+                       i, &fleet->bsc.bp, &bsc->players[i], seed);
     }
 
     MobVector_CreateEmpty(&fleet->aiMobs);
@@ -98,29 +80,8 @@ void Fleet_Destroy(Fleet *fleet)
     ASSERT(fleet != NULL);
     ASSERT(fleet->initialized);
 
-    for (uint32 i = 0; i < fleet->numAIs; i++) {
-        FleetAI *ai = &fleet->ais[i];
-
-        if (ai->ops.mobDestroyed != NULL) {
-            CMobIt mit;
-            CMobIt_Start(&ai->mobs, &mit);
-            while (CMobIt_HasNext(&mit)) {
-                Mob *m = CMobIt_Next(&mit);
-                ai->ops.mobDestroyed(ai->aiHandle, m, m->aiMobHandle);
-            }
-        }
-
-        if (ai->ops.destroyFleet != NULL) {
-            ai->ops.destroyFleet(fleet->ais[i].aiHandle);
-        }
-
-        MobPSet_Destroy(&ai->mobs);
-        MobPSet_Destroy(&ai->sensors);
-
-        if (ai->player.mreg != NULL) {
-            MBRegistry_Free(ai->player.mreg);
-            ai->player.mreg = NULL;
-        }
+    for (uint i = 0; i < fleet->numAIs; i++) {
+        Fleet_DestroyAI(&fleet->ais[i]);
     }
 
     MobVector_Destroy(&fleet->aiMobs);
@@ -128,6 +89,59 @@ void Fleet_Destroy(Fleet *fleet)
     free(fleet->ais);
     fleet->initialized = FALSE;
     free(fleet);
+}
+
+void Fleet_CreateAI(FleetAI *ai, FleetAIType aiType,
+                    PlayerID id, const BattleParams *bp,
+                    const BattlePlayer *player,
+                    uint64 seed)
+{
+    Fleet_GetOps(aiType, &ai->ops);
+
+    ai->id = id;
+    ai->bp = *bp;
+    ai->player = *player;
+    if (ai->player.mreg != NULL) {
+        ai->player.mreg =
+            MBRegistry_AllocCopy(ai->player.mreg);
+    }
+
+    ai->seed = seed;
+    ai->tick = 0;
+    ai->credits = 0;
+
+    MobPSet_Create(&ai->mobs);
+    MobPSet_Create(&ai->sensors);
+
+    if (ai->ops.createFleet != NULL) {
+        ai->aiHandle = ai->ops.createFleet(ai);
+    } else {
+        ai->aiHandle = ai;
+    }
+}
+
+void Fleet_DestroyAI(FleetAI *ai)
+{
+    if (ai->ops.mobDestroyed != NULL) {
+        CMobIt mit;
+        CMobIt_Start(&ai->mobs, &mit);
+        while (CMobIt_HasNext(&mit)) {
+            Mob *m = CMobIt_Next(&mit);
+            ai->ops.mobDestroyed(ai->aiHandle, m, m->aiMobHandle);
+        }
+    }
+
+    if (ai->ops.destroyFleet != NULL) {
+        ai->ops.destroyFleet(ai->aiHandle);
+    }
+
+    MobPSet_Destroy(&ai->mobs);
+    MobPSet_Destroy(&ai->sensors);
+
+    if (ai->player.mreg != NULL) {
+        MBRegistry_Free(ai->player.mreg);
+        ai->player.mreg = NULL;
+    }
 }
 
 void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
@@ -146,7 +160,7 @@ void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
     MobVector_Pin(&fleet->aiMobs);
     MobVector_Pin(&fleet->aiSensors);
 
-    for (uint32 i = 0; i < fleet->numAIs; i++) {
+    for (uint i = 0; i < fleet->numAIs; i++) {
         MobPSet_MakeEmpty(&fleet->ais[i].mobs);
         MobPSet_MakeEmpty(&fleet->ais[i].sensors);
         fleet->ais[i].credits = bs->players[i].credits;
@@ -155,7 +169,7 @@ void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
     /*
      * Sort the incoming ships by player.
      */
-    for (uint32 i = 0; i < numMobs; i++) {
+    for (uint i = 0; i < numMobs; i++) {
         Mob *mob = &mobs[i];
         Mob *m;
         PlayerID p = mob->playerID;

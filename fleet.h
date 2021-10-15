@@ -31,6 +31,11 @@ void Fleet_Destroy(Fleet *fleet);
 void Fleet_RunTick(Fleet *fleet, const BattleStatus *bs,
                    Mob *mobs, uint32 numMobs);
 
+void Fleet_CreateAI(FleetAI *ai, FleetAIType aiType,
+                    PlayerID id, const BattleParams *bp,
+                    const BattlePlayer *player, uint64 seed);
+void Fleet_DestroyAI(FleetAI *ai);
+
 Mob *FleetUtil_FindClosestMob(MobPSet *ms, const FPoint *pos, uint filter);
 Mob *FleetUtil_FindClosestMobInRange(MobPSet *ms, const FPoint *pos, uint filter,
                                      float radius);
@@ -60,7 +65,7 @@ static inline void NeutralFleet_GetOps(FleetAIOps *ops)
     ops->aiName = "Neutral";
 }
 
-static inline void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
+static inline void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     struct {
         FleetAIType aiType;
@@ -89,6 +94,7 @@ static inline void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
     for (uint i = 0; i < ARRAYSIZE(fleets); i++ ) {
         if (fleets[i].aiType == aiType) {
             fleets[i].getOps(ops);
+            ops->aiType = aiType;
             return;
         }
     }
@@ -100,7 +106,7 @@ static inline void FleetGetOps(FleetAIType aiType, FleetAIOps *ops)
 static inline const char *Fleet_GetName(FleetAIType aiType)
 {
     FleetAIOps ops;
-    FleetGetOps(aiType, &ops);
+    Fleet_GetOps(aiType, &ops);
     return ops.aiName;
 }
 
