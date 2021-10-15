@@ -64,7 +64,7 @@ public:
             { "baseRadius",           "100",     },
             { "baseWeight",           "0.0",     },
             { "nearBaseRadius",       "250.0",   },
-            { "baseDefenseRadius",    "250.0",      },
+            { "baseDefenseRadius",    "250.0",   },
 
             { "enemyRadius",          "166.7",   },
             { "enemyWeight",          "0.3",     },
