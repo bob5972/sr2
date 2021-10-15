@@ -1061,23 +1061,23 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
             { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
             { "holdCount",             1.0f,   200.0f,  0.05f, 0.10f, 0.20f},
 
-            { "gatherRange",          10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
-            { "attackRange",          10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
-            { "alignWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
-            { "cohereWeight",         -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
-            { "separateWeight",       -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
-            { "edgesWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
-            { "enemyWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
-            { "coresWeight",          -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "gatherRange",          10.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "attackRange",          10.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "alignWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
+            { "cohereWeight",         -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
+            { "separateWeight",       -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
+            { "edgesWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
+            { "enemyWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
+            { "coresWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
 
-            { "curHeadingWeight",     -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
-            { "attackSeparateWeight", -1.0f,   1.0f,    0.1f, 0.05f, 0.25f},
+            { "curHeadingWeight",     -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
+            { "attackSeparateWeight", -1.0f,     1.0f,  0.1f, 0.05f, 0.25f},
 
-            { "flockRadius",          10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
-            { "repulseRadius",        10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
-            { "edgeRadius",           10.0f, 500.0f,    0.1f, 0.05f, 0.25f},
+            { "flockRadius",          10.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "repulseRadius",        10.0f,   500.0f,  0.1f, 0.05f, 0.25f},
+            { "edgeRadius",           10.0f,   500.0f,  0.1f, 0.05f, 0.25f},
 
-            { "holdFleetSpawnRate",   0.0f, 1.0f,       0.1f, 0.05f, 0.5f},
+            { "holdFleetSpawnRate",   0.0f,      1.0f,  0.1f, 0.05f, 0.5f},
         };
 
         MainMutationBParams vb[] = {
