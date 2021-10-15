@@ -47,19 +47,35 @@ public:
             { "attackRange",          "250",  },
 
             // FlockFleet specific options
-            { "alignWeight",          "0.2",  },
-            { "cohereWeight",         "-0.1", },
-            { "separateWeight",       "0.2",  },
-            { "edgesWeight",          "0.9",  },
-            { "enemyWeight",          "0.3",  },
-            { "coresWeight",          "0.1",  },
-
-            { "curHeadingWeight",     "0.5",  },
-            { "attackSeparateWeight", "0.5",  },
-
             { "flockRadius",          "166.7",   }, // baseSensorRadius / 1.5
+            { "alignWeight",          "0.2",     },
+            { "cohereWeight",         "-0.1",    },
+
             { "repulseRadius",        "50.0",    }, // 2 * fighterSensorRadius
+            { "separateWeight",       "0.2",     },
+
             { "edgeRadius",           "100.0",   }, // fighterSensorRadius
+            { "edgesWeight",          "0.9",     },
+
+            { "coresRadius",          "166.7",   },
+            { "coresWeight",          "0.1",     },
+            { "coresCrowding",        "5",       },
+
+            { "baseRadius",           "100",     },
+            { "baseWeight",           "0.0",     },
+            { "nearBaseRadius",       "250.0",   },
+            { "baseDefenseRadius",    "250.0",      },
+
+            { "enemyRadius",          "166.7",   },
+            { "enemyWeight",          "0.3",     },
+
+            { "enemyBaseRadius",      "100",     },
+            { "enemyBaseWeight",      "0.0",     },
+
+            { "curHeadingWeight",     "0.5",     },
+
+            { "attackSeparateRadius", "166.7",   },
+            { "attackSeparateWeight", "0.5",     },
         };
 
         for (uint i = 0; i < ARRAYSIZE(configs); i++) {
@@ -82,19 +98,35 @@ public:
             { "attackRange",          "32.886688",   },
 
             // FlockFleet specific options
+            { "flockRadius",          "398.545197", },
             { "alignWeight",          "0.239648",   },
             { "cohereWeight",         "-0.006502",  },
+
+            { "repulseRadius",        "121.312904", },
             { "separateWeight",       "0.781240",   },
+
+            { "edgeRadius",           "161.593430", },
             { "edgesWeight",          "0.704170",   },
-            { "enemyWeight",          "0.556688",   },
+
+            { "coresRadius",          "398.545197", },
             { "coresWeight",          "0.122679",   },
+            { "coresCrowding",        "5.0",        },
+
+            { "baseRadius",           "100",        },
+            { "baseWeight",           "0.0",        },
+            { "nearBaseRadius",       "250.0",      },
+            { "baseDefenseRadius",    "250.0",      },
+
+            { "enemyRadius",          "398.545197", },
+            { "enemyWeight",          "0.556688",   },
+
+            { "enemyBaseRadius",      "100",        },
+            { "enemyBaseWeight",      "0.0",        },
 
             { "curHeadingWeight",     "0.838760",   },
-            { "attackSeparateWeight", "0.188134",   },
 
-            { "flockRadius",          "398.545197", },
-            { "repulseRadius",        "121.312904", },
-            { "edgeRadius",           "161.593430", },
+            { "attackSeparateRadius", "398.545197", },
+            { "attackSeparateWeight", "0.188134",   },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -106,21 +138,38 @@ public:
             }
         }
 
+        this->myConfig.flockRadius = MBRegistry_GetFloat(mreg, "flockRadius");
         this->myConfig.alignWeight = MBRegistry_GetFloat(mreg, "alignWeight");
         this->myConfig.cohereWeight = MBRegistry_GetFloat(mreg, "cohereWeight");
+
+        this->myConfig.repulseRadius = MBRegistry_GetFloat(mreg, "repulseRadius");
         this->myConfig.separateWeight = MBRegistry_GetFloat(mreg, "separateWeight");
+
+        this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
         this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
-        this->myConfig.enemyWeight = MBRegistry_GetFloat(mreg, "enemyWeight");
+
+        this->myConfig.coresRadius = MBRegistry_GetFloat(mreg, "coresRadius");
         this->myConfig.coresWeight = MBRegistry_GetFloat(mreg, "coresWeight");
+        this->myConfig.coresCrowding = (uint)MBRegistry_GetFloat(mreg, "coresCrowding");
+
+        this->myConfig.baseRadius = MBRegistry_GetFloat(mreg, "baseRadius");
+        this->myConfig.baseWeight = MBRegistry_GetFloat(mreg, "baseWeight");
+        this->myConfig.nearBaseRadius = MBRegistry_GetFloat(mreg, "nearBaseRadius");
+        this->myConfig.baseDefenseRadius = MBRegistry_GetFloat(mreg, "baseDefenseRadius");
+
+        this->myConfig.enemyRadius = MBRegistry_GetFloat(mreg, "enemyRadius");
+        this->myConfig.enemyWeight = MBRegistry_GetFloat(mreg, "enemyWeight");
+
+        this->myConfig.enemyBaseRadius = MBRegistry_GetFloat(mreg, "enemyBaseRadius");
+        this->myConfig.enemyBaseWeight = MBRegistry_GetFloat(mreg, "enemyBaseWeight");
 
         this->myConfig.curHeadingWeight =
             MBRegistry_GetFloat(mreg, "curHeadingWeight");
+
+        this->myConfig.attackSeparateRadius =
+            MBRegistry_GetFloat(mreg, "attackSeparateRadius");
         this->myConfig.attackSeparateWeight =
             MBRegistry_GetFloat(mreg, "attackSeparateWeight");
-
-        this->myConfig.flockRadius = MBRegistry_GetFloat(mreg, "flockRadius");
-        this->myConfig.repulseRadius = MBRegistry_GetFloat(mreg, "repulseRadius");
-        this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
 
         this->BasicAIGovernor::loadRegistry(mreg);
 
@@ -318,10 +367,44 @@ public:
                                                    &mob->pos, flockRadius);
 
             if (FPoint_Distance(&mob->pos, &core->pos) <= flockRadius ||
-                numFriends >= 5) {
+                numFriends >= myConfig.coresCrowding) {
                 FPoint eVec;
                 FRPoint reVec;
                 FPoint_Subtract(&core->pos, &mob->pos, &eVec);
+                FPoint_ToFRPoint(&eVec, NULL, &reVec);
+                reVec.radius = weight;
+                FRPoint_Add(rPos, &reVec, rPos);
+            }
+        }
+    }
+
+    void findBase(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        SensorGrid *sg = mySensorGrid;
+        Mob *base = sg->friendBase();
+
+        if (base != NULL) {
+            if (FPoint_Distance(&mob->pos, &base->pos) <= flockRadius) {
+                FPoint eVec;
+                FRPoint reVec;
+                FPoint_Subtract(&base->pos, &mob->pos, &eVec);
+                FPoint_ToFRPoint(&eVec, NULL, &reVec);
+                reVec.radius = weight;
+                FRPoint_Add(rPos, &reVec, rPos);
+            }
+        }
+    }
+
+    void findEnemyBase(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        SensorGrid *sg = mySensorGrid;
+        Mob *base = sg->enemyBase();
+
+        if (base != NULL) {
+            if (FPoint_Distance(&mob->pos, &base->pos) <= flockRadius) {
+                FPoint eVec;
+                FRPoint reVec;
+                FPoint_Subtract(&base->pos, &mob->pos, &eVec);
                 FPoint_ToFRPoint(&eVec, NULL, &reVec);
                 reVec.radius = weight;
                 FRPoint_Add(rPos, &reVec, rPos);
@@ -336,7 +419,7 @@ public:
         FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
         //flockAlign(mob, &rPos);
-        flockSeparate(mob, &rPos, myConfig.flockRadius,
+        flockSeparate(mob, &rPos, myConfig.attackSeparateRadius,
                       myConfig.attackSeparateWeight);
         //flockCohere(mob, &rPos);
 
@@ -350,7 +433,6 @@ public:
         SensorGrid *sg = mySensorGrid;
         BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
         Mob *base = sg->friendBase();
-        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         bool nearBase;
 
@@ -365,7 +447,7 @@ public:
 
         nearBase = FALSE;
         if (base != NULL &&
-            FPoint_Distance(&base->pos, &mob->pos) < baseRadius) {
+            FPoint_Distance(&base->pos, &mob->pos) < myConfig.nearBaseRadius) {
             nearBase = TRUE;
         }
 
@@ -382,8 +464,11 @@ public:
             flockSeparate(mob, &rForce, myConfig.repulseRadius,
                           myConfig.separateWeight);
             avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
-            findEnemies(mob, &rForce, myConfig.flockRadius, myConfig.enemyWeight);
-            findCores(mob, &rForce, myConfig.flockRadius, myConfig.coresWeight);
+            findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
+            findEnemies(mob, &rForce, myConfig.enemyRadius, myConfig.enemyWeight);
+            findEnemyBase(mob, &rForce, myConfig.enemyBaseRadius,
+                          myConfig.enemyBaseWeight);
+            findCores(mob, &rForce, myConfig.coresRadius, myConfig.coresWeight);
 
             rPos.radius = myConfig.curHeadingWeight;
             FRPoint_Add(&rPos, &rForce, &rPos);
@@ -407,11 +492,10 @@ public:
         BasicAIGovernor::runTick();
 
         Mob *base = sg->friendBase();
-        float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
 
         if (base != NULL) {
             int numEnemies = sg->numTargetsInRange(MOB_FLAG_SHIP, &base->pos,
-                                                   baseRadius);
+                                                   myConfig.baseDefenseRadius);
             int f = 0;
             int e = 0;
 
@@ -443,19 +527,36 @@ public:
     }
 
     struct {
+        float flockRadius;
         float alignWeight;
         float cohereWeight;
+
+        float repulseRadius;
         float separateWeight;
+
+        float edgeRadius;
         float edgesWeight;
-        float enemyWeight;
+
+        float coresRadius;
         float coresWeight;
+        uint  coresCrowding;
+
+        float baseRadius;
+        float baseWeight;
+        float nearBaseRadius;
+        float baseDefenseRadius;
+
+        float enemyRadius;
+        float enemyWeight;
+
+        float enemyBaseRadius;
+        float enemyBaseWeight;
 
         float curHeadingWeight;
+
+        float attackSeparateRadius;
         float attackSeparateWeight;
 
-        float flockRadius;
-        float repulseRadius;
-        float edgeRadius;
     } myConfig;
 };
 

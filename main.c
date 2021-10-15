@@ -271,14 +271,14 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-        // mainData.players[p].aiType = FLEET_AI_FLOCK;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_FLOCK;
+        p++;
 
         mainData.players[p].aiType = FLEET_AI_HOLD;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BOB;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_BOB;
+        // p++;
 
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;
@@ -1029,55 +1029,46 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 
     MBRegistry_Put(dest->mreg, "age", "0");
 
-    if (src->aiType == FLEET_AI_FLOCK) {
+    if (src->aiType == FLEET_AI_FLOCK ||
+        src->aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max    mag   jump   mutation
             { "gatherRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "attackRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "alignWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "cohereWeight",         -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "separateWeight",       -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "edgesWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "enemyWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "coresWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-
-            { "curHeadingWeight",     -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "attackSeparateWeight", -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
+            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
+            { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
+            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
+            { "holdCount",             1.0f, 200.0f,  0.05f, 0.10f, 0.25f},
 
             { "flockRadius",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "alignWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "cohereWeight",         -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+
             { "repulseRadius",        10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "separateWeight",       -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+
             { "edgeRadius",           10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-        };
+            { "edgesWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
 
-        for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
-            MainMutateFValue(dest->mreg, &vf[i]);
-        }
-    } else if (src->aiType == FLEET_AI_BOB) {
-        MainMutationFParams vf[] = {
-            // key                     min     max       mag   jump   mutation
-            { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.40f},
-            { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.40f},
-            { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.40f},
-            { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.40f},
-            { "holdCount",             1.0f,   200.0f,  0.05f, 0.10f, 0.40f},
+            { "coresRadius",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "coresWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "coresCrowding",        -1.0f,  10.0f, 0.1f, 0.05f, 0.25f},
 
-            { "gatherRange",          10.0f,   500.0f,  0.1f, 0.05f, 0.40f},
-            { "attackRange",          10.0f,   500.0f,  0.1f, 0.05f, 0.40f},
-            { "alignWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
-            { "cohereWeight",         -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
-            { "separateWeight",       -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
-            { "edgesWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
-            { "enemyWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
-            { "coresWeight",          -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
+            { "baseRadius",           10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "baseWeight",           -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "nearBaseRadius",       10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "baseDefenseRadius",    10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
 
-            { "curHeadingWeight",     -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
-            { "attackSeparateWeight", -1.0f,     1.0f,  0.1f, 0.05f, 0.40f},
+            { "enemyRadius",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "enemyWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
 
-            { "flockRadius",          10.0f,   500.0f,  0.1f, 0.05f, 0.40f},
-            { "repulseRadius",        10.0f,   500.0f,  0.1f, 0.05f, 0.40f},
-            { "edgeRadius",           10.0f,   500.0f,  0.1f, 0.05f, 0.40f},
+            { "enemyBaseRadius",      10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "enemyBaseWeight",      -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
 
-            { "holdFleetSpawnRate",   0.0f,      1.0f,  0.1f, 0.05f, 0.40f},
+            { "curHeadingWeight",     -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+
+            { "attackSeparateRadius", 10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "attackSeparateWeight", -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
         };
 
         MainMutationBParams vb[] = {
