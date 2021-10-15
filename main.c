@@ -184,6 +184,7 @@ void MainConstructScenario(void)
     uint cp = 0;
     BattlePlayer targetPlayers[MAX_PLAYERS];
     uint tp = 0;
+
     for (uint i = FLEET_AI_MIN; i < FLEET_AI_MAX; i++) {
         if (i != FLEET_AI_DUMMY) {
             ASSERT(cp < ARRAYSIZE(controlPlayers));
@@ -192,6 +193,11 @@ void MainConstructScenario(void)
             cp++;
         }
     }
+
+    //XXX: Needs a better way to manage --optimize
+    // controlPlayers[cp].aiType = FLEET_AI_HOLD;
+    // controlPlayers[cp].playerType = PLAYER_TYPE_CONTROL;
+    // cp++;
 
     /*
      * The NEUTRAL fleet always needs to be there.
@@ -319,7 +325,9 @@ void MainConstructScenario(void)
                 continue;
             }
 
-            if (MBRegistry_GetInt(mainData.players[ti].mreg, "numBattles") == 0) {
+            if (!MBOpt_IsPresent("mutatePopulation")) {
+                itCount = 1;
+            } else if (MBRegistry_GetInt(mainData.players[ti].mreg, "numBattles") == 0) {
                 itCount = MBOpt_GetUint("mutationNewIterations");
             } else {
                 itCount = MBOpt_GetUint("mutationStaleIterations");
@@ -399,7 +407,7 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
     const int doSimple = 0;
     const int doTable = 1;
     const int doRandom = 2;
-    int method = doSimple;
+    int method = doRandom;
 
     /*
      * Target fleets to optimize.
@@ -476,26 +484,27 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
             float minValue;
             float maxValue;
         } v[] = {
-            { "gatherRange", 50.0f, 300.0f, },
-            { "attackRange", 50.0f, 400.0f, },
-            { "alignWeight",         -1.0f, 1.0f, },
-            { "cohereWeight",        -1.0f, 1.0f, },
-            { "separateWeight",      -1.0f, 1.0f, },
-            { "edgesWeight",         -1.0f, 1.0f, },
-            { "enemyWeight",         -1.0f, 1.0f, },
-            { "coresWeight",         -1.0f, 1.0f, },
+            // { "baseRadius",        50.0f, 500.0f,  },
+            // { "baseWeight",        -1.0f, 1.0f,    },
+            // { "nearBaseRadius",    50.0f, 500.0f,  },
+            // { "baseDefenseRadius", 50.0f, 500.0f,  },
 
-            { "curHeadingWeight",     -1.0f, 1.0f, },
-            { "attackSeparateWeight", -1.0f, 1.0f, },
+            // { "enemyBaseRadius",    50.0f, 500.0f, },
+            // { "enemyBaseWeight",    -1.0f, 1.0f,   },
 
-            { "flockRadius",   50.0f, 300.0f, },
-            { "repulseRadius", 10.0f, 300.0f, },
-            { "edgeRadius",    20.0f, 200.0f, },
+            { "baseRadius",        50.0f, 500.0f,  },
+            { "baseWeight",        -0.01f, 0.01f,  },
+            { "nearBaseRadius",    50.0f, 200.0f,  },
+            { "baseDefenseRadius", 200.0f, 500.0f, },
+
+            { "enemyBaseRadius",  300.0f, 700.0f,  },
+            { "enemyBaseWeight",    0.1f, 0.3f,   },
         };
 
-        for (uint f = 0; f < 10; f++) {
-            char *vstr[13];
-            ASSERT(ARRAYSIZE(vstr) == ARRAYSIZE(v));
+        for (uint f = 0; f < 5; f++) {
+            char *vstr[6];
+            MBUtil_Zero(vstr, sizeof(vstr));
+            ASSERT(ARRAYSIZE(vstr) >= ARRAYSIZE(v));
             MBUtil_Zero(&vstr, sizeof(vstr));
 
             targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
@@ -508,11 +517,13 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
 
             targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK;
             char *name = NULL;
-                asprintf(&name, "%s %s:%s %s:%s:%s:%s:%s:%s %s:%s %s:%s:%s",
-                         Fleet_GetName(targetPlayers[*tpIndex].aiType),
-                         vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
-                         vstr[5], vstr[6], vstr[7], vstr[8], vstr[9],
-                         vstr[10], vstr[11], vstr[12]);
+            asprintf(&name, "%s %s:%s %s:%s %s:%s",
+                     Fleet_GetName(targetPlayers[*tpIndex].aiType),
+                     vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
+                     vstr[5]);
+            // asprintf(&name, "%s %s",
+            //              Fleet_GetName(targetPlayers[*tpIndex].aiType),
+            //              vstr[0]);
             targetPlayers[*tpIndex].playerName = name;
 
             (*tpIndex)++;
