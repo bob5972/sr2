@@ -68,9 +68,13 @@ typedef struct MainEngineResultUnit {
 
 typedef struct MainWinnerData {
     uint battles;
+    uint battleTicks;
     uint wins;
+    uint winTicks;
     uint losses;
+    uint lossTicks;
     uint draws;
+    uint drawTicks;
 } MainWinnerData;
 
 typedef struct MainEngineThreadData {
@@ -578,18 +582,28 @@ static void MainRecordWinner(MainWinnerData *wd, PlayerUID puid,
 
     if (puid == bs->winnerUID) {
         wd->wins++;
+        wd->winTicks += bs->tick;
     } else if (bs->winnerUID == PLAYER_ID_NEUTRAL) {
         wd->draws++;
+        wd->drawTicks += bs->tick;
     } else {
         wd->losses++;
+        wd->lossTicks += bs->tick;
     }
     wd->battles++;
+    wd->battleTicks += bs->tick;
 
     ASSERT(wd->wins >= 0);
     ASSERT(wd->losses >= 0);
     ASSERT(wd->draws >= 0);
     ASSERT(wd->battles >= 0);
     ASSERT(wd->wins + wd->losses + wd->draws == wd->battles);
+
+    ASSERT(wd->winTicks >= 0);
+    ASSERT(wd->lossTicks >= 0);
+    ASSERT(wd->drawTicks >= 0);
+    ASSERT(wd->battleTicks >= 0);
+    ASSERT(wd->winTicks + wd->lossTicks + wd->drawTicks == wd->battleTicks);
 }
 
 static void MainPrintWinnerData(MainWinnerData *wd)
@@ -644,6 +658,35 @@ static void MainPrintWinners(void)
     Warning("Total Battles: %d\n", totalBattles);
 }
 
+static void MainDumpAddToKey(MBRegistry *source, MBRegistry *dest,
+                             const MBString *destPrefix,
+                             const char *key,
+                             uint value)
+{
+    uint x;
+    MBString destKey;
+    MBString tmp;
+
+    MBString_Create(&destKey);
+    MBString_Create(&tmp);
+
+    MBString_Copy(&destKey, destPrefix);
+
+    MBString_AppendCStr(&destKey, key);
+    if (source != NULL) {
+        x = MBRegistry_GetUint(source, key);
+    } else {
+        x = 0;
+    }
+
+    MBString_IntToString(&tmp, value + x);
+    MBRegistry_PutCopy(dest, MBString_GetCStr(&destKey),
+                        MBString_GetCStr(&tmp));
+
+    MBString_Destroy(&destKey);
+    MBString_Destroy(&tmp);
+}
+
 static void MainDumpPopulation(void)
 {
     uint32 i;
@@ -662,7 +705,6 @@ static void MainDumpPopulation(void)
 
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
     for (i = 1; i < mainData.numPlayers; i++) {
-        uint x;
         MainWinnerData *wd = &mainData.winners[i];
         const char *fleetName = Fleet_GetName(mainData.players[i].aiType);
 
@@ -695,49 +737,23 @@ static void MainDumpPopulation(void)
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            PlayerType_ToString(mainData.players[i].playerType));
 
-        MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "numBattles");
-        if (mainData.players[i].mreg != NULL) {
-            x = MBRegistry_GetUint(mainData.players[i].mreg, "numBattles");
-        } else {
-            x = 0;
-        }
-        MBString_IntToString(&tmp, wd->battles + x);
-        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
-                           MBString_GetCStr(&tmp));
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numBattles", wd->battles);
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numWins", wd->wins);
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numLosses", wd->losses);
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numDraws", wd->draws);
 
-        MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "numWins");
-        if (mainData.players[i].mreg != NULL) {
-            x = MBRegistry_GetUint(mainData.players[i].mreg, "numWins");
-        } else {
-            x = 0;
-        }
-        MBString_IntToString(&tmp, wd->wins + x);
-        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
-                           MBString_GetCStr(&tmp));
-
-        MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "numLosses");
-        if (mainData.players[i].mreg != NULL) {
-            x = MBRegistry_GetUint(mainData.players[i].mreg, "numLosses");
-        } else {
-            x = 0;
-        }
-        MBString_IntToString(&tmp, wd->losses + x);
-        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
-                           MBString_GetCStr(&tmp));
-
-        MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "numDraws");
-        if (mainData.players[i].mreg != NULL) {
-            x = MBRegistry_GetUint(mainData.players[i].mreg, "numDraws");
-        } else {
-            x = 0;
-        }
-        MBString_IntToString(&tmp, wd->draws + x);
-        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
-                           MBString_GetCStr(&tmp));
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numBattleTicks", wd->battleTicks);
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numWinTicks", wd->winTicks);
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numLossTicks", wd->lossTicks);
+        MainDumpAddToKey(mainData.players[i].mreg, popReg,
+                         &prefix, "numDrawTicks", wd->drawTicks);
     }
 
     MBString_IntToString(&tmp, numFleets);
@@ -994,6 +1010,11 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Remove(dest->mreg, "numWins");
     MBRegistry_Remove(dest->mreg, "numLosses");
     MBRegistry_Remove(dest->mreg, "numDraws");
+    MBRegistry_Remove(dest->mreg, "numBattleTicks");
+    MBRegistry_Remove(dest->mreg, "numWinTicks");
+    MBRegistry_Remove(dest->mreg, "numLossTicks");
+    MBRegistry_Remove(dest->mreg, "numDrawTicks");
+
     MBRegistry_Put(dest->mreg, "age", "0");
 
     if (src->aiType == FLEET_AI_FLOCK) {
