@@ -745,15 +745,6 @@ static void MainDumpPopulation(void)
                          &prefix, "numLosses", wd->losses);
         MainDumpAddToKey(mainData.players[i].mreg, popReg,
                          &prefix, "numDraws", wd->draws);
-
-        MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numBattleTicks", wd->battleTicks);
-        MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numWinTicks", wd->winTicks);
-        MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numLossTicks", wd->lossTicks);
-        MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numDrawTicks", wd->drawTicks);
     }
 
     MBString_IntToString(&tmp, numFleets);
@@ -905,7 +896,9 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                                   bool useWinRatio)
 {
     uint32 iterations = 0;
-    uint32 i = Random_Int(0, numFleets - 1);
+    uint32 i;
+
+    i = Random_Int(0, numFleets - 1);
     while (TRUE) {
         uint32 fi = i + startingMPIndex;
         MBRegistry *fleetReg = mainPlayers[fi].mreg;
@@ -1010,10 +1003,6 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Remove(dest->mreg, "numWins");
     MBRegistry_Remove(dest->mreg, "numLosses");
     MBRegistry_Remove(dest->mreg, "numDraws");
-    MBRegistry_Remove(dest->mreg, "numBattleTicks");
-    MBRegistry_Remove(dest->mreg, "numWinTicks");
-    MBRegistry_Remove(dest->mreg, "numLossTicks");
-    MBRegistry_Remove(dest->mreg, "numDrawTicks");
 
     MBRegistry_Put(dest->mreg, "age", "0");
 
