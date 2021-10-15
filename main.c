@@ -1033,7 +1033,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         src->aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max    mag   jump   mutation
-            { "gatherRange",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "gatherRange",          10.0f, 500.0f,   0.1f, 0.05f, 0.25f},
             { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
