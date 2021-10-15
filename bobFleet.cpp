@@ -134,6 +134,7 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
         void *aiMobHandle;
         aiMobHandle = squadAI->ops.mobSpawned(squadAI->aiHandle, m);
         ASSERT(aiMobHandle == NULL);
+        UNUSED_VARIABLE(aiMobHandle);
     }
 
     return NULL;
