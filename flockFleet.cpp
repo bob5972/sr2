@@ -27,6 +27,17 @@ extern "C" {
 #include "shipAI.hpp"
 #include "MBMap.hpp"
 
+typedef struct FlockConfigValue {
+    const char *key;
+    const char *value;
+} FlockConfigValue;
+
+typedef enum FlockFleetType {
+    FLOCK_LITE,
+    FLOCK_NORMAL,
+    FLOCK_HEAVY,
+} FlockFleetType;
+
 class FlockAIGovernor : public BasicAIGovernor
 {
 public:
@@ -36,11 +47,8 @@ public:
 
     virtual ~FlockAIGovernor() { }
 
-    virtual void putLiteDefaults(MBRegistry *mreg) {
-        struct {
-            const char *key;
-            const char *value;
-        } configs[] = {
+    virtual void putDefaults(MBRegistry *mreg, FlockFleetType flockType) {
+        FlockConfigValue liteConfigs[] = {
             // Override BasicFleet defaults
             { "gatherAbandonStale",   "TRUE", },
             { "gatherRange",          "100",  },
@@ -78,20 +86,7 @@ public:
             { "attackSeparateWeight", "0.5",     },
         };
 
-        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
-            if (configs[i].value != NULL &&
-                !MBRegistry_ContainsKey(mreg, configs[i].key)) {
-                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
-            }
-        }
-    }
-
-
-    virtual void loadRegistry(MBRegistry *mreg) {
-        struct {
-            const char *key;
-            const char *value;
-        } configs[] = {
+        FlockConfigValue normalConfigs[] = {
             // Override BasicFleet defaults
             { "gatherAbandonStale",   "TRUE",        },
             { "gatherRange",          "68.465767",   },
@@ -129,15 +124,75 @@ public:
             { "attackSeparateWeight", "0.188134",   },
         };
 
-        mreg = MBRegistry_AllocCopy(mreg);
+        FlockConfigValue heavyConfigs[] = {
+            // Override BasicFleet defaults
+            { "gatherAbandonStale",   "TRUE",       },
+            { "gatherRange",          "61",         },
+            { "attackRange",          "13.183991",  },
+            { "guardRange",           "82.598732",  },
+            { "evadeStrictDistance",  "25",         },
+            { "attackExtendedRange",  "TRUE",       },
+            { "evadeRange",           "485",        },
+            { "evadeUseStrictDistance", "TRUE",     },
+            { "rotateStartingAngle", "TRUE",        },
 
-        for (uint i = 0; i < ARRAYSIZE(configs); i++) {
-            if (configs[i].value != NULL &&
-                !MBRegistry_ContainsKey(mreg, configs[i].key)) {
-                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
-            }
+            // FlockFleet specific options
+            { "flockRadius",          "338",        },
+            { "alignWeight",          "0.000000",   },
+            { "cohereWeight",         "-0.233058",  },
+
+            { "repulseRadius",        "121.312904", },
+            { "separateWeight",       "0.781240",   },
+
+            { "edgeRadius",           "207.942780", },
+            { "edgesWeight",          "0.171197",   },
+
+            { "coresRadius",          "1.000000",   },
+            { "coresWeight",          "0.0",        },
+            { "coresCrowding",        "2.0",        },
+
+            { "baseRadius",           "54.0",       },
+            { "baseWeight",           "-0.589485",  },
+            { "nearBaseRadius",       "8.000000",   },
+            { "baseDefenseRadius",    "64.0",       },
+
+            { "enemyRadius",          "398.545197", },
+            { "enemyWeight",          "0.931404",   },
+
+            { "enemyBaseRadius",      "103",        },
+            { "enemyBaseWeight",      "0.000000",   },
+
+            { "curHeadingWeight",     "0.838760",   },
+
+            { "attackSeparateRadius", "8.000000",   },
+            { "attackSeparateWeight", "0.0",        },
+        };
+
+        FlockConfigValue *configDefaults;
+        uint configDefaultsSize;
+
+        if (flockType == FLOCK_LITE) {
+            configDefaults = liteConfigs;
+            configDefaultsSize = ARRAYSIZE(liteConfigs);
+        } else if (flockType == FLOCK_NORMAL) {
+            configDefaults = normalConfigs;
+            configDefaultsSize = ARRAYSIZE(normalConfigs);
+        } else {
+            ASSERT(flockType == FLOCK_HEAVY);
+            configDefaults = heavyConfigs;
+            configDefaultsSize = ARRAYSIZE(heavyConfigs);
         }
 
+        for (uint i = 0; i < configDefaultsSize; i++) {
+            if (configDefaults[i].value != NULL &&
+                !MBRegistry_ContainsKey(mreg, configDefaults[i].key)) {
+                MBRegistry_Put(mreg, configDefaults[i].key, configDefaults[i].value);
+            }
+        }
+    }
+
+
+    virtual void loadRegistry(MBRegistry *mreg) {
         this->myConfig.flockRadius = MBRegistry_GetFloat(mreg, "flockRadius");
         this->myConfig.alignWeight = MBRegistry_GetFloat(mreg, "alignWeight");
         this->myConfig.cohereWeight = MBRegistry_GetFloat(mreg, "cohereWeight");
@@ -172,8 +227,6 @@ public:
             MBRegistry_GetFloat(mreg, "attackSeparateWeight");
 
         this->BasicAIGovernor::loadRegistry(mreg);
-
-        MBRegistry_Free(mreg);
     }
 
     void flockAlign(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
@@ -562,7 +615,7 @@ public:
 
 class FlockFleet {
 public:
-    FlockFleet(FleetAI *ai, bool lite)
+    FlockFleet(FleetAI *ai, FlockFleetType flockType)
     :sg(), gov(ai, &sg)
     {
         this->ai = ai;
@@ -571,10 +624,7 @@ public:
 
         mreg = MBRegistry_AllocCopy(ai->player.mreg);
 
-        if (lite) {
-            this->gov.putLiteDefaults(mreg);
-        }
-
+        this->gov.putDefaults(mreg, flockType);
         this->gov.loadRegistry(mreg);
     }
 
@@ -592,6 +642,7 @@ public:
 
 static void *FlockFleetCreate(FleetAI *ai);
 static void *FlockFleetLiteCreate(FleetAI *ai);
+static void *FlockFleetHeavyCreate(FleetAI *ai);
 static void FlockFleetDestroy(void *aiHandle);
 static void FlockFleetRunAITick(void *aiHandle);
 static void *FlockFleetMobSpawned(void *aiHandle, Mob *m);
@@ -628,16 +679,37 @@ void FlockFleetLite_GetOps(FleetAIOps *ops)
     ops->mobDestroyed = FlockFleetMobDestroyed;
 }
 
+void FlockFleetHeavy_GetOps(FleetAIOps *ops)
+{
+    ASSERT(ops != NULL);
+    MBUtil_Zero(ops, sizeof(*ops));
+
+    ops->aiName = "FlockFleetHeavy";
+    ops->aiAuthor = "Michael Banack";
+
+    ops->createFleet = &FlockFleetHeavyCreate;
+    ops->destroyFleet = &FlockFleetDestroy;
+    ops->runAITick = &FlockFleetRunAITick;
+    ops->mobSpawned = FlockFleetMobSpawned;
+    ops->mobDestroyed = FlockFleetMobDestroyed;
+}
+
 static void *FlockFleetLiteCreate(FleetAI *ai)
 {
     ASSERT(ai != NULL);
-    return new FlockFleet(ai, TRUE);
+    return new FlockFleet(ai, FLOCK_LITE);
+}
+
+static void *FlockFleetHeavyCreate(FleetAI *ai)
+{
+    ASSERT(ai != NULL);
+    return new FlockFleet(ai, FLOCK_HEAVY);
 }
 
 static void *FlockFleetCreate(FleetAI *ai)
 {
     ASSERT(ai != NULL);
-    return new FlockFleet(ai, FALSE);
+    return new FlockFleet(ai, FLOCK_NORMAL);
 }
 
 static void FlockFleetDestroy(void *handle)

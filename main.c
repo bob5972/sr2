@@ -242,6 +242,7 @@ void MainConstructScenario(void)
          *    BasicFleet
          *    FlockFleet
          *    HoldFleet
+         *    FlockFleetHeavy
          *
          *    -- unrated --
          *    BobFleet (prototype, varies)
@@ -277,11 +278,15 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_FLOCK;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_HOLD;
         p++;
+
+        mainData.players[p].aiType = FLEET_AI_FLOCK_HEAVY;
+        p++;
+
 
         // mainData.players[p].aiType = FLEET_AI_BOB;
         // p++;
