@@ -1089,7 +1089,6 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
-            { "holdCount",             1.0f, 200.0f,  0.05f, 0.10f, 0.25f},
 
             { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
@@ -1100,28 +1099,31 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
 
             { "edgeRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "edgesWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "centerRadius",          0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
+            { "centerWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "coresRadius",           1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "coresRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
             { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
-            { "coresCrowding",        -1.0f,  10.0f, 0.05f, 0.05f, 0.25f},
+            { "coresCrowdRadius",     0.0f,  900.0f, 0.05f, 0.05f, 0.25f},
+            { "coresCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.25f},
 
             { "baseRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "baseWeight",           -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
             { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
 
-            { "enemyRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
             { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.25f},
 
-            { "enemyBaseRadius",      10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
             { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
             { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
             { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
-
-            { "holdFleetSpawnRate",   0.01f,   1.0f, 0.05f, 0.05f, 0.25f},
         };
 
         MainMutationFParams bvf[] = {

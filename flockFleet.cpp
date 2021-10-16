@@ -32,6 +32,11 @@ typedef struct FlockConfigValue {
     const char *value;
 } FlockConfigValue;
 
+typedef enum FlockPullType {
+    PULL_ALWAYS,
+    PULL_RANGE,
+} FlockPullType;
+
 class FlockAIGovernor : public BasicAIGovernor
 {
 public:
@@ -49,42 +54,47 @@ public:
             { "attackRange",          "250",  },
 
             // FlockFleet specific options
-            { "flockRadius",          "166.7",   }, // baseSensorRadius / 1.5
-            { "alignWeight",          "0.2",     },
-            { "cohereWeight",         "-0.1",    },
+            { "flockRadius",          "166.7",      }, // baseSensorRadius / 1.5
+            { "alignWeight",          "0.2",        },
+            { "cohereWeight",         "-0.1",       },
 
-            { "repulseRadius",        "50.0",    }, // 2 * fighterSensorRadius
-            { "separateWeight",       "0.2",     },
+            { "repulseRadius",        "50.0",       }, // 2 * fighterSensorRadius
+            { "separateWeight",       "0.2",        },
 
-            { "edgeRadius",           "100.0",   }, // fighterSensorRadius
-            { "edgesWeight",          "0.9",     },
+            { "edgeRadius",           "100.0",      }, // fighterSensorRadius
+            { "edgesWeight",          "0.9",        },
+            { "centerRadius",         "0.0",        },
+            { "centerWeight",         "0.0",        },
 
-            { "coresRadius",          "166.7",   },
-            { "coresWeight",          "0.1",     },
-            { "coresCrowding",        "5",       },
+            { "coresRadius",          "166.7",      },
+            { "coresWeight",          "0.1",        },
+            { "coresCrowdRadius",     "166.7",      },
+            { "coresCrowding",        "5",          },
 
-            { "baseRadius",           "100",     },
-            { "baseWeight",           "0.0",     },
-            { "nearBaseRadius",       "250.0",   },
-            { "baseDefenseRadius",    "250.0",   },
+            { "baseRadius",           "100",        },
+            { "baseWeight",           "0.0",        },
+            { "nearBaseRadius",       "250.0",      },
+            { "baseDefenseRadius",    "250.0",      },
 
-            { "enemyRadius",          "166.7",   },
-            { "enemyWeight",          "0.3",     },
+            { "enemyRadius",          "166.7",      },
+            { "enemyWeight",          "0.3",        },
+            { "enemyCrowdRadius",     "166.7",      },
+            { "enemyCrowding",        "5",          },
 
-            { "enemyBaseRadius",      "100",     },
-            { "enemyBaseWeight",      "0.0",     },
+            { "enemyBaseRadius",      "100",        },
+            { "enemyBaseWeight",      "0.0",        },
 
-            { "curHeadingWeight",     "0.5",     },
+            { "curHeadingWeight",     "0.5",        },
 
-            { "attackSeparateRadius", "166.7",   },
-            { "attackSeparateWeight", "0.5",     },
+            { "attackSeparateRadius", "166.7",      },
+            { "attackSeparateWeight", "0.5",        },
         };
 
         FlockConfigValue configs2[] = {
             // Override BasicFleet defaults
-            { "gatherAbandonStale",   "TRUE",        },
-            { "gatherRange",          "68.465767",   },
-            { "attackRange",          "32.886688",   },
+            { "gatherAbandonStale",   "TRUE",       },
+            { "gatherRange",          "68.465767",  },
+            { "attackRange",          "32.886688",  },
 
             // FlockFleet specific options
             { "flockRadius",          "398.545197", },
@@ -96,9 +106,12 @@ public:
 
             { "edgeRadius",           "161.593430", },
             { "edgesWeight",          "0.704170",   },
+            { "centerRadius",         "0.0",        },
+            { "centerWeight",         "0.0",        },
 
             { "coresRadius",          "398.545197", },
             { "coresWeight",          "0.122679",   },
+            { "coresCrowdRadius",     "398.545197", },
             { "coresCrowding",        "5.0",        },
 
             { "baseRadius",           "100",        },
@@ -108,6 +121,8 @@ public:
 
             { "enemyRadius",          "398.545197", },
             { "enemyWeight",          "0.556688",   },
+            { "enemyCrowdRadius",     "398.545197", },
+            { "enemyCrowding",        "5",          },
 
             { "enemyBaseRadius",      "100",        },
             { "enemyBaseWeight",      "0.0",        },
@@ -139,10 +154,13 @@ public:
             { "separateWeight",       "0.781240",   },
 
             { "edgeRadius",           "10.0",       },
-            { "edgesWeight",          "-0.10",      },
+            { "edgesWeight",          "0.10",       },
+            { "centerRadius",         "0.0",        },
+            { "centerWeight",         "0.0",        },
 
             { "coresRadius",          "1.000000",   },
             { "coresWeight",          "0.0",        },
+            { "coresCrowdRadius",     "1.000000",   },
             { "coresCrowding",        "2.0",        },
 
             { "baseRadius",           "54.0",       },
@@ -152,6 +170,8 @@ public:
 
             { "enemyRadius",          "398.545197", },
             { "enemyWeight",          "0.931404",   },
+            { "enemyCrowdRadius",     "398.545197", },
+            { "enemyCrowding",        "5",          },
 
             { "enemyBaseRadius",      "103",        },
             { "enemyBaseWeight",      "0.000000",   },
@@ -184,9 +204,12 @@ public:
 
             { "edgeRadius",           "23.606379",  },
             { "edgesWeight",          "0.958569",   },
+            { "centerRadius",         "0.0",        },
+            { "centerWeight",         "0.0",        },
 
             { "coresRadius",          "93.769035",  },
             { "coresWeight",          "0.210546",   },
+            { "coresCrowdRadius",     "93.769035",  },
             { "coresCrowding",        "7.429844",   },
 
             { "baseRadius",           "38.207771",  },
@@ -196,6 +219,8 @@ public:
 
             { "enemyRadius",          "398.545197", },
             { "enemyWeight",          "0.931404",   },
+            { "enemyCrowdRadius",     "398.545197", },
+            { "enemyCrowding",        "5",          },
 
             { "enemyBaseRadius",      "10.000000",  },
             { "enemyBaseWeight",      "-0.950000",  },
@@ -244,9 +269,12 @@ public:
 
         this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
         this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
+        this->myConfig.centerRadius = MBRegistry_GetFloat(mreg, "centerRadius");
+        this->myConfig.centerWeight = MBRegistry_GetFloat(mreg, "centerWeight");
 
         this->myConfig.coresRadius = MBRegistry_GetFloat(mreg, "coresRadius");
         this->myConfig.coresWeight = MBRegistry_GetFloat(mreg, "coresWeight");
+        this->myConfig.coresCrowdRadius = MBRegistry_GetFloat(mreg, "coresCrowdRadius");
         this->myConfig.coresCrowding = (uint)MBRegistry_GetFloat(mreg, "coresCrowding");
 
         this->myConfig.baseRadius = MBRegistry_GetFloat(mreg, "baseRadius");
@@ -256,6 +284,8 @@ public:
 
         this->myConfig.enemyRadius = MBRegistry_GetFloat(mreg, "enemyRadius");
         this->myConfig.enemyWeight = MBRegistry_GetFloat(mreg, "enemyWeight");
+        this->myConfig.enemyCrowdRadius = MBRegistry_GetFloat(mreg, "enemyCrowdRadius");
+        this->myConfig.enemyCrowding = (uint)MBRegistry_GetFloat(mreg, "enemyCrowding");
 
         this->myConfig.enemyBaseRadius = MBRegistry_GetFloat(mreg, "enemyBaseRadius");
         this->myConfig.enemyBaseWeight = MBRegistry_GetFloat(mreg, "enemyBaseWeight");
@@ -320,6 +350,27 @@ public:
         }
 
         FRPoint_Add(&drp, repulseVec, repulseVec);
+    }
+
+    void pullVector(FRPoint *curForce,
+                    const FPoint *cPos, const FPoint *tPos,
+                    float radius, float weight, FlockPullType pType) {
+        ASSERT(pType == PULL_ALWAYS ||
+               pType == PULL_RANGE);
+
+        if (pType == PULL_RANGE &&
+            FPoint_Distance(cPos, tPos) > radius) {
+            return;
+        } else if (weight == 0.0f) {
+            return;
+        }
+
+        FPoint eVec;
+        FRPoint reVec;
+        FPoint_Subtract(tPos, cPos, &eVec);
+        FPoint_ToFRPoint(&eVec, NULL, &reVec);
+        reVec.radius = weight;
+        FRPoint_Add(curForce, &reVec, curForce);
     }
 
     void flockSeparate(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
@@ -432,78 +483,59 @@ public:
     }
 
 
-    void findEnemies(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+    void findEnemies(Mob *mob, FRPoint *rPos, float radius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
 
         if (enemy != NULL) {
             int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                                   &mob->pos, flockRadius);
-
-            if (numFriends >= 5) {
-                FPoint eVec;
-                FRPoint reVec;
-                FPoint_Subtract(&enemy->pos, &mob->pos, &eVec);
-                FPoint_ToFRPoint(&eVec, NULL, &reVec);
-                reVec.radius = weight;
-                FRPoint_Add(rPos, &reVec, rPos);
-            }
+                                                   &mob->pos, myConfig.enemyCrowdRadius);
+            FlockPullType pType = numFriends >= myConfig.enemyCrowding ?
+                                  PULL_ALWAYS : PULL_RANGE;
+            pullVector(rPos, &mob->pos, &enemy->pos, radius, weight, pType);
         }
     }
 
-    void findCores(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+    void findCores(Mob *mob, FRPoint *rPos, float radius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *core = sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
 
         if (core != NULL) {
             int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                                   &mob->pos, flockRadius);
-
-            if (FPoint_Distance(&mob->pos, &core->pos) <= flockRadius ||
-                numFriends >= myConfig.coresCrowding) {
-                FPoint eVec;
-                FRPoint reVec;
-                FPoint_Subtract(&core->pos, &mob->pos, &eVec);
-                FPoint_ToFRPoint(&eVec, NULL, &reVec);
-                reVec.radius = weight;
-                FRPoint_Add(rPos, &reVec, rPos);
-            }
+                                                   &mob->pos, myConfig.coresCrowdRadius);
+            FlockPullType pType = numFriends >= myConfig.coresCrowding ?
+                                  PULL_ALWAYS : PULL_RANGE;
+            pullVector(rPos, &mob->pos, &core->pos, radius, weight, pType);
         }
     }
 
-    void findBase(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+    void findCenter(Mob *mob, FRPoint *rPos, float radius, float weight) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        FPoint center;
+        center.x = myFleetAI->bp.width / 2;
+        center.y = myFleetAI->bp.height / 2;
+        pullVector(rPos, &mob->pos, &center, radius, weight, PULL_RANGE);
+    }
+
+    void findBase(Mob *mob, FRPoint *rPos, float radius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *base = sg->friendBase();
 
         if (base != NULL) {
-            if (FPoint_Distance(&mob->pos, &base->pos) <= flockRadius) {
-                FPoint eVec;
-                FRPoint reVec;
-                FPoint_Subtract(&base->pos, &mob->pos, &eVec);
-                FPoint_ToFRPoint(&eVec, NULL, &reVec);
-                reVec.radius = weight;
-                FRPoint_Add(rPos, &reVec, rPos);
-            }
+            pullVector(rPos, &mob->pos, &base->pos, radius, weight, PULL_RANGE);
         }
     }
 
-    void findEnemyBase(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+    void findEnemyBase(Mob *mob, FRPoint *rPos, float radius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *base = sg->enemyBase();
 
         if (base != NULL) {
-            if (FPoint_Distance(&mob->pos, &base->pos) <= flockRadius) {
-                FPoint eVec;
-                FRPoint reVec;
-                FPoint_Subtract(&base->pos, &mob->pos, &eVec);
-                FPoint_ToFRPoint(&eVec, NULL, &reVec);
-                reVec.radius = weight;
-                FRPoint_Add(rPos, &reVec, rPos);
-            }
+            pullVector(rPos, &mob->pos, &base->pos, radius, weight, PULL_RANGE);
         }
     }
 
@@ -559,6 +591,7 @@ public:
             flockSeparate(mob, &rForce, myConfig.repulseRadius,
                           myConfig.separateWeight);
             avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
+            findCenter(mob, &rForce, myConfig.centerRadius, myConfig.centerWeight);
             findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
             findEnemies(mob, &rForce, myConfig.enemyRadius, myConfig.enemyWeight);
             findEnemyBase(mob, &rForce, myConfig.enemyBaseRadius,
@@ -631,9 +664,12 @@ public:
 
         float edgeRadius;
         float edgesWeight;
+        float centerRadius;
+        float centerWeight;
 
         float coresRadius;
         float coresWeight;
+        float coresCrowdRadius;
         uint  coresCrowding;
 
         float baseRadius;
@@ -643,6 +679,8 @@ public:
 
         float enemyRadius;
         float enemyWeight;
+        float enemyCrowdRadius;
+        uint  enemyCrowding;
 
         float enemyBaseRadius;
         float enemyBaseWeight;
