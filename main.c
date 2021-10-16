@@ -1089,7 +1089,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
             { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "holdFleetSpawnRate",   0.0f,    1.0f, 0.05f, 0.05f, 0.25f},
+            { "holdFleetSpawnRate",   0.01f,   1.0f, 0.05f, 0.05f, 0.25f},
         };
 
         MainMutationBParams vb[] = {
