@@ -133,12 +133,12 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
     ASSERT(sf != NULL);
     ASSERT(m != NULL);
 
+    ASSERT(ARRAYSIZE(sf->squadAI) == 2);
     if (RandomState_Flip(&sf->rs, sf->holdFleetSpawnRate)) {
         i = 0;
         ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_HOLD);
     } else {
         i = 1;
-        ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_FLOCK_HEAVY);
     }
 
     ASSERT(!sf->mobMap.containsKey(m->mobid));

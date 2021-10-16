@@ -281,15 +281,15 @@ void MainConstructScenario(void)
         // mainData.players[p].aiType = FLEET_AI_FLOCK;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_HOLD;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_HOLD;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_FLOCK_HEAVY;
         p++;
 
 
-        // mainData.players[p].aiType = FLEET_AI_BOB;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_BOB;
+        p++;
 
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;
@@ -412,15 +412,15 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
     const int doSimple = 0;
     const int doTable = 1;
     const int doRandom = 2;
-    int method = doRandom;
+    int method = doSimple;
 
     /*
      * Target fleets to optimize.
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK;
-        targetPlayers[*tpIndex].playerName = "FlockFleet Test";
+        targetPlayers[*tpIndex].aiType = FLEET_AI_BOB;
+        targetPlayers[*tpIndex].playerName = "BobFleetTest";
 
         // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
@@ -1086,6 +1086,8 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 
             { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+
+            { "holdFleetSpawnRate",   0.0f,    1.0f, 0.05f, 0.05f, 0.25f},
         };
 
         MainMutationBParams vb[] = {
