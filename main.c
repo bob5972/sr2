@@ -138,8 +138,9 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 static uint32 MainFleetCompetition(BattlePlayer *mainPlayers, uint32 mpSize,
                                    uint32 startingMPIndex, uint32 numFleets,
                                    bool useWinRatio);
+static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg);
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
-                            uint32 fi, uint32 mi);
+                            uint32 fi, uint32 mi, uint32 bi);
 
 void MainConstructScenario(void)
 {
@@ -897,8 +898,11 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             uint32 mi = MainFleetCompetition(mainPlayers, mpSize,
                                              startingMPIndex, numFleets,
                                              TRUE);
+            uint32 bi = MainFindRandomFleet(mainPlayers, mpSize,
+                                            startingMPIndex, numFleets,
+                                            TRUE, NULL);
             ASSERT(*mpIndex < mpSize);
-            MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi);
+            MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi, bi);
             (*mpIndex)++;
             mutateCount--;
         }
@@ -958,7 +962,10 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         if (mainPlayers[fi].playerType == PLAYER_TYPE_TARGET) {
             if (Random_Flip(sProb)) {
                 ASSERT(fi < mpSize);
-                *weightOut = sProb;
+
+                if (weightOut != NULL) {
+                    *weightOut = sProb;
+                }
                 return fi;
             }
         }
@@ -1023,13 +1030,16 @@ static void MainMutateBValue(MBRegistry *mreg, MainMutationBParams *mp)
 }
 
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
-                            uint32 fi, uint32 mi)
+                            uint32 fi, uint32 mi, uint32 bi)
 {
     BattlePlayer *dest = &mainPlayers[fi];
     BattlePlayer *src = &mainPlayers[mi];
+    BattlePlayer *breeder = &mainPlayers[bi];
 
     ASSERT(fi < mpSize);
     ASSERT(mi < mpSize);
+    ASSERT(bi != fi);
+    ASSERT(mi != fi);
 
     ASSERT(dest->playerType == PLAYER_TYPE_INVALID);
     ASSERT(src->playerType == PLAYER_TYPE_TARGET);
@@ -1039,15 +1049,33 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     dest->mreg = MBRegistry_AllocCopy(src->mreg);
 
     dest->playerType = PLAYER_TYPE_TARGET;
+
+    if (src != breeder &&
+        breeder->aiType == src->aiType &&
+        breeder->mreg != NULL) {
+        for (uint i = 0; i < MBRegistry_NumEntries(breeder->mreg); i++) {
+            if (Random_Bit()) {
+                const char *key = MBRegistry_GetKeyAt(breeder->mreg, i);
+                const char *value = MBRegistry_GetValueAt(breeder->mreg, i);
+                MBRegistry_PutCopy(dest->mreg, key, value);
+            }
+        }
+    }
+
+    MainMutateParams(src->aiType, dest->mreg);
+
     MBRegistry_Remove(dest->mreg, "numBattles");
     MBRegistry_Remove(dest->mreg, "numWins");
     MBRegistry_Remove(dest->mreg, "numLosses");
     MBRegistry_Remove(dest->mreg, "numDraws");
-
     MBRegistry_Put(dest->mreg, "age", "0");
+}
 
-    if (src->aiType == FLEET_AI_FLOCK4 ||
-        src->aiType == FLEET_AI_BOB) {
+
+static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
+{
+    if (aiType == FLEET_AI_FLOCK4 ||
+        aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max      mag   jump   mutation
             { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.25f},
@@ -1106,17 +1134,17 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         };
 
         for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
-            MainMutateFValue(dest->mreg, &vf[i]);
+            MainMutateFValue(mreg, &vf[i]);
         }
-        if (src->aiType == FLEET_AI_BOB) {
+        if (aiType == FLEET_AI_BOB) {
             for (uint32 i = 0; i < ARRAYSIZE(bvf); i++) {
-                MainMutateFValue(dest->mreg, &bvf[i]);
+                MainMutateFValue(mreg, &bvf[i]);
             }
         }
         for (uint32 i = 0; i < ARRAYSIZE(vb); i++) {
-            MainMutateBValue(dest->mreg, &vb[i]);
+            MainMutateBValue(mreg, &vb[i]);
         }
-    } else if (src->aiType == FLEET_AI_HOLD) {
+    } else if (aiType == FLEET_AI_HOLD) {
         MainMutationFParams vf[] = {
             // key                     min    max       mag   jump   mutation
             { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
@@ -1139,10 +1167,10 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         };
 
         for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
-            MainMutateFValue(dest->mreg, &vf[i]);
+            MainMutateFValue(mreg, &vf[i]);
         }
         for (uint32 i = 0; i < ARRAYSIZE(vb); i++) {
-            MainMutateBValue(dest->mreg, &vb[i]);
+            MainMutateBValue(mreg, &vb[i]);
         }
     } else {
         NOT_IMPLEMENTED();
