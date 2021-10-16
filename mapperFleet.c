@@ -77,7 +77,7 @@ static void *MapperFleetMobSpawned(void *aiHandle, Mob *m);
 static void MapperFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static MapperShip *MapperFleetGetShip(MapperFleetData *sf, MobID mobid);
 
-void MapperFleet_GetOps(FleetAIOps *ops)
+void MapperFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

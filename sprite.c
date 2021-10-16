@@ -681,11 +681,12 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
         case FLEET_AI_CIRCLE:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_BLUE2);
-        case FLEET_AI_FLOCK:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
-        case FLEET_AI_FLOCK_LITE:
+        case FLEET_AI_FLOCK1:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE2);
-        case FLEET_AI_FLOCK_HEAVY:
+        case FLEET_AI_FLOCK2:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
+        case FLEET_AI_FLOCK3:
+        case FLEET_AI_FLOCK4:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE3);
 
         default:
@@ -1007,9 +1008,10 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_BASIC,       0x808080, }, // DARK GRAY
         { FLEET_AI_HOLD,        0xF00080, }, // PURPLE
         { FLEET_AI_BOB,         0x80F080, }, // GREENISH-YELLOW
-        { FLEET_AI_FLOCK,       0xFF3388, }, // BLUEISH-GRAY?
-        { FLEET_AI_FLOCK_LITE,  0xFF3322, }, // YELLOWISH-GRAY?
-        { FLEET_AI_FLOCK_HEAVY, 0xFF3366, }, // YELLOWISH-GRAY?
+        { FLEET_AI_FLOCK1,      0xFF3322, }, // YELLOWISH-GRAY?
+        { FLEET_AI_FLOCK2,      0xFF3388, }, // BLUEISH-GRAY?
+        { FLEET_AI_FLOCK3,      0xFF3366, }, // YELLOWISH-GRAY?
+        { FLEET_AI_FLOCK4,      0xFFFF66, }, // YELLOWISH-GRAY?
     };
 
     ASSERT(repeatCount > 0);

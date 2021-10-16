@@ -60,7 +60,7 @@ static void *GatherFleetMobSpawned(void *aiHandle, Mob *m);
 static void GatherFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static GatherShip *GatherFleetGetShip(GatherFleetData *sf, MobID mobid);
 
-void GatherFleet_GetOps(FleetAIOps *ops)
+void GatherFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

@@ -237,12 +237,13 @@ void MainConstructScenario(void)
          *    MapperFleet
          *    RunAwayFleet
          *    CircleFleet
-         *    FlockFleetLite
+         *    FlockFleet1
          *    CowardFleet
          *    BasicFleet
-         *    FlockFleet
+         *    FlockFleet2
          *    HoldFleet
-         *    FlockFleetHeavy
+         *    FlockFleet3
+         *    FlockFleet4
          *
          *    -- unrated --
          *    BobFleet (prototype, varies)
@@ -269,7 +270,7 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_CIRCLE;
 //        p++;
 
-//        mainData.players[p].aiType = FLEET_AI_FLOCK_LITE;
+//        mainData.players[p].aiType = FLEET_AI_FLOCK1;
 //        p++;
 
 //        mainData.players[p].aiType = FLEET_AI_COWARD;
@@ -278,15 +279,17 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_BASIC;
 //         p++;
 
-        // mainData.players[p].aiType = FLEET_AI_FLOCK;
+        // mainData.players[p].aiType = FLEET_AI_FLOCK2;
         // p++;
 
         // mainData.players[p].aiType = FLEET_AI_HOLD;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK_HEAVY;
+        mainData.players[p].aiType = FLEET_AI_FLOCK3;
         p++;
 
+        mainData.players[p].aiType = FLEET_AI_FLOCK4;
+        p++;
 
         mainData.players[p].aiType = FLEET_AI_BOB;
         p++;
@@ -520,7 +523,7 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
                 MBRegistry_Put(targetPlayers[*tpIndex].mreg, v[i].param, vstr[i]);
             }
 
-            targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK;
+            targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK4;
             char *name = NULL;
             asprintf(&name, "%s %s:%s %s:%s %s:%s",
                      Fleet_GetName(targetPlayers[*tpIndex].aiType),
@@ -1045,8 +1048,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 
     MBRegistry_Put(dest->mreg, "age", "0");
 
-    if (src->aiType == FLEET_AI_FLOCK ||
-        src->aiType == FLEET_AI_FLOCK_HEAVY ||
+    if (src->aiType == FLEET_AI_FLOCK4 ||
         src->aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max      mag   jump   mutation

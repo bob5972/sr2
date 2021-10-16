@@ -101,6 +101,8 @@ void Fleet_CreateAI(FleetAI *ai, FleetAIType aiType,
     ai->id = id;
     ai->bp = *bp;
     ai->player = *player;
+    ai->player.aiType = aiType;
+
     if (ai->player.mreg != NULL) {
         ai->player.mreg =
             MBRegistry_AllocCopy(ai->player.mreg);

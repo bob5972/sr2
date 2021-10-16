@@ -42,7 +42,7 @@ static void *CloudFleetMobSpawned(void *aiHandle, Mob *m);
 static void CloudFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static CloudShip *CloudFleetGetShip(CloudFleetData *sf, MobID mobid);
 
-void CloudFleet_GetOps(FleetAIOps *ops)
+void CloudFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

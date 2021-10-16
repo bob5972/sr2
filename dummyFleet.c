@@ -28,7 +28,7 @@ static void DummyFleetRunAITick(void *aiHandle);
 static void *DummyFleetCreate(FleetAI *ai);
 static void DummyFleetDestroy(void *aiHandle);
 
-void DummyFleet_GetOps(FleetAIOps *ops)
+void DummyFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ops->aiName = "DummyFleet";
     ops->aiAuthor = "Michael Banack";

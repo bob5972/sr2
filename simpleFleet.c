@@ -33,7 +33,7 @@ static void *SimpleFleetCreate(FleetAI *ai);
 static void SimpleFleetDestroy(void *aiHandle);
 static void SimpleFleetRunAI(void *aiHandle);
 
-void SimpleFleet_GetOps(FleetAIOps *ops)
+void SimpleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

@@ -132,7 +132,7 @@ static void HoldFleetRunAITick(void *aiHandle);
 static void *HoldFleetMobSpawned(void *aiHandle, Mob *m);
 static void HoldFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
-void HoldFleet_GetOps(FleetAIOps *ops)
+void HoldFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

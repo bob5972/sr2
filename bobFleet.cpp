@@ -45,7 +45,7 @@ public:
         MBUtil_Zero(&this->squadAI, sizeof(this->squadAI));
         ASSERT(ARRAYSIZE(this->squadAI) == 2);
         this->squadAI[0].ops.aiType = FLEET_AI_HOLD;
-        this->squadAI[1].ops.aiType = FLEET_AI_FLOCK_HEAVY;
+        this->squadAI[1].ops.aiType = FLEET_AI_FLOCK4;
 
         for (uint i = 0; i < ARRAYSIZE(this->squadAI); i++) {
             FleetAI *squadAI = &this->squadAI[i];
@@ -96,7 +96,7 @@ static void *BobFleetCreate(FleetAI *ai);
 static void BobFleetDestroy(void *aiHandle);
 static void BobFleetRunAITick(void *aiHandle);
 
-void BobFleet_GetOps(FleetAIOps *ops)
+void BobFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

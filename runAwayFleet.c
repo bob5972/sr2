@@ -38,7 +38,7 @@ static void *RunAwayFleetMobSpawned(void *aiHandle, Mob *m);
 static void RunAwayFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static RunAwayShip *RunAwayFleetGetShip(RunAwayFleetData *sf, MobID mobid);
 
-void RunAwayFleet_GetOps(FleetAIOps *ops)
+void RunAwayFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

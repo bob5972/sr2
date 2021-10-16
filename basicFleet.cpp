@@ -52,7 +52,7 @@ static void BasicFleetRunAITick(void *aiHandle);
 static void *BasicFleetMobSpawned(void *aiHandle, Mob *m);
 static void BasicFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
-void BasicFleet_GetOps(FleetAIOps *ops)
+void BasicFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

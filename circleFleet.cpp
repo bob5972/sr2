@@ -225,7 +225,7 @@ static void CircleFleetRunAITick(void *aiHandle);
 static void *CircleFleetMobSpawned(void *aiHandle, Mob *m);
 static void CircleFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
-void CircleFleet_GetOps(FleetAIOps *ops)
+void CircleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));

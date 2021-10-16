@@ -46,7 +46,7 @@ static void *CowardFleetCreate(FleetAI *ai);
 static void CowardFleetDestroy(void *aiHandle);
 static void CowardFleetRunAITick(void *aiHandle);
 
-void CowardFleet_GetOps(FleetAIOps *ops)
+void CowardFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));
