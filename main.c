@@ -950,7 +950,8 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         if (useWinRatio) {
             weight = MBRegistry_GetUint(fleetReg, "numWins");
         } else {
-            weight = MBRegistry_GetUint(fleetReg, "numLosses");
+            weight = MBRegistry_GetUint(fleetReg, "numLosses") +
+                     MBRegistry_GetUint(fleetReg, "numDraws");
         }
 
         sProb = numBattles > 0 ? weight / (float)numBattles : 0.0f;
