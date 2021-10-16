@@ -45,7 +45,7 @@ public:
         MBUtil_Zero(&this->squadAI, sizeof(this->squadAI));
         ASSERT(ARRAYSIZE(this->squadAI) == 2);
         this->squadAI[0].ops.aiType = FLEET_AI_HOLD;
-        this->squadAI[1].ops.aiType = FLEET_AI_FLOCK;
+        this->squadAI[1].ops.aiType = FLEET_AI_FLOCK_HEAVY;
 
         for (uint i = 0; i < ARRAYSIZE(this->squadAI); i++) {
             FleetAI *squadAI = &this->squadAI[i];
@@ -138,7 +138,7 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
         ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_HOLD);
     } else {
         i = 1;
-        ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_FLOCK);
+        ASSERT(sf->squadAI[i].ops.aiType == FLEET_AI_FLOCK_HEAVY);
     }
 
     ASSERT(!sf->mobMap.containsKey(m->mobid));
