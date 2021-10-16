@@ -144,8 +144,8 @@ public:
             { "repulseRadius",        "121.312904", },
             { "separateWeight",       "0.781240",   },
 
-            { "edgeRadius",           "207.942780", },
-            { "edgesWeight",          "0.171197",   },
+            { "edgeRadius",           "10.0",       },
+            { "edgesWeight",          "-0.10",      },
 
             { "coresRadius",          "1.000000",   },
             { "coresWeight",          "0.0",        },
