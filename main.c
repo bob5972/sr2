@@ -1050,7 +1050,13 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 
     dest->playerType = PLAYER_TYPE_TARGET;
 
-    if (src != breeder &&
+    /*
+     * Half the time, randomly mix traits with another fleet.
+     * This increases the odds that two beneficial traits will end up together
+     * without having to independently evolve twice.
+     */
+    if (Random_Bit() &&
+        src != breeder &&
         breeder->aiType == src->aiType &&
         breeder->mreg != NULL) {
         for (uint i = 0; i < MBRegistry_NumEntries(breeder->mreg); i++) {
