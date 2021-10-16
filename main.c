@@ -894,9 +894,6 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
 
         ASSERT(*mpIndex == startingMPIndex + numFleets);
         while (mutateCount > 0) {
-            /*
-             * Only mutate the original fleets ?
-             */
             uint32 mi = MainFleetCompetition(mainPlayers, mpSize,
                                              startingMPIndex, numFleets,
                                              TRUE);
@@ -1093,6 +1090,12 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
             { "holdFleetSpawnRate",   0.01f,   1.0f, 0.05f, 0.05f, 0.25f},
         };
 
+        MainMutationFParams bvf[] = {
+            // key                     min    max      mag   jump   mutation
+            { "holdCount",             1.0f, 200.0f,  0.05f, 0.10f, 0.25f},
+            { "holdFleetSpawnRate",   0.01f,   1.0f, 0.05f, 0.05f, 0.25f},
+        };
+
         MainMutationBParams vb[] = {
             // key                       mutation
             { "evadeFighters",           0.05f},
@@ -1104,6 +1107,11 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 
         for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
             MainMutateFValue(dest->mreg, &vf[i]);
+        }
+        if (src->aiType == FLEET_AI_BOB) {
+            for (uint32 i = 0; i < ARRAYSIZE(bvf); i++) {
+                MainMutateFValue(dest->mreg, &bvf[i]);
+            }
         }
         for (uint32 i = 0; i < ARRAYSIZE(vb); i++) {
             MainMutateBValue(dest->mreg, &vb[i]);
