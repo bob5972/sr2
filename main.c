@@ -1043,43 +1043,43 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     if (src->aiType == FLEET_AI_FLOCK ||
         src->aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
-            // key                     min    max    mag   jump   mutation
-            { "gatherRange",          10.0f, 500.0f,   0.1f, 0.05f, 0.25f},
+            // key                     min    max      mag   jump   mutation
+            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.25f},
             { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
             { "holdCount",             1.0f, 200.0f,  0.05f, 0.10f, 0.25f},
 
-            { "flockRadius",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "alignWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "cohereWeight",         -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "repulseRadius",        10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "separateWeight",       -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "repulseRadius",        10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "edgeRadius",           10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "edgesWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "edgeRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "edgesWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "coresRadius",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "coresWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "coresCrowding",        -1.0f,  10.0f, 0.1f, 0.05f, 0.25f},
+            { "coresRadius",           1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "coresCrowding",        -1.0f,  10.0f, 0.05f, 0.05f, 0.25f},
 
-            { "baseRadius",           10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "baseWeight",           -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
-            { "nearBaseRadius",       10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "baseDefenseRadius",    10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
+            { "baseRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "baseWeight",           -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
 
-            { "enemyRadius",          10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "enemyWeight",          -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "enemyRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "enemyBaseRadius",      10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "enemyBaseWeight",      -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "enemyBaseRadius",      10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "curHeadingWeight",     -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "attackSeparateRadius", 10.0f, 500.0f, 0.1f, 0.05f, 0.25f},
-            { "attackSeparateWeight", -1.0f,   1.0f, 0.1f, 0.05f, 0.25f},
+            { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
         };
 
         MainMutationBParams vb[] = {
