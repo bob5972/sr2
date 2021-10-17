@@ -1094,21 +1094,21 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
             { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "repulseRadius",        10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "repulseRadius",         5.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
 
-            { "edgeRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
-            { "edgesWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
-            { "centerRadius",          0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
-            { "centerWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "edgesWeight",          -0.2f,   1.0f, 0.05f, 0.05f, 0.10f},
+            { "centerRadius",          0.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "centerWeight",         -0.1f,   0.1f, 0.05f, 0.05f, 0.25f},
 
             { "coresRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
             { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
-            { "coresCrowdRadius",     0.0f,  900.0f, 0.05f, 0.05f, 0.25f},
+            { "coresCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
             { "coresCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.25f},
 
             { "baseRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
-            { "baseWeight",           -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "baseWeight",           -1.0f,   0.2f, 0.05f, 0.05f, 0.05f},
             { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
             { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
 
@@ -1129,7 +1129,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
         MainMutationFParams bvf[] = {
             // key                     min    max      mag   jump   mutation
             { "holdCount",             1.0f, 200.0f,  0.05f, 0.10f, 0.25f},
-            { "holdFleetSpawnRate",   0.01f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "holdFleetSpawnRate",   0.01f,   1.0f,  0.05f, 0.05f, 0.25f},
         };
 
         MainMutationBParams vb[] = {
