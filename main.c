@@ -1089,46 +1089,54 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
         aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max      mag   jump   mutation
-            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.25f},
-            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
-            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
-            { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
-            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.25f},
+            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.05f},
+            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
+            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
+            { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
+            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
 
-            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
-            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
-            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.05f},
+            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
 
-            { "repulseRadius",         5.0f, 500.0f, 0.05f, 0.05f, 0.25f},
-            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "repulseRadius",         5.0f, 500.0f, 0.05f, 0.05f, 0.05f},
+            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
 
-            { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.05f, 0.10f},
             { "edgesWeight",          -0.2f,   1.0f, 0.05f, 0.05f, 0.10f},
-            { "centerRadius",          0.0f, 500.0f, 0.05f, 0.05f, 0.25f},
-            { "centerWeight",         -0.1f,   0.1f, 0.05f, 0.05f, 0.25f},
+            { "centerRadius",          0.0f, 900.0f, 0.05f, 0.05f, 0.10f},
+            { "centerWeight",         -0.1f,   0.1f, 0.05f, 0.05f, 0.10f},
 
-            { "coresRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
-            { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
-            { "coresCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
-            { "coresCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.25f},
+            { "coresRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
+            { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "coresCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
+            { "coresCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.05f},
 
-            { "baseRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "baseRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.05f},
             { "baseWeight",           -1.0f,   0.2f, 0.05f, 0.05f, 0.05f},
-            { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
-            { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
+            { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
+            { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
 
-            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
-            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
-            { "enemyCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
-            { "enemyCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
+            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "enemyCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
+            { "enemyCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.05f},
 
-            { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.05f, 0.25f},
-            { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
+            { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
 
-            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
 
-            { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.25f},
-            { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.25f},
+            { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
+            { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+
+            { "locusRadius",          1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
+            { "locusWeight",         -1.0f,    1.0f,  0.05f, 0.05f, 0.50f},
+            { "locusCircularPeriod",  1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
+            { "locusCircularWeight", -1.0f,    1.0f,  0.05f, 0.05f, 0.50f},
+            { "locusLinearXPeriod",   1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
+            { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
+            { "locusLinearWeight",   -1.0f,    1.0f,  0.05f, 0.05f, 0.50f},
         };
 
         MainMutationFParams bvf[] = {

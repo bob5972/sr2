@@ -633,6 +633,12 @@ public:
             float cheight = height / 2;
             float ct = myFleetAI->tick / myConfig.locusCircularPeriod;
 
+            /*
+             * This isn't actually the circumference of an ellipse,
+             * but it's a good approximation.
+             */
+            ct /= M_PI * (cwidth + cheight);
+
             circular.x = cwidth + cwidth * cosf(ct);
             circular.y = cheight + cheight * sinf(ct);
             haveCircular = TRUE;
@@ -641,7 +647,14 @@ public:
         if (myConfig.locusLinearXPeriod > 0.0f &&
             myConfig.locusLinearWeight != 0.0f) {
             float ltx = myFleetAI->tick / myConfig.locusLinearXPeriod;
+            ltx /= 2 * width;
             linear.x = width * modff(ltx / width, &temp);
+            if (((uint)temp) % 2 == 1) {
+                /*
+                 * Go backwards for the return trip.
+                 */
+                linear.x = width - linear.x;
+            }
             haveLinear = TRUE;
         } else {
             linear.x = mob->pos.x;
@@ -650,7 +663,14 @@ public:
         if (myConfig.locusLinearYPeriod > 0.0f &&
             myConfig.locusLinearWeight != 0.0f) {
             float lty = myFleetAI->tick / myConfig.locusLinearYPeriod;
+            lty /= 2 * height;
             linear.y = height * modff(lty / height, &temp);
+            if (((uint)temp) % 2 == 1) {
+                /*
+                 * Go backwards for the return trip.
+                 */
+                linear.y = height - linear.y;
+            }
             haveLinear = TRUE;
         } else {
             linear.y = mob->pos.y;
