@@ -47,21 +47,15 @@ public:
     virtual ~FlockAIGovernor() { }
 
     virtual void putDefaults(MBRegistry *mreg, FleetAIType flockType) {
-        FlockConfigValue configs1[] = {
-            // Override BasicFleet defaults
-            { "gatherAbandonStale",   "TRUE", },
-            { "gatherRange",          "100",  },
-            { "attackRange",          "250",  },
-
-            // FlockFleet specific options
-            { "flockRadius",          "166.7",      }, // baseSensorRadius / 1.5
+        FlockConfigValue defaults[] = {
+            { "flockRadius",          "166.7",      },
             { "alignWeight",          "0.2",        },
             { "cohereWeight",         "-0.1",       },
 
-            { "repulseRadius",        "50.0",       }, // 2 * fighterSensorRadius
+            { "repulseRadius",        "50.0",       },
             { "separateWeight",       "0.2",        },
 
-            { "edgeRadius",           "100.0",      }, // fighterSensorRadius
+            { "edgeRadius",           "100.0",      },
             { "edgesWeight",          "0.9",        },
             { "centerRadius",         "0.0",        },
             { "centerWeight",         "0.0",        },
@@ -83,6 +77,47 @@ public:
 
             { "enemyBaseRadius",      "100",        },
             { "enemyBaseWeight",      "0.0",        },
+
+            { "curHeadingWeight",     "0.5",        },
+
+            { "attackSeparateRadius", "166.7",      },
+            { "attackSeparateWeight", "0.5",        },
+
+            { "locusRadius",          "10000.0",    },
+            { "locusWeight",          "0.0",        },
+            { "locusCircularPeriod",  "1000.0",     },
+            { "locusCircularWeight",  "0.0",        },
+            { "locusLinearXPeriod",   "1000.0",     },
+            { "locusLinearYPeriod",   "1000.0",     },
+            { "locusLinearWeight",    "0.0",        },
+        };
+
+        FlockConfigValue configs1[] = {
+            // Override BasicFleet defaults
+            { "gatherAbandonStale",   "TRUE", },
+            { "gatherRange",          "100",  },
+            { "attackRange",          "250",  },
+
+            // FlockFleet specific options
+            { "flockRadius",          "166.7",      }, // baseSensorRadius / 1.5
+            { "alignWeight",          "0.2",        },
+            { "cohereWeight",         "-0.1",       },
+
+            { "repulseRadius",        "50.0",       }, // 2 * fighterSensorRadius
+            { "separateWeight",       "0.2",        },
+
+            { "edgeRadius",           "100.0",      }, // fighterSensorRadius
+            { "edgesWeight",          "0.9",        },
+
+            { "coresRadius",          "166.7",      },
+            { "coresWeight",          "0.1",        },
+            { "coresCrowdRadius",     "166.7",      },
+            { "coresCrowding",        "5",          },
+
+            { "enemyRadius",          "166.7",      },
+            { "enemyWeight",          "0.3",        },
+            { "enemyCrowdRadius",     "166.7",      },
+            { "enemyCrowding",        "5",          },
 
             { "curHeadingWeight",     "0.5",        },
 
@@ -114,18 +149,10 @@ public:
             { "coresCrowdRadius",     "398.545197", },
             { "coresCrowding",        "5.0",        },
 
-            { "baseRadius",           "100",        },
-            { "baseWeight",           "0.0",        },
-            { "nearBaseRadius",       "250.0",      },
-            { "baseDefenseRadius",    "250.0",      },
-
             { "enemyRadius",          "398.545197", },
             { "enemyWeight",          "0.556688",   },
             { "enemyCrowdRadius",     "398.545197", },
             { "enemyCrowding",        "5",          },
-
-            { "enemyBaseRadius",      "100",        },
-            { "enemyBaseWeight",      "0.0",        },
 
             { "curHeadingWeight",     "0.838760",   },
 
@@ -155,8 +182,6 @@ public:
 
             { "edgeRadius",           "10.0",       },
             { "edgesWeight",          "0.10",       },
-            { "centerRadius",         "0.0",        },
-            { "centerWeight",         "0.0",        },
 
             { "coresRadius",          "1.000000",   },
             { "coresWeight",          "0.0",        },
@@ -204,8 +229,6 @@ public:
 
             { "edgeRadius",           "23.606379",  },
             { "edgesWeight",          "0.958569",   },
-            { "centerRadius",         "0.0",        },
-            { "centerWeight",         "0.0",        },
 
             { "coresRadius",          "93.769035",  },
             { "coresWeight",          "0.210546",   },
@@ -308,6 +331,13 @@ public:
                 MBRegistry_Put(mreg, configDefaults[i].key, configDefaults[i].value);
             }
         }
+
+        for (uint i = 0; i < ARRAYSIZE(defaults); i++) {
+            if (defaults[i].value != NULL &&
+                !MBRegistry_ContainsKey(mreg, defaults[i].key)) {
+                MBRegistry_Put(mreg, defaults[i].key, defaults[i].value);
+            }
+        }
     }
 
 
@@ -349,6 +379,21 @@ public:
             MBRegistry_GetFloat(mreg, "attackSeparateRadius");
         this->myConfig.attackSeparateWeight =
             MBRegistry_GetFloat(mreg, "attackSeparateWeight");
+
+        this->myConfig.locusRadius =
+            MBRegistry_GetFloat(mreg, "locusRadius");
+        this->myConfig.locusWeight =
+            MBRegistry_GetFloat(mreg, "locusWeight");
+        this->myConfig.locusCircularPeriod =
+            MBRegistry_GetFloat(mreg, "locusCircularPeriod");
+        this->myConfig.locusCircularWeight =
+            MBRegistry_GetFloat(mreg, "locusCircularWeight");
+        this->myConfig.locusLinearXPeriod =
+            MBRegistry_GetFloat(mreg, "locusLinearXPeriod");
+        this->myConfig.locusLinearYPeriod =
+            MBRegistry_GetFloat(mreg, "locusLinearYPeriod");
+        this->myConfig.locusLinearWeight =
+            MBRegistry_GetFloat(mreg, "locusLinearWeight");
 
         this->BasicAIGovernor::loadRegistry(mreg);
     }
@@ -571,6 +616,66 @@ public:
         pullVector(rPos, &mob->pos, &center, radius, weight, PULL_RANGE);
     }
 
+    void findLocus(Mob *mob, FRPoint *rPos) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        FPoint circular;
+        FPoint linear;
+        FPoint locus;
+        bool haveCircular = FALSE;
+        bool haveLinear = FALSE;
+        float width = myFleetAI->bp.width;
+        float height = myFleetAI->bp.height;
+        float temp;
+
+        if (myConfig.locusCircularPeriod > 0.0f &&
+            myConfig.locusCircularWeight != 0.0f) {
+            float cwidth = width / 2;
+            float cheight = height / 2;
+            float ct = myFleetAI->tick / myConfig.locusCircularPeriod;
+
+            circular.x = cwidth + cwidth * cosf(ct);
+            circular.y = cheight + cheight * sinf(ct);
+            haveCircular = TRUE;
+        }
+
+        if (myConfig.locusLinearXPeriod > 0.0f &&
+            myConfig.locusLinearWeight != 0.0f) {
+            float ltx = myFleetAI->tick / myConfig.locusLinearXPeriod;
+            linear.x = width * modff(ltx / width, &temp);
+            haveLinear = TRUE;
+        } else {
+            linear.x = mob->pos.x;
+        }
+
+        if (myConfig.locusLinearYPeriod > 0.0f &&
+            myConfig.locusLinearWeight != 0.0f) {
+            float lty = myFleetAI->tick / myConfig.locusLinearYPeriod;
+            linear.y = height * modff(lty / height, &temp);
+            haveLinear = TRUE;
+        } else {
+            linear.y = mob->pos.y;
+        }
+
+        if (haveLinear && haveCircular) {
+            locus.x = myConfig.locusCircularWeight * circular.x +
+                      myConfig.locusLinearWeight * linear.x;
+            locus.y = myConfig.locusCircularWeight * circular.y +
+                      myConfig.locusLinearWeight * linear.y;
+        } else if (haveLinear) {
+            locus = linear;
+        } else if (haveCircular) {
+            locus = circular;
+        } else {
+            /*
+             * If we have neither, contribute nothing.
+             */
+            return;
+        }
+
+        pullVector(rPos, &mob->pos, &locus,
+                   myConfig.locusRadius, myConfig.locusWeight, PULL_RANGE);
+    }
+
     void findBase(Mob *mob, FRPoint *rPos, float radius, float weight) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
@@ -649,6 +754,7 @@ public:
             findEnemyBase(mob, &rForce, myConfig.enemyBaseRadius,
                           myConfig.enemyBaseWeight);
             findCores(mob, &rForce, myConfig.coresRadius, myConfig.coresWeight);
+            findLocus(mob, &rForce);
 
             rPos.radius = myConfig.curHeadingWeight;
             FRPoint_Add(&rPos, &rForce, &rPos);
@@ -742,6 +848,13 @@ public:
         float attackSeparateRadius;
         float attackSeparateWeight;
 
+        float locusRadius;
+        float locusWeight;
+        float locusCircularPeriod;
+        float locusCircularWeight;
+        float locusLinearXPeriod;
+        float locusLinearYPeriod;
+        float locusLinearWeight;
     } myConfig;
 };
 
