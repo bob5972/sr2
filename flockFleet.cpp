@@ -792,7 +792,7 @@ void FlockFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
     } else if (aiType == FLEET_AI_FLOCK4) {
         ops->aiName = "FlockFleet4";
     } else if (aiType == FLEET_AI_FLOCK5) {
-        ops->aiName = "FlockFleet4";
+        ops->aiName = "FlockFleet5";
     } else {
         NOT_IMPLEMENTED();
     }
