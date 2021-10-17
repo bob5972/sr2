@@ -231,6 +231,55 @@ public:
             { "attackSeparateWeight", "-0.942996",  },
         };
 
+        FlockConfigValue configs5[] = {
+            // Override BasicFleet defaults
+            { "gatherAbandonStale",   "FALSE",      },
+            { "gatherRange",          "61",         },
+            { "attackRange",          "50.903362",  },
+            { "guardRange",           "-0.528344",  },
+            { "evadeStrictDistance",  "3.119897",   },
+            { "attackExtendedRange",  "TRUE",       },
+            { "evadeRange",           "72.195099",  },
+            { "evadeUseStrictDistance", "TRUE",     },
+            { "rotateStartingAngle", "TRUE",        },
+
+            // FlockFleet specific options
+            { "flockRadius",          "136.132584", },
+            { "alignWeight",          "0.193725",   },
+            { "cohereWeight",         "-0.365141",  },
+
+            { "repulseRadius",        "121.312904", },
+            { "separateWeight",       "0.781240",   },
+
+            { "edgeRadius",           "117.935951", },
+            { "edgesWeight",          "0.008065",   },
+            { "centerRadius",         "45.782734",  },
+            { "centerWeight",         "0.613753",   },
+
+            { "coresRadius",          "134.762024", },
+            { "coresWeight",          "0.239872",   },
+            { "coresCrowdRadius",     "0.000000",   },
+            { "coresCrowding",        "18.770977",  },
+
+            { "baseRadius",           "391.563629", },
+            { "baseWeight",           "-0.319866",  },
+            { "nearBaseRadius",       "1.102500",   },
+            { "baseDefenseRadius",    "66.977211",  },
+
+            { "enemyRadius",          "0.000000",   },
+            { "enemyWeight",          "0.936234",   },
+            { "enemyCrowdRadius",     "0.000000",   },
+            { "enemyCrowding",        "-0.041383",  },
+
+            { "enemyBaseRadius",      "43.751724",  },
+            { "enemyBaseWeight",      "0.096284",   },
+
+            { "curHeadingWeight",     "0.987313",   },
+
+            { "attackSeparateRadius", "451.420227", },
+            { "attackSeparateWeight", "-1.000000",  },
+        };
+
         FlockConfigValue *configDefaults;
         uint configDefaultsSize;
 
@@ -246,6 +295,9 @@ public:
         } else if (flockType == FLEET_AI_FLOCK4) {
             configDefaults = configs4;
             configDefaultsSize = ARRAYSIZE(configs4);
+        } else if (flockType == FLEET_AI_FLOCK5) {
+            configDefaults = configs5;
+            configDefaultsSize = ARRAYSIZE(configs5);
         } else {
             PANIC("Unknown aiType: %d\n", flockType);
         }
@@ -738,6 +790,8 @@ void FlockFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
     } else if (aiType == FLEET_AI_FLOCK3) {
         ops->aiName = "FlockFleet3";
     } else if (aiType == FLEET_AI_FLOCK4) {
+        ops->aiName = "FlockFleet4";
+    } else if (aiType == FLEET_AI_FLOCK5) {
         ops->aiName = "FlockFleet4";
     } else {
         NOT_IMPLEMENTED();
