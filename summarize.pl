@@ -150,7 +150,7 @@ sub Main() {
     }
 
     Console("\n");
-    Warning("numFleets = " . $numFleets . "\n");
+    Console("numFleets = " . $numFleets . "\n");
     $fitness = sprintf("%1.2f", ($fitness*100));
     Console("Average Fitness: $fitness%\n");
     Console("\n");
