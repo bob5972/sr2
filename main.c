@@ -427,8 +427,8 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[*tpIndex].aiType = FLEET_AI_BOB;
-        targetPlayers[*tpIndex].playerName = "BobFleetTest";
+        targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK5;
+        targetPlayers[*tpIndex].playerName = "FlockFleet5Test";
 
         // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
