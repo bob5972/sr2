@@ -1081,6 +1081,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
 {
     if (aiType == FLEET_AI_FLOCK4 ||
+        aiType == FLEET_AI_FLOCK5 ||
         aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max      mag   jump   mutation
