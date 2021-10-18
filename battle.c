@@ -458,18 +458,16 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc, const Mob
 
     ASSERT(BattleCanMobScan(scanning));
 
-    if (scanning->playerID == target->playerID) {
-        // Players don't scan themselves...
-        return FALSE;
-    }
     if (BitVector_GetRaw32(scanning->playerID, target->scannedBy)) {
         // This target was already seen by the player, so this isn't
         // a new scan.
         return FALSE;
     }
 
-    Mob_GetCircle(target, &tc);
+    // Players don't scan themselves...
+    ASSERT(scanning->playerID != target->playerID);
 
+    Mob_GetCircle(target, &tc);
     if (FCircle_Intersect(sc, &tc)) {
         return TRUE;
     }
@@ -482,7 +480,13 @@ static void BattleRunScanning(Battle *battle)
 
     for (uint32 outer = 0; outer < size; outer++) {
         Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
+        BitVector_SetRaw32(oMob->playerID, &oMob->scannedBy);
+    }
+
+    for (uint32 outer = 0; outer < size; outer++) {
+        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
         FCircle sc;
+
         if (!BattleCanMobScan(oMob)) {
             continue;
         }
@@ -497,6 +501,11 @@ static void BattleRunScanning(Battle *battle)
                 battle->bs.sensorContacts++;
             }
         }
+    }
+
+    for (uint32 outer = 0; outer < size; outer++) {
+        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
+        BitVector_ResetRaw32(oMob->playerID, &oMob->scannedBy);
     }
 }
 
