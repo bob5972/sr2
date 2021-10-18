@@ -329,8 +329,8 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
     FCircle lc, rc;
 
     ASSERT(BattleCanMobTypesCollide(lhs->type, rhs->type));
-    if (lhs->playerID == rhs->playerID &&
-        lhs->type != MOB_TYPE_POWER_CORE) {
+    if (lhs->type != MOB_TYPE_POWER_CORE &&
+        lhs->playerID == rhs->playerID) {
         // Players generally don't collide with themselves...
         ASSERT(rhs->type != MOB_TYPE_POWER_CORE);
         return FALSE;
