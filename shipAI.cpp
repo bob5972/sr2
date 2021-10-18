@@ -104,6 +104,13 @@ void BasicAIGovernor::runMob(Mob *mob)
              */
             FRPoint pr;
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &pr);
+            if (pr.radius <= MICRON) {
+                /*
+                 * If we're too close to our last point, then go off in a
+                 * random direction.
+                 */
+                pr.theta = RandomState_Float(&myRandomState, 0, 2 * M_PI);
+            }
             pr.radius += MobType_GetSpeed(MOB_TYPE_MISSILE);
             FRPoint_ToFPoint(&pr, &mob->lastPos, &mob->cmd.target);
         }
