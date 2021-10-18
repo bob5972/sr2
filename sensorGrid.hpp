@@ -244,10 +244,11 @@ public:
                            MobTypeFlags filter) {
         uint n = 0;
         MobSet::MobIt mit = myFriends.iterator(filter);
+        FPoint lAvgVel;
 
         ASSERT(avgVel != NULL);
-        avgVel->x = 0.0f;
-        avgVel->y = 0.0f;
+        lAvgVel.x = 0.0f;
+        lAvgVel.y = 0.0f;
 
         while (mit.hasNext()) {
             Mob *f = mit.next();
@@ -255,40 +256,45 @@ public:
 
             if (FPoint_Distance(&f->pos, p) <= radius) {
                 n++;
-                avgVel->x += (f->pos.x - f->lastPos.x);
-                avgVel->y += (f->pos.y - f->lastPos.y);
+                lAvgVel.x += (f->pos.x - f->lastPos.x);
+                lAvgVel.y += (f->pos.y - f->lastPos.y);
             }
         }
 
         if (n != 0) {
-            avgVel->x /= n;
-            avgVel->y /= n;
+            lAvgVel.x /= n;
+            lAvgVel.y /= n;
         }
+
+        *avgVel = lAvgVel;
     }
 
     void friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
         uint n = 0;
         MobSet::MobIt mit = myFriends.iterator(filter);
+        FPoint lAvgPos;
 
         ASSERT(avgPos != NULL);
-        avgPos->x = 0.0f;
-        avgPos->y = 0.0f;
+        lAvgPos.x = 0.0f;
+        lAvgPos.y = 0.0f;
 
         while (mit.hasNext()) {
             Mob *f = mit.next();
             ASSERT(f != NULL);
 
             if (FPoint_Distance(&f->pos, p) <= radius) {
-                avgPos->x += f->pos.x;
-                avgPos->y += f->pos.y;
+                lAvgPos.x += f->pos.x;
+                lAvgPos.y += f->pos.y;
             }
         }
 
         if (n != 0) {
-            avgPos->x /= n;
-            avgPos->y /= n;
+            lAvgPos.x /= n;
+            lAvgPos.y /= n;
         }
+
+        *avgPos = lAvgPos;
     }
 
 private:
