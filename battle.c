@@ -392,7 +392,6 @@ static void BattleRunCollisions(Battle *battle)
         Mob *oMob = MobVector_GetPtr(&battle->mobs, x);
         uint8 tempBits = Mob_IsAmmo(oMob);
         ASSERT(tempBits == 0x0 || tempBits == 0x1);
-
         oMob->tempBits = tempBits;
     }
 
@@ -461,7 +460,6 @@ static void BattleRunScanning(Battle *battle)
         if (!BattleCanMobScan(oMob)) {
             continue;
         }
-
         Mob_GetSensorCircle(oMob, &sc);
 
         for (uint32 inner = 0; inner < size; inner++) {
