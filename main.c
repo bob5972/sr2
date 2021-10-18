@@ -1089,23 +1089,23 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
         aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max      mag   jump   mutation
-            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.05f},
-            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
-            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
-            { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
-            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
+            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.10f},
+            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
+            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
+            { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
+            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
 
             { "sensorGrid.staleCoreTime",
                                        0.0f, 100.0f,  0.05f, 0.10f, 0.15f},
             { "sensorGrid.staleFighterTime",
                                        0.0f, 100.0f,  0.05f, 0.10f, 0.15f},
 
-            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.05f},
-            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
-            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.15f},
+            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
+            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
 
-            { "repulseRadius",         5.0f, 500.0f, 0.05f, 0.05f, 0.05f},
-            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "repulseRadius",         5.0f, 500.0f, 0.05f, 0.05f, 0.15f},
+            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
 
             { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.05f, 0.10f},
             { "edgesWeight",          -0.2f,   1.0f, 0.05f, 0.05f, 0.10f},
@@ -1122,26 +1122,26 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
             { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
 
-            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
-            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.15f},
+            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
             { "enemyCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
             { "enemyCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.05f},
 
             { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
             { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
 
-            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
 
             { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
             { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
 
-            { "locusRadius",          1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
-            { "locusWeight",         -1.0f,    1.0f,  0.05f, 0.05f, 0.50f},
-            { "locusCircularPeriod", -1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
-            { "locusCircularWeight", -1.0f,    1.0f,  0.05f, 0.05f, 0.50f},
-            { "locusLinearXPeriod",  -1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
-            { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.05f, 0.50f},
-            { "locusLinearWeight",   -1.0f,    1.0f,  0.05f, 0.05f, 0.50f},
+            { "locusRadius",          1.0f, 12345.0f, 0.05f, 0.05f, 0.25f},
+            { "locusWeight",         -1.0f,    1.0f,  0.05f, 0.05f, 0.25f},
+            { "locusCircularPeriod", -1.0f, 12345.0f, 0.05f, 0.05f, 0.25f},
+            { "locusCircularWeight", -1.0f,    1.0f,  0.05f, 0.05f, 0.25f},
+            { "locusLinearXPeriod",  -1.0f, 12345.0f, 0.05f, 0.05f, 0.25f},
+            { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.05f, 0.25f},
+            { "locusLinearWeight",   -1.0f,    1.0f,  0.05f, 0.05f, 0.25f},
         };
 
         MainMutationFParams bvf[] = {
