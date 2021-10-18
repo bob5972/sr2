@@ -52,20 +52,14 @@ void SensorGrid::updateTick(FleetAI *ai)
         MobSet::MobIt tmit = myTargets.iterator();
         while (tmit.hasNext()) {
             Mob *tMob = tmit.next();
-            if (tMob->type == MOB_TYPE_BASE ||
-                tMob->type == MOB_TYPE_POWER_CORE) {
-                if (Mob_CanScanPoint(m, &tMob->pos)) {
-                    /*
-                     * If we can scan where the target was, remove it,
-                     * since it's either gone now, or we'll re-add it below
-                     * if it shows up in the scan.
-                     *
-                     * XXX: Don't do this for fighters, since we're
-                     * relying on the stale images to orient missiles.
-                     */
-                    myTargets.removeMob(tMob->mobid);
-                    myTargetLastSeenMap.remove(tMob->mobid);
-                }
+            if (Mob_CanScanPoint(m, &tMob->pos)) {
+                /*
+                 * If we can scan where the target was, remove it,
+                 * since it's either gone now, or we'll re-add it below
+                 * if it shows up in the scan.
+                 */
+                myTargets.removeMob(tMob->mobid);
+                myTargetLastSeenMap.remove(tMob->mobid);
             }
         }
 
@@ -111,9 +105,9 @@ void SensorGrid::updateTick(FleetAI *ai)
         if (m->type == MOB_TYPE_BASE) {
             staleAge = MAX_UINT;
         } else if (m->type == MOB_TYPE_POWER_CORE) {
-            staleAge = 40;
+            staleAge = myStaleCoreTime;
         } else {
-            staleAge = 2;
+            staleAge = myStaleFighterTime;
         }
 
         if (staleAge < MAX_UINT && scanAge > staleAge) {

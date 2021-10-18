@@ -1095,6 +1095,11 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
             { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.05f},
 
+            { "sensorGrid.staleCoreTime",
+                                       0.0f, 100.0f,  0.05f, 0.10f, 0.15f},
+            { "sensorGrid.staleFighterTime",
+                                       0.0f, 100.0f,  0.05f, 0.10f, 0.15f},
+
             { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.05f},
             { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
             { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},

@@ -22,10 +22,14 @@
 extern "C" {
 #include "battleTypes.h"
 #include "mob.h"
+#include "MBRegistry.h"
 }
 
 #include "mobSet.hpp"
 #include "IntMap.hpp"
+
+#define SG_STALE_CORE_DEFAULT   40
+#define SG_STALE_FIGHTER_DEFAULT 2
 
 class SensorGrid
 {
@@ -41,12 +45,31 @@ public:
 
         myFriendBasePos.x = 0.0f;
         myFriendBasePos.y = 0.0f;
+
+        myStaleCoreTime = SG_STALE_CORE_DEFAULT;
+        myStaleFighterTime = SG_STALE_FIGHTER_DEFAULT;
     }
 
     /**
      * Destroy this SensorGrid.
      */
     ~SensorGrid() { }
+
+    /**
+     * Load settings from MBRegistry.
+     */
+    void loadRegistry(MBRegistry *mreg) {
+        if (mreg == NULL) {
+            return;
+        }
+
+        myStaleCoreTime =
+            (uint)MBRegistry_GetFloatD(mreg, "sensorGrid.staleCoreTime",
+                                       SG_STALE_CORE_DEFAULT);
+        myStaleFighterTime =
+            (uint)MBRegistry_GetFloatD(mreg, "sensorGrid.staleFighterTime",
+                                       SG_STALE_FIGHTER_DEFAULT);
+    }
 
     /**
      * Update this SensorGrid with the new sensor information in the tick.
@@ -277,6 +300,9 @@ private:
 
     MobSet myFriends;
     MobSet myTargets;
+
+    uint myStaleFighterTime;
+    uint myStaleCoreTime;
 };
 
 

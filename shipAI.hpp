@@ -237,6 +237,8 @@ public:
         MBUtil_Zero(&myConfig, sizeof(myConfig));
         loadRegistry(ai->player.mreg);
 
+        sg->loadRegistry(ai->player.mreg);
+
         myStartingAngle = RandomState_Float(rs, 0.0f, M_PI * 2.0f);
     }
 

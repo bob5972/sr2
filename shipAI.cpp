@@ -97,6 +97,15 @@ void BasicAIGovernor::runMob(Mob *mob)
         Mob *target = sg->findClosestTargetInRange(&mob->pos, scanFilter, range);
         if (target != NULL) {
             mob->cmd.target = target->pos;
+        } else if (FPoint_Distance(&mob->pos, &mob->cmd.target) <= MICRON) {
+            /*
+             * We have no target, and we've reached our last known point.
+             * Continue motion in the same direction.
+             */
+            FRPoint pr;
+            FPoint_ToFRPoint(&mob.pos, &mob.lastPos, &pr);
+            pr.radius += MobType_GetSpeed(MOB_TYPE_MISSILE);
+            FRPoint_ToFPoint(&pr, &mob->lastPos, &mob.cmd.target);
         }
     } else if (mob->type == MOB_TYPE_BASE) {
         if (ai->credits > 200 && RandomState_Int(rs, 0, 10) == 0) {
