@@ -158,8 +158,9 @@ sub Main() {
     Console("\n");
     my $mw = $entries->{"$maxWinsP.numWins"};
     my $f = $mw / $entries->{"$maxWinsP.numBattles"};
+    my $a = $entries->{"$maxWinsP.age"};
     $f = sprintf("%1.2f%%", ($f*100));
-    Console("Leader: numWins=$mw, fitness=$f\n");
+    Console("Leader: age=$a, numWins=$mw, fitness=$f\n");
 
     Console("\n");
     $fitness = sprintf("%1.2f", ($fitness*100));
