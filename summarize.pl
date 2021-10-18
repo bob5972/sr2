@@ -63,6 +63,7 @@ sub Main() {
     my $ages = {};
     my $maxAge = 0;
     my $fitnessRange = {};
+    my $maxWinsP;
 
     for (my $i = 0.1; $i <= 1.0; $i+=0.1) {
         $fitnessRange->{$i} = 0;
@@ -101,7 +102,11 @@ sub Main() {
                 }
             }
 
-
+            my $nw = $entries->{"$prefix.numWins"};
+            if (!defined($maxWinsP) ||
+                $nw > $entries->{"$maxWinsP.numWins"}) {
+                $maxWinsP = $prefix;
+            }
         }
     }
 
@@ -136,6 +141,7 @@ sub Main() {
         $ages = $collapsedAges;
     }
 
+    Console("numFleets = " . $numFleets . "\n");
     Console("\n");
     Console(sprintf("%10s %10s\n", "Fitness", "Count"));
     for (my $fi = 0.1; $fi <= 1.0; $fi += 0.1) {
@@ -150,7 +156,12 @@ sub Main() {
     }
 
     Console("\n");
-    Console("numFleets = " . $numFleets . "\n");
+    my $mw = $entries->{"$maxWinsP.numWins"};
+    my $f = $mw / $entries->{"$maxWinsP.numBattles"};
+    $f = sprintf("%1.2f%%", ($f*100));
+    Console("Leader: numWins=$mw, fitness=$f\n");
+
+    Console("\n");
     $fitness = sprintf("%1.2f", ($fitness*100));
     Console("Average Fitness: $fitness%\n");
     Console("\n");
