@@ -310,12 +310,7 @@ BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
         ASSERT(rhsAmmo == !rhsShip);
     }
 
-    if (lhsAmmo) {
-        return !rhsAmmo;
-    } else {
-        ASSERT(!lhsAmmo);
-        return rhsAmmo;
-    }
+    return lhsAmmo ^ rhsAmmo;
 }
 
 static INLINE_ALWAYS bool
@@ -326,9 +321,9 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
     if (!BattleCanMobTypesCollide(lhs->type, rhs->type)) {
         return FALSE;
     }
-    if (lhs->type != MOB_TYPE_POWER_CORE &&
-        rhs->type != MOB_TYPE_POWER_CORE &&
-        lhs->playerID == rhs->playerID) {
+    if (lhs->playerID == rhs->playerID &&
+        lhs->type != MOB_TYPE_POWER_CORE &&
+        rhs->type != MOB_TYPE_POWER_CORE) {
         // Players generally don't collide with themselves...
         return FALSE;
     }
