@@ -46,6 +46,11 @@ void MobPSet_Remove(MobPSet *ms, MobID mobid);
 int MobPSet_Size(MobPSet *ms);
 void MobPSet_UnitTest();
 
+static inline Mob *MobPSet_GetIndex(MobPSet *ms, int i)
+{
+    return MobPVec_GetValue(&ms->pv, i);
+}
+
 void CMobIt_Start(MobPSet *ms, CMobIt *mit);
 bool CMobIt_HasNext(CMobIt *mit);
 Mob *CMobIt_Next(CMobIt *mit);

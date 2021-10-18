@@ -41,6 +41,8 @@ typedef struct Battle {
     MobVector mobs;
     bool mobsAcquired;
 
+    MobPVec tempMobs[2];
+
     MobVector pendingSpawns;
 } Battle;
 
@@ -79,6 +81,10 @@ Battle *Battle_Create(const BattleScenario *bsc,
            FLEET_AI_NEUTRAL);
     MobVector_Create(&battle->mobs, 0, 1024);
     MobVector_CreateEmpty(&battle->pendingSpawns);
+
+    for (uint i = 0; i < ARRAYSIZE(battle->tempMobs); i++) {
+        MobPVec_CreateEmpty(&battle->tempMobs[i]);
+    }
 
     uint randomShift = RandomState_Int(&battle->rs, 0, numPlayers - 1);
     for (uint i = 0; i < numPlayers; i++) {
@@ -128,6 +134,10 @@ void Battle_Destroy(Battle *battle)
 
     Fleet_Destroy(battle->fleet);
     battle->fleet = NULL;
+
+    for (uint i = 0; i < ARRAYSIZE(battle->tempMobs); i++) {
+        MobPVec_Destroy(&battle->tempMobs[i]);
+    }
 
     MobVector_Destroy(&battle->mobs);
     MobVector_Destroy(&battle->pendingSpawns);
@@ -320,15 +330,15 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 
     ASSERT(BattleCanMobTypesCollide(lhs->type, rhs->type));
     if (lhs->playerID == rhs->playerID &&
-        lhs->type != MOB_TYPE_POWER_CORE &&
-        rhs->type != MOB_TYPE_POWER_CORE) {
+        lhs->type != MOB_TYPE_POWER_CORE) {
         // Players generally don't collide with themselves...
+        ASSERT(rhs->type != MOB_TYPE_POWER_CORE);
         return FALSE;
     }
 
-    ASSERT(lhs->alive == TRUE || lhs->alive == FALSE);
+    ASSERT(lhs->alive);
     ASSERT(rhs->alive == TRUE || rhs->alive == FALSE);
-    if ((lhs->alive & rhs->alive) == 0) {
+    if (!rhs->alive) {
         return FALSE;
     }
 
@@ -386,22 +396,38 @@ BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 
 static void BattleRunCollisions(Battle *battle)
 {
-    uint size = MobVector_Size(&battle->mobs);
+    uint mobSize = MobVector_Size(&battle->mobs);
 
-    for (uint32 x = 0; x < size; x++) {
+    ASSERT(ARRAYSIZE(battle->tempMobs) >= 2);
+    MobPVec_Resize(&battle->tempMobs[0], mobSize);
+    MobPVec_Resize(&battle->tempMobs[1], mobSize);
+
+    uint ammoSize = 0;
+    uint shipSize = 0;
+
+    for (uint32 x = 0; x < mobSize; x++) {
         Mob *oMob = MobVector_GetPtr(&battle->mobs, x);
-        uint8 tempBits = Mob_IsAmmo(oMob);
-        ASSERT(tempBits == 0x0 || tempBits == 0x1);
-        oMob->tempBits = tempBits;
+
+        if (oMob->alive) {
+            if (Mob_IsAmmo(oMob)) {
+                MobPVec_PutValue(&battle->tempMobs[0], ammoSize++, oMob);
+            } else {
+                MobPVec_PutValue(&battle->tempMobs[1], shipSize++, oMob);
+            }
+        }
     }
 
-    for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
+    DEBUG_ONLY(
+        MobPVec_Resize(&battle->tempMobs[0], ammoSize);
+        MobPVec_Resize(&battle->tempMobs[1], shipSize);
+    );
 
-        for (uint32 inner = outer + 1; inner < size; inner++) {
-            Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
-            if ((oMob->tempBits ^ iMob->tempBits) != 0 &&
-                BattleCheckMobCollision(oMob, iMob)) {
+    for (uint32 outer = 0; outer < ammoSize; outer++) {
+        Mob *oMob = MobPVec_GetValue(&battle->tempMobs[0], outer);
+
+        for (uint32 inner = 0; inner < shipSize; inner++) {
+            Mob *iMob = MobPVec_GetValue(&battle->tempMobs[1], inner);
+            if (BattleCheckMobCollision(oMob, iMob)) {
                 BattleRunMobCollision(battle, oMob, iMob);
                 if (!oMob->alive) {
                     break;
