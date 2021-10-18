@@ -395,7 +395,7 @@ static void BattleRunCollisions(Battle *battle)
 
     for (uint32 x = 0; x < size; x++) {
         Mob *oMob = MobVector_GetPtr(&battle->mobs, x);
-        uint32 tempBits = Mob_IsAmmo(oMob);
+        uint8 tempBits = Mob_IsAmmo(oMob);
         ASSERT(tempBits == 0x0 || tempBits == 0x1);
 
         // float radius = oMob->radius;

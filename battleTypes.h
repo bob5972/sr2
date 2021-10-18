@@ -107,7 +107,7 @@ typedef struct Mob {
      * (See Mob_MaskForAI)
      */
     char privateFields;
-    uint32 tempBits;
+    uint8 tempBits;
     bool removeMob;
     uint32 scannedBy;
 } Mob;
