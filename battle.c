@@ -318,16 +318,17 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
 {
     FCircle lc, rc;
 
-    if (!BattleCanMobTypesCollide(lhs->type, rhs->type)) {
-        return FALSE;
-    }
+    ASSERT(BattleCanMobTypesCollide(lhs->type, rhs->type));
     if (lhs->playerID == rhs->playerID &&
         lhs->type != MOB_TYPE_POWER_CORE &&
         rhs->type != MOB_TYPE_POWER_CORE) {
         // Players generally don't collide with themselves...
         return FALSE;
     }
-    if (!lhs->alive || !rhs->alive) {
+
+    ASSERT(lhs->alive == TRUE || lhs->alive == FALSE);
+    ASSERT(rhs->alive == TRUE || rhs->alive == FALSE);
+    if ((lhs->alive & rhs->alive) == 0) {
         return FALSE;
     }
 
@@ -387,13 +388,80 @@ static void BattleRunCollisions(Battle *battle)
 {
     uint size = MobVector_Size(&battle->mobs);
 
+    float width = battle->bsc.bp.width;
+    float height = battle->bsc.bp.height;
+    float hwidth = width / 2.0f;
+    float hheight = height / 2.0f;
+
+    for (uint32 x = 0; x < size; x++) {
+        Mob *oMob = MobVector_GetPtr(&battle->mobs, x);
+        uint32 tempBits = Mob_IsAmmo(oMob);
+        ASSERT(tempBits == 0x0 || tempBits == 0x1);
+
+        float radius = oMob->radius;
+        float x = oMob->pos.x;
+        float y = oMob->pos.y;
+        float l = x - radius;
+        float r = x + radius;
+        float t = y - radius;
+        float b = y + radius;
+        float a = width - x;
+
+        tempBits = 0;
+        if (l <= hwidth && t <= hheight) {
+            tempBits |= 1 << 4;
+        }
+        if (r >= hwidth && t <= hheight) {
+            tempBits |= 1 << 5;
+        }
+        if (l <= hwidth && b >= hheight) {
+            tempBits |= 1 << 6;
+        }
+        if (r >= hwidth && b >= hheight) {
+            tempBits |= 1 << 7;
+        }
+
+        /*
+         * Do another set of quadrant checks on a different basis.
+         * Together these divide the map into 8 regions.
+         */
+        tempBits = 0;
+        if (l <= t && t <= a) {
+            tempBits |= 1 << 8;
+        }
+        if (l <= t && b >= a) {
+            tempBits |= 1 << 9;
+        }
+        if (r >= b && t <= a) {
+            tempBits |= 1 << 10;
+        }
+        if (r >= b && b >= a) {
+            tempBits |= 1 << 11;
+        }
+
+        oMob->tempBits = tempBits;
+    }
+
     for (uint32 outer = 0; outer < size; outer++) {
         Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
 
         for (uint32 inner = outer + 1; inner < size; inner++) {
             Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
-            if (BattleCheckMobCollision(oMob, iMob)) {
+            uint32 tMask = 0x1;
+            uint32 q1Mask = 0xF0;
+            uint32 q2Mask = 0xF00;
+            uint32 oBits = oMob->tempBits;
+            uint32 iBits = iMob->tempBits;
+
+            uint32 tBits = (oBits ^ iBits) & tMask;
+            uint32 q1Bits = (oBits & iBits) & q1Mask;
+            uint32 q2Bits = (oBits & iBits) & q2Mask;
+            if ((tBits != 0 && q1Bits != 0 && q2Bits != 0) &&
+                BattleCheckMobCollision(oMob, iMob)) {
                 BattleRunMobCollision(battle, oMob, iMob);
+                if (!oMob->alive) {
+                    break;
+                }
             }
         }
     }

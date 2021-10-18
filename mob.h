@@ -92,6 +92,13 @@ static inline uint Mob_GetMaxFuel(const Mob *mob)
     return MobType_GetMaxFuel(mob->type);
 }
 
+static inline bool Mob_IsAmmo(const Mob *mob)
+{
+    uint flag = (1 << mob->type);
+    return (MOB_FLAG_AMMO & flag) != 0;
+
+}
+
 static inline void Mob_GetCircle(const Mob *mob, FCircle *c)
 {
     c->center.x = mob->pos.x;
