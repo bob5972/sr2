@@ -103,9 +103,9 @@ void BasicAIGovernor::runMob(Mob *mob)
              * Continue motion in the same direction.
              */
             FRPoint pr;
-            FPoint_ToFRPoint(&mob.pos, &mob.lastPos, &pr);
+            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &pr);
             pr.radius += MobType_GetSpeed(MOB_TYPE_MISSILE);
-            FRPoint_ToFPoint(&pr, &mob->lastPos, &mob.cmd.target);
+            FRPoint_ToFPoint(&pr, &mob->lastPos, &mob->cmd.target);
         }
     } else if (mob->type == MOB_TYPE_BASE) {
         if (ai->credits > 200 && RandomState_Int(rs, 0, 10) == 0) {
