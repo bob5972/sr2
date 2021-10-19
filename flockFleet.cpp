@@ -52,7 +52,9 @@ public:
             { "alignWeight",          "0.2",        },
             { "cohereWeight",         "-0.1",       },
 
-            { "repulseRadius",        "50.0",       },
+            { "separateRadius",       "50.0",       },
+            { "separatePeriod",       "0.0",        },
+            { "separateScale",        "50.0",       },
             { "separateWeight",       "0.2",        },
 
             { "edgeRadius",           "100.0",      },
@@ -103,7 +105,7 @@ public:
             { "alignWeight",          "0.2",        },
             { "cohereWeight",         "-0.1",       },
 
-            { "repulseRadius",        "50.0",       }, // 2 * fighterSensorRadius
+            { "separateRadius",       "50.0",       }, // 2 * fighterSensorRadius
             { "separateWeight",       "0.2",        },
 
             { "edgeRadius",           "100.0",      }, // fighterSensorRadius
@@ -136,7 +138,7 @@ public:
             { "alignWeight",          "0.239648",   },
             { "cohereWeight",         "-0.006502",  },
 
-            { "repulseRadius",        "121.312904", },
+            { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
 
             { "edgeRadius",           "161.593430", },
@@ -177,7 +179,7 @@ public:
             { "alignWeight",          "0.000000",   },
             { "cohereWeight",         "-0.233058",  },
 
-            { "repulseRadius",        "121.312904", },
+            { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
 
             { "edgeRadius",           "10.0",       },
@@ -224,7 +226,7 @@ public:
             { "alignWeight",          "0.295573",   },
             { "cohereWeight",         "-0.097492",  },
 
-            { "repulseRadius",        "121.312904", },
+            { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
 
             { "edgeRadius",           "23.606379",  },
@@ -271,7 +273,7 @@ public:
             { "alignWeight",          "0.193725",   },
             { "cohereWeight",         "-0.365141",  },
 
-            { "repulseRadius",        "121.312904", },
+            { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
 
             { "edgeRadius",           "117.935951", },
@@ -346,7 +348,9 @@ public:
         this->myConfig.alignWeight = MBRegistry_GetFloat(mreg, "alignWeight");
         this->myConfig.cohereWeight = MBRegistry_GetFloat(mreg, "cohereWeight");
 
-        this->myConfig.repulseRadius = MBRegistry_GetFloat(mreg, "repulseRadius");
+        this->myConfig.separateRadius = MBRegistry_GetFloat(mreg, "separateRadius");
+        this->myConfig.separatePeriod = MBRegistry_GetFloat(mreg, "separatePeriod");
+        this->myConfig.separateScale = MBRegistry_GetFloat(mreg, "separateScale");
         this->myConfig.separateWeight = MBRegistry_GetFloat(mreg, "separateWeight");
 
         this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
@@ -470,7 +474,8 @@ public:
         FRPoint_Add(curForce, &reVec, curForce);
     }
 
-    void flockSeparate(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
+    void flockSeparate(Mob *mob, FRPoint *rPos, float radius, float weight) {
+
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
 
@@ -486,9 +491,8 @@ public:
 
 
             if (f->mobid != mob->mobid &&
-                FPoint_Distance(&f->pos, &mob->pos) <= flockRadius) {
-                repulseVector(&repulseVec, &f->pos, &mob->pos,
-                              flockRadius);
+                FPoint_Distance(&f->pos, &mob->pos) <= radius) {
+                repulseVector(&repulseVec, &f->pos, &mob->pos, radius);
             }
         }
 
@@ -765,8 +769,7 @@ public:
 
             flockAlign(mob, &rForce, myConfig.flockRadius, myConfig.alignWeight);
             flockCohere(mob, &rForce, myConfig.flockRadius, myConfig.cohereWeight);
-            flockSeparate(mob, &rForce, myConfig.repulseRadius,
-                          myConfig.separateWeight);
+            flockSeparate(mob, &rForce, myLive.separateRadius, myConfig.separateWeight);
             avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
             findCenter(mob, &rForce, myConfig.centerRadius, myConfig.centerWeight);
             findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
@@ -792,8 +795,17 @@ public:
     }
 
     virtual void runTick() {
-        //FleetAI *ai = myFleetAI;
         SensorGrid *sg = mySensorGrid;
+
+        if (myConfig.separatePeriod > 0.0f &&
+            myConfig.separateScale > 0.0f) {
+            float p = myConfig.separatePeriod;
+            float s = myConfig.separateScale;
+            myLive.separateRadius = myConfig.separateRadius +
+                                   s * fabs(sinf(myFleetAI->tick / p));
+        } else {
+            myLive.separateRadius = myConfig.separateRadius;
+        }
 
         BasicAIGovernor::runTick();
 
@@ -837,7 +849,9 @@ public:
         float alignWeight;
         float cohereWeight;
 
-        float repulseRadius;
+        float separateRadius;
+        float separatePeriod;
+        float separateScale;
         float separateWeight;
 
         float edgeRadius;
@@ -876,6 +890,10 @@ public:
         float locusLinearYPeriod;
         float locusLinearWeight;
     } myConfig;
+
+    struct {
+        float separateRadius;
+    } myLive;
 };
 
 class FlockFleet {

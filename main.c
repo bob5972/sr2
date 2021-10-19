@@ -1104,7 +1104,9 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
             { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
 
-            { "repulseRadius",         5.0f, 500.0f, 0.05f, 0.05f, 0.15f},
+            { "separateRadius",        5.0f, 500.0f, 0.05f, 0.05f, 0.15f},
+            { "separatePeriod",        0.0f,2000.0f, 0.05f, 0.05f, 0.15f},
+            { "separateScale",         0.0f, 500.0f, 0.05f, 0.05f, 0.15f},
             { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
 
             { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.05f, 0.10f},
