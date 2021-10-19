@@ -682,9 +682,11 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
         case FLEET_AI_CIRCLE:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_BLUE2);
         case FLEET_AI_FLOCK1:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED);
         case FLEET_AI_FLOCK2:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED2);
         case FLEET_AI_FLOCK3:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE2);
         case FLEET_AI_FLOCK4:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
         case FLEET_AI_FLOCK5:
