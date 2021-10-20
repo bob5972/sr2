@@ -1101,6 +1101,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
                                        0.0f, 100.0f,  0.05f, 0.10f, 0.15f},
 
             { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.15f},
+            { "flockCrowding",         0.0f,  20.0f, 0.05f, 0.05f, 0.15f},
             { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
             { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
 
@@ -1159,6 +1160,8 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "attackExtendedRange",     0.05f},
             { "rotateStartingAngle",     0.05f},
             { "gatherAbandonStale",      0.05f},
+            { "alwaysFlock",             0.05f},
+            { "randomIdle",              0.05f},
         };
 
         for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {

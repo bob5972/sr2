@@ -48,7 +48,11 @@ public:
 
     virtual void putDefaults(MBRegistry *mreg, FleetAIType flockType) {
         FlockConfigValue defaults[] = {
+            { "randomIdle",           "TRUE",       },
+            { "alwaysFlock",          "FALSE",      },
+
             { "flockRadius",          "166.7",      },
+            { "flockCrowding",        "2.0",        },
             { "alignWeight",          "0.2",        },
             { "cohereWeight",         "-0.1",       },
 
@@ -344,7 +348,11 @@ public:
 
 
     virtual void loadRegistry(MBRegistry *mreg) {
+        this->myConfig.randomIdle = MBRegistry_GetBool(mreg, "randomIdle");
+        this->myConfig.alwaysFlock = MBRegistry_GetBool(mreg, "alwaysFlock");
+
         this->myConfig.flockRadius = MBRegistry_GetFloat(mreg, "flockRadius");
+        this->myConfig.flockCrowding = (uint)MBRegistry_GetFloat(mreg, "flockCrowding");
         this->myConfig.alignWeight = MBRegistry_GetFloat(mreg, "alignWeight");
         this->myConfig.cohereWeight = MBRegistry_GetFloat(mreg, "cohereWeight");
 
@@ -743,6 +751,7 @@ public:
         Mob *base = sg->friendBase();
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         bool nearBase;
+        bool doFlock;
 
         ASSERT(ship != NULL);
 
@@ -755,21 +764,33 @@ public:
 
         nearBase = FALSE;
         if (base != NULL &&
+            myConfig.nearBaseRadius > 0.0f &&
             FPoint_Distance(&base->pos, &mob->pos) < myConfig.nearBaseRadius) {
             nearBase = TRUE;
         }
 
-        if (!nearBase &&
+        doFlock = FALSE;
+        if (myConfig.flockCrowding <= 1 ||
             sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos,
-                                  myConfig.flockRadius) > 1) {
+                                  myConfig.flockRadius) >= myConfig.flockCrowding) {
+            doFlock = TRUE;
+        }
+
+        if (!nearBase && (myConfig.alwaysFlock || doFlock)) {
             FRPoint rForce, rPos;
 
             FRPoint_Zero(&rForce);
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-            flockAlign(mob, &rForce, myConfig.flockRadius, myConfig.alignWeight);
-            flockCohere(mob, &rForce, myConfig.flockRadius, myConfig.cohereWeight);
-            flockSeparate(mob, &rForce, myLive.separateRadius, myConfig.separateWeight);
+            if (doFlock) {
+                flockAlign(mob, &rForce, myConfig.flockRadius,
+                           myConfig.alignWeight);
+                flockCohere(mob, &rForce, myConfig.flockRadius,
+                            myConfig.cohereWeight);
+                flockSeparate(mob, &rForce, myLive.separateRadius,
+                              myConfig.separateWeight);
+            }
+
             avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
             findCenter(mob, &rForce, myConfig.centerRadius, myConfig.centerWeight);
             findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
@@ -782,12 +803,15 @@ public:
             rPos.radius = myConfig.curHeadingWeight;
             FRPoint_Add(&rPos, &rForce, &rPos);
             rPos.radius = speed;
+
             FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
         } else if (newlyIdle) {
-            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            if (myConfig.randomIdle) {
+                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            }
         }
 
         ASSERT(!isnanf(mob->cmd.target.x));
@@ -845,7 +869,11 @@ public:
     }
 
     struct {
+        bool randomIdle;
+        bool alwaysFlock;
+
         float flockRadius;
+        uint flockCrowding;
         float alignWeight;
         float cohereWeight;
 
