@@ -1092,7 +1092,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.10f},
             { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
             { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
-            { "attackRange",          -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
+            { "attackRange",          -1.0f, 700.0f,  0.05f, 0.10f, 0.10f},
             { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.10f},
 
             { "sensorGrid.staleCoreTime",
