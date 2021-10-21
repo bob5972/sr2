@@ -258,6 +258,9 @@ public:
             { "rotateStartingAngle",    "TRUE",  },
             { "startingMaxRadius",      "300",   },
             { "startingMinRadius",      "250",   },
+            { "creditReserve",          "200",   },
+            { "baseSpawnJitter",        "10",    },
+            { "fighterFireJitter",      "0",     },
         };
 
         mreg = MBRegistry_AllocCopy(mreg);
@@ -293,6 +296,13 @@ public:
         ASSERT(myConfig.startingMaxRadius > 0.0f);
 
         ASSERT(myConfig.startingMinRadius < myConfig.startingMaxRadius);
+
+        myConfig.creditReserve =
+            (uint)MBRegistry_GetFloat(mreg, "creditReserve");
+        myConfig.baseSpawnJitter =
+            (uint)MBRegistry_GetFloat(mreg, "baseSpawnJitter");
+        myConfig.fighterFireJitter =
+            (uint)MBRegistry_GetFloat(mreg, "fighterFireJitter");
 
         MBRegistry_Free(mreg);
     }
@@ -377,7 +387,8 @@ public:
         ship->state = BSAI_STATE_ATTACK;
         ship->attackData.pos = enemyTarget->pos;
 
-        if (FPoint_Distance(&mob->pos, &enemyTarget->pos) <= firingRange) {
+        if (RandomState_Int(rs, 0, myConfig.fighterFireJitter) == 0 &&
+            FPoint_Distance(&mob->pos, &enemyTarget->pos) <= firingRange) {
             mob->cmd.spawnType = MOB_TYPE_MISSILE;
         }
 
@@ -476,6 +487,10 @@ protected:
         bool rotateStartingAngle;
         float startingMaxRadius;
         float startingMinRadius;
+
+        uint creditReserve;
+        uint baseSpawnJitter;
+        uint fighterFireJitter;
     } myConfig;
 
     float myStartingAngle;

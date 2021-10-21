@@ -115,7 +115,8 @@ void BasicAIGovernor::runMob(Mob *mob)
             FRPoint_ToFPoint(&pr, &mob->lastPos, &mob->cmd.target);
         }
     } else if (mob->type == MOB_TYPE_BASE) {
-        if (ai->credits > 200 && RandomState_Int(rs, 0, 10) == 0) {
+        if (ai->credits > myConfig.creditReserve &&
+            RandomState_Int(rs, 0, myConfig.baseSpawnJitter) == 0) {
             mob->cmd.spawnType = MOB_TYPE_FIGHTER;
         } else {
             mob->cmd.spawnType = MOB_TYPE_INVALID;
