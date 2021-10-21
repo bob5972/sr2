@@ -1,7 +1,7 @@
 MReg::MBLib::Version=5
 width = 1600
 height = 1200
-startingCredits = 1000
+startingCredits = 400
 creditsPerTick = 1
 tickLimit = 50000
 powerCoreDropRate = 0.25
