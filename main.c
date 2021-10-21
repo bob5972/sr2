@@ -247,6 +247,7 @@ void MainConstructScenario(void)
          *    FlockFleet4
          *    FlockFleet5
          *    FlockFleet6
+         *    FlockFleet7
          *
          *    -- unrated --
          *    BobFleet (prototype, varies)
@@ -294,10 +295,13 @@ void MainConstructScenario(void)
         // mainData.players[p].aiType = FLEET_AI_FLOCK4;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK5;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_FLOCK5;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_FLOCK6;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_FLOCK7;
         p++;
 
         // mainData.players[p].aiType = FLEET_AI_BOB;

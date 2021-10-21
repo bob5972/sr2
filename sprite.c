@@ -1016,7 +1016,9 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_FLOCK2,      0xFF3388, }, // BLUEISH-GRAY?
         { FLEET_AI_FLOCK3,      0xFF3366, }, // GRAYISH?
         { FLEET_AI_FLOCK4,      0xFFFF66, }, // GRAYISH?
-        { FLEET_AI_FLOCK4,      0x2FFF66, }, // GRAYISH?
+        { FLEET_AI_FLOCK5,      0x2FFF66, }, // GRAYISH?
+        { FLEET_AI_FLOCK6,      0xFF2244, }, // YELLOWISH-GRAY?
+        { FLEET_AI_FLOCK7,      0x00FF66, }, // BLUEISH-GRAY?
     };
 
     ASSERT(repeatCount > 0);
