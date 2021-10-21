@@ -107,7 +107,8 @@ sub Main() {
                     $f = $gPop->{"$prefix.numWins"} / $numBattles;
                 }
                 for (my $fi = 0.1; $fi <= 1.0; $fi += 0.1) {
-                    if ($f <= $fi) {
+                    # This has rounding problems at 100% ?
+                    if ($f <= $fi || $fi > 0.9) {
                         $fitnessRange->{$fi}++;
                         last;
                     }
