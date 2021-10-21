@@ -339,7 +339,7 @@ public:
             { "edgeRadius",           "27.186251",  },
             { "edgesWeight",          "0.742008",   },
             { "centerRadius",         "341.787628", },
-            { "centerWeight",         " 0.094766",   },
+            { "centerWeight",         "0.094766",   },
 
             { "coresRadius",          "579.377625", },
             { "coresWeight",          "0.012672",   },
