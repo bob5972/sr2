@@ -930,7 +930,7 @@ static uint32 MainFleetCompetition(BattlePlayer *mainPlayers, uint32 mpSize,
                                   startingMPIndex, numFleets,
                                   useWinRatio, &w2);
 
-    if (w1 >= w2) {
+    if (Random_Bit() || w1 >= w2) {
         return f1;
     } else {
         return f2;
