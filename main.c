@@ -1091,6 +1091,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
     if (aiType == FLEET_AI_FLOCK4 ||
         aiType == FLEET_AI_FLOCK5 ||
         aiType == FLEET_AI_FLOCK6 ||
+        aiType == FLEET_AI_FLOCK7 ||
         aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max      mag   jump   mutation
@@ -1142,7 +1143,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.15f, 0.05f},
             { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.15f, 0.05f},
 
-            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.15f, 0.15f},
+            { "curHeadingWeight",     -1.0f,   2.0f, 0.05f, 0.15f, 0.15f},
 
             { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.15f, 0.10f},
             { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.15f, 0.10f},
