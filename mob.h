@@ -33,6 +33,7 @@ float MobType_GetRadius(MobType type);
 int MobType_GetMaxFuel(MobType type);
 int MobType_GetMaxHealth(MobType type);
 int MobType_GetCost(MobType type);
+int MobType_GetRechargeTicks(MobType type);
 
 /*
  * Tracks a set of mob pointers indexed by MobID.

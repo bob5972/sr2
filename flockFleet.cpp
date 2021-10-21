@@ -50,6 +50,7 @@ public:
         FlockConfigValue defaults[] = {
             { "randomIdle",           "TRUE",       },
             { "alwaysFlock",          "FALSE",      },
+            { "baseSpawnJitter",        "1",        },
 
             { "flockRadius",          "166.7",      },
             { "flockCrowding",        "2.0",        },

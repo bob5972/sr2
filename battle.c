@@ -247,7 +247,7 @@ static void BattleRunMobSpawn(Battle *battle, Mob *mob)
                              mob->cmd.spawnType,
                              mob->playerID, &mob->pos);
     spawn->cmd.target = mob->cmd.target;
-    mob->rechargeTime = SPAWN_RECHARGE_TICKS;
+    mob->rechargeTime = MobType_GetRechargeTicks(mob->type);;
     mob->lastSpawnTick = battle->bs.tick;
 }
 

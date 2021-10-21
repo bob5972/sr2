@@ -98,6 +98,15 @@ int MobType_GetCost(MobType type)
     return v[type].cost;
 }
 
+int MobType_GetRechargeTicks(MobType type)
+{
+    if (type == MOB_TYPE_BASE) {
+        return 50;
+    }
+
+    return 5;
+}
+
 int MobType_GetMaxFuel(MobType type)
 {
     static struct {
