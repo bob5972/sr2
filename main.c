@@ -1094,68 +1094,68 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
         aiType == FLEET_AI_BOB) {
         MainMutationFParams vf[] = {
             // key                     min    max      mag   jump   mutation
-            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.05f, 0.15f},
-            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.10f, 0.15f},
-            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.15f},
-            { "attackRange",          -1.0f, 700.0f,  0.05f, 0.10f, 0.15f},
-            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.10f, 0.15f},
+            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.15f, 0.15f},
+            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.15f, 0.15f},
+            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.15f, 0.15f},
+            { "attackRange",          -1.0f, 700.0f,  0.05f, 0.15f, 0.15f},
+            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.15f, 0.15f},
 
             { "sensorGrid.staleCoreTime",
-                                       0.0f, 100.0f,  0.05f, 0.10f, 0.15f},
+                                       0.0f, 100.0f,  0.05f, 0.15f, 0.15f},
             { "sensorGrid.staleFighterTime",
-                                       0.0f, 100.0f,  0.05f, 0.10f, 0.15f},
+                                       0.0f, 100.0f,  0.05f, 0.15f, 0.15f},
 
-            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.05f, 0.15f},
-            { "flockCrowding",         0.0f,  20.0f, 0.05f, 0.05f, 0.15f},
-            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
-            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
+            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.15f, 0.15f},
+            { "flockCrowding",         0.0f,  20.0f, 0.05f, 0.15f, 0.15f},
+            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.15f, 0.15f},
+            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.15f, 0.15f},
 
-            { "separateRadius",        5.0f, 500.0f, 0.05f, 0.05f, 0.15f},
-            { "separatePeriod",        0.0f,2000.0f, 0.05f, 0.05f, 0.15f},
-            { "separateScale",         0.0f, 500.0f, 0.05f, 0.05f, 0.15f},
-            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
+            { "separateRadius",        5.0f, 500.0f, 0.05f, 0.15f, 0.15f},
+            { "separatePeriod",        0.0f,2000.0f, 0.05f, 0.15f, 0.15f},
+            { "separateScale",         0.0f, 500.0f, 0.05f, 0.15f, 0.15f},
+            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.15f, 0.15f},
 
-            { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.05f, 0.15f},
-            { "edgesWeight",          -0.2f,   1.0f, 0.05f, 0.05f, 0.15f},
-            { "centerRadius",          0.0f, 900.0f, 0.05f, 0.05f, 0.15f},
-            { "centerWeight",         -0.1f,   0.1f, 0.05f, 0.05f, 0.05f},
+            { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.15f, 0.15f},
+            { "edgesWeight",          -0.2f,   1.0f, 0.05f, 0.15f, 0.15f},
+            { "centerRadius",          0.0f, 900.0f, 0.05f, 0.15f, 0.15f},
+            { "centerWeight",         -0.1f,   0.1f, 0.05f, 0.15f, 0.05f},
 
-            { "coresRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.15f},
-            { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
-            { "coresCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
-            { "coresCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.05f},
+            { "coresRadius",           0.0f, 900.0f, 0.05f, 0.15f, 0.15f},
+            { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.15f, 0.15f},
+            { "coresCrowdRadius",      0.0f, 900.0f, 0.05f, 0.15f, 0.05f},
+            { "coresCrowding",        -1.0f,  20.0f, 0.05f, 0.15f, 0.05f},
 
-            { "baseRadius",           10.0f, 500.0f, 0.05f, 0.05f, 0.05f},
-            { "baseWeight",           -1.0f,   0.3f, 0.05f, 0.05f, 0.05f},
-            { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
-            { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.05f, 0.05f},
+            { "baseRadius",           10.0f, 500.0f, 0.05f, 0.15f, 0.05f},
+            { "baseWeight",           -1.0f,   0.3f, 0.05f, 0.15f, 0.05f},
+            { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.15f, 0.05f},
+            { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.15f, 0.05f},
 
-            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.05f, 0.15f},
-            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
-            { "enemyCrowdRadius",      0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
-            { "enemyCrowding",        -1.0f,  20.0f, 0.05f, 0.05f, 0.05f},
+            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.15f, 0.15f},
+            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.15f, 0.15f},
+            { "enemyCrowdRadius",      0.0f, 900.0f, 0.05f, 0.15f, 0.05f},
+            { "enemyCrowding",        -1.0f,  20.0f, 0.05f, 0.15f, 0.05f},
 
-            { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.05f, 0.05f},
-            { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.05f, 0.05f},
+            { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.15f, 0.05f},
+            { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.15f, 0.05f},
 
-            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.05f, 0.15f},
+            { "curHeadingWeight",     -1.0f,   1.0f, 0.05f, 0.15f, 0.15f},
 
-            { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.05f, 0.10f},
-            { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.05f, 0.10f},
+            { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.15f, 0.10f},
+            { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.15f, 0.10f},
 
-            { "locusRadius",          1.0f, 12345.0f, 0.05f, 0.05f, 0.15f},
-            { "locusWeight",         -1.0f,    1.0f,  0.05f, 0.05f, 0.15f},
-            { "locusCircularPeriod", -1.0f, 12345.0f, 0.05f, 0.05f, 0.15f},
-            { "locusCircularWeight", -1.0f,    1.0f,  0.05f, 0.05f, 0.15f},
-            { "locusLinearXPeriod",  -1.0f, 12345.0f, 0.05f, 0.05f, 0.15f},
-            { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.05f, 0.15f},
-            { "locusLinearWeight",   -1.0f,    1.0f,  0.05f, 0.05f, 0.15f},
+            { "locusRadius",          1.0f, 12345.0f, 0.05f, 0.15f, 0.15f},
+            { "locusWeight",         -1.0f,    1.0f,  0.05f, 0.15f, 0.15f},
+            { "locusCircularPeriod", -1.0f, 12345.0f, 0.05f, 0.15f, 0.15f},
+            { "locusCircularWeight", -1.0f,    1.0f,  0.05f, 0.15f, 0.15f},
+            { "locusLinearXPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.15f},
+            { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.15f},
+            { "locusLinearWeight",   -1.0f,    1.0f,  0.05f, 0.15f, 0.15f},
         };
 
         MainMutationFParams bvf[] = {
             // key                     min    max      mag   jump   mutation
-            { "holdCount",             1.0f, 200.0f,  0.05f, 0.10f, 0.15f},
-            { "holdFleetSpawnRate",   0.01f,   1.0f,  0.05f, 0.05f, 0.15f},
+            { "holdCount",             1.0f, 200.0f,  0.05f, 0.15f, 0.15f},
+            { "holdFleetSpawnRate",   0.01f,   1.0f,  0.05f, 0.15f, 0.15f},
         };
 
         MainMutationBParams vb[] = {
