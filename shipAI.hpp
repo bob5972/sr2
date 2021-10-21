@@ -259,7 +259,7 @@ public:
             { "startingMaxRadius",      "300",   },
             { "startingMinRadius",      "250",   },
             { "creditReserve",          "200",   },
-            { "baseSpawnJitter",        "10",    },
+            { "baseSpawnJitter",        "1",     },
             { "fighterFireJitter",      "0",     },
         };
 
