@@ -10,6 +10,13 @@ use Scalar::Util qw(looks_like_number);
 
 use MBBasic;
 
+my $gScriptOptions = {
+    "dumpFleet|d=i" => { desc => "Dump the specified fleet",
+                         default => undef, },
+};
+
+my $gPop;
+
 sub GetCountFromRange($$$)
 {
     my $hash = shift;
@@ -47,15 +54,32 @@ sub CompareRange($$)
     NOT_IMPLEMENTED();
 }
 
-sub Main() {
-    my $entries;
+sub DumpFleet($) {
+    my $fn = shift;
 
+    my $prefix = "fleet$fn";
+
+    foreach my $k (keys %{$gPop}) {
+        if ($k =~ /^$prefix\./) {
+            my $v = $gPop->{$k};
+            Console("$k = $v\n");
+        }
+    }
+}
+
+sub Main() {
+    MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
     MBBasic::Init();
 
     my $file = "build/tmp/popMutate.txt";
-    $entries = LoadMRegFile($file);
+    $gPop = LoadMRegFile($file);
 
-    my $numFleets = $entries->{'numFleets'};
+    if (defined($OPTIONS->{'dumpFleet'})) {
+        DumpFleet($OPTIONS->{'dumpFleet'});
+        return 0;
+    }
+
+    my $numFleets = $gPop->{'numFleets'};
     VERIFY(defined($numFleets) && $numFleets > 0);
 
     my $totalWins = 0;
@@ -71,16 +95,16 @@ sub Main() {
 
     for (my $i = 1; $i <= $numFleets; $i++) {
         my $prefix = "fleet$i";
-        if ($entries->{"$prefix.playerType"} eq "Target") {
-            if (defined($entries->{"$prefix.numBattles"})) {
-                my $numBattles = $entries->{"$prefix.numBattles"};
-                my $numWins = $entries->{"$prefix.numWins"};
+        if ($gPop->{"$prefix.playerType"} eq "Target") {
+            if (defined($gPop->{"$prefix.numBattles"})) {
+                my $numBattles = $gPop->{"$prefix.numBattles"};
+                my $numWins = $gPop->{"$prefix.numWins"};
                 $totalWins += $numWins;
                 $totalBattles += $numBattles;
 
                 my $f = 0.0;
                 if (defined($numBattles) && $numBattles > 0) {
-                    $f = $entries->{"$prefix.numWins"} / $numBattles;
+                    $f = $gPop->{"$prefix.numWins"} / $numBattles;
                 }
                 for (my $fi = 0.1; $fi <= 1.0; $fi += 0.1) {
                     if ($f <= $fi) {
@@ -90,7 +114,7 @@ sub Main() {
                 }
             }
 
-            my $a = $entries->{"$prefix.age"};
+            my $a = $gPop->{"$prefix.age"};
             if (defined($a)) {
                 if (!defined($ages->{$a})) {
                     $ages->{$a} = 0;
@@ -102,9 +126,9 @@ sub Main() {
                 }
             }
 
-            my $nw = $entries->{"$prefix.numWins"};
+            my $nw = $gPop->{"$prefix.numWins"};
             if (!defined($maxWinsP) ||
-                $nw > $entries->{"$maxWinsP.numWins"}) {
+                $nw > $gPop->{"$maxWinsP.numWins"}) {
                 $maxWinsP = $prefix;
             }
         }
@@ -156,9 +180,9 @@ sub Main() {
     }
 
     Console("\n");
-    my $mw = $entries->{"$maxWinsP.numWins"};
-    my $f = $mw / $entries->{"$maxWinsP.numBattles"};
-    my $a = $entries->{"$maxWinsP.age"};
+    my $mw = $gPop->{"$maxWinsP.numWins"};
+    my $f = $mw / $gPop->{"$maxWinsP.numBattles"};
+    my $a = $gPop->{"$maxWinsP.age"};
     $f = sprintf("%1.2f%%", ($f*100));
     Console("Leader: $maxWinsP, age=$a, numWins=$mw, fitness=$f\n");
 
