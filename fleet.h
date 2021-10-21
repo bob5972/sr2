@@ -87,6 +87,7 @@ static inline void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         { FLEET_AI_FLOCK3,      FlockFleet_GetOps       },
         { FLEET_AI_FLOCK4,      FlockFleet_GetOps       },
         { FLEET_AI_FLOCK5,      FlockFleet_GetOps       },
+        { FLEET_AI_FLOCK6,      FlockFleet_GetOps       },
     };
 
     ASSERT(aiType != FLEET_AI_INVALID);

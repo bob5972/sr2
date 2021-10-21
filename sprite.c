@@ -691,6 +691,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
         case FLEET_AI_FLOCK5:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE3);
+        case FLEET_AI_FLOCK6:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED3);
 
         default:
             return SPRITE_INVALID;
