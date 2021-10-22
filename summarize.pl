@@ -128,9 +128,11 @@ sub Main() {
             }
 
             my $nw = $gPop->{"$prefix.numWins"};
-            if (!defined($maxWinsP) ||
-                (defined($nw) && $nw > $gPop->{"$maxWinsP.numWins"})) {
-                $maxWinsP = $prefix;
+            if (defined($nw)) {
+                if (!defined($maxWinsP) ||
+                    $nw > $gPop->{"$maxWinsP.numWins"}) {
+                    $maxWinsP = $prefix;
+                }
             }
         }
     }
@@ -180,12 +182,15 @@ sub Main() {
         Console(sprintf("%8s %8s\n", $x, $ages->{$x}));
     }
 
-    Console("\n");
-    my $mw = $gPop->{"$maxWinsP.numWins"};
-    my $f = $mw / $gPop->{"$maxWinsP.numBattles"};
-    my $a = $gPop->{"$maxWinsP.age"};
-    $f = sprintf("%1.2f%%", ($f*100));
-    Console("Leader: $maxWinsP, age=$a, numWins=$mw, fitness=$f\n");
+    my $nb = $gPop->{"$maxWinsP.numBattles"};
+    if (defined($nb)) {
+        Console("\n");
+        my $mw = $gPop->{"$maxWinsP.numWins"};
+        my $f = $mw / $gPop->{"$maxWinsP.numBattles"};
+        my $a = $gPop->{"$maxWinsP.age"};
+        $f = sprintf("%1.2f%%", ($f*100));
+        Console("Leader: $maxWinsP, age=$a, numWins=$mw, fitness=$f\n");
+    }
 
     Console("\n");
     $fitness = sprintf("%1.2f", ($fitness*100));
