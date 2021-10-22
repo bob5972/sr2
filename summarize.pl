@@ -182,9 +182,9 @@ sub Main() {
         Console(sprintf("%8s %8s\n", $x, $ages->{$x}));
     }
 
-    my $nb = $gPop->{"$maxWinsP.numBattles"};
-    if (defined($nb)) {
+    if (defined($maxWinsP)) {
         Console("\n");
+        my $nb = $gPop->{"$maxWinsP.numBattles"};
         my $mw = $gPop->{"$maxWinsP.numWins"};
         my $f = $mw / $gPop->{"$maxWinsP.numBattles"};
         my $a = $gPop->{"$maxWinsP.age"};
