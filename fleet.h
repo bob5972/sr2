@@ -64,6 +64,25 @@ static inline void NeutralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
     ops->aiName = "Neutral";
 }
 
+static inline bool Fleet_IsFlockFleet(FleetAIType aiType)
+{
+    switch (aiType) {
+        case FLEET_AI_FLOCK1:
+        case FLEET_AI_FLOCK2:
+        case FLEET_AI_FLOCK3:
+        case FLEET_AI_FLOCK4:
+        case FLEET_AI_FLOCK5:
+        case FLEET_AI_FLOCK6:
+        case FLEET_AI_FLOCK7:
+        case FLEET_AI_FLOCK8:
+            return TRUE;
+        default:
+            return FALSE;
+    }
+
+    NOT_REACHED();
+}
+
 static inline void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     struct {
@@ -82,18 +101,17 @@ static inline void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         { FLEET_AI_BASIC,       BasicFleet_GetOps       },
         { FLEET_AI_HOLD,        HoldFleet_GetOps        },
         { FLEET_AI_CIRCLE,      CircleFleet_GetOps      },
-        { FLEET_AI_FLOCK1,      FlockFleet_GetOps       },
-        { FLEET_AI_FLOCK2,      FlockFleet_GetOps       },
-        { FLEET_AI_FLOCK3,      FlockFleet_GetOps       },
-        { FLEET_AI_FLOCK4,      FlockFleet_GetOps       },
-        { FLEET_AI_FLOCK5,      FlockFleet_GetOps       },
-        { FLEET_AI_FLOCK6,      FlockFleet_GetOps       },
-        { FLEET_AI_FLOCK7,      FlockFleet_GetOps       },
     };
 
     ASSERT(aiType != FLEET_AI_INVALID);
     ASSERT(aiType < FLEET_AI_MAX);
     MBUtil_Zero(ops, sizeof(*ops));
+
+    if (Fleet_IsFlockFleet(aiType)) {
+        FlockFleet_GetOps(aiType, ops);
+        ops->aiType = aiType;
+        return;
+    }
 
     for (uint i = 0; i < ARRAYSIZE(fleets); i++ ) {
         if (fleets[i].aiType == aiType) {

@@ -429,6 +429,61 @@ public:
             { "separateWeight",       "0.950000",   },
         };
 
+        FlockConfigValue configs8[] = {
+            { "alignWeight",          "0.941104",   },
+            { "alwaysFlock",          "TRUE",       },
+            { "attackExtendedRange",  "FALSE",      },
+            { "attackRange",          "-0.950000",  },
+            { "attackSeparateRadius", "5.244739",   },
+            { "attackSeparateWeight", "1.000000",   },
+            { "baseDefenseRadius",    "7.765651",   },
+            { "baseRadius",           "251.561218", },
+            { "baseSpawnJitter",      "1.050000",   },
+            { "baseWeight",           "-0.594068",  },
+            { "centerRadius",         "0.000000",   },
+            { "centerWeight",         "-0.049964",  },
+            { "cohereWeight",         "0.111733",   },
+            { "coresCrowding",        "10.063643",  },
+            { "coresCrowdRadius",     "446.784180", },
+            { "coresRadius",          "561.107605", },
+            { "coresWeight",          "0.270990",   },
+            { "creditReserve",        "149.861420", },
+            { "curHeadingWeight",     "0.608142",   },
+            { "edgeRadius",           "24.759119",  },
+            { "edgesWeight",          "0.753383",   },
+            { "enemyBaseRadius",      "190.747162", },
+            { "enemyBaseWeight",      "-0.268014",  },
+            { "enemyCrowding",        "8.292590",   },
+            { "enemyCrowdRadius",     "737.966675", },
+            { "enemyRadius",          "469.026489", },
+            { "enemyWeight",          "0.827751",   },
+            { "evadeFighters",        "FALSE",      },
+            { "evadeRange",           "384.699890", },
+            { "evadeStrictDistance",  "268.416046", },
+            { "evadeUseStrictDistance", "FALSE",    },
+            { "flockCrowding",        "2.360445",   },
+            { "flockRadius",          "110.022324", },
+            { "gatherAbandonStale",   "FALSE",      },
+            { "gatherRange",          "11.025000",  },
+            { "guardRange",           "-0.950000",  },
+            { "locusCircularPeriod",  "9389.412109",},
+            { "locusCircularWeight",  "-0.191549",  },
+            { "locusLinearWeight",    "0.024249",   },
+            { "locusLinearXPeriod",   "4819.627441",},
+            { "locusLinearYPeriod",   "4481.782227",},
+            { "locusRadius",          "1.000000",   },
+            { "locusWeight",          "-0.181500",  },
+            { "nearBaseRadius",       "58.276283",  },
+            { "randomIdle",           "TRUE",       },
+            { "rotateStartingAngle",  "TRUE",       },
+            { "sensorGrid.staleCoreTime",    "53.971874" },
+            { "sensorGrid.staleFighterTime", "5.159447"  },
+            { "separatePeriod",       "198.535645", },
+            { "separateRadius",       "117.649010", },
+            { "separateScale",        "0.000000",   },
+            { "separateWeight",       "0.902500",   },
+        };
+
         FlockConfigValue *configDefaults;
         uint configDefaultsSize;
 
@@ -453,6 +508,9 @@ public:
         } else if (flockType == FLEET_AI_FLOCK7) {
             configDefaults = configs7;
             configDefaultsSize = ARRAYSIZE(configs7);
+        } else if (flockType == FLEET_AI_FLOCK8) {
+            configDefaults = configs8;
+            configDefaultsSize = ARRAYSIZE(configs8);
         } else {
             PANIC("Unknown aiType: %d\n", flockType);
         }
@@ -1102,6 +1160,8 @@ void FlockFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "FlockFleet6";
     } else if (aiType == FLEET_AI_FLOCK7) {
         ops->aiName = "FlockFleet7";
+    } else if (aiType == FLEET_AI_FLOCK8) {
+        ops->aiName = "FlockFleet8";
     } else {
         NOT_IMPLEMENTED();
     }
