@@ -129,7 +129,7 @@ sub Main() {
 
             my $nw = $gPop->{"$prefix.numWins"};
             if (!defined($maxWinsP) ||
-                $nw > $gPop->{"$maxWinsP.numWins"}) {
+                (defined($nw) && $nw > $gPop->{"$maxWinsP.numWins"})) {
                 $maxWinsP = $prefix;
             }
         }
