@@ -75,6 +75,7 @@ static inline bool Fleet_IsFlockFleet(FleetAIType aiType)
         case FLEET_AI_FLOCK6:
         case FLEET_AI_FLOCK7:
         case FLEET_AI_FLOCK8:
+        case FLEET_AI_FLOCK9:
             return TRUE;
         default:
             return FALSE;

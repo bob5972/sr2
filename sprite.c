@@ -694,6 +694,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN);
         case FLEET_AI_FLOCK8:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN2);
+        case FLEET_AI_FLOCK9:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN3);
 
         default:
             return SPRITE_INVALID;
@@ -1022,6 +1024,7 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_FLOCK6,      0xFF2244, }, // YELLOWISH-GRAY?
         { FLEET_AI_FLOCK7,      0x00FF66, }, // BLUEISH-GRAY?
         { FLEET_AI_FLOCK8,      0x101FFF, }, // GRAYISH?
+        { FLEET_AI_FLOCK9,      0x123FFF, }, // GRAYISH?
     };
 
     ASSERT(repeatCount > 0);

@@ -302,10 +302,13 @@ void MainConstructScenario(void)
         // mainData.players[p].aiType = FLEET_AI_FLOCK6;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK7;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_FLOCK7;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_FLOCK8;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_FLOCK9;
         p++;
 
         // mainData.players[p].aiType = FLEET_AI_BOB;
@@ -439,8 +442,8 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK8;
-        targetPlayers[*tpIndex].playerName = "FlockFleet8Test";
+        targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK9;
+        targetPlayers[*tpIndex].playerName = "FlockFleet9Test";
 
         // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
@@ -839,7 +842,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
 
         if (MBRegistry_GetCStr(fleetReg, "fleetName") == NULL) {
             MBRegistry_DebugDump(fleetReg);
-            PANIC("Missing key: fleetName\n");
+            PANIC("Missing key: fleetName, i=%d\n", i);
         }
         if (MBRegistry_ContainsKey(fleetReg, "playerName")) {
             mainPlayers[*mpIndex].playerName =
