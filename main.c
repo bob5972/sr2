@@ -1182,6 +1182,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "gatherAbandonStale",      0.05f},
             { "alwaysFlock",             0.05f},
             { "randomIdle",              0.05f},
+            { "brokenCohere",            0.05f},
         };
 
         for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {

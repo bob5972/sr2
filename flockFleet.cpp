@@ -56,6 +56,7 @@ public:
             { "flockCrowding",        "2.0",        },
             { "alignWeight",          "0.2",        },
             { "cohereWeight",         "-0.1",       },
+            { "brokenCohere",         "FALSE",      },
 
             { "separateRadius",       "50.0",       },
             { "separatePeriod",       "0.0",        },
@@ -111,6 +112,7 @@ public:
             { "flockRadius",          "166.7",      }, // baseSensorRadius / 1.5
             { "alignWeight",          "0.2",        },
             { "cohereWeight",         "-0.1",       },
+            { "brokenCohere",         "TRUE",       },
 
             { "separateRadius",       "50.0",       }, // 2 * fighterSensorRadius
             { "separateWeight",       "0.2",        },
@@ -144,6 +146,7 @@ public:
             { "flockRadius",          "398.545197", },
             { "alignWeight",          "0.239648",   },
             { "cohereWeight",         "-0.006502",  },
+            { "brokenCohere",         "TRUE",       },
 
             { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
@@ -185,6 +188,7 @@ public:
             { "flockRadius",          "338",        },
             { "alignWeight",          "0.000000",   },
             { "cohereWeight",         "-0.233058",  },
+            { "brokenCohere",         "TRUE",       },
 
             { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
@@ -232,6 +236,7 @@ public:
             { "flockRadius",          "129.883743", },
             { "alignWeight",          "0.295573",   },
             { "cohereWeight",         "-0.097492",  },
+            { "brokenCohere",         "TRUE",       },
 
             { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
@@ -279,6 +284,7 @@ public:
             { "flockRadius",          "136.132584", },
             { "alignWeight",          "0.193725",   },
             { "cohereWeight",         "-0.365141",  },
+            { "brokenCohere",         "TRUE",       },
 
             { "separateRadius",       "121.312904", },
             { "separateWeight",       "0.781240",   },
@@ -333,6 +339,7 @@ public:
             { "flockCrowding",        "2.269907",   },
             { "alignWeight",          "-0.355190",  },
             { "cohereWeight",         "-0.356305",  },
+            { "brokenCohere",         "TRUE",       },
 
             { "separateRadius",       "129.375519", },
             { "separatePeriod",       "104.161858", },
@@ -387,6 +394,7 @@ public:
             { "baseRadius",           "339.388031", },
             { "baseSpawnJitter",      "1.000000",   },
             { "baseWeight",           "-0.585778",  },
+            { "brokenCohere",         "TRUE",       },
             { "centerRadius",         "432.775909", },
             { "centerWeight",         "0.090749",   },
             { "cohereWeight",         "-0.063437",  },
@@ -442,6 +450,7 @@ public:
             { "baseRadius",           "251.561218", },
             { "baseSpawnJitter",      "1.050000",   },
             { "baseWeight",           "-0.594068",  },
+            { "brokenCohere",         "TRUE",       },
             { "centerRadius",         "0.000000",   },
             { "centerWeight",         "-0.049964",  },
             { "cohereWeight",         "0.111733",   },
@@ -497,6 +506,7 @@ public:
             { "baseRadius",           "292.362305", },
             { "baseSpawnJitter",      "1.000000",   },
             { "baseWeight",           "-0.328720",  },
+            { "brokenCohere",         "TRUE",       },
             { "centerRadius",         "761.465576", },
             { "centerWeight",         "-0.048965",  },
             { "cohereWeight",         "0.048618",   },
@@ -599,6 +609,7 @@ public:
         this->myConfig.flockCrowding = (uint)MBRegistry_GetFloat(mreg, "flockCrowding");
         this->myConfig.alignWeight = MBRegistry_GetFloat(mreg, "alignWeight");
         this->myConfig.cohereWeight = MBRegistry_GetFloat(mreg, "cohereWeight");
+        this->myConfig.brokenCohere = MBRegistry_GetBool(mreg, "brokenCohere");
 
         this->myConfig.separateRadius = MBRegistry_GetFloat(mreg, "separateRadius");
         this->myConfig.separatePeriod = MBRegistry_GetFloat(mreg, "separatePeriod");
@@ -659,29 +670,55 @@ public:
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
-    void flockAlign(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        SensorGrid *sg = mySensorGrid;
-
-        FPoint avgVel;
-        sg->friendAvgVelocity(&avgVel, &mob->pos, flockRadius, MOB_FLAG_FIGHTER);
-
+    void flockAlign(const FPoint *avgVel, FRPoint *rPos) {
+        float weight = myConfig.alignWeight;
         FRPoint ravgVel;
-        FPoint_ToFRPoint(&avgVel, NULL, &ravgVel);
+
+        FPoint_ToFRPoint(avgVel, NULL, &ravgVel);
         ravgVel.radius = weight;
 
         FRPoint_Add(rPos, &ravgVel, rPos);
     }
 
-    void flockCohere(Mob *mob, FRPoint *rPos, float flockRadius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    void brokenCoherePos(FPoint *avgPos, const FPoint *center) {
         SensorGrid *sg = mySensorGrid;
+        MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
+        FPoint lAvgPos;
+        float flockRadius = myConfig.flockRadius;
 
-        FPoint avgPos;
-        sg->friendAvgPos(&avgPos, &mob->pos, flockRadius, MOB_FLAG_FIGHTER);
+        lAvgPos.x = 0.0f;
+        lAvgPos.y = 0.0f;
+
+        while (mit.hasNext()) {
+            Mob *f = mit.next();
+            ASSERT(f != NULL);
+
+            if (FPoint_Distance(&f->pos, center) <= flockRadius) {
+                /*
+                 * The broken version just sums the positions and doesn't
+                 * properly average them.
+                 */
+                lAvgPos.x += f->pos.x;
+                lAvgPos.y += f->pos.y;
+            }
+        }
+
+        ASSERT(avgPos != NULL);
+        *avgPos = lAvgPos;
+    }
+
+    void flockCohere(Mob *mob, const FPoint *avgPos, FRPoint *rPos) {
+        FPoint lAvgPos;
+        float weight = myConfig.cohereWeight;
+
+        if (myConfig.brokenCohere) {
+            brokenCoherePos(&lAvgPos, &mob->pos);
+        } else {
+            lAvgPos = *avgPos;
+        }
 
         FRPoint ravgPos;
-        FPoint_ToFRPoint(&avgPos, NULL, &ravgPos);
+        FPoint_ToFRPoint(&lAvgPos, NULL, &ravgPos);
         ravgPos.radius = weight;
         FRPoint_Add(rPos, &ravgPos, rPos);
     }
@@ -732,7 +769,6 @@ public:
     }
 
     void flockSeparate(Mob *mob, FRPoint *rPos, float radius, float weight) {
-
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
 
@@ -1002,10 +1038,8 @@ public:
         FRPoint rPos;
         FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-        //flockAlign(mob, &rPos);
         flockSeparate(mob, &rPos, myConfig.attackSeparateRadius,
                       myConfig.attackSeparateWeight);
-        //flockCohere(mob, &rPos);
 
         rPos.radius = speed;
         FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
@@ -1051,10 +1085,13 @@ public:
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
             if (doFlock) {
-                flockAlign(mob, &rForce, myConfig.flockRadius,
-                           myConfig.alignWeight);
-                flockCohere(mob, &rForce, myConfig.flockRadius,
-                            myConfig.cohereWeight);
+                FPoint avgVel;
+                FPoint avgPos;
+                sg->friendAvgFlock(&avgVel, &avgPos, &mob->pos,
+                                   myConfig.flockRadius, MOB_FLAG_FIGHTER);
+                flockAlign(&avgVel, &rForce);
+                flockCohere(mob, &avgPos, &rForce);
+
                 flockSeparate(mob, &rForce, myLive.separateRadius,
                               myConfig.separateWeight);
             }
@@ -1144,6 +1181,7 @@ public:
         uint flockCrowding;
         float alignWeight;
         float cohereWeight;
+        bool brokenCohere;
 
         float separateRadius;
         float separatePeriod;
