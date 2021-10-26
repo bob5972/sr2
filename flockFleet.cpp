@@ -100,6 +100,7 @@ public:
             { "locusLinearWeight",    "0.0",        },
             { "locusRandomWeight",    "0.0",        },
             { "locusRandomPeriod",    "1000.0",     },
+            { "useScaledLocus",       "TRUE",       },
         };
 
         FlockConfigValue configs1[] = {
@@ -381,6 +382,7 @@ public:
             { "locusLinearXPeriod",   "4605.293945",},
             { "locusLinearYPeriod",   "9429.933594",},
             { "locusLinearWeight",    "-0.002683",  },
+            { "useScaledLocus",       "FALSE",      },
         };
 
         FlockConfigValue configs7[] = {
@@ -437,6 +439,7 @@ public:
             { "separateRadius",       "119.961555", },
             { "separateScale",        "0.000000",   },
             { "separateWeight",       "0.950000",   },
+            { "useScaledLocus",       "FALSE",      },
         };
 
         FlockConfigValue configs8[] = {
@@ -493,6 +496,7 @@ public:
             { "separateRadius",       "117.649010", },
             { "separateScale",        "0.000000",   },
             { "separateWeight",       "0.902500",   },
+            { "useScaledLocus",       "FALSE",      },
         };
 
         FlockConfigValue configs9[] = {
@@ -549,6 +553,7 @@ public:
             { "separateRadius",       "105.912781", },
             { "separateScale",        "0.000000",   },
             { "separateWeight",       "0.839316",   },
+            { "useScaledLocus",       "FALSE",      },
         };
 
         FlockConfigValue *configDefaults;
@@ -661,6 +666,8 @@ public:
             MBRegistry_GetFloat(mreg, "locusLinearYPeriod");
         this->myConfig.locusLinearWeight =
             MBRegistry_GetFloat(mreg, "locusLinearWeight");
+        this->myConfig.useScaledLocus =
+            MBRegistry_GetFloat(mreg, "useScaledLocus");
 
         this->myConfig.locusRandomWeight =
             MBRegistry_GetFloat(mreg, "locusRandomWeight");
@@ -992,19 +999,30 @@ public:
         }
 
         if (haveLinear || haveCircular || haveRandom) {
+            float scale = 0.0f;
             locus.x = 0.0f;
             locus.y = 0.0f;
             if (haveLinear) {
                 locus.x += myConfig.locusLinearWeight * linear.x;
                 locus.y += myConfig.locusLinearWeight * linear.y;
+                scale += myConfig.locusLinearWeight;
             }
             if (haveCircular) {
                 locus.x += myConfig.locusCircularWeight * circular.x;
                 locus.y += myConfig.locusCircularWeight * circular.y;
+                scale += myConfig.locusCircularWeight;
             }
             if (haveRandom) {
                 locus.x += myConfig.locusRandomWeight * myLive.randomLocus.x;
                 locus.y += myConfig.locusRandomWeight *  myLive.randomLocus.y;
+                scale += myConfig.locusRandomWeight;
+            }
+
+            if (myConfig.useScaledLocus) {
+                if (scale != 0.0f) {
+                    locus.x /= scale;
+                    locus.y /= scale;
+                }
             }
 
             pullVector(rPos, &mob->pos, &locus,
@@ -1225,6 +1243,7 @@ public:
         float locusLinearWeight;
         float locusRandomWeight;
         uint  locusRandomPeriod;
+        bool  useScaledLocus;
     } myConfig;
 
     struct {

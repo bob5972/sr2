@@ -1166,11 +1166,11 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "locusRadius",          1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
             { "locusWeight",         -1.0f,    1.0f,  0.05f, 0.15f, 0.02f},
             { "locusCircularPeriod", -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
-            { "locusCircularWeight", -1.0f,    1.0f,  0.05f, 0.15f, 0.02f},
+            { "locusCircularWeight",  0.0f,    2.0f,  0.05f, 0.15f, 0.02f},
             { "locusLinearXPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
             { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
-            { "locusLinearWeight",   -1.0f,    1.0f,  0.05f, 0.15f, 0.02f},
-            { "locusRandomWeight",   -1.0f,    1.0f,  0.05f, 0.15f, 0.02f},
+            { "locusLinearWeight",    0.0f,    2.0f,  0.05f, 0.15f, 0.02f},
+            { "locusRandomWeight",    0.0f,    2.0f,  0.05f, 0.15f, 0.02f},
             { "locusRandomPeriod",   -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
         };
 
@@ -1190,6 +1190,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "alwaysFlock",             0.01f},
             { "randomIdle",              0.01f},
             { "brokenCohere",            0.01f},
+            { "useScaledLocus",          0.01f},
         };
 
         for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
