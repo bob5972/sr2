@@ -1116,9 +1116,9 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "attackRange",          -1.0f, 700.0f,  0.05f, 0.15f, 0.15f},
             { "guardRange",           -1.0f, 500.0f,  0.05f, 0.15f, 0.15f},
 
-            { "creditReserve",       100.0f,1000.0f,  0.05f, 0.15f, 0.15f},
-            { "baseSpawnJitter",       1.0f, 100.0f,  0.05f, 0.15f, 0.15f},
-            { "fighterFireJitter",     1.0f,  10.0f,  0.05f, 0.15f, 0.15f},
+            { "creditReserve",       100.0f,1000.0f,  0.05f, 0.15f, 0.05f},
+            { "baseSpawnJitter",       1.0f, 100.0f,  0.05f, 0.15f, 0.05f},
+            { "fighterFireJitter",     1.0f,  10.0f,  0.05f, 0.15f, 0.05f},
 
             { "sensorGrid.staleCoreTime",
                                        0.0f, 100.0f,  0.05f, 0.15f, 0.15f},
