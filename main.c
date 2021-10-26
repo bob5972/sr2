@@ -1006,7 +1006,9 @@ static void MainMutateFValue(MBRegistry *mreg, MainMutationFParams *mp)
 
     if (Random_Flip(mp->mutationRate)) {
         float value = MBRegistry_GetFloat(mreg, mp->key);
-        if (Random_Flip(mp->jumpRate)) {
+
+        if (!MBRegistry_ContainsKey(mreg, mp->key) ||
+            Random_Flip(mp->jumpRate)) {
             value = Random_Float(mp->minValue, mp->maxValue);
         } else if (Random_Bit()) {
             if (Random_Bit()) {
