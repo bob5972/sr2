@@ -1042,8 +1042,13 @@ static void MainMutateBValue(MBRegistry *mreg, MainMutationBParams *mp)
     ASSERT(mp != NULL);
 
     if (Random_Flip(mp->flipRate)) {
-        bool value = MBRegistry_GetBool(mreg, mp->key);
-        value = !value;
+        bool value;
+
+        if (MBRegistry_ContainsKey(mreg, mp->key)) {
+            value = !MBRegistry_GetBool(mreg, mp->key);
+        } else {
+            value = Random_Bit();
+        }
         MBRegistry_PutCopy(mreg, mp->key, value ? "TRUE" : "FALSE");
     }
 }
