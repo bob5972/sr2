@@ -910,7 +910,7 @@ public:
             myConfig.locusRandomWeight != 0.0f) {
             /*
              * XXX: Each ship will get a different random locus on the first
-             *  tick.
+             * tick.
              */
             if (myLive.randomLocusTick == 0 ||
                 myFleetAI->tick - myLive.randomLocusTick >
