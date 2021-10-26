@@ -59,7 +59,7 @@ sub DumpFleet($) {
 
     my $prefix = "fleet$fn";
 
-    foreach my $k (keys %{$gPop}) {
+    foreach my $k (sort keys %{$gPop}) {
         if ($k =~ /^$prefix\./) {
             my $v = $gPop->{$k};
             Console("$k = $v\n");
