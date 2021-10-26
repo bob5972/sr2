@@ -97,6 +97,8 @@ public:
             { "locusLinearXPeriod",   "1000.0",     },
             { "locusLinearYPeriod",   "1000.0",     },
             { "locusLinearWeight",    "0.0",        },
+            { "locusRandomWeight",    "0.0",        },
+            { "locusRandomPeriod",    "1000.0",     },
         };
 
         FlockConfigValue configs1[] = {
@@ -649,6 +651,11 @@ public:
         this->myConfig.locusLinearWeight =
             MBRegistry_GetFloat(mreg, "locusLinearWeight");
 
+        this->myConfig.locusRandomWeight =
+            MBRegistry_GetFloat(mreg, "locusRandomWeight");
+        this->myConfig.locusRandomPeriod =
+            (uint)MBRegistry_GetFloat(mreg, "locusRandomPeriod");
+
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
@@ -877,6 +884,7 @@ public:
         FPoint locus;
         bool haveCircular = FALSE;
         bool haveLinear = FALSE;
+        bool haveRandom = FALSE;
         float width = myFleetAI->bp.width;
         float height = myFleetAI->bp.height;
         float temp;
@@ -896,6 +904,23 @@ public:
             circular.x = cwidth + cwidth * cosf(ct);
             circular.y = cheight + cheight * sinf(ct);
             haveCircular = TRUE;
+        }
+
+        if (myConfig.locusRandomPeriod > 0.0f &&
+            myConfig.locusRandomWeight != 0.0f) {
+            /*
+             * XXX: Each ship will get a different random locus on the first
+             *  tick.
+             */
+            if (myLive.randomLocusTick == 0 ||
+                myFleetAI->tick - myLive.randomLocusTick >
+                myConfig.locusRandomPeriod) {
+                RandomState *rs = &myRandomState;
+                myLive.randomLocus.x = RandomState_Float(rs, 0.0f, width);
+                myLive.randomLocus.y = RandomState_Float(rs, 0.0f, height);
+                myLive.randomLocusTick = myFleetAI->tick;
+            }
+            haveRandom = TRUE;
         }
 
         if (myConfig.locusLinearXPeriod > 0.0f &&
@@ -930,24 +955,25 @@ public:
             linear.y = mob->pos.y;
         }
 
-        if (haveLinear && haveCircular) {
-            locus.x = myConfig.locusCircularWeight * circular.x +
-                      myConfig.locusLinearWeight * linear.x;
-            locus.y = myConfig.locusCircularWeight * circular.y +
-                      myConfig.locusLinearWeight * linear.y;
-        } else if (haveLinear) {
-            locus = linear;
-        } else if (haveCircular) {
-            locus = circular;
-        } else {
-            /*
-             * If we have neither, contribute nothing.
-             */
-            return;
-        }
+        if (haveLinear || haveCircular || haveRandom) {
+            locus.x = 0.0f;
+            locus.y = 0.0f;
+            if (haveLinear) {
+                locus.x += myConfig.locusLinearWeight * linear.x;
+                locus.y += myConfig.locusLinearWeight * linear.y;
+            }
+            if (haveCircular) {
+                locus.x += myConfig.locusCircularWeight * circular.x;
+                locus.y += myConfig.locusCircularWeight * circular.y;
+            }
+            if (haveRandom) {
+                locus.x += myConfig.locusRandomWeight * myLive.randomLocus.x;
+                locus.y += myConfig.locusRandomWeight *  myLive.randomLocus.y;
+            }
 
-        pullVector(rPos, &mob->pos, &locus,
-                   myConfig.locusRadius, myConfig.locusWeight, PULL_RANGE);
+            pullVector(rPos, &mob->pos, &locus,
+                       myConfig.locusRadius, myConfig.locusWeight, PULL_RANGE);
+        }
     }
 
     void findBase(Mob *mob, FRPoint *rPos, float radius, float weight) {
@@ -1159,10 +1185,14 @@ public:
         float locusLinearXPeriod;
         float locusLinearYPeriod;
         float locusLinearWeight;
+        float locusRandomWeight;
+        uint  locusRandomPeriod;
     } myConfig;
 
     struct {
         float separateRadius;
+        FPoint randomLocus;
+        uint randomLocusTick;
     } myLive;
 };
 

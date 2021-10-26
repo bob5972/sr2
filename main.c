@@ -1163,6 +1163,8 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "locusLinearXPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.15f},
             { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.15f},
             { "locusLinearWeight",   -1.0f,    1.0f,  0.05f, 0.15f, 0.15f},
+            { "locusRandomWeight",   -1.0f,    1.0f,  0.05f, 0.15f, 0.15f},
+            { "locusRandomPeriod",   -1.0f, 12345.0f, 0.05f, 0.15f, 0.15f},
         };
 
         MainMutationFParams bvf[] = {
