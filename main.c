@@ -317,7 +317,7 @@ void MainConstructScenario(void)
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;
         //mainData.players[p].mreg = MBRegistry_Alloc();
-        //MBRegistry_Put(mainData.players[p].mreg, "holdCount", "1");
+        //MBRegistry_PutConst(mainData.players[p].mreg, "holdCount", "1");
         //p++;
     }
 
@@ -446,22 +446,22 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
         targetPlayers[*tpIndex].playerName = "FlockFleet9Test";
 
         // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackRange", "100");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackRange", "100");
 
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "alignWeight", "0.7");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "cohereWeight", "-0.15");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "separateWeight", "0.95");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "edgesWeight", "0.85");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "enemyWeight", "0.6");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "coresWeight", "0.10");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "alignWeight", "0.7");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "cohereWeight", "-0.15");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "separateWeight", "0.95");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "edgesWeight", "0.85");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "enemyWeight", "0.6");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "coresWeight", "0.10");
 
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "curHeadingWeight", "0.10");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackSeparateWeight", "0.50");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "curHeadingWeight", "0.10");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackSeparateWeight", "0.50");
 
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "flockRadius", "171");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "repulseRadius", "100");
-        // MBRegistry_Put(targetPlayers[*tpIndex].mreg, "edgeRadius", "50");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "flockRadius", "171");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "repulseRadius", "100");
+        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "edgeRadius", "50");
 
         (*tpIndex)++;
 
@@ -484,13 +484,13 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
             targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
 
             asprintf(&vstr[0], "%1.0f", v[i].attackRange);
-            MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackRange", vstr[0]);
+            MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackRange", vstr[0]);
 
             asprintf(&vstr[1], "%d", v[i].attackExtendedRange);
-            MBRegistry_Put(targetPlayers[*tpIndex].mreg, "attackExtendedRange", vstr[1]);
+            MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackExtendedRange", vstr[1]);
 
             asprintf(&vstr[2], "%1.0f", v[i].holdCount);
-            MBRegistry_Put(targetPlayers[*tpIndex].mreg, "holdCount", vstr[2]);
+            MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "holdCount", vstr[2]);
 
             targetPlayers[*tpIndex].aiType = FLEET_AI_HOLD;
 
@@ -540,7 +540,7 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
             for (uint i = 0; i < ARRAYSIZE(v); i++) {
                 float value = Random_Float(v[i].minValue, v[i].maxValue);
                 asprintf(&vstr[i], "%1.2f", value);
-                MBRegistry_Put(targetPlayers[*tpIndex].mreg, v[i].param, vstr[i]);
+                MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, v[i].param, vstr[i]);
             }
 
             targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK4;
@@ -723,7 +723,7 @@ static void MainDumpAddToKey(MBRegistry *source, MBRegistry *dest,
 
     MBString_IntToString(&tmp, value + x);
     MBRegistry_PutCopy(dest, MBString_GetCStr(&destKey),
-                        MBString_GetCStr(&tmp));
+                       MBString_GetCStr(&tmp));
 
     MBString_Destroy(&destKey);
     MBString_Destroy(&tmp);
@@ -1100,7 +1100,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Remove(dest->mreg, "numWins");
     MBRegistry_Remove(dest->mreg, "numLosses");
     MBRegistry_Remove(dest->mreg, "numDraws");
-    MBRegistry_Put(dest->mreg, "age", "0");
+    MBRegistry_PutConst(dest->mreg, "age", "0");
 }
 
 
@@ -1372,8 +1372,8 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
 
     if (useDefault) {
         for (uint i = 0; i < ARRAYSIZE(defaultValues); i++) {
-            MBRegistry_Put(mreg, defaultValues[i].key,
-                           defaultValues[i].value);
+            MBRegistry_PutConst(mreg, defaultValues[i].key,
+                                defaultValues[i].value);
         }
     }
 

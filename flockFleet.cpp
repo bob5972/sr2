@@ -593,14 +593,14 @@ public:
         for (uint i = 0; i < configDefaultsSize; i++) {
             if (configDefaults[i].value != NULL &&
                 !MBRegistry_ContainsKey(mreg, configDefaults[i].key)) {
-                MBRegistry_Put(mreg, configDefaults[i].key, configDefaults[i].value);
+                MBRegistry_PutConst(mreg, configDefaults[i].key, configDefaults[i].value);
             }
         }
 
         for (uint i = 0; i < ARRAYSIZE(defaults); i++) {
             if (defaults[i].value != NULL &&
                 !MBRegistry_ContainsKey(mreg, defaults[i].key)) {
-                MBRegistry_Put(mreg, defaults[i].key, defaults[i].value);
+                MBRegistry_PutConst(mreg, defaults[i].key, defaults[i].value);
             }
         }
     }

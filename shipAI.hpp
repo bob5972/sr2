@@ -267,7 +267,7 @@ public:
 
         for (uint i = 0; i < ARRAYSIZE(configs); i++) {
             if (!MBRegistry_ContainsKey(mreg, configs[i].key)) {
-                MBRegistry_Put(mreg, configs[i].key, configs[i].value);
+                MBRegistry_PutConst(mreg, configs[i].key, configs[i].value);
             }
         }
 
