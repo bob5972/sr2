@@ -379,8 +379,8 @@ static int MobDistanceComparatorFn(const void *lhs, const void *rhs,
     ASSERT(Mob_CheckInvariants(l));
     ASSERT(Mob_CheckInvariants(r));
 
-    float lDistance = FPoint_Distance(pos, &l->pos);
-    float rDistance = FPoint_Distance(pos, &r->pos);
+    float lDistance = FPoint_DistanceSquared(pos, &l->pos);
+    float rDistance = FPoint_DistanceSquared(pos, &r->pos);
 
     if (lDistance < rDistance) {
         return -1;

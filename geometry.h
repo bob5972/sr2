@@ -97,14 +97,16 @@ static inline bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
     return clamped;
 }
 
-static inline float FPoint_Distance(const FPoint *a, const FPoint *b)
+static inline float FPoint_DistanceSquared(const FPoint *a, const FPoint *b)
 {
     float dx = (b->x - a->x);
     float dy = (b->y - a->y);
-    float d = dx * dx + dy * dy;
+    return dx * dx + dy * dy;
+}
 
-    ASSERT(d >= 0);
-    return sqrtf(d);
+static inline float FPoint_Distance(const FPoint *a, const FPoint *b)
+{
+    return sqrtf(FPoint_DistanceSquared(a, b));
 }
 
 static inline void FPoint_Midpoint(FPoint *m, const FPoint *a, const FPoint *b)
