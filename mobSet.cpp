@@ -110,9 +110,14 @@ Mob *MobSet::findNthClosestMob(const FPoint *pos,
 
     CMBComparator comp;
     MobP_InitDistanceComparator(&comp, pos);
-    v.sort(MBComparator<Mob *>(&comp));
 
-    return v[n];
+    if (n == 0) {
+        int min = v.findMin(MBComparator<Mob *>(&comp));
+        return v[min];
+    } else {
+        v.sort(MBComparator<Mob *>(&comp));
+        return v[n];
+    }
 }
 
 Mob *MobSet::getBase()
