@@ -113,9 +113,6 @@ public:
      * Find the friendly mob closest to the specified point.
      */
     Mob *findClosestFriend(const FPoint *pos, MobTypeFlags filter) {
-        /*
-         * XXX: It's faster to implement this directly to avoid the sort.
-         */
         return findNthClosestFriend(pos, filter, 0);
     }
 
@@ -131,9 +128,6 @@ public:
      * Find the target mob closest to the specified point.
      */
     Mob *findClosestTarget(const FPoint *pos, MobTypeFlags filter) {
-        /*
-         * XXX: It's faster to implement this directly to avoid the sort.
-         */
         return findNthClosestTarget(pos, filter, 0);
     }
 
