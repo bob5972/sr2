@@ -90,13 +90,17 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
     //XXX ASSERT isLocked?
 
     ASSERT(wq->itemSize == itemSize);
-    uint32 newLastIndex = wq->nextItem + wq->numQueued;
+    int32 newLastIndex = wq->nextItem + wq->numQueued;
+
+    ASSERT(newLastIndex >= 0);
+    ASSERT(newLastIndex >= wq->nextItem);
+    ASSERT(newLastIndex >= wq->numQueued);
 
     if (newLastIndex >= CMBVector_Size(&wq->items)) {
         CMBVector_Grow(&wq->items);
     }
-
     ASSERT(newLastIndex < CMBVector_Size(&wq->items));
+
     void *ptr = CMBVector_GetPtr(&wq->items, newLastIndex);
     memcpy(ptr, item, wq->itemSize);
 

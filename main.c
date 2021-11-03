@@ -106,6 +106,7 @@ struct MainData {
     uint numBSCs;
     BattleScenario *bscs;
     uint totalBattles;
+    bool doneQueueing;
 
     int numPlayers;
     BattlePlayer players[MAX_PLAYERS];
@@ -1268,8 +1269,9 @@ static void MainRunBattle(MainEngineThreadData *tData,
     tData->bsc = wu->bsc;
     tData->battle = Battle_Create(&tData->bsc, wu->seed);
 
-    Warning("Starting Battle %d of %d...\n", tData->battleId,
-            mainData.totalBattles);
+    Warning("Starting Battle %d of %d... %s\n", tData->battleId,
+            mainData.totalBattles,
+            mainData.doneQueueing ? "" : "(Still Queueing)");
     Warning("\n");
 
     tData->startTimeMS = SDL_GetTicks();
@@ -1545,7 +1547,11 @@ int main(int argc, char **argv)
         Display_Init(&mainData.bscs[0]);
     }
 
+    mainData.totalBattles = mainData.loop * mainData.numBSCs;
+
     uint battleId = 0;
+
+    WorkQueue_Lock(&mainData.workQ);
     for (uint i = 0; i < mainData.loop; i++) {
         for (uint b = 0; b < mainData.numBSCs; b++) {
             MainEngineWorkUnit wu;
@@ -1573,10 +1579,14 @@ int main(int argc, char **argv)
                 wu.seed = RandomState_Uint64(&mainData.rs);
             }
 
-            WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
+            Warning("Queueing Battle %d of %d...\n", wu.battleId,
+                    mainData.totalBattles);
+            WorkQueue_QueueItemLocked(&mainData.workQ, &wu, sizeof(wu));
         }
     }
-    mainData.totalBattles = mainData.loop * mainData.numBSCs;
+    WorkQueue_Unlock(&mainData.workQ);
+    Warning("Done Queueing\n");
+    mainData.doneQueueing = TRUE;
 
     if (!mainData.headless) {
         Display_Main(mainData.startPaused);
