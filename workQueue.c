@@ -29,30 +29,30 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     wq->nextItem = 0;
     SDL_AtomicSet(&wq->numQueued, 0);
     SDL_AtomicSet(&wq->numInProgress, 0);
+    SDL_AtomicSet(&wq->finishWaitingCount, 0);
     wq->workerWaitingCount = 0;
-    wq->finishWaitingCount = 0;
 
     CMBVector_CreateEmpty(&wq->items, itemSize);
 
     wq->lock = SDL_CreateMutex();
     wq->workerSignal = SDL_CreateCond();
-    wq->finishSignal = SDL_CreateCond();
+    wq->finishSem = SDL_CreateSemaphore(0);
 }
 
 void WorkQueue_Destroy(WorkQueue *wq)
 {
     ASSERT(wq->itemSize != 0);
     ASSERT(wq->workerWaitingCount == 0);
-    ASSERT(wq->finishWaitingCount == 0);
+    ASSERT(SDL_AtomicGet(&wq->finishWaitingCount) == 0);
 
     CMBVector_Destroy(&wq->items);
     SDL_DestroyMutex(wq->lock);
     SDL_DestroyCond(wq->workerSignal);
-    SDL_DestroyCond(wq->finishSignal);
+    SDL_DestroySemaphore(wq->finishSem);
 
     wq->lock = NULL;
     wq->workerSignal = NULL;
-    wq->finishSignal = NULL;
+    wq->finishSem = NULL;
 }
 
 void WorkQueue_Lock(WorkQueue *wq)
@@ -166,9 +166,13 @@ void WorkQueue_FinishItem(WorkQueue *wq)
 
         if (SDL_AtomicGet(&wq->numQueued) == 0 &&
             SDL_AtomicGet(&wq->numInProgress) == 0 &&
-            wq->finishWaitingCount > 0) {
-            wq->finishWaitingCount = 0;
-            SDL_CondBroadcast(wq->finishSignal);
+            SDL_AtomicGet(&wq->finishWaitingCount) > 0) {
+            uint count = SDL_AtomicGet(&wq->finishWaitingCount);
+            while (count > 0) {
+                SDL_AtomicAdd(&wq->finishWaitingCount, -1);
+                SDL_SemPost(wq->finishSem);
+                count--;
+            }
         }
 
         WorkQueue_Unlock(wq);
@@ -177,34 +181,33 @@ void WorkQueue_FinishItem(WorkQueue *wq)
 
 void WorkQueue_WaitForAllFinished(WorkQueue *wq)
 {
-    WorkQueue_Lock(wq);
+    ASSERT(wq != NULL);
 
     /*
-     * If we were briefly finished, and then a new work unit
-     * gets queued, we might not actually wake-up here.
+     * If things are actively being queued while we're
+     * waiting here, it's possible to racily miss a transient
+     * state of being empty, or incorrectly detect being empty.
      */
-    while (SDL_AtomicGet(&wq->numQueued) > 0 ||
-           SDL_AtomicGet(&wq->numInProgress) > 0) {
-        wq->finishWaitingCount++;
-        SDL_CondWait(wq->finishSignal, wq->lock);
+    if (SDL_AtomicGet(&wq->numQueued) == 0 &&
+        SDL_AtomicGet(&wq->numInProgress) == 0) {
+        return;
     }
 
-    WorkQueue_Unlock(wq);
+    SDL_AtomicAdd(&wq->finishWaitingCount, 1);
+    int error = SDL_SemWait(wq->finishSem);
+    if (error != 0) {
+        PANIC("Failed to wait for WorkQueue: %s\n", SDL_GetError());
+    }
 }
 
 int WorkQueue_QueueSizeLocked(WorkQueue *wq)
 {
-    //XXX: ASSERT isLocked ?
     return SDL_AtomicGet(&wq->numQueued);
 }
 
 int WorkQueue_QueueSize(WorkQueue *wq)
 {
-    int retVal;
-    WorkQueue_Lock(wq);
-    retVal = WorkQueue_QueueSizeLocked(wq);
-    WorkQueue_Unlock(wq);
-    return retVal;
+    return WorkQueue_QueueSizeLocked(wq);
 }
 
 bool WorkQueue_IsEmpty(WorkQueue *wq)

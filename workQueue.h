@@ -28,12 +28,12 @@ typedef struct WorkQueue {
     int nextItem;
     SDL_atomic_t numQueued;
     SDL_atomic_t numInProgress;
+    SDL_atomic_t finishWaitingCount;
     int workerWaitingCount;
-    int finishWaitingCount;
     CMBVector items;
     SDL_mutex *lock;
     SDL_cond *workerSignal;
-    SDL_cond *finishSignal;
+    SDL_sem *finishSem;
 } WorkQueue;
 
 void WorkQueue_Create(WorkQueue *wq, uint itemSize);
