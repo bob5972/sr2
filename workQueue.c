@@ -27,7 +27,7 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
 
     wq->itemSize = itemSize;
     wq->nextItem = 0;
-    wq->numQueued = 0;
+    SDL_AtomicSet(&wq->numQueued, 0);
     SDL_AtomicSet(&wq->numInProgress, 0);
     wq->workerWaitingCount = 0;
     wq->finishWaitingCount = 0;
@@ -90,11 +90,12 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
     //XXX ASSERT isLocked?
 
     ASSERT(wq->itemSize == itemSize);
-    int32 newLastIndex = wq->nextItem + wq->numQueued;
+    uint numQueued = SDL_AtomicGet(&wq->numQueued);
+    int32 newLastIndex = wq->nextItem + numQueued;
 
     ASSERT(newLastIndex >= 0);
     ASSERT(newLastIndex >= wq->nextItem);
-    ASSERT(newLastIndex >= wq->numQueued);
+    ASSERT(newLastIndex >= numQueued);
 
     if (newLastIndex >= CMBVector_Size(&wq->items)) {
         CMBVector_Grow(&wq->items);
@@ -104,7 +105,8 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
     void *ptr = CMBVector_GetPtr(&wq->items, newLastIndex);
     memcpy(ptr, item, wq->itemSize);
 
-    wq->numQueued++;
+    numQueued++;
+    SDL_AtomicSet(&wq->numQueued, numQueued);
 
     if (wq->workerWaitingCount > 0) {
         wq->workerWaitingCount--;
@@ -115,17 +117,19 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
 void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
 {
     //XXX ASSERT isLocked ?
+    uint numQueued = SDL_AtomicGet(&wq->numQueued);
 
     ASSERT(wq->itemSize == itemSize);
-    ASSERT(wq->numQueued + wq->nextItem <= CMBVector_Size(&wq->items));
-    ASSERT(wq->numQueued > 0);
+    ASSERT(numQueued + wq->nextItem <= CMBVector_Size(&wq->items));
+    ASSERT(numQueued > 0);
 
     void *ptr = CMBVector_GetPtr(&wq->items, wq->nextItem);
     memcpy(item, ptr, wq->itemSize);
     wq->nextItem++;
-    wq->numQueued--;
+    numQueued--;
+    SDL_AtomicSet(&wq->numQueued, numQueued);
 
-    if (wq->numQueued == 0) {
+    if (numQueued == 0) {
         wq->nextItem = 0;
     }
 
@@ -137,9 +141,10 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
     WorkQueue_Lock(wq);
 
     ASSERT(wq->itemSize == itemSize);
-    ASSERT(wq->numQueued + wq->nextItem <= CMBVector_Size(&wq->items));
+    ASSERT(SDL_AtomicGet(&wq->numQueued) + wq->nextItem <=
+           CMBVector_Size(&wq->items));
 
-    while (wq->numQueued == 0) {
+    while (SDL_AtomicGet(&wq->numQueued) == 0) {
         wq->workerWaitingCount++;
         SDL_CondWait(wq->workerSignal, wq->lock);
     }
@@ -159,7 +164,7 @@ void WorkQueue_FinishItem(WorkQueue *wq)
         WorkQueue_Lock(wq);
         ASSERT(SDL_AtomicGet(&wq->numInProgress) >= 0);
 
-        if (wq->numQueued == 0 &&
+        if (SDL_AtomicGet(&wq->numQueued) == 0 &&
             SDL_AtomicGet(&wq->numInProgress) == 0 &&
             wq->finishWaitingCount > 0) {
             wq->finishWaitingCount = 0;
@@ -178,7 +183,7 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq)
      * If we were briefly finished, and then a new work unit
      * gets queued, we might not actually wake-up here.
      */
-    while (wq->numQueued > 0 ||
+    while (SDL_AtomicGet(&wq->numQueued) > 0 ||
            SDL_AtomicGet(&wq->numInProgress) > 0) {
         wq->finishWaitingCount++;
         SDL_CondWait(wq->finishSignal, wq->lock);
@@ -190,7 +195,7 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq)
 int WorkQueue_QueueSizeLocked(WorkQueue *wq)
 {
     //XXX: ASSERT isLocked ?
-    return wq->numQueued;
+    return SDL_AtomicGet(&wq->numQueued);
 }
 
 int WorkQueue_QueueSize(WorkQueue *wq)
@@ -211,7 +216,7 @@ void WorkQueue_MakeEmpty(WorkQueue *wq)
 {
     WorkQueue_Lock(wq);
     SDL_AtomicSet(&wq->numInProgress, 0);
-    wq->numQueued = 0;
+    SDL_AtomicSet(&wq->numQueued, 0);
     wq->nextItem = 0;
     WorkQueue_Unlock(wq);
 }

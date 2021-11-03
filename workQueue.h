@@ -26,7 +26,7 @@
 typedef struct WorkQueue {
     uint itemSize;
     int nextItem;
-    int numQueued;
+    SDL_atomic_t numQueued;
     SDL_atomic_t numInProgress;
     int workerWaitingCount;
     int finishWaitingCount;
