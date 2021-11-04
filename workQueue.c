@@ -30,6 +30,7 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     SDL_AtomicSet(&wq->numQueued, 0);
     SDL_AtomicSet(&wq->numInProgress, 0);
     SDL_AtomicSet(&wq->finishWaitingCount, 0);
+    SDL_AtomicSet(&wq->anyFinishWaitingCount, 0);
     wq->workerWaitingCount = 0;
 
     CMBVector_CreateEmpty(&wq->items, itemSize);
@@ -37,6 +38,7 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     wq->lock = SDL_CreateMutex();
     wq->workerSignal = SDL_CreateCond();
     wq->finishSem = SDL_CreateSemaphore(0);
+    wq->anyFinishSem = SDL_CreateSemaphore(0);
 }
 
 void WorkQueue_Destroy(WorkQueue *wq)
@@ -44,15 +46,18 @@ void WorkQueue_Destroy(WorkQueue *wq)
     ASSERT(wq->itemSize != 0);
     ASSERT(wq->workerWaitingCount == 0);
     ASSERT(SDL_AtomicGet(&wq->finishWaitingCount) == 0);
+    ASSERT(SDL_AtomicGet(&wq->anyFinishWaitingCount) == 0);
 
     CMBVector_Destroy(&wq->items);
     SDL_DestroyMutex(wq->lock);
     SDL_DestroyCond(wq->workerSignal);
     SDL_DestroySemaphore(wq->finishSem);
+    SDL_DestroySemaphore(wq->anyFinishSem);
 
     wq->lock = NULL;
     wq->workerSignal = NULL;
     wq->finishSem = NULL;
+    wq->anyFinishSem = NULL;
 }
 
 void WorkQueue_Lock(WorkQueue *wq)
@@ -157,62 +162,115 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
 void WorkQueue_FinishItem(WorkQueue *wq)
 {
     bool pEmpty;
+    bool doLock = FALSE;
 
     pEmpty = SDL_AtomicDecRef(&wq->numInProgress);
 
-    if (pEmpty) {
+    if (pEmpty || SDL_AtomicGet(&wq->anyFinishWaitingCount) > 0) {
+        doLock = TRUE;
+    }
+
+    if (doLock) {
         WorkQueue_Lock(wq);
         ASSERT(SDL_AtomicGet(&wq->numInProgress) >= 0);
 
-        if (SDL_AtomicGet(&wq->numQueued) == 0 &&
-            SDL_AtomicGet(&wq->numInProgress) == 0 &&
+        if (SDL_AtomicGet(&wq->anyFinishWaitingCount) > 0) {
+            SDL_AtomicDecRef(&wq->anyFinishWaitingCount);
+            SDL_SemPost(wq->anyFinishSem);
+        }
+
+        if (WorkQueue_IsIdle(wq) &&
             SDL_AtomicGet(&wq->finishWaitingCount) > 0) {
-            uint count = SDL_AtomicGet(&wq->finishWaitingCount);
-            while (count > 0) {
-                SDL_AtomicAdd(&wq->finishWaitingCount, -1);
-                SDL_SemPost(wq->finishSem);
-                count--;
-            }
+            SDL_AtomicDecRef(&wq->finishWaitingCount);
+            SDL_SemPost(wq->finishSem);
         }
 
         WorkQueue_Unlock(wq);
     }
 }
 
-void WorkQueue_WaitForAllFinished(WorkQueue *wq)
+void WorkQueue_WaitForAnyFinished(WorkQueue *wq)
 {
+    bool wait = FALSE;
     ASSERT(wq != NULL);
 
     /*
+     * We don't properly support multi-waiters.
+     */
+    ASSERT(SDL_AtomicGet(&wq->anyFinishWaitingCount) == 0);
+
+    /*
+     * If nothing is queued or in-progress, don't wait.
+     */
+    if (WorkQueue_IsIdle(wq)) {
+        return;
+    }
+
+    WorkQueue_Lock(wq);
+    SDL_AtomicIncRef(&wq->anyFinishWaitingCount);
+    if (WorkQueue_IsIdle(wq)) {
+        SDL_AtomicDecRef(&wq->anyFinishWaitingCount);
+    } else {
+        wait = TRUE;
+    }
+    WorkQueue_Unlock(wq);
+
+    if (wait) {
+        int error = SDL_SemWait(wq->anyFinishSem);
+        if (error != 0) {
+            PANIC("Failed to wait for WorkQueue: %s\n", SDL_GetError());
+        }
+    }
+}
+
+void WorkQueue_WaitForAllFinished(WorkQueue *wq)
+{
+    bool wait = FALSE;
+    ASSERT(wq != NULL);
+
+    /*
+     * We don't properly support multi-waiters.
      * If things are actively being queued while we're
      * waiting here, it's possible to racily miss a transient
      * state of being empty, or incorrectly detect being empty.
      */
-    if (SDL_AtomicGet(&wq->numQueued) == 0 &&
-        SDL_AtomicGet(&wq->numInProgress) == 0) {
+    ASSERT(SDL_AtomicGet(&wq->finishWaitingCount) == 0);
+
+    if (WorkQueue_IsIdle(wq)) {
         return;
     }
 
-    SDL_AtomicAdd(&wq->finishWaitingCount, 1);
-    int error = SDL_SemWait(wq->finishSem);
-    if (error != 0) {
-        PANIC("Failed to wait for WorkQueue: %s\n", SDL_GetError());
+    WorkQueue_Lock(wq);
+    SDL_AtomicIncRef(&wq->finishWaitingCount);
+    if (WorkQueue_IsIdle(wq)) {
+        SDL_AtomicDecRef(&wq->finishWaitingCount);
+    } else {
+        wait = TRUE;
     }
-}
+    WorkQueue_Unlock(wq);
 
-int WorkQueue_QueueSizeLocked(WorkQueue *wq)
-{
-    return SDL_AtomicGet(&wq->numQueued);
+    if (wait) {
+        int error = SDL_SemWait(wq->finishSem);
+        if (error != 0) {
+            PANIC("Failed to wait for WorkQueue: %s\n", SDL_GetError());
+        }
+    }
 }
 
 int WorkQueue_QueueSize(WorkQueue *wq)
 {
-    return WorkQueue_QueueSizeLocked(wq);
+    return SDL_AtomicGet(&wq->numQueued);
 }
 
 bool WorkQueue_IsEmpty(WorkQueue *wq)
 {
-    return WorkQueue_QueueSize(wq) == 0;
+    return SDL_AtomicGet(&wq->numQueued) == 0;
+}
+
+bool WorkQueue_IsIdle(WorkQueue *wq)
+{
+    return SDL_AtomicGet(&wq->numQueued) == 0 &&
+           SDL_AtomicGet(&wq->numInProgress) == 0;
 }
 
 void WorkQueue_MakeEmpty(WorkQueue *wq)

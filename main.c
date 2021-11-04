@@ -1582,6 +1582,17 @@ int main(int argc, char **argv)
             Warning("Queueing Battle %d of %d...\n", wu.battleId,
                     mainData.totalBattles);
             WorkQueue_QueueItemLocked(&mainData.workQ, &wu, sizeof(wu));
+
+            if ((battleId + 1) % (2 * mainData.numThreads) == 0) {
+                WorkQueue_Unlock(&mainData.workQ);
+
+                while (WorkQueue_QueueSize(&mainData.workQ) >
+                       3 * mainData.numThreads) {
+                    WorkQueue_WaitForAnyFinished(&mainData.workQ);
+                }
+
+                WorkQueue_Lock(&mainData.workQ);
+            }
         }
     }
     WorkQueue_Unlock(&mainData.workQ);
@@ -1607,7 +1618,7 @@ int main(int argc, char **argv)
     }
 
     WorkQueue_Lock(&mainData.resultQ);
-    uint qSize = WorkQueue_QueueSizeLocked(&mainData.resultQ);
+    uint qSize = WorkQueue_QueueSize(&mainData.resultQ);
     for (uint i = 0; i < qSize; i++) {
         MainEngineResultUnit ru;
         WorkQueue_GetItemLocked(&mainData.resultQ, &ru, sizeof(ru));

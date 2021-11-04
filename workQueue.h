@@ -29,11 +29,13 @@ typedef struct WorkQueue {
     SDL_atomic_t numQueued;
     SDL_atomic_t numInProgress;
     SDL_atomic_t finishWaitingCount;
+    SDL_atomic_t anyFinishWaitingCount;
     int workerWaitingCount;
     CMBVector items;
     SDL_mutex *lock;
     SDL_cond *workerSignal;
     SDL_sem *finishSem;
+    SDL_sem *anyFinishSem;
 } WorkQueue;
 
 void WorkQueue_Create(WorkQueue *wq, uint itemSize);
@@ -43,6 +45,7 @@ void WorkQueue_QueueItem(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_FinishItem(WorkQueue *wq);
 void WorkQueue_WaitForAllFinished(WorkQueue *wq);
+void WorkQueue_WaitForAnyFinished(WorkQueue *wq);
 
 void WorkQueue_Lock(WorkQueue *wq);
 void WorkQueue_Unlock(WorkQueue *wq);
@@ -50,10 +53,13 @@ void WorkQueue_Unlock(WorkQueue *wq);
 void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize);
 
+/*
+ * Don't require the lock.
+ */
 int WorkQueue_QueueSize(WorkQueue *wq);
-int WorkQueue_QueueSizeLocked(WorkQueue *wq);
 bool WorkQueue_IsEmpty(WorkQueue *wq);
 void WorkQueue_MakeEmpty(WorkQueue *wq);
+bool WorkQueue_IsIdle(WorkQueue *wq);
 
 
 #endif // _WORKQUEUE_H_202006241219
