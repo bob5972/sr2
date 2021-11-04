@@ -287,33 +287,6 @@ void WorkQueue_WaitForCountBelow(WorkQueue *wq, uint count)
     }
 }
 
-int WorkQueue_QueueSize(WorkQueue *wq)
-{
-    return SDL_AtomicGet(&wq->numQueued);
-}
-
-int WorkQueue_GetCount(WorkQueue *wq)
-{
-    return SDL_AtomicGet(&wq->numQueued) +
-           SDL_AtomicGet(&wq->numInProgress);
-}
-
-bool WorkQueue_IsEmpty(WorkQueue *wq)
-{
-    return SDL_AtomicGet(&wq->numQueued) == 0;
-}
-
-bool WorkQueue_IsIdle(WorkQueue *wq)
-{
-    return SDL_AtomicGet(&wq->numQueued) == 0 &&
-           SDL_AtomicGet(&wq->numInProgress) == 0;
-}
-
-bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count)
-{
-    return WorkQueue_GetCount(wq) < count;
-}
-
 void WorkQueue_MakeEmpty(WorkQueue *wq)
 {
     WorkQueue_Lock(wq);

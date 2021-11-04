@@ -54,15 +54,37 @@ void WorkQueue_Unlock(WorkQueue *wq);
 void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize);
 
-/*
- * Don't require the lock, but obviously racy if concurrently modified.
- */
-int WorkQueue_QueueSize(WorkQueue *wq);
-bool WorkQueue_IsEmpty(WorkQueue *wq);
 void WorkQueue_MakeEmpty(WorkQueue *wq);
-bool WorkQueue_IsIdle(WorkQueue *wq);
-int WorkQueue_GetCount(WorkQueue *wq);
-bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count);
+
+/*
+ * The following functions don't require the lock.
+ */
+static INLINE int WorkQueue_QueueSize(WorkQueue *wq)
+{
+    return SDL_AtomicGet(&wq->numQueued);
+}
+
+static INLINE int WorkQueue_GetCount(WorkQueue *wq)
+{
+    return SDL_AtomicGet(&wq->numQueued) +
+           SDL_AtomicGet(&wq->numInProgress);
+}
+
+static INLINE bool WorkQueue_IsEmpty(WorkQueue *wq)
+{
+    return SDL_AtomicGet(&wq->numQueued) == 0;
+}
+
+static INLINE bool WorkQueue_IsIdle(WorkQueue *wq)
+{
+    return SDL_AtomicGet(&wq->numQueued) == 0 &&
+           SDL_AtomicGet(&wq->numInProgress) == 0;
+}
+
+static INLINE bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count)
+{
+    return WorkQueue_GetCount(wq) < count;
+}
 
 
 #endif // _WORKQUEUE_H_202006241219
