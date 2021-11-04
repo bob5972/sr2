@@ -46,6 +46,7 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_FinishItem(WorkQueue *wq);
 void WorkQueue_WaitForAllFinished(WorkQueue *wq);
 void WorkQueue_WaitForAnyFinished(WorkQueue *wq);
+void WorkQueue_WaitForCountBelow(WorkQueue *wq, uint count);
 
 void WorkQueue_Lock(WorkQueue *wq);
 void WorkQueue_Unlock(WorkQueue *wq);
@@ -54,12 +55,14 @@ void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize);
 
 /*
- * Don't require the lock.
+ * Don't require the lock, but obviously racy if concurrently modified.
  */
 int WorkQueue_QueueSize(WorkQueue *wq);
 bool WorkQueue_IsEmpty(WorkQueue *wq);
 void WorkQueue_MakeEmpty(WorkQueue *wq);
 bool WorkQueue_IsIdle(WorkQueue *wq);
+int WorkQueue_GetCount(WorkQueue *wq);
+bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count);
 
 
 #endif // _WORKQUEUE_H_202006241219

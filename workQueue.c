@@ -207,10 +207,8 @@ void WorkQueue_WaitForAnyFinished(WorkQueue *wq)
     }
 
     WorkQueue_Lock(wq);
-    SDL_AtomicIncRef(&wq->anyFinishWaitingCount);
-    if (WorkQueue_IsIdle(wq)) {
-        SDL_AtomicDecRef(&wq->anyFinishWaitingCount);
-    } else {
+    if (!WorkQueue_IsIdle(wq)) {
+        SDL_AtomicIncRef(&wq->anyFinishWaitingCount);
         wait = TRUE;
     }
     WorkQueue_Unlock(wq);
@@ -241,10 +239,8 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq)
     }
 
     WorkQueue_Lock(wq);
-    SDL_AtomicIncRef(&wq->finishWaitingCount);
-    if (WorkQueue_IsIdle(wq)) {
-        SDL_AtomicDecRef(&wq->finishWaitingCount);
-    } else {
+    if (!WorkQueue_IsIdle(wq)) {
+        SDL_AtomicIncRef(&wq->finishWaitingCount);
         wait = TRUE;
     }
     WorkQueue_Unlock(wq);
@@ -257,9 +253,49 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq)
     }
 }
 
+void WorkQueue_WaitForCountBelow(WorkQueue *wq, uint count)
+{
+    uint32 waitCount;
+    ASSERT(wq != NULL);
+    ASSERT(count < MAX_INT32 / 2);
+
+    /*
+     * Doesn't work correctly if someone is actively queueing new
+     * items, or we have multi-waiters.
+     */
+    ASSERT(SDL_AtomicGet(&wq->anyFinishWaitingCount) == 0);
+
+    if (WorkQueue_IsCountBelow(wq, count)) {
+        return;
+    }
+
+    WorkQueue_Lock(wq);
+    if (WorkQueue_IsCountBelow(wq, count)) {
+        waitCount = 0;
+    } else {
+        waitCount = WorkQueue_GetCount(wq) - count;
+        SDL_AtomicAdd(&wq->anyFinishWaitingCount, waitCount);
+    }
+    WorkQueue_Unlock(wq);
+
+    while (waitCount > 0) {
+        int error = SDL_SemWait(wq->anyFinishSem);
+        if (error != 0) {
+            PANIC("Failed to wait for WorkQueue: %s\n", SDL_GetError());
+        }
+        waitCount--;
+    }
+}
+
 int WorkQueue_QueueSize(WorkQueue *wq)
 {
     return SDL_AtomicGet(&wq->numQueued);
+}
+
+int WorkQueue_GetCount(WorkQueue *wq)
+{
+    return SDL_AtomicGet(&wq->numQueued) +
+           SDL_AtomicGet(&wq->numInProgress);
 }
 
 bool WorkQueue_IsEmpty(WorkQueue *wq)
@@ -271,6 +307,11 @@ bool WorkQueue_IsIdle(WorkQueue *wq)
 {
     return SDL_AtomicGet(&wq->numQueued) == 0 &&
            SDL_AtomicGet(&wq->numInProgress) == 0;
+}
+
+bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count)
+{
+    return WorkQueue_GetCount(wq) < count;
 }
 
 void WorkQueue_MakeEmpty(WorkQueue *wq)

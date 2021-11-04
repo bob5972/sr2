@@ -1269,9 +1269,8 @@ static void MainRunBattle(MainEngineThreadData *tData,
     tData->bsc = wu->bsc;
     tData->battle = Battle_Create(&tData->bsc, wu->seed);
 
-    Warning("Starting Battle %d of %d... %s\n", tData->battleId,
-            mainData.totalBattles,
-            mainData.doneQueueing ? "" : "(Still Queueing)");
+    Warning("Starting Battle %d of %d...\n", tData->battleId,
+            mainData.totalBattles);
     Warning("\n");
 
     tData->startTimeMS = SDL_GetTicks();
@@ -1583,14 +1582,10 @@ int main(int argc, char **argv)
                     mainData.totalBattles);
             WorkQueue_QueueItemLocked(&mainData.workQ, &wu, sizeof(wu));
 
-            if ((battleId + 1) % (2 * mainData.numThreads) == 0) {
+            if ((battleId + 1) % mainData.numThreads == 0) {
                 WorkQueue_Unlock(&mainData.workQ);
-
-                while (WorkQueue_QueueSize(&mainData.workQ) >
-                       3 * mainData.numThreads) {
-                    WorkQueue_WaitForAnyFinished(&mainData.workQ);
-                }
-
+                WorkQueue_WaitForCountBelow(&mainData.workQ,
+                                            mainData.numThreads * 3);
                 WorkQueue_Lock(&mainData.workQ);
             }
         }
