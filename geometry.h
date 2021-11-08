@@ -1,6 +1,6 @@
 /*
  * geometry.h -- part of SpaceRobots2
- * Copyright (C) 2020 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #define _GEOMETRY_H_202005310649
 
 #include <math.h>
-#include "mbassert.h"
+#include "MBAssert.h"
 
 typedef struct UPoint {
     uint x;

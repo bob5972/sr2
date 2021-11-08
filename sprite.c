@@ -1,6 +1,6 @@
 /*
  * sprite.c -- part of SpaceRobots2
- * Copyright (C) 2020 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #include <png.h>
 
 #include "sprite.h"
-#include "random.h"
+#include "Random.h"
 
 typedef enum SpriteSource {
 

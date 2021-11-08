@@ -9,3 +9,5 @@ perf.data.old
 local/
 *.kate-swp
 .vscode/
+subprojects/
+!subprojects/*.wrap

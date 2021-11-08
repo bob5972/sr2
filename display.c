@@ -1,6 +1,6 @@
 /*
  * display.c -- part of SpaceRobots2
- * Copyright (C) 2020 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include "mbconfig.h"
-#include "mbbasic.h"
-#include "mbtypes.h"
-#include "mbassert.h"
-#include "random.h"
+#include "MBConfig.h"
+#include "MBBasic.h"
+#include "MBTypes.h"
+#include "MBAssert.h"
+#include "Random.h"
 #include "display.h"
 #include "MBVector.h"
 #include "sprite.h"

@@ -22,11 +22,11 @@
 
 #include <SDL2/SDL.h>
 
-#include "mbconfig.h"
-#include "mbtypes.h"
-#include "mbutil.h"
-#include "mbassert.h"
-#include "random.h"
+#include "MBConfig.h"
+#include "MBTypes.h"
+#include "MBUtil.h"
+#include "MBAssert.h"
+#include "Random.h"
 #include "display.h"
 #include "geometry.h"
 #include "battle.h"
