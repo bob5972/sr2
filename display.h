@@ -21,8 +21,9 @@
 
 #include "battle.h"
 #include "mob.h"
+#include "SR2Config.h"
 
-#if SR2_GUI
+#ifdef SR2_GUI
 void Display_Init(const BattleScenario *bsc);
 void Display_Exit();
 Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip);

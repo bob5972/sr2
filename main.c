@@ -22,6 +22,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "SR2Config.h"
+
 #include "MBConfig.h"
 #include "MBTypes.h"
 #include "MBUtil.h"
@@ -1446,7 +1448,7 @@ void MainParseCmdLine(int argc, char **argv)
     }
 
     mainData.headless = MBOpt_GetBool("headless");
-    if (!SR2_GUI) {
+    if (!sr2_gui) {
         mainData.headless = TRUE;
     }
 

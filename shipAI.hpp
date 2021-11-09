@@ -45,7 +45,7 @@ public:
     /**
      * Destroy this ShipAIGovernor.
      */
-    ~ShipAIGovernor() {
+    virtual ~ShipAIGovernor() {
         int i;
         for (i = 0; i < myAIData.size(); i++) {
             ShipAI *ship = myAIData[i];
