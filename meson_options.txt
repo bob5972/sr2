@@ -1,2 +1,0 @@
-option('gui', type : 'boolean', value : true)
-option('devel', type : 'boolean', value : false)

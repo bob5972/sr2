@@ -24,9 +24,7 @@
 	extern "C" {
 #endif
 
-/* Begin Auto-Generated Meson Defines */
-#mesondefine SR2_GUI
-/* End Auto-Generated Meson Defines */
+#include "MBConfig.h"
 
 #ifdef SR2_GUI
 #define sr2_gui 1
