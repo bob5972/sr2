@@ -10,9 +10,3 @@ OPTS="${OPTS} -H"
 
 ./compile.sh debug && build/MBLib/test.bin && build/sr2 -u && \
     echo && echo build/sr2 $OPTS "$@" && build/sr2 $OPTS "$@"
-
-if [ $? == 0 ]; then
-    echo
-    echo "$POP: "
-    cat $POP
-fi;
