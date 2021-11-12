@@ -1606,8 +1606,8 @@ int main(int argc, char **argv)
             WorkQueue_QueueItemLocked(&mainData.workQ, &wu, sizeof(wu));
 
             if ((battleId + 1) % mainData.numThreads == 0) {
-                uint workTarget = mainData.numThreads * 4;
                 WorkQueue_Unlock(&mainData.workQ);
+                uint workTarget = mainData.numThreads * 4;
 
                 /*
                  * Try to process the results as they come in, to reduce

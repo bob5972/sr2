@@ -49,9 +49,6 @@ void WorkQueue_WaitForAllFinished(WorkQueue *wq);
 void WorkQueue_WaitForAnyFinished(WorkQueue *wq);
 void WorkQueue_WaitForCountBelow(WorkQueue *wq, uint count);
 
-void WorkQueue_Lock(WorkQueue *wq);
-void WorkQueue_Unlock(WorkQueue *wq);
-
 void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize);
 void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize);
 
@@ -85,6 +82,18 @@ static INLINE bool WorkQueue_IsIdle(WorkQueue *wq)
 static INLINE bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count)
 {
     return WorkQueue_GetCount(wq) < count;
+}
+
+static INLINE void WorkQueue_Lock(WorkQueue *wq)
+{
+    ASSERT(wq != NULL);
+    MBLock_Lock(&wq->lock);
+}
+
+static INLINE void WorkQueue_Unlock(WorkQueue *wq)
+{
+    ASSERT(wq != NULL);
+    MBLock_Unlock(&wq->lock);
 }
 
 

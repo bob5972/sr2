@@ -56,18 +56,6 @@ void WorkQueue_Destroy(WorkQueue *wq)
     wq->anyFinishSem = NULL;
 }
 
-void WorkQueue_Lock(WorkQueue *wq)
-{
-    ASSERT(wq != NULL);
-    MBLock_Lock(&wq->lock);
-}
-
-void WorkQueue_Unlock(WorkQueue *wq)
-{
-    ASSERT(wq != NULL);
-    MBLock_Unlock(&wq->lock);
-}
-
 void WorkQueue_QueueItem(WorkQueue *wq, void *item, uint itemSize)
 {
     WorkQueue_Lock(wq);
