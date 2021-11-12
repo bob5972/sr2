@@ -116,6 +116,7 @@ clean:
 	rm -f $(BUILDROOT)/$(TARGET)
 
 # after a distclean you'll need to run configure again
+dist-clean: distclean
 distclean: clean
 	rm -rf $(BUILDROOT)/
 	rm -rf config.mk
