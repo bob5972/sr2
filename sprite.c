@@ -678,6 +678,7 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         case SPRITE_SET_SPACE_PURPLE3:
             st = SPRITE_SPACE_PURPLE3_BASE;
             break;
+
         case SPRITE_SET_NAJU_BLUE:
             st = SPRITE_NAJU_BLUE_BASE;
             break;
@@ -726,11 +727,58 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         case SPRITE_SET_NAJU_YELLOW3:
             st = SPRITE_NAJU_YELLOW3_BASE;
             break;
+
         case SPRITE_SET_ALTAIR_PURPLE:
             st = SPRITE_ALTAIR_PURPLE_BASE;
             break;
+        case SPRITE_SET_ALTAIR_PURPLE2:
+            st = SPRITE_ALTAIR_PURPLE2_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_YELLOW:
+            st = SPRITE_ALTAIR_YELLOW_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_RED2:
+            st = SPRITE_ALTAIR_RED2_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_GREEN:
+            st = SPRITE_ALTAIR_GREEN_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_GREEN2:
+            st = SPRITE_ALTAIR_GREEN2_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_BLUE:
+            st = SPRITE_ALTAIR_BLUE_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_BLUE2:
+            st = SPRITE_ALTAIR_BLUE2_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_MAGENTA:
+            st = SPRITE_ALTAIR_MAGENTA_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_RED:
+            st = SPRITE_ALTAIR_RED_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_RED3:
+            st = SPRITE_ALTAIR_RED3_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_GREEN3:
+            st = SPRITE_ALTAIR_GREEN3_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_ORANGE:
+            st = SPRITE_ALTAIR_ORANGE_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_ORANGE2:
+            st = SPRITE_ALTAIR_ORANGE2_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_YELLOW2:
+            st = SPRITE_ALTAIR_YELLOW2_BASE;
+            break;
+        case SPRITE_SET_ALTAIR_BLUE3:
+            st = SPRITE_ALTAIR_BLUE3_BASE;
+            break;
+
         default:
-            NOT_REACHED();
+            NOT_IMPLEMENTED();
     }
 
     if (st == SPRITE_INVALID) {
