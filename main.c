@@ -1587,7 +1587,7 @@ int main(int argc, char **argv)
             if ((battleId + 1) % mainData.numThreads == 0) {
                 WorkQueue_Unlock(&mainData.workQ);
                 WorkQueue_WaitForCountBelow(&mainData.workQ,
-                                            mainData.numThreads * 3);
+                                            mainData.numThreads * 4);
                 WorkQueue_Lock(&mainData.workQ);
             }
         }
