@@ -72,15 +72,17 @@ public:
 
     virtual void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
         BundleConfigValue defaults[] = {
-            { "cores.radius.baseValue", "166.7",    },
-            { "cores.weight.baseValue", "0.1",      },
-            { "cores.crowd.radius",     "166.7",    },
-            { "cores.crowd.size",       "5",        },
+            { "cores.radius.baseValue",     "166.7", },
+            { "cores.weight.baseValue",     "0.1",   },
+            { "cores.crowd.radius",         "166.7", },
+            { "cores.crowd.size",           "5",     },
 
-            { "enemy.radius.baseValue", "166.7",    },
-            { "enemy.weight.baseValue", "0.3",      },
-            { "enemy.crowd.radius",     "166.7",    },
-            { "enemy.crowd.size",       "5",        },
+            { "enemy.radius.baseValue",     "166.7", },
+            { "enemy.weight.baseValue",     "0.3",   },
+            { "enemy.crowd.radius",         "166.7", },
+            { "enemy.crowd.size",           "5",     },
+
+            { "curHeadingWeight.baseValue", "0.5",   },
 
             // Legacy Values
             { "randomIdle",           "TRUE",       },
@@ -111,7 +113,7 @@ public:
             { "enemyBaseRadius",      "100",        },
             { "enemyBaseWeight",      "0.0",        },
 
-            { "curHeadingWeight",     "0.5",        },
+
 
             { "attackSeparateRadius", "166.7",      },
             { "attackSeparateWeight", "0.5",        },
@@ -148,7 +150,6 @@ public:
             { "coresRadius",          "776.426697", },
             { "coresWeight",          "0.197949",   },
             { "creditReserve",        "120.438179", },
-            { "curHeadingWeight",     "0.499466",   },
             { "edgeRadius",           "26.930847",  },
             { "edgesWeight",          "0.482821",   },
             { "enemyBaseRadius",      "224.461044", },
@@ -233,7 +234,7 @@ public:
         MBString_Destroy(&s);
     }
 
-    virtual void loadBundle(MBRegistry *mreg, BundleForce *b, const char *prefix) {
+    virtual void loadBundleForce(MBRegistry *mreg, BundleForce *b, const char *prefix) {
         CMBString s;
         const char *cs;
         MBString_Create(&s);
@@ -265,7 +266,7 @@ public:
         } else if (strcmp(cs, "strict") == 0) {
             b->flags |= BUNDLE_FLAG_STRICT_RANGE;
         } else {
-            PANIC("Unknown rangeType = %s\n", cs);
+            PANIC("Unknown crowdType = %s\n", cs);
         }
 
         MBString_MakeEmpty(&s);
@@ -312,8 +313,8 @@ public:
         this->myConfig.centerRadius = MBRegistry_GetFloat(mreg, "centerRadius");
         this->myConfig.centerWeight = MBRegistry_GetFloat(mreg, "centerWeight");
 
-        loadBundle(mreg, &this->myConfig.cores, "cores");
-        loadBundle(mreg, &this->myConfig.cores, "enemy");
+        loadBundleForce(mreg, &this->myConfig.cores, "cores");
+        loadBundleForce(mreg, &this->myConfig.cores, "enemy");
 
         this->myConfig.baseRadius = MBRegistry_GetFloat(mreg, "baseRadius");
         this->myConfig.baseWeight = MBRegistry_GetFloat(mreg, "baseWeight");
@@ -323,8 +324,7 @@ public:
         this->myConfig.enemyBaseRadius = MBRegistry_GetFloat(mreg, "enemyBaseRadius");
         this->myConfig.enemyBaseWeight = MBRegistry_GetFloat(mreg, "enemyBaseWeight");
 
-        this->myConfig.curHeadingWeight =
-            MBRegistry_GetFloat(mreg, "curHeadingWeight");
+        loadBundleValue(mreg, &this->myConfig.curHeadingWeight, "curHeadingWeight");
 
         this->myConfig.attackSeparateRadius =
             MBRegistry_GetFloat(mreg, "attackSeparateRadius");
@@ -830,7 +830,7 @@ public:
             findCores(mob, &rForce);
             findLocus(mob, &rForce);
 
-            rPos.radius = myConfig.curHeadingWeight;
+            rPos.radius = getBundleValue(&myConfig.curHeadingWeight);
             FRPoint_Add(&rPos, &rForce, &rPos);
             rPos.radius = speed;
 
@@ -930,7 +930,7 @@ public:
         float enemyBaseRadius;
         float enemyBaseWeight;
 
-        float curHeadingWeight;
+        BundleValue curHeadingWeight;
 
         float attackSeparateRadius;
         float attackSeparateWeight;
