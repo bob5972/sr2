@@ -72,36 +72,37 @@ public:
 
     virtual void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
         BundleConfigValue defaults[] = {
-            { "cores.radius.baseValue",        "166.7", },
-            { "cores.weight.baseValue",        "0.1",   },
-            { "cores.crowd.radius",            "166.7", },
-            { "cores.crowd.size",              "5",     },
+            { "cores.radius.baseValue",          "166.7", },
+            { "cores.weight.baseValue",          "0.1",   },
+            { "cores.crowd.radius",              "166.7", },
+            { "cores.crowd.size",                "0",     },
 
-            { "enemy.radius.baseValue",        "166.7", },
-            { "enemy.weight.baseValue",        "0.3",   },
-            { "enemy.crowd.radius.baseValue",  "166.7", },
-            { "enemy.crowd.size.baseValue",    "5",     },
+            { "enemy.radius.baseValue",          "166.7", },
+            { "enemy.weight.baseValue",          "0.3",   },
+            { "enemy.crowd.radius.baseValue",    "166.7", },
+            { "enemy.crowd.size.baseValue",      "2",     },
 
-            { "align.radius.baseValue",        "166.7", },
-            { "align.weight.baseValue",        "0.2",   },
-            { "aligin.crowd.radius.baseValue", "166.7", },
-            { "aligin.crowd.size.baseValue",    "2",    },
+            { "align.radius.baseValue",          "166.7", },
+            { "align.weight.baseValue",          "0.2",   },
+            { "aligin.crowd.radius.baseValue",   "166.7", },
+            { "aligin.crowd.size.baseValue",     "3",     },
 
-            { "cohere.radius.baseValue",       "166.7", },
-            { "cohere.weight.baseValue",       "0.1",   },
-            { "cohere.crowd.radius.baseValue", "166.7", },
-            { "cohere.crowd.size.baseValue",    "2",    },
+            { "cohere.radius.baseValue",         "166.7", },
+            { "cohere.weight.baseValue",         "0.1",   },
+            { "cohere.crowd.radius.baseValue",   "166.7", },
+            { "cohere.crowd.size.baseValue",     "3",     },
 
-            { "curHeadingWeight.baseValue",    "0.5",   },
+            { "separate.radius.baseValue",       "150.0", },
+            { "separate.weight.baseValue",       "0.8",   },
+
+            { "attackSeparate.radius.baseValue", "166.0", },
+            { "attackSeparate.weight.baseValue", "0.5",   },
+
+            { "curHeadingWeight.baseValue",      "0.5",   },
 
             // Legacy Values
             { "randomIdle",           "TRUE",       },
             { "baseSpawnJitter",        "1",        },
-
-            { "separateRadius",       "50.0",       },
-            { "separatePeriod",       "0.0",        },
-            { "separateScale",        "50.0",       },
-            { "separateWeight",       "0.2",        },
 
             { "edgeRadius",           "100.0",      },
             { "edgesWeight",          "0.9",        },
@@ -115,9 +116,6 @@ public:
 
             { "enemyBaseRadius",      "100",        },
             { "enemyBaseWeight",      "0.0",        },
-
-            { "attackSeparateRadius", "166.7",      },
-            { "attackSeparateWeight", "0.5",        },
 
             { "locusRadius",          "10000.0",    },
             { "locusWeight",          "0.0",        },
@@ -234,7 +232,8 @@ public:
         MBString_Destroy(&s);
     }
 
-    virtual void loadBundleForce(MBRegistry *mreg, BundleForce *b, const char *prefix) {
+    virtual void loadBundleForce(MBRegistry *mreg, BundleForce *b,
+                                 const char *prefix) {
         CMBString s;
         const char *cs;
         MBString_Create(&s);
@@ -296,11 +295,6 @@ public:
     virtual void loadRegistry(MBRegistry *mreg) {
         this->myConfig.randomIdle = MBRegistry_GetBool(mreg, "randomIdle");
 
-        this->myConfig.separateRadius = MBRegistry_GetFloat(mreg, "separateRadius");
-        this->myConfig.separatePeriod = MBRegistry_GetFloat(mreg, "separatePeriod");
-        this->myConfig.separateScale = MBRegistry_GetFloat(mreg, "separateScale");
-        this->myConfig.separateWeight = MBRegistry_GetFloat(mreg, "separateWeight");
-
         this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
         this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
         this->myConfig.centerRadius = MBRegistry_GetFloat(mreg, "centerRadius");
@@ -308,6 +302,8 @@ public:
 
         loadBundleForce(mreg, &this->myConfig.align, "align");
         loadBundleForce(mreg, &this->myConfig.cohere, "cohere");
+        loadBundleForce(mreg, &this->myConfig.separate, "separate");
+        loadBundleForce(mreg, &this->myConfig.attackSeparate, "attackSeparate");
 
         loadBundleForce(mreg, &this->myConfig.cores, "cores");
         loadBundleForce(mreg, &this->myConfig.cores, "enemy");
@@ -321,11 +317,6 @@ public:
         this->myConfig.enemyBaseWeight = MBRegistry_GetFloat(mreg, "enemyBaseWeight");
 
         loadBundleValue(mreg, &this->myConfig.curHeadingWeight, "curHeadingWeight");
-
-        this->myConfig.attackSeparateRadius =
-            MBRegistry_GetFloat(mreg, "attackSeparateRadius");
-        this->myConfig.attackSeparateWeight =
-            MBRegistry_GetFloat(mreg, "attackSeparateWeight");
 
         this->myConfig.locusRadius =
             MBRegistry_GetFloat(mreg, "locusRadius");
@@ -357,6 +348,8 @@ public:
         float radius = getBundleValue(&myConfig.align.radius);
         SensorGrid *sg = mySensorGrid;
         sg->friendAvgVelocity(&avgVel, &mob->pos, radius, MOB_FLAG_FIGHTER);
+        avgVel.x += mob->pos.x;
+        avgVel.y += mob->pos.y;
         applyBundle(mob, rForce, &myConfig.align, &avgVel);
     }
 
@@ -413,9 +406,17 @@ public:
         FRPoint_Add(curForce, &reVec, curForce);
     }
 
-    void flockSeparate(Mob *mob, FRPoint *rPos, float radius, float weight) {
+    void flockSeparate(Mob *mob, FRPoint *rForce, BundleForce *bundle) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
+
+        if (!crowdCheck(mob, bundle)) {
+            /* No force. */
+            return;
+        }
+
+        float radius = getBundleValue(&bundle->radius);
+        float weight = getBundleValue(&bundle->weight);
 
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
         FRPoint repulseVec;
@@ -427,7 +428,6 @@ public:
             Mob *f = mit.next();
             ASSERT(f != NULL);
 
-
             if (f->mobid != mob->mobid &&
                 FPoint_Distance(&f->pos, &mob->pos) <= radius) {
                 repulseVector(&repulseVec, &f->pos, &mob->pos, radius);
@@ -435,7 +435,7 @@ public:
         }
 
         repulseVec.radius = weight;
-        FRPoint_Add(rPos, &repulseVec, rPos);
+        FRPoint_Add(rForce, &repulseVec, rForce);
     }
 
     float edgeDistance(FPoint *pos) {
@@ -531,20 +531,34 @@ public:
         }
     }
 
-    void applyBundle(Mob *mob, FRPoint *rForce, BundleForce *bundle,
-                     FPoint *focusPos) {
-        BundleLegacyPullType pType;
+    bool crowdCheck(Mob *mob, BundleForce *bundle) {
         SensorGrid *sg = mySensorGrid;
 
         if ((bundle->flags & BUNDLE_FLAG_STRICT_CROWD) != 0) {
             uint crowdSize = (uint)getBundleValue(&bundle->crowd.size);
             float crowdRadius = getBundleValue(&bundle->crowd.radius);
+
+            if (crowdSize <= 1 || crowdRadius <= 0.0f) {
+                return TRUE;
+            }
+
             int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
                                                    &mob->pos, crowdRadius);
             if (numFriends < crowdSize) {
-                /* No force. */
-                return;
+                return FALSE;
             }
+        }
+
+        return TRUE;
+    }
+
+    void applyBundle(Mob *mob, FRPoint *rForce, BundleForce *bundle,
+                     FPoint *focusPos) {
+        BundleLegacyPullType pType;
+
+        if (!crowdCheck(mob, bundle)) {
+            /* No force. */
+            return;
         }
 
         if ((bundle->flags & BUNDLE_FLAG_STRICT_RANGE) != 0) {
@@ -722,8 +736,7 @@ public:
         FRPoint rPos;
         FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-        flockSeparate(mob, &rPos, myConfig.attackSeparateRadius,
-                      myConfig.attackSeparateWeight);
+        flockSeparate(mob, &rPos, &myConfig.attackSeparate);
 
         rPos.radius = speed;
         FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
@@ -762,8 +775,8 @@ public:
 
             flockAlign(mob, &rForce);
             flockCohere(mob, &rForce);
-            flockSeparate(mob, &rForce, myLive.separateRadius,
-                          myConfig.separateWeight);
+            flockSeparate(mob, &rForce, &myConfig.separate);
+
             avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
             findCenter(mob, &rForce, myConfig.centerRadius, myConfig.centerWeight);
             findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
@@ -793,16 +806,6 @@ public:
 
     virtual void runTick() {
         SensorGrid *sg = mySensorGrid;
-
-        if (myConfig.separatePeriod > 0.0f &&
-            myConfig.separateScale > 0.0f) {
-            float p = myConfig.separatePeriod;
-            float s = myConfig.separateScale;
-            myLive.separateRadius = myConfig.separateRadius +
-                                   s * fabs(sinf(myFleetAI->tick / p));
-        } else {
-            myLive.separateRadius = myConfig.separateRadius;
-        }
 
         BasicAIGovernor::runTick();
 
@@ -846,11 +849,8 @@ public:
 
         BundleForce align;
         BundleForce cohere;
-
-        float separateRadius;
-        float separatePeriod;
-        float separateScale;
-        float separateWeight;
+        BundleForce separate;
+        BundleForce attackSeparate;
 
         float edgeRadius;
         float edgesWeight;
@@ -871,9 +871,6 @@ public:
 
         BundleValue curHeadingWeight;
 
-        float attackSeparateRadius;
-        float attackSeparateWeight;
-
         float locusRadius;
         float locusWeight;
         float locusCircularPeriod;
@@ -887,7 +884,6 @@ public:
     } myConfig;
 
     struct {
-        float separateRadius;
         FPoint randomLocus;
         uint randomLocusTick;
     } myLive;
