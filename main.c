@@ -1563,6 +1563,9 @@ int main(int argc, char **argv)
         if (mainData.numBSCs != 1) {
             PANIC("Multiple scenarios requries --headless\n");
         }
+        if (mainData.loop != 1) {
+            PANIC("Multiple battles requires --headless\n");
+        }
         Display_Init(&mainData.bscs[0]);
     }
 
@@ -1633,7 +1636,7 @@ int main(int argc, char **argv)
     }
 
     WorkQueue_WaitForAllFinished(&mainData.workQ);
-
+    ASSERT(WorkQueue_IsIdle(&mainData.workQ));
     for (uint i = 0; i < mainData.numThreads; i++) {
         MainEngineWorkUnit wu;
         MBUtil_Zero(&wu, sizeof(wu));
@@ -1643,6 +1646,7 @@ int main(int argc, char **argv)
     for (uint i = 0; i < mainData.numThreads; i++) {
         SDL_WaitThread(mainData.tData[i].sdlThread, NULL);
     }
+    ASSERT(WorkQueue_IsEmpty(&mainData.workQ));
 
     WorkQueue_Lock(&mainData.resultQ);
     uint qSize = WorkQueue_QueueSize(&mainData.resultQ);
