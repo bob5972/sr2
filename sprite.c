@@ -40,6 +40,24 @@ typedef enum SpriteSource {
     SPRITE_SOURCE_SPACE29,
 
     SPRITE_SOURCE_SHEET2,
+
+    SPRITE_SOURCE_ALTAIR1,
+    SPRITE_SOURCE_ALTAIR2,
+    SPRITE_SOURCE_ALTAIR3,
+    SPRITE_SOURCE_ALTAIR4,
+    SPRITE_SOURCE_ALTAIR5,
+    SPRITE_SOURCE_ALTAIR6,
+    SPRITE_SOURCE_ALTAIR7,
+    SPRITE_SOURCE_ALTAIR8,
+    SPRITE_SOURCE_ALTAIR9,
+    SPRITE_SOURCE_ALTAIR10,
+    SPRITE_SOURCE_ALTAIR11,
+    SPRITE_SOURCE_ALTAIR12,
+    SPRITE_SOURCE_ALTAIR13,
+    SPRITE_SOURCE_ALTAIR14,
+    SPRITE_SOURCE_ALTAIR15,
+    SPRITE_SOURCE_ALTAIR16,
+
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
 } SpriteSource;
@@ -255,6 +273,87 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_NAJU_YELLOW3_FIGHTER4,   SPRITE_SOURCE_SHEET2,      587, 676,   9,   9, },
     { SPRITE_NAJU_YELLOW3_POWER_CORE, SPRITE_SOURCE_SHEET2,      606, 678,   4,   4, },
     { SPRITE_NAJU_YELLOW3_MISSILE,    SPRITE_SOURCE_SHEET2,      620, 676,   8,   8, },
+
+    { SPRITE_ALTAIR_PURPLE_BASE,      SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_PURPLE_FIGHTER,   SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_PURPLE_MISSILE,   SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_PURPLE_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_PURPLE2_BASE,     SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_PURPLE2_FIGHTER,  SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_PURPLE2_MISSILE,  SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_PURPLE2_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_YELLOW_BASE,      SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_YELLOW_FIGHTER,   SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_YELLOW_MISSILE,   SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_YELLOW_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_RED2_BASE,        SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_RED2_FIGHTER,     SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_RED2_MISSILE,     SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_RED2_POWER_CORE,  SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_GREEN_BASE,       SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_GREEN_FIGHTER,    SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_GREEN_MISSILE,    SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_GREEN_POWER_CORE, SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_GREEN2_BASE,      SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_GREEN2_FIGHTER,   SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_GREEN2_MISSILE,   SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_GREEN2_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_BLUE_BASE,        SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_BLUE_FIGHTER,     SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_BLUE_MISSILE,     SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_BLUE_POWER_CORE,  SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_BLUE2_BASE,       SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_BLUE2_FIGHTER,    SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_BLUE2_MISSILE,    SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_BLUE2_POWER_CORE, SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_MAGENTA_BASE,     SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_MAGENTA_FIGHTER,  SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_MAGENTA_MISSILE,  SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_MAGENTA_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_RED_BASE,         SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_RED_FIGHTER,      SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_RED_MISSILE,      SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_RED_POWER_CORE,   SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_RED3_BASE,        SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_RED3_FIGHTER,     SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_RED3_MISSILE,     SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_RED3_POWER_CORE,  SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_GREEN3_BASE,      SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_GREEN3_FIGHTER,   SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_GREEN3_MISSILE,   SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_GREEN3_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_ORANGE_BASE,      SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_ORANGE_FIGHTER,   SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_ORANGE_MISSILE,   SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_ORANGE_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_ORANGE2_BASE,     SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_ORANGE2_FIGHTER,  SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_ORANGE2_MISSILE,  SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_ORANGE2_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_YELLOW2_BASE,     SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_YELLOW2_FIGHTER,  SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_YELLOW2_MISSILE,  SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_YELLOW2_POWER_CORE,SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
+    { SPRITE_ALTAIR_BLUE3_BASE,       SPRITE_SOURCE_ALTAIR1,       1,   1, 101, 101, },
+    { SPRITE_ALTAIR_BLUE3_FIGHTER,    SPRITE_SOURCE_ALTAIR1,     103,   3,  11,  11, },
+    { SPRITE_ALTAIR_BLUE3_MISSILE,    SPRITE_SOURCE_ALTAIR1,     115,   5,   7,   7, },
+    { SPRITE_ALTAIR_BLUE3_POWER_CORE, SPRITE_SOURCE_ALTAIR1,     123,   6,   5,   5, },
+
 };
 
 typedef struct SpriteBacking {
@@ -299,7 +398,7 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 16);
+    ASSERT(SPRITE_SOURCE_MAX == 32);
     gSprite.sources[SPRITE_SOURCE_SPACE15] = Sprite_LoadPNG("art/space15.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE16] = Sprite_LoadPNG("art/space16.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE17] = Sprite_LoadPNG("art/space17.png", 129, 103);
@@ -315,7 +414,23 @@ void Sprite_Init()
     gSprite.sources[SPRITE_SOURCE_SPACE27] = Sprite_LoadPNG("art/space27.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE28] = Sprite_LoadPNG("art/space28.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE29] = Sprite_LoadPNG("art/space29.png", 129, 103);
-    gSprite.sources[SPRITE_SOURCE_SHEET2] = Sprite_LoadPNG("art/sheet2.png", 656, 720);
+    gSprite.sources[SPRITE_SOURCE_SHEET2]  = Sprite_LoadPNG("art/sheet2.png",  656, 720);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR1] = Sprite_LoadPNG("art/altair1.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR2] = Sprite_LoadPNG("art/altair2.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR3] = Sprite_LoadPNG("art/altair3.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR4] = Sprite_LoadPNG("art/altair4.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR5] = Sprite_LoadPNG("art/altair5.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR6] = Sprite_LoadPNG("art/altair6.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR7] = Sprite_LoadPNG("art/altair7.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR8] = Sprite_LoadPNG("art/altair8.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR9] = Sprite_LoadPNG("art/altair9.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR10] = Sprite_LoadPNG("art/altair10.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR11] = Sprite_LoadPNG("art/altair11.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR12] = Sprite_LoadPNG("art/altair12.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR13] = Sprite_LoadPNG("art/altair13.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR14] = Sprite_LoadPNG("art/altair14.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR15] = Sprite_LoadPNG("art/altair15.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_ALTAIR16] = Sprite_LoadPNG("art/altair16.png", 129, 103);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
         uint32 backingID;
@@ -611,6 +726,9 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         case SPRITE_SET_NAJU_YELLOW3:
             st = SPRITE_NAJU_YELLOW3_BASE;
             break;
+        case SPRITE_SET_ALTAIR_PURPLE:
+            st = SPRITE_ALTAIR_PURPLE_BASE;
+            break;
         default:
             NOT_REACHED();
     }
@@ -640,6 +758,16 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         } else if (t == MOB_TYPE_MISSILE) {
             return st + 6;
         }
+    }
+
+    if (ss >= SPRITE_SET_ALTAIR_PURPLE &&
+        ss <= SPRITE_SET_ALTAIR_PURPLE) {
+        ASSERT(MOB_TYPE_BASE == 1);
+        ASSERT(MOB_TYPE_FIGHTER == 2);
+        ASSERT(MOB_TYPE_MISSILE == 3);
+        ASSERT(MOB_TYPE_POWER_CORE == 4);
+        ASSERT(t >= 1 && t <= 4);
+        return st + (t - 1);
     }
 
     PANIC("Unknown Sprite Requested!\n");
