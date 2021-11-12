@@ -77,6 +77,11 @@ public:
             { "cores.crowd.radius",     "166.7",    },
             { "cores.crowd.size",       "5",        },
 
+            { "enemy.radius.baseValue", "166.7",    },
+            { "enemy.weight.baseValue", "0.3",      },
+            { "enemy.crowd.radius",     "166.7",    },
+            { "enemy.crowd.size",       "5",        },
+
             // Legacy Values
             { "randomIdle",           "TRUE",       },
             { "alwaysFlock",          "FALSE",      },
@@ -102,11 +107,6 @@ public:
             { "baseWeight",           "0.0",        },
             { "nearBaseRadius",       "250.0",      },
             { "baseDefenseRadius",    "250.0",      },
-
-            { "enemyRadius",          "166.7",      },
-            { "enemyWeight",          "0.3",        },
-            { "enemyCrowdRadius",     "166.7",      },
-            { "enemyCrowding",        "5",          },
 
             { "enemyBaseRadius",      "100",        },
             { "enemyBaseWeight",      "0.0",        },
@@ -218,24 +218,55 @@ public:
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".baseValue");
-        bv->baseValue = MBRegistry_GetFloatD(mreg, MBString_GetCStr(&s), 0.0f);
+        bv->baseValue = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".period");
-        bv->period = MBRegistry_GetFloatD(mreg, MBString_GetCStr(&s), 0.0f);
+        bv->period = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".amplitude");
-        bv->amplitude = MBRegistry_GetFloatD(mreg, MBString_GetCStr(&s), 0.0f);
+        bv->amplitude = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_Destroy(&s);
     }
 
     virtual void loadBundle(MBRegistry *mreg, BundleForce *b, const char *prefix) {
         CMBString s;
+        const char *cs;
         MBString_Create(&s);
+
+        b->flags = BUNDLE_FLAG_NONE;
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".rangeType");
+        cs = MBRegistry_GetCStr(mreg, MBString_GetCStr(&s));
+        if (cs == NULL ||
+            strcmp(cs, "") == 0 ||
+            strcmp(cs, "none") == 0) {
+            /* No extra flags. */
+        } else if (strcmp(cs, "strict") == 0) {
+            b->flags |= BUNDLE_FLAG_STRICT_RANGE;
+        } else {
+            PANIC("Unknown rangeType = %s\n", cs);
+        }
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".crowdType");
+        cs = MBRegistry_GetCStr(mreg, MBString_GetCStr(&s));
+        if (cs == NULL ||
+            strcmp(cs, "") == 0 ||
+            strcmp(cs, "none") == 0) {
+            /* No extra flags. */
+        } else if (strcmp(cs, "strict") == 0) {
+            b->flags |= BUNDLE_FLAG_STRICT_RANGE;
+        } else {
+            PANIC("Unknown rangeType = %s\n", cs);
+        }
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -282,16 +313,12 @@ public:
         this->myConfig.centerWeight = MBRegistry_GetFloat(mreg, "centerWeight");
 
         loadBundle(mreg, &this->myConfig.cores, "cores");
+        loadBundle(mreg, &this->myConfig.cores, "enemy");
 
         this->myConfig.baseRadius = MBRegistry_GetFloat(mreg, "baseRadius");
         this->myConfig.baseWeight = MBRegistry_GetFloat(mreg, "baseWeight");
         this->myConfig.nearBaseRadius = MBRegistry_GetFloat(mreg, "nearBaseRadius");
         this->myConfig.baseDefenseRadius = MBRegistry_GetFloat(mreg, "baseDefenseRadius");
-
-        this->myConfig.enemyRadius = MBRegistry_GetFloat(mreg, "enemyRadius");
-        this->myConfig.enemyWeight = MBRegistry_GetFloat(mreg, "enemyWeight");
-        this->myConfig.enemyCrowdRadius = MBRegistry_GetFloat(mreg, "enemyCrowdRadius");
-        this->myConfig.enemyCrowding = (uint)MBRegistry_GetFloat(mreg, "enemyCrowding");
 
         this->myConfig.enemyBaseRadius = MBRegistry_GetFloat(mreg, "enemyBaseRadius");
         this->myConfig.enemyBaseWeight = MBRegistry_GetFloat(mreg, "enemyBaseWeight");
@@ -535,21 +562,6 @@ public:
         FRPoint_Add(rPos, &repulseVec, rPos);
     }
 
-
-    void findEnemies(Mob *mob, FRPoint *rPos, float radius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        SensorGrid *sg = mySensorGrid;
-        Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
-
-        if (enemy != NULL) {
-            int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                                   &mob->pos, myConfig.enemyCrowdRadius);
-            BundleLegacyPullType pType = numFriends >= myConfig.enemyCrowding ?
-                                  PULL_ALWAYS : PULL_RANGE;
-            pullVector(rPos, &mob->pos, &enemy->pos, radius, weight, pType);
-        }
-    }
-
     float getBundleValue(BundleValue *bv) {
         if (bv->amplitude > 0.0f && bv->period > 0.0f) {
             float p = bv->period;
@@ -594,6 +606,16 @@ public:
 
         if (core != NULL) {
             applyBundle(mob, rForce, &myConfig.cores, &core->pos);
+        }
+    }
+
+    void findEnemies(Mob *mob, FRPoint *rForce) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        SensorGrid *sg = mySensorGrid;
+        Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
+
+        if (enemy != NULL) {
+            applyBundle(mob, rForce, &myConfig.enemy, &enemy->pos);
         }
     }
 
@@ -802,7 +824,7 @@ public:
             avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
             findCenter(mob, &rForce, myConfig.centerRadius, myConfig.centerWeight);
             findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
-            findEnemies(mob, &rForce, myConfig.enemyRadius, myConfig.enemyWeight);
+            findEnemies(mob, &rForce);
             findEnemyBase(mob, &rForce, myConfig.enemyBaseRadius,
                           myConfig.enemyBaseWeight);
             findCores(mob, &rForce);
@@ -903,10 +925,7 @@ public:
         float nearBaseRadius;
         float baseDefenseRadius;
 
-        float enemyRadius;
-        float enemyWeight;
-        float enemyCrowdRadius;
-        uint  enemyCrowding;
+        BundleForce enemy;
 
         float enemyBaseRadius;
         float enemyBaseWeight;
