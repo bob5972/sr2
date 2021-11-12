@@ -57,6 +57,7 @@ void CowardFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void RunAwayFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void CircleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void FlockFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
+void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 
 static inline void NeutralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
@@ -102,6 +103,7 @@ static inline void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         { FLEET_AI_BASIC,       BasicFleet_GetOps       },
         { FLEET_AI_HOLD,        HoldFleet_GetOps        },
         { FLEET_AI_CIRCLE,      CircleFleet_GetOps      },
+        { FLEET_AI_BUNDLE1,     BundleFleet_GetOps      },
     };
 
     ASSERT(aiType != FLEET_AI_INVALID);

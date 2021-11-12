@@ -853,10 +853,9 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_YELLOW3);
         case FLEET_AI_HOLD:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_PURPLE);
-        case FLEET_AI_BOB:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
         case FLEET_AI_CIRCLE:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_BLUE2);
+
         case FLEET_AI_FLOCK1:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED);
         case FLEET_AI_FLOCK2:
@@ -875,6 +874,12 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN2);
         case FLEET_AI_FLOCK9:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN3);
+
+        case FLEET_AI_BUNDLE1:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_PURPLE);
+
+        case FLEET_AI_BOB:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
 
         default:
             return SPRITE_INVALID;

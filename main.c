@@ -255,6 +255,7 @@ void MainConstructScenario(void)
          *
          *    -- unrated --
          *    BobFleet (prototype, varies)
+         *    BundleFleet1 (in progress)
          */
 
 //        mainData.players[p].aiType = FLEET_AI_DUMMY;
@@ -308,10 +309,13 @@ void MainConstructScenario(void)
         // mainData.players[p].aiType = FLEET_AI_FLOCK7;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK8;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_FLOCK8;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_FLOCK9;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_BUNDLE1;
         p++;
 
         // mainData.players[p].aiType = FLEET_AI_BOB;

@@ -59,6 +59,7 @@ C_SOURCES = main.c \
             workQueue.c
 CPP_SOURCES = basicFleet.cpp \
               bobFleet.cpp \
+              bundleFleet.cpp \
               circleFleet.cpp \
               cowardFleet.cpp \
               flockFleet.cpp \
