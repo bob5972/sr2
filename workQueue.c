@@ -94,7 +94,8 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
     ASSERT(res == 0);
 }
 
-void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
+static void WorkQueueGetItemLocked(WorkQueue *wq, void *item, uint itemSize,
+                                   bool useSemaphore)
 {
     ASSERT(wq != NULL);
     ASSERT(MBLock_IsLocked(&wq->lock));
@@ -103,6 +104,15 @@ void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
 
     ASSERT(wq->itemSize == itemSize);
     ASSERT(numQueued > 0);
+
+    if (useSemaphore) {
+        /*
+         * Keep the semaphore synced, if we didn't already decrement it.
+         */
+        ASSERT(SDL_SemValue(wq->workerSem) > 0);
+        int res = SDL_SemWait(wq->workerSem);
+        ASSERT(res == 0);
+    }
 
     MBRing_RemoveHead(&wq->items, item, itemSize);
     numQueued--;
@@ -113,13 +123,18 @@ void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
     SDL_AtomicIncRef(&wq->numInProgress);
 }
 
+void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
+{
+    WorkQueueGetItemLocked(wq, item, itemSize, TRUE);
+}
+
 void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
 {
     int res = SDL_SemWait(wq->workerSem);
     ASSERT(res == 0);
 
     WorkQueue_Lock(wq);
-    WorkQueue_GetItemLocked(wq, item, itemSize);
+    WorkQueueGetItemLocked(wq, item, itemSize, FALSE);
     WorkQueue_Unlock(wq);
 }
 

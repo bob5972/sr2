@@ -1336,6 +1336,24 @@ static void MainRunBattle(MainEngineThreadData *tData,
     }
 }
 
+static void MainProcessSingleResult(MainEngineResultUnit *ru)
+{
+    for (uint p = 0; p < ru->bs.numPlayers; p++) {
+        PlayerUID puid = ru->bs.players[p].playerUID;
+        ASSERT(puid < ARRAYSIZE(mainData.winners));
+        MainRecordWinner(&mainData.winners[puid], puid, &ru->bs);
+    }
+    if (ru->bs.numPlayers == 3) {
+        PlayerUID puid1 = ru->bs.players[1].playerUID;
+        PlayerUID puid2 = ru->bs.players[2].playerUID;
+        ASSERT(ru->bs.players[0].playerUID == PLAYER_ID_NEUTRAL);
+        MainRecordWinner(&mainData.winnerBreakdown[puid1][puid2],
+                         puid1, &ru->bs);
+        MainRecordWinner(&mainData.winnerBreakdown[puid2][puid1],
+                         puid2, &ru->bs);
+    }
+}
+
 void MainLoadScenario(MBRegistry *mreg, const char *scenario)
 {
     MBString filename;
@@ -1585,9 +1603,21 @@ int main(int argc, char **argv)
             WorkQueue_QueueItemLocked(&mainData.workQ, &wu, sizeof(wu));
 
             if ((battleId + 1) % mainData.numThreads == 0) {
+                uint workTarget = mainData.numThreads * 4;
                 WorkQueue_Unlock(&mainData.workQ);
-                WorkQueue_WaitForCountBelow(&mainData.workQ,
-                                            mainData.numThreads * 4);
+
+                /*
+                 * Try to process the results as they come in, to reduce
+                 * memory usage.
+                 */
+                while (!WorkQueue_IsEmpty(&mainData.resultQ) &&
+                       !WorkQueue_IsCountBelow(&mainData.workQ, workTarget)) {
+                    MainEngineResultUnit ru;
+                    WorkQueue_WaitForItem(&mainData.resultQ, &ru, sizeof(ru));
+                    MainProcessSingleResult(&ru);
+                }
+
+                WorkQueue_WaitForCountBelow(&mainData.workQ, workTarget);
                 WorkQueue_Lock(&mainData.workQ);
             }
         }
@@ -1619,23 +1649,10 @@ int main(int argc, char **argv)
     for (uint i = 0; i < qSize; i++) {
         MainEngineResultUnit ru;
         WorkQueue_GetItemLocked(&mainData.resultQ, &ru, sizeof(ru));
-
-        for (uint p = 0; p < ru.bs.numPlayers; p++) {
-            PlayerUID puid = ru.bs.players[p].playerUID;
-            ASSERT(puid < ARRAYSIZE(mainData.winners));
-            MainRecordWinner(&mainData.winners[puid], puid, &ru.bs);
-        }
-        if (ru.bs.numPlayers == 3) {
-            PlayerUID puid1 = ru.bs.players[1].playerUID;
-            PlayerUID puid2 = ru.bs.players[2].playerUID;
-            ASSERT(ru.bs.players[0].playerUID == PLAYER_ID_NEUTRAL);
-            MainRecordWinner(&mainData.winnerBreakdown[puid1][puid2],
-                             puid1, &ru.bs);
-            MainRecordWinner(&mainData.winnerBreakdown[puid2][puid1],
-                             puid2, &ru.bs);
-        }
+        MainProcessSingleResult(&ru);
     }
     WorkQueue_Unlock(&mainData.resultQ);
+    ASSERT(WorkQueue_IsEmpty(&mainData.resultQ));
 
     MainPrintWinners();
 
