@@ -24,15 +24,15 @@
 
 #include "MBVector.h"
 #include "MBLock.h"
+#include "MBRing.h"
 
 typedef struct WorkQueue {
-    uint itemSize;
-    int nextItem;
     SDL_atomic_t numQueued;
     SDL_atomic_t numInProgress;
     SDL_atomic_t finishWaitingCount;
     SDL_atomic_t anyFinishWaitingCount;
-    CMBVector items;
+    uint itemSize;
+    MBRing items;
     MBLock lock;
     SDL_sem *workerSem;
     SDL_sem *finishSem;

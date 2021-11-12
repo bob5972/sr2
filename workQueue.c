@@ -26,13 +26,12 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     ASSERT(itemSize != 0);
 
     wq->itemSize = itemSize;
-    wq->nextItem = 0;
     SDL_AtomicSet(&wq->numQueued, 0);
     SDL_AtomicSet(&wq->numInProgress, 0);
     SDL_AtomicSet(&wq->finishWaitingCount, 0);
     SDL_AtomicSet(&wq->anyFinishWaitingCount, 0);
 
-    CMBVector_CreateEmpty(&wq->items, itemSize);
+    MBRing_Create(&wq->items, itemSize);
 
     MBLock_Create(&wq->lock);
     wq->workerSem = SDL_CreateSemaphore(0);
@@ -46,7 +45,7 @@ void WorkQueue_Destroy(WorkQueue *wq)
     ASSERT(SDL_AtomicGet(&wq->finishWaitingCount) == 0);
     ASSERT(SDL_AtomicGet(&wq->anyFinishWaitingCount) == 0);
 
-    CMBVector_Destroy(&wq->items);
+    MBRing_Destroy(&wq->items);
     MBLock_Destroy(&wq->lock);
     SDL_DestroySemaphore(wq->workerSem);
     SDL_DestroySemaphore(wq->finishSem);
@@ -84,21 +83,11 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
 
     ASSERT(wq->itemSize == itemSize);
     uint numQueued = SDL_AtomicGet(&wq->numQueued);
-    int32 newLastIndex = wq->nextItem + numQueued;
 
-    ASSERT(newLastIndex >= 0);
-    ASSERT(newLastIndex >= wq->nextItem);
-    ASSERT(newLastIndex >= numQueued);
-
-    if (newLastIndex >= CMBVector_Size(&wq->items)) {
-        CMBVector_Grow(&wq->items);
-    }
-    ASSERT(newLastIndex < CMBVector_Size(&wq->items));
-
-    void *ptr = CMBVector_GetPtr(&wq->items, newLastIndex);
-    memcpy(ptr, item, wq->itemSize);
-
+    MBRing_InsertTail(&wq->items, item, itemSize);
     numQueued++;
+    ASSERT(MBRing_Size(&wq->items) == numQueued);
+
     SDL_AtomicSet(&wq->numQueued, numQueued);
 
     int res = SDL_SemPost(wq->workerSem);
@@ -113,37 +102,24 @@ void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
     uint numQueued = SDL_AtomicGet(&wq->numQueued);
 
     ASSERT(wq->itemSize == itemSize);
-    ASSERT(numQueued + wq->nextItem <= CMBVector_Size(&wq->items));
     ASSERT(numQueued > 0);
 
-    void *ptr = CMBVector_GetPtr(&wq->items, wq->nextItem);
-    memcpy(item, ptr, wq->itemSize);
-    wq->nextItem++;
+    MBRing_RemoveHead(&wq->items, item, itemSize);
     numQueued--;
-    SDL_AtomicSet(&wq->numQueued, numQueued);
+    ASSERT(MBRing_Size(&wq->items) == numQueued);
 
-    if (numQueued == 0) {
-        wq->nextItem = 0;
-    }
+    SDL_AtomicSet(&wq->numQueued, numQueued);
 
     SDL_AtomicIncRef(&wq->numInProgress);
 }
 
 void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
 {
-    WorkQueue_Lock(wq);
-
-    ASSERT(wq->itemSize == itemSize);
-    ASSERT(SDL_AtomicGet(&wq->numQueued) + wq->nextItem <=
-           CMBVector_Size(&wq->items));
-
-    WorkQueue_Unlock(wq);
     int res = SDL_SemWait(wq->workerSem);
     ASSERT(res == 0);
+
     WorkQueue_Lock(wq);
-
     WorkQueue_GetItemLocked(wq, item, itemSize);
-
     WorkQueue_Unlock(wq);
 }
 
@@ -280,6 +256,6 @@ void WorkQueue_MakeEmpty(WorkQueue *wq)
     WorkQueue_Lock(wq);
     SDL_AtomicSet(&wq->numInProgress, 0);
     SDL_AtomicSet(&wq->numQueued, 0);
-    wq->nextItem = 0;
+    MBRing_MakeEmpty(&wq->items);
     WorkQueue_Unlock(wq);
 }
