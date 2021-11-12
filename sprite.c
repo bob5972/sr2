@@ -128,133 +128,133 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_SPACE_PURPLE3_MISSILE,   SPRITE_SOURCE_SPACE29,     115,   1,   7,   7, },
     { SPRITE_SPACE_PURPLE3_POWER_CORE,SPRITE_SOURCE_SPACE29,     123,   1,   5,   5, },
 
-    { SPRITE_BLUE_BASE,               SPRITE_SOURCE_SHEET2,       38,  34,  99,  99, },
-    { SPRITE_BLUE_FIGHTER1,           SPRITE_SOURCE_SHEET2,       59, 148,   9,   9, },
-    { SPRITE_BLUE_FIGHTER2,           SPRITE_SOURCE_SHEET2,       75, 148,   9,   9, },
-    { SPRITE_BLUE_FIGHTER3,           SPRITE_SOURCE_SHEET2,       91, 148,   9,   9, },
-    { SPRITE_BLUE_FIGHTER4,           SPRITE_SOURCE_SHEET2,      107, 148,   9,   9, },
-    { SPRITE_BLUE_POWER_CORE,         SPRITE_SOURCE_SHEET2,      126, 150,   4,   4, },
-    { SPRITE_BLUE_MISSILE,            SPRITE_SOURCE_SHEET2,      140, 148,   8,   8, },
+    { SPRITE_NAJU_BLUE_BASE,          SPRITE_SOURCE_SHEET2,       38,  34,  99,  99, },
+    { SPRITE_NAJU_BLUE_FIGHTER1,      SPRITE_SOURCE_SHEET2,       59, 148,   9,   9, },
+    { SPRITE_NAJU_BLUE_FIGHTER2,      SPRITE_SOURCE_SHEET2,       75, 148,   9,   9, },
+    { SPRITE_NAJU_BLUE_FIGHTER3,      SPRITE_SOURCE_SHEET2,       91, 148,   9,   9, },
+    { SPRITE_NAJU_BLUE_FIGHTER4,      SPRITE_SOURCE_SHEET2,      107, 148,   9,   9, },
+    { SPRITE_NAJU_BLUE_POWER_CORE,    SPRITE_SOURCE_SHEET2,      126, 150,   4,   4, },
+    { SPRITE_NAJU_BLUE_MISSILE,       SPRITE_SOURCE_SHEET2,      140, 148,   8,   8, },
 
-    { SPRITE_PURPLE_BASE,             SPRITE_SOURCE_SHEET2,      198,  34,  99,  99, },
-    { SPRITE_PURPLE_FIGHTER1,         SPRITE_SOURCE_SHEET2,      219, 148,   9,   9, },
-    { SPRITE_PURPLE_FIGHTER2,         SPRITE_SOURCE_SHEET2,      235, 148,   9,   9, },
-    { SPRITE_PURPLE_FIGHTER3,         SPRITE_SOURCE_SHEET2,      251, 148,   9,   9, },
-    { SPRITE_PURPLE_FIGHTER4,         SPRITE_SOURCE_SHEET2,      267, 148,   9,   9, },
-    { SPRITE_PURPLE_POWER_CORE,       SPRITE_SOURCE_SHEET2,      286, 150,   4,   4, },
-    { SPRITE_PURPLE_MISSILE,          SPRITE_SOURCE_SHEET2,      300, 148,   8,   8, },
+    { SPRITE_NAJU_PURPLE_BASE,        SPRITE_SOURCE_SHEET2,      198,  34,  99,  99, },
+    { SPRITE_NAJU_PURPLE_FIGHTER1,    SPRITE_SOURCE_SHEET2,      219, 148,   9,   9, },
+    { SPRITE_NAJU_PURPLE_FIGHTER2,    SPRITE_SOURCE_SHEET2,      235, 148,   9,   9, },
+    { SPRITE_NAJU_PURPLE_FIGHTER3,    SPRITE_SOURCE_SHEET2,      251, 148,   9,   9, },
+    { SPRITE_NAJU_PURPLE_FIGHTER4,    SPRITE_SOURCE_SHEET2,      267, 148,   9,   9, },
+    { SPRITE_NAJU_PURPLE_POWER_CORE,  SPRITE_SOURCE_SHEET2,      286, 150,   4,   4, },
+    { SPRITE_NAJU_PURPLE_MISSILE,     SPRITE_SOURCE_SHEET2,      300, 148,   8,   8, },
 
-    { SPRITE_GRAY_BASE,               SPRITE_SOURCE_SHEET2,      358,  34,  99,  99, },
-    { SPRITE_GRAY_FIGHTER1,           SPRITE_SOURCE_SHEET2,      379, 148,   9,   9, },
-    { SPRITE_GRAY_FIGHTER2,           SPRITE_SOURCE_SHEET2,      395, 148,   9,   9, },
-    { SPRITE_GRAY_FIGHTER3,           SPRITE_SOURCE_SHEET2,      411, 148,   9,   9, },
-    { SPRITE_GRAY_FIGHTER4,           SPRITE_SOURCE_SHEET2,      427, 148,   9,   9, },
-    { SPRITE_GRAY_POWER_CORE,         SPRITE_SOURCE_SHEET2,      446, 150,   4,   4, },
-    { SPRITE_GRAY_MISSILE,            SPRITE_SOURCE_SHEET2,      460, 148,   8,   8, },
+    { SPRITE_NAJU_GRAY_BASE,          SPRITE_SOURCE_SHEET2,      358,  34,  99,  99, },
+    { SPRITE_NAJU_GRAY_FIGHTER1,      SPRITE_SOURCE_SHEET2,      379, 148,   9,   9, },
+    { SPRITE_NAJU_GRAY_FIGHTER2,      SPRITE_SOURCE_SHEET2,      395, 148,   9,   9, },
+    { SPRITE_NAJU_GRAY_FIGHTER3,      SPRITE_SOURCE_SHEET2,      411, 148,   9,   9, },
+    { SPRITE_NAJU_GRAY_FIGHTER4,      SPRITE_SOURCE_SHEET2,      427, 148,   9,   9, },
+    { SPRITE_NAJU_GRAY_POWER_CORE,    SPRITE_SOURCE_SHEET2,      446, 150,   4,   4, },
+    { SPRITE_NAJU_GRAY_MISSILE,       SPRITE_SOURCE_SHEET2,      460, 148,   8,   8, },
 
-    { SPRITE_YELLOW_BASE,             SPRITE_SOURCE_SHEET2,      518,  34,  99,  99, },
-    { SPRITE_YELLOW_FIGHTER1,         SPRITE_SOURCE_SHEET2,      539, 148,   9,   9, },
-    { SPRITE_YELLOW_FIGHTER2,         SPRITE_SOURCE_SHEET2,      555, 148,   9,   9, },
-    { SPRITE_YELLOW_FIGHTER3,         SPRITE_SOURCE_SHEET2,      571, 148,   9,   9, },
-    { SPRITE_YELLOW_FIGHTER4,         SPRITE_SOURCE_SHEET2,      587, 148,   9,   9, },
-    { SPRITE_YELLOW_POWER_CORE,       SPRITE_SOURCE_SHEET2,      606, 150,   4,   4, },
-    { SPRITE_YELLOW_MISSILE,          SPRITE_SOURCE_SHEET2,      620, 148,   8,   8, },
+    { SPRITE_NAJU_YELLOW_BASE,        SPRITE_SOURCE_SHEET2,      518,  34,  99,  99, },
+    { SPRITE_NAJU_YELLOW_FIGHTER1,    SPRITE_SOURCE_SHEET2,      539, 148,   9,   9, },
+    { SPRITE_NAJU_YELLOW_FIGHTER2,    SPRITE_SOURCE_SHEET2,      555, 148,   9,   9, },
+    { SPRITE_NAJU_YELLOW_FIGHTER3,    SPRITE_SOURCE_SHEET2,      571, 148,   9,   9, },
+    { SPRITE_NAJU_YELLOW_FIGHTER4,    SPRITE_SOURCE_SHEET2,      587, 148,   9,   9, },
+    { SPRITE_NAJU_YELLOW_POWER_CORE,  SPRITE_SOURCE_SHEET2,      606, 150,   4,   4, },
+    { SPRITE_NAJU_YELLOW_MISSILE,     SPRITE_SOURCE_SHEET2,      620, 148,   8,   8, },
 
-    { SPRITE_GREEN_BASE,              SPRITE_SOURCE_SHEET2,       38, 210,  99,  99, },
-    { SPRITE_GREEN_FIGHTER1,          SPRITE_SOURCE_SHEET2,       59, 324,   9,   9, },
-    { SPRITE_GREEN_FIGHTER2,          SPRITE_SOURCE_SHEET2,       75, 324,   9,   9, },
-    { SPRITE_GREEN_FIGHTER3,          SPRITE_SOURCE_SHEET2,       91, 324,   9,   9, },
-    { SPRITE_GREEN_FIGHTER4,          SPRITE_SOURCE_SHEET2,      107, 324,   9,   9, },
-    { SPRITE_GREEN_POWER_CORE,        SPRITE_SOURCE_SHEET2,      126, 326,   4,   4, },
-    { SPRITE_GREEN_MISSILE,           SPRITE_SOURCE_SHEET2,      140, 324,   8,   8, },
+    { SPRITE_NAJU_GREEN_BASE,         SPRITE_SOURCE_SHEET2,       38, 210,  99,  99, },
+    { SPRITE_NAJU_GREEN_FIGHTER1,     SPRITE_SOURCE_SHEET2,       59, 324,   9,   9, },
+    { SPRITE_NAJU_GREEN_FIGHTER2,     SPRITE_SOURCE_SHEET2,       75, 324,   9,   9, },
+    { SPRITE_NAJU_GREEN_FIGHTER3,     SPRITE_SOURCE_SHEET2,       91, 324,   9,   9, },
+    { SPRITE_NAJU_GREEN_FIGHTER4,     SPRITE_SOURCE_SHEET2,      107, 324,   9,   9, },
+    { SPRITE_NAJU_GREEN_POWER_CORE,   SPRITE_SOURCE_SHEET2,      126, 326,   4,   4, },
+    { SPRITE_NAJU_GREEN_MISSILE,      SPRITE_SOURCE_SHEET2,      140, 324,   8,   8, },
 
-    { SPRITE_RED_BASE,                SPRITE_SOURCE_SHEET2,      198, 210,  99,  99, },
-    { SPRITE_RED_FIGHTER1,            SPRITE_SOURCE_SHEET2,      219, 324,   9,   9, },
-    { SPRITE_RED_FIGHTER2,            SPRITE_SOURCE_SHEET2,      235, 324,   9,   9, },
-    { SPRITE_RED_FIGHTER3,            SPRITE_SOURCE_SHEET2,      251, 324,   9,   9, },
-    { SPRITE_RED_FIGHTER4,            SPRITE_SOURCE_SHEET2,      267, 324,   9,   9, },
-    { SPRITE_RED_POWER_CORE,          SPRITE_SOURCE_SHEET2,      286, 326,   4,   4, },
-    { SPRITE_RED_MISSILE,             SPRITE_SOURCE_SHEET2,      300, 324,   8,   8, },
+    { SPRITE_NAJU_RED_BASE,           SPRITE_SOURCE_SHEET2,      198, 210,  99,  99, },
+    { SPRITE_NAJU_RED_FIGHTER1,       SPRITE_SOURCE_SHEET2,      219, 324,   9,   9, },
+    { SPRITE_NAJU_RED_FIGHTER2,       SPRITE_SOURCE_SHEET2,      235, 324,   9,   9, },
+    { SPRITE_NAJU_RED_FIGHTER3,       SPRITE_SOURCE_SHEET2,      251, 324,   9,   9, },
+    { SPRITE_NAJU_RED_FIGHTER4,       SPRITE_SOURCE_SHEET2,      267, 324,   9,   9, },
+    { SPRITE_NAJU_RED_POWER_CORE,     SPRITE_SOURCE_SHEET2,      286, 326,   4,   4, },
+    { SPRITE_NAJU_RED_MISSILE,        SPRITE_SOURCE_SHEET2,      300, 324,   8,   8, },
 
-    { SPRITE_BLUE2_BASE,              SPRITE_SOURCE_SHEET2,      358, 210,  99,  99, },
-    { SPRITE_BLUE2_FIGHTER1,          SPRITE_SOURCE_SHEET2,      379, 324,   9,   9, },
-    { SPRITE_BLUE2_FIGHTER2,          SPRITE_SOURCE_SHEET2,      395, 324,   9,   9, },
-    { SPRITE_BLUE2_FIGHTER3,          SPRITE_SOURCE_SHEET2,      411, 324,   9,   9, },
-    { SPRITE_BLUE2_FIGHTER4,          SPRITE_SOURCE_SHEET2,      427, 324,   9,   9, },
-    { SPRITE_BLUE2_POWER_CORE,        SPRITE_SOURCE_SHEET2,      446, 326,   4,   4, },
-    { SPRITE_BLUE2_MISSILE,           SPRITE_SOURCE_SHEET2,      460, 324,   8,   8, },
+    { SPRITE_NAJU_BLUE2_BASE,         SPRITE_SOURCE_SHEET2,      358, 210,  99,  99, },
+    { SPRITE_NAJU_BLUE2_FIGHTER1,     SPRITE_SOURCE_SHEET2,      379, 324,   9,   9, },
+    { SPRITE_NAJU_BLUE2_FIGHTER2,     SPRITE_SOURCE_SHEET2,      395, 324,   9,   9, },
+    { SPRITE_NAJU_BLUE2_FIGHTER3,     SPRITE_SOURCE_SHEET2,      411, 324,   9,   9, },
+    { SPRITE_NAJU_BLUE2_FIGHTER4,     SPRITE_SOURCE_SHEET2,      427, 324,   9,   9, },
+    { SPRITE_NAJU_BLUE2_POWER_CORE,   SPRITE_SOURCE_SHEET2,      446, 326,   4,   4, },
+    { SPRITE_NAJU_BLUE2_MISSILE,      SPRITE_SOURCE_SHEET2,      460, 324,   8,   8, },
 
-    { SPRITE_ORANGE_BASE,             SPRITE_SOURCE_SHEET2,      518, 210,  99,  99, },
-    { SPRITE_ORANGE_FIGHTER1,         SPRITE_SOURCE_SHEET2,      539, 324,   9,   9, },
-    { SPRITE_ORANGE_FIGHTER2,         SPRITE_SOURCE_SHEET2,      555, 324,   9,   9, },
-    { SPRITE_ORANGE_FIGHTER3,         SPRITE_SOURCE_SHEET2,      571, 324,   9,   9, },
-    { SPRITE_ORANGE_FIGHTER4,         SPRITE_SOURCE_SHEET2,      587, 324,   9,   9, },
-    { SPRITE_ORANGE_POWER_CORE,       SPRITE_SOURCE_SHEET2,      606, 326,   4,   4, },
-    { SPRITE_ORANGE_MISSILE,          SPRITE_SOURCE_SHEET2,      620, 324,   8,   8, },
+    { SPRITE_NAJU_ORANGE_BASE,        SPRITE_SOURCE_SHEET2,      518, 210,  99,  99, },
+    { SPRITE_NAJU_ORANGE_FIGHTER1,    SPRITE_SOURCE_SHEET2,      539, 324,   9,   9, },
+    { SPRITE_NAJU_ORANGE_FIGHTER2,    SPRITE_SOURCE_SHEET2,      555, 324,   9,   9, },
+    { SPRITE_NAJU_ORANGE_FIGHTER3,    SPRITE_SOURCE_SHEET2,      571, 324,   9,   9, },
+    { SPRITE_NAJU_ORANGE_FIGHTER4,    SPRITE_SOURCE_SHEET2,      587, 324,   9,   9, },
+    { SPRITE_NAJU_ORANGE_POWER_CORE,  SPRITE_SOURCE_SHEET2,      606, 326,   4,   4, },
+    { SPRITE_NAJU_ORANGE_MISSILE,     SPRITE_SOURCE_SHEET2,      620, 324,   8,   8, },
 
-    { SPRITE_TURQUOISE_BASE,          SPRITE_SOURCE_SHEET2,       38, 386,  99,  99, },
-    { SPRITE_TURQUOISE_FIGHTER1,      SPRITE_SOURCE_SHEET2,       59, 500,   9,   9, },
-    { SPRITE_TURQUOISE_FIGHTER2,      SPRITE_SOURCE_SHEET2,       75, 500,   9,   9, },
-    { SPRITE_TURQUOISE_FIGHTER3,      SPRITE_SOURCE_SHEET2,       91, 500,   9,   9, },
-    { SPRITE_TURQUOISE_FIGHTER4,      SPRITE_SOURCE_SHEET2,      107, 500,   9,   9, },
-    { SPRITE_TURQUOISE_POWER_CORE,    SPRITE_SOURCE_SHEET2,      126, 502,   4,   4, },
-    { SPRITE_TURQUOISE_MISSILE,       SPRITE_SOURCE_SHEET2,      140, 500,   8,   8, },
+    { SPRITE_NAJU_TURQUOISE_BASE,     SPRITE_SOURCE_SHEET2,       38, 386,  99,  99, },
+    { SPRITE_NAJU_TURQUOISE_FIGHTER1, SPRITE_SOURCE_SHEET2,       59, 500,   9,   9, },
+    { SPRITE_NAJU_TURQUOISE_FIGHTER2, SPRITE_SOURCE_SHEET2,       75, 500,   9,   9, },
+    { SPRITE_NAJU_TURQUOISE_FIGHTER3, SPRITE_SOURCE_SHEET2,       91, 500,   9,   9, },
+    { SPRITE_NAJU_TURQUOISE_FIGHTER4, SPRITE_SOURCE_SHEET2,      107, 500,   9,   9, },
+    { SPRITE_NAJU_TURQUOISE_POWER_CORE,SPRITE_SOURCE_SHEET2,     126, 502,   4,   4, },
+    { SPRITE_NAJU_TURQUOISE_MISSILE,  SPRITE_SOURCE_SHEET2,      140, 500,   8,   8, },
 
-    { SPRITE_PURPLE2_BASE,            SPRITE_SOURCE_SHEET2,      198, 386,  99,  99, },
-    { SPRITE_PURPLE2_FIGHTER1,        SPRITE_SOURCE_SHEET2,      219, 500,   9,   9, },
-    { SPRITE_PURPLE2_FIGHTER2,        SPRITE_SOURCE_SHEET2,      235, 500,   9,   9, },
-    { SPRITE_PURPLE2_FIGHTER3,        SPRITE_SOURCE_SHEET2,      251, 500,   9,   9, },
-    { SPRITE_PURPLE2_FIGHTER4,        SPRITE_SOURCE_SHEET2,      267, 500,   9,   9, },
-    { SPRITE_PURPLE2_POWER_CORE,      SPRITE_SOURCE_SHEET2,      286, 502,   4,   4, },
-    { SPRITE_PURPLE2_MISSILE,         SPRITE_SOURCE_SHEET2,      300, 500,   8,   8, },
+    { SPRITE_NAJU_PURPLE2_BASE,       SPRITE_SOURCE_SHEET2,      198, 386,  99,  99, },
+    { SPRITE_NAJU_PURPLE2_FIGHTER1,   SPRITE_SOURCE_SHEET2,      219, 500,   9,   9, },
+    { SPRITE_NAJU_PURPLE2_FIGHTER2,   SPRITE_SOURCE_SHEET2,      235, 500,   9,   9, },
+    { SPRITE_NAJU_PURPLE2_FIGHTER3,   SPRITE_SOURCE_SHEET2,      251, 500,   9,   9, },
+    { SPRITE_NAJU_PURPLE2_FIGHTER4,   SPRITE_SOURCE_SHEET2,      267, 500,   9,   9, },
+    { SPRITE_NAJU_PURPLE2_POWER_CORE, SPRITE_SOURCE_SHEET2,      286, 502,   4,   4, },
+    { SPRITE_NAJU_PURPLE2_MISSILE,    SPRITE_SOURCE_SHEET2,      300, 500,   8,   8, },
 
-    { SPRITE_WHITE_BASE,              SPRITE_SOURCE_SHEET2,      358, 386,  99,  99, },
-    { SPRITE_WHITE_FIGHTER1,          SPRITE_SOURCE_SHEET2,      379, 500,   9,   9, },
-    { SPRITE_WHITE_FIGHTER2,          SPRITE_SOURCE_SHEET2,      395, 500,   9,   9, },
-    { SPRITE_WHITE_FIGHTER3,          SPRITE_SOURCE_SHEET2,      411, 500,   9,   9, },
-    { SPRITE_WHITE_FIGHTER4,          SPRITE_SOURCE_SHEET2,      427, 500,   9,   9, },
-    { SPRITE_WHITE_POWER_CORE,        SPRITE_SOURCE_SHEET2,      446, 502,   4,   4, },
-    { SPRITE_WHITE_MISSILE,           SPRITE_SOURCE_SHEET2,      460, 500,   8,   8, },
+    { SPRITE_NAJU_WHITE_BASE,         SPRITE_SOURCE_SHEET2,      358, 386,  99,  99, },
+    { SPRITE_NAJU_WHITE_FIGHTER1,     SPRITE_SOURCE_SHEET2,      379, 500,   9,   9, },
+    { SPRITE_NAJU_WHITE_FIGHTER2,     SPRITE_SOURCE_SHEET2,      395, 500,   9,   9, },
+    { SPRITE_NAJU_WHITE_FIGHTER3,     SPRITE_SOURCE_SHEET2,      411, 500,   9,   9, },
+    { SPRITE_NAJU_WHITE_FIGHTER4,     SPRITE_SOURCE_SHEET2,      427, 500,   9,   9, },
+    { SPRITE_NAJU_WHITE_POWER_CORE,   SPRITE_SOURCE_SHEET2,      446, 502,   4,   4, },
+    { SPRITE_NAJU_WHITE_MISSILE,      SPRITE_SOURCE_SHEET2,      460, 500,   8,   8, },
 
-    { SPRITE_RED2_BASE,               SPRITE_SOURCE_SHEET2,      518, 386,  99,  99, },
-    { SPRITE_RED2_FIGHTER1,           SPRITE_SOURCE_SHEET2,      539, 500,   9,   9, },
-    { SPRITE_RED2_FIGHTER2,           SPRITE_SOURCE_SHEET2,      555, 500,   9,   9, },
-    { SPRITE_RED2_FIGHTER3,           SPRITE_SOURCE_SHEET2,      571, 500,   9,   9, },
-    { SPRITE_RED2_FIGHTER4,           SPRITE_SOURCE_SHEET2,      587, 500,   9,   9, },
-    { SPRITE_RED2_POWER_CORE,         SPRITE_SOURCE_SHEET2,      606, 502,   4,   4, },
-    { SPRITE_RED2_MISSILE,            SPRITE_SOURCE_SHEET2,      620, 500,   8,   8, },
+    { SPRITE_NAJU_RED2_BASE,          SPRITE_SOURCE_SHEET2,      518, 386,  99,  99, },
+    { SPRITE_NAJU_RED2_FIGHTER1,      SPRITE_SOURCE_SHEET2,      539, 500,   9,   9, },
+    { SPRITE_NAJU_RED2_FIGHTER2,      SPRITE_SOURCE_SHEET2,      555, 500,   9,   9, },
+    { SPRITE_NAJU_RED2_FIGHTER3,      SPRITE_SOURCE_SHEET2,      571, 500,   9,   9, },
+    { SPRITE_NAJU_RED2_FIGHTER4,      SPRITE_SOURCE_SHEET2,      587, 500,   9,   9, },
+    { SPRITE_NAJU_RED2_POWER_CORE,    SPRITE_SOURCE_SHEET2,      606, 502,   4,   4, },
+    { SPRITE_NAJU_RED2_MISSILE,       SPRITE_SOURCE_SHEET2,      620, 500,   8,   8, },
 
-    { SPRITE_YELLOW2_BASE,            SPRITE_SOURCE_SHEET2,       38, 562,  99,  99, },
-    { SPRITE_YELLOW2_FIGHTER1,        SPRITE_SOURCE_SHEET2,       59, 676,   9,   9, },
-    { SPRITE_YELLOW2_FIGHTER2,        SPRITE_SOURCE_SHEET2,       75, 676,   9,   9, },
-    { SPRITE_YELLOW2_FIGHTER3,        SPRITE_SOURCE_SHEET2,       91, 676,   9,   9, },
-    { SPRITE_YELLOW2_FIGHTER4,        SPRITE_SOURCE_SHEET2,      107, 676,   9,   9, },
-    { SPRITE_YELLOW2_POWER_CORE,      SPRITE_SOURCE_SHEET2,      126, 678,   4,   4, },
-    { SPRITE_YELLOW2_MISSILE,         SPRITE_SOURCE_SHEET2,      140, 676,   8,   8, },
+    { SPRITE_NAJU_YELLOW2_BASE,       SPRITE_SOURCE_SHEET2,       38, 562,  99,  99, },
+    { SPRITE_NAJU_YELLOW2_FIGHTER1,   SPRITE_SOURCE_SHEET2,       59, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW2_FIGHTER2,   SPRITE_SOURCE_SHEET2,       75, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW2_FIGHTER3,   SPRITE_SOURCE_SHEET2,       91, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW2_FIGHTER4,   SPRITE_SOURCE_SHEET2,      107, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW2_POWER_CORE, SPRITE_SOURCE_SHEET2,      126, 678,   4,   4, },
+    { SPRITE_NAJU_YELLOW2_MISSILE,    SPRITE_SOURCE_SHEET2,      140, 676,   8,   8, },
 
-    { SPRITE_MAGENTA_BASE,            SPRITE_SOURCE_SHEET2,      198, 562,  99,  99, },
-    { SPRITE_MAGENTA_FIGHTER1,        SPRITE_SOURCE_SHEET2,      219, 676,   9,   9, },
-    { SPRITE_MAGENTA_FIGHTER2,        SPRITE_SOURCE_SHEET2,      235, 676,   9,   9, },
-    { SPRITE_MAGENTA_FIGHTER3,        SPRITE_SOURCE_SHEET2,      251, 676,   9,   9, },
-    { SPRITE_MAGENTA_FIGHTER4,        SPRITE_SOURCE_SHEET2,      267, 676,   9,   9, },
-    { SPRITE_MAGENTA_POWER_CORE,      SPRITE_SOURCE_SHEET2,      286, 678,   4,   4, },
-    { SPRITE_MAGENTA_MISSILE,         SPRITE_SOURCE_SHEET2,      300, 676,   8,   8, },
+    { SPRITE_NAJU_MAGENTA_BASE,       SPRITE_SOURCE_SHEET2,      198, 562,  99,  99, },
+    { SPRITE_NAJU_MAGENTA_FIGHTER1,   SPRITE_SOURCE_SHEET2,      219, 676,   9,   9, },
+    { SPRITE_NAJU_MAGENTA_FIGHTER2,   SPRITE_SOURCE_SHEET2,      235, 676,   9,   9, },
+    { SPRITE_NAJU_MAGENTA_FIGHTER3,   SPRITE_SOURCE_SHEET2,      251, 676,   9,   9, },
+    { SPRITE_NAJU_MAGENTA_FIGHTER4,   SPRITE_SOURCE_SHEET2,      267, 676,   9,   9, },
+    { SPRITE_NAJU_MAGENTA_POWER_CORE, SPRITE_SOURCE_SHEET2,      286, 678,   4,   4, },
+    { SPRITE_NAJU_MAGENTA_MISSILE,    SPRITE_SOURCE_SHEET2,      300, 676,   8,   8, },
 
-    { SPRITE_ORANGE2_BASE,            SPRITE_SOURCE_SHEET2,      358, 562,  99,  99, },
-    { SPRITE_ORANGE2_FIGHTER1,        SPRITE_SOURCE_SHEET2,      379, 676,   9,   9, },
-    { SPRITE_ORANGE2_FIGHTER2,        SPRITE_SOURCE_SHEET2,      395, 676,   9,   9, },
-    { SPRITE_ORANGE2_FIGHTER3,        SPRITE_SOURCE_SHEET2,      411, 676,   9,   9, },
-    { SPRITE_ORANGE2_FIGHTER4,        SPRITE_SOURCE_SHEET2,      427, 676,   9,   9, },
-    { SPRITE_ORANGE2_POWER_CORE,      SPRITE_SOURCE_SHEET2,      446, 678,   4,   4, },
-    { SPRITE_ORANGE2_MISSILE,         SPRITE_SOURCE_SHEET2,      460, 676,   8,   8, },
+    { SPRITE_NAJU_ORANGE2_BASE,       SPRITE_SOURCE_SHEET2,      358, 562,  99,  99, },
+    { SPRITE_NAJU_ORANGE2_FIGHTER1,   SPRITE_SOURCE_SHEET2,      379, 676,   9,   9, },
+    { SPRITE_NAJU_ORANGE2_FIGHTER2,   SPRITE_SOURCE_SHEET2,      395, 676,   9,   9, },
+    { SPRITE_NAJU_ORANGE2_FIGHTER3,   SPRITE_SOURCE_SHEET2,      411, 676,   9,   9, },
+    { SPRITE_NAJU_ORANGE2_FIGHTER4,   SPRITE_SOURCE_SHEET2,      427, 676,   9,   9, },
+    { SPRITE_NAJU_ORANGE2_POWER_CORE, SPRITE_SOURCE_SHEET2,      446, 678,   4,   4, },
+    { SPRITE_NAJU_ORANGE2_MISSILE,    SPRITE_SOURCE_SHEET2,      460, 676,   8,   8, },
 
-    { SPRITE_YELLOW3_BASE,            SPRITE_SOURCE_SHEET2,      518, 562,  99,  99, },
-    { SPRITE_YELLOW3_FIGHTER1,        SPRITE_SOURCE_SHEET2,      539, 676,   9,   9, },
-    { SPRITE_YELLOW3_FIGHTER2,        SPRITE_SOURCE_SHEET2,      555, 676,   9,   9, },
-    { SPRITE_YELLOW3_FIGHTER3,        SPRITE_SOURCE_SHEET2,      571, 676,   9,   9, },
-    { SPRITE_YELLOW3_FIGHTER4,        SPRITE_SOURCE_SHEET2,      587, 676,   9,   9, },
-    { SPRITE_YELLOW3_POWER_CORE,      SPRITE_SOURCE_SHEET2,      606, 678,   4,   4, },
-    { SPRITE_YELLOW3_MISSILE,         SPRITE_SOURCE_SHEET2,      620, 676,   8,   8, },
+    { SPRITE_NAJU_YELLOW3_BASE,       SPRITE_SOURCE_SHEET2,      518, 562,  99,  99, },
+    { SPRITE_NAJU_YELLOW3_FIGHTER1,   SPRITE_SOURCE_SHEET2,      539, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW3_FIGHTER2,   SPRITE_SOURCE_SHEET2,      555, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW3_FIGHTER3,   SPRITE_SOURCE_SHEET2,      571, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW3_FIGHTER4,   SPRITE_SOURCE_SHEET2,      587, 676,   9,   9, },
+    { SPRITE_NAJU_YELLOW3_POWER_CORE, SPRITE_SOURCE_SHEET2,      606, 678,   4,   4, },
+    { SPRITE_NAJU_YELLOW3_MISSILE,    SPRITE_SOURCE_SHEET2,      620, 676,   8,   8, },
 };
 
 typedef struct SpriteBacking {
@@ -563,53 +563,53 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         case SPRITE_SET_SPACE_PURPLE3:
             st = SPRITE_SPACE_PURPLE3_BASE;
             break;
-        case SPRITE_SET_BLUE:
-            st = SPRITE_BLUE_BASE;
+        case SPRITE_SET_NAJU_BLUE:
+            st = SPRITE_NAJU_BLUE_BASE;
             break;
-        case SPRITE_SET_PURPLE:
-            st = SPRITE_PURPLE_BASE;
+        case SPRITE_SET_NAJU_PURPLE:
+            st = SPRITE_NAJU_PURPLE_BASE;
             break;
-        case SPRITE_SET_GRAY:
-            st = SPRITE_GRAY_BASE;
+        case SPRITE_SET_NAJU_GRAY:
+            st = SPRITE_NAJU_GRAY_BASE;
             break;
-        case SPRITE_SET_YELLOW:
-            st = SPRITE_YELLOW_BASE;
+        case SPRITE_SET_NAJU_YELLOW:
+            st = SPRITE_NAJU_YELLOW_BASE;
             break;
-        case SPRITE_SET_GREEN:
-            st = SPRITE_GREEN_BASE;
+        case SPRITE_SET_NAJU_GREEN:
+            st = SPRITE_NAJU_GREEN_BASE;
             break;
-        case SPRITE_SET_RED:
-            st = SPRITE_RED_BASE;
+        case SPRITE_SET_NAJU_RED:
+            st = SPRITE_NAJU_RED_BASE;
             break;
-        case SPRITE_SET_BLUE2:
-            st = SPRITE_BLUE2_BASE;
+        case SPRITE_SET_NAJU_BLUE2:
+            st = SPRITE_NAJU_BLUE2_BASE;
             break;
-        case SPRITE_SET_ORANGE:
-            st = SPRITE_ORANGE_BASE;
+        case SPRITE_SET_NAJU_ORANGE:
+            st = SPRITE_NAJU_ORANGE_BASE;
             break;
-        case SPRITE_SET_TURQUOISE:
-            st = SPRITE_TURQUOISE_BASE;
+        case SPRITE_SET_NAJU_TURQUOISE:
+            st = SPRITE_NAJU_TURQUOISE_BASE;
             break;
-        case SPRITE_SET_PURPLE2:
-            st = SPRITE_PURPLE2_BASE;
+        case SPRITE_SET_NAJU_PURPLE2:
+            st = SPRITE_NAJU_PURPLE2_BASE;
             break;
-        case SPRITE_SET_WHITE:
-            st = SPRITE_WHITE_BASE;
+        case SPRITE_SET_NAJU_WHITE:
+            st = SPRITE_NAJU_WHITE_BASE;
             break;
-        case SPRITE_SET_RED2:
-            st = SPRITE_RED2_BASE;
+        case SPRITE_SET_NAJU_RED2:
+            st = SPRITE_NAJU_RED2_BASE;
             break;
-        case SPRITE_SET_YELLOW2:
-            st = SPRITE_YELLOW2_BASE;
+        case SPRITE_SET_NAJU_YELLOW2:
+            st = SPRITE_NAJU_YELLOW2_BASE;
             break;
-        case SPRITE_SET_MAGENTA:
-            st = SPRITE_MAGENTA_BASE;
+        case SPRITE_SET_NAJU_MAGENTA:
+            st = SPRITE_NAJU_MAGENTA_BASE;
             break;
-        case SPRITE_SET_ORANGE2:
-            st = SPRITE_ORANGE2_BASE;
+        case SPRITE_SET_NAJU_ORANGE2:
+            st = SPRITE_NAJU_ORANGE2_BASE;
             break;
-        case SPRITE_SET_YELLOW3:
-            st = SPRITE_YELLOW3_BASE;
+        case SPRITE_SET_NAJU_YELLOW3:
+            st = SPRITE_NAJU_YELLOW3_BASE;
             break;
         default:
             NOT_REACHED();
@@ -629,17 +629,20 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         return st + (t - 1);
     }
 
-    if (t == MOB_TYPE_BASE) {
-        return st;
-    } else if (t == MOB_TYPE_FIGHTER) {
-        return st + Random_Int(1, 4);
-    } else if (t == MOB_TYPE_POWER_CORE) {
-        return st + 5;
-    } else if (t == MOB_TYPE_MISSILE) {
-        return st + 6;
+    if (ss >= SPRITE_SET_NAJU_BLUE &&
+        ss <= SPRITE_SET_NAJU_YELLOW3) {
+        if (t == MOB_TYPE_BASE) {
+            return st;
+        } else if (t == MOB_TYPE_FIGHTER) {
+            return st + Random_Int(1, 4);
+        } else if (t == MOB_TYPE_POWER_CORE) {
+            return st + 5;
+        } else if (t == MOB_TYPE_MISSILE) {
+            return st + 6;
+        }
     }
 
-    NOT_REACHED();
+    PANIC("Unknown Sprite Requested!\n");
 }
 
 static SpriteType SpriteGetMobSpriteType(MobType t,
@@ -657,27 +660,27 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_GRAY);
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_WHITE);
         case FLEET_AI_DUMMY:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_WHITE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_WHITE);
         case FLEET_AI_SIMPLE:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_RED);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_RED);
         case FLEET_AI_GATHER:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_GREEN);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_GREEN);
         case FLEET_AI_CLOUD:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_BLUE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_BLUE);
         case FLEET_AI_MAPPER:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_YELLOW);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_YELLOW);
         case FLEET_AI_RUNAWAY:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_PURPLE2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_PURPLE2);
         case FLEET_AI_COWARD:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_TURQUOISE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_TURQUOISE);
         case FLEET_AI_BASIC:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_YELLOW3);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_YELLOW3);
         case FLEET_AI_HOLD:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_PURPLE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_PURPLE);
         case FLEET_AI_BOB:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
         case FLEET_AI_CIRCLE:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_BLUE2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_BLUE2);
         case FLEET_AI_FLOCK1:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED);
         case FLEET_AI_FLOCK2:
