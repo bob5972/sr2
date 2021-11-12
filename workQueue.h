@@ -19,9 +19,11 @@
 #ifndef _WORKQUEUE_H_202006241219
 #define _WORKQUEUE_H_202006241219
 
-#include "MBVector.h"
 #include <SDL2/SDL_mutex.h>
 #include <SDL2/SDL_atomic.h>
+
+#include "MBVector.h"
+#include "MBLock.h"
 
 typedef struct WorkQueue {
     uint itemSize;
@@ -30,10 +32,9 @@ typedef struct WorkQueue {
     SDL_atomic_t numInProgress;
     SDL_atomic_t finishWaitingCount;
     SDL_atomic_t anyFinishWaitingCount;
-    int workerWaitingCount;
     CMBVector items;
-    SDL_mutex *lock;
-    SDL_cond *workerSignal;
+    MBLock lock;
+    SDL_sem *workerSem;
     SDL_sem *finishSem;
     SDL_sem *anyFinishSem;
 } WorkQueue;

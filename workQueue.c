@@ -31,12 +31,11 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
     SDL_AtomicSet(&wq->numInProgress, 0);
     SDL_AtomicSet(&wq->finishWaitingCount, 0);
     SDL_AtomicSet(&wq->anyFinishWaitingCount, 0);
-    wq->workerWaitingCount = 0;
 
     CMBVector_CreateEmpty(&wq->items, itemSize);
 
-    wq->lock = SDL_CreateMutex();
-    wq->workerSignal = SDL_CreateCond();
+    MBLock_Create(&wq->lock);
+    wq->workerSem = SDL_CreateSemaphore(0);
     wq->finishSem = SDL_CreateSemaphore(0);
     wq->anyFinishSem = SDL_CreateSemaphore(0);
 }
@@ -44,42 +43,30 @@ void WorkQueue_Create(WorkQueue *wq, uint itemSize)
 void WorkQueue_Destroy(WorkQueue *wq)
 {
     ASSERT(wq->itemSize != 0);
-    ASSERT(wq->workerWaitingCount == 0);
     ASSERT(SDL_AtomicGet(&wq->finishWaitingCount) == 0);
     ASSERT(SDL_AtomicGet(&wq->anyFinishWaitingCount) == 0);
 
     CMBVector_Destroy(&wq->items);
-    SDL_DestroyMutex(wq->lock);
-    SDL_DestroyCond(wq->workerSignal);
+    MBLock_Destroy(&wq->lock);
+    SDL_DestroySemaphore(wq->workerSem);
     SDL_DestroySemaphore(wq->finishSem);
     SDL_DestroySemaphore(wq->anyFinishSem);
 
-    wq->lock = NULL;
-    wq->workerSignal = NULL;
+    wq->workerSem = NULL;
     wq->finishSem = NULL;
     wq->anyFinishSem = NULL;
 }
 
 void WorkQueue_Lock(WorkQueue *wq)
 {
-    int c;
-
     ASSERT(wq != NULL);
-    c = SDL_LockMutex(wq->lock);
-    if (c != 0) {
-        PANIC("Failed to lock mutex: error=%d\n", c);
-    }
+    MBLock_Lock(&wq->lock);
 }
 
 void WorkQueue_Unlock(WorkQueue *wq)
 {
-    int c;
-
     ASSERT(wq != NULL);
-    c = SDL_UnlockMutex(wq->lock);
-    if (c != 0) {
-        PANIC("Failed to unlock mutex: error=%d\n", c);
-    }
+    MBLock_Unlock(&wq->lock);
 }
 
 void WorkQueue_QueueItem(WorkQueue *wq, void *item, uint itemSize)
@@ -92,7 +79,8 @@ void WorkQueue_QueueItem(WorkQueue *wq, void *item, uint itemSize)
 
 void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
 {
-    //XXX ASSERT isLocked?
+    ASSERT(wq != NULL);
+    ASSERT(MBLock_IsLocked(&wq->lock));
 
     ASSERT(wq->itemSize == itemSize);
     uint numQueued = SDL_AtomicGet(&wq->numQueued);
@@ -113,15 +101,15 @@ void WorkQueue_QueueItemLocked(WorkQueue *wq, void *item, uint itemSize)
     numQueued++;
     SDL_AtomicSet(&wq->numQueued, numQueued);
 
-    if (wq->workerWaitingCount > 0) {
-        wq->workerWaitingCount--;
-        SDL_CondSignal(wq->workerSignal);
-    }
+    int res = SDL_SemPost(wq->workerSem);
+    ASSERT(res == 0);
 }
 
 void WorkQueue_GetItemLocked(WorkQueue *wq, void *item, uint itemSize)
 {
-    //XXX ASSERT isLocked ?
+    ASSERT(wq != NULL);
+    ASSERT(MBLock_IsLocked(&wq->lock));
+
     uint numQueued = SDL_AtomicGet(&wq->numQueued);
 
     ASSERT(wq->itemSize == itemSize);
@@ -149,10 +137,10 @@ void WorkQueue_WaitForItem(WorkQueue *wq, void *item, uint itemSize)
     ASSERT(SDL_AtomicGet(&wq->numQueued) + wq->nextItem <=
            CMBVector_Size(&wq->items));
 
-    while (SDL_AtomicGet(&wq->numQueued) == 0) {
-        wq->workerWaitingCount++;
-        SDL_CondWait(wq->workerSignal, wq->lock);
-    }
+    WorkQueue_Unlock(wq);
+    int res = SDL_SemWait(wq->workerSem);
+    ASSERT(res == 0);
+    WorkQueue_Lock(wq);
 
     WorkQueue_GetItemLocked(wq, item, itemSize);
 
