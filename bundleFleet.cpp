@@ -67,54 +67,53 @@ public:
 
     virtual void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
         BundleConfigValue defaults[] = {
-            { "cores.radius.value",          "166.7", },
-            { "cores.weight.value",          "0.1",   },
-            { "cores.crowd.radius",          "166.7", },
-            { "cores.crowd.size",            "0",     },
+            { "cores.radius.value",          "166.7",  },
+            { "cores.weight.value",          "0.1",    },
+            { "cores.crowd.radius",          "166.7",  },
+            { "cores.crowd.size",            "0",      },
 
-            { "enemy.radius.value",          "166.7", },
-            { "enemy.weight.value",          "0.3",   },
-            { "enemy.crowd.radius.value",    "166.7", },
-            { "enemy.crowd.size.value",      "2",     },
+            { "enemy.radius.value",          "166.7",  },
+            { "enemy.weight.value",          "0.3",    },
+            { "enemy.crowd.radius.value",    "166.7",  },
+            { "enemy.crowd.size.value",      "2",      },
 
-            { "enemyBase.radius.value",      "166.7", },
-            { "enemyBaes.weight.value",      "0.3",   },
+            { "enemyBase.radius.value",      "166.7",  },
+            { "enemyBase.weight.value",      "0.3",    },
 
-            { "align.radius.value",          "166.7", },
-            { "align.weight.value",          "0.2",   },
-            { "aligin.crowd.radius.value",   "166.7", },
-            { "aligin.crowd.size.value",     "3",     },
+            { "align.radius.value",          "166.7",  },
+            { "align.weight.value",          "0.2",    },
+            { "aligin.crowd.radius.value",   "166.7",  },
+            { "aligin.crowd.size.value",     "3",      },
 
-            { "cohere.radius.value",         "166.7", },
-            { "cohere.weight.value",         "0.1",   },
-            { "cohere.crowd.radius.value",   "166.7", },
-            { "cohere.crowd.size.value",     "3",     },
+            { "cohere.radius.value",         "166.7",  },
+            { "cohere.weight.value",         "0.1",    },
+            { "cohere.crowd.radius.value",   "166.7",  },
+            { "cohere.crowd.size.value",     "3",      },
 
-            { "separate.radius.value",       "150.0", },
-            { "separate.weight.value",       "0.8",   },
+            { "separate.radius.value",       "150.0",  },
+            { "separate.weight.value",       "0.8",    },
 
-            { "attackSeparate.radius.value", "166.0", },
-            { "attackSeparate.weight.value", "0.5",   },
+            { "attackSeparate.radius.value", "166.0",  },
+            { "attackSeparate.weight.value", "0.5",    },
 
-            { "curHeadingWeight.value",      "0.5",   },
+            { "curHeadingWeight.value",      "0.5",    },
 
-            { "center.radius.value",         "0.0",   },
-            { "center.weight.value",         "0.0",   },
+            { "center.radius.value",         "0.0",    },
+            { "center.weight.value",         "0.0",    },
 
-            { "edges.radius.value",          "100.0", },
-            { "edges.weight.value",          "0.9",   },
+            { "edges.radius.value",          "100.0",  },
+            { "edges.weight.value",          "0.9",    },
+
+            { "locus.radius.value",          "1000.0", },
+            { "locus.weight.value",          "0.0",    },
 
             // Legacy Values
             { "randomIdle",           "TRUE",       },
             { "baseSpawnJitter",        "1",        },
 
-            { "baseRadius",           "100",        },
-            { "baseWeight",           "0.0",        },
             { "nearBaseRadius",       "250.0",      },
             { "baseDefenseRadius",    "250.0",      },
 
-            { "locusRadius",          "10000.0",    },
-            { "locusWeight",          "0.0",        },
             { "locusCircularPeriod",  "1000.0",     },
             { "locusCircularWeight",  "0.0",        },
             { "locusLinearXPeriod",   "1000.0",     },
