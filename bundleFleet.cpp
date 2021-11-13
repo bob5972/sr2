@@ -298,9 +298,8 @@ public:
 
         loadBundleForce(mreg, &this->myConfig.center, "center");
         loadBundleForce(mreg, &this->myConfig.edges, "edges");
+        loadBundleForce(mreg, &this->myConfig.base, "base");
 
-        this->myConfig.baseRadius = MBRegistry_GetFloat(mreg, "baseRadius");
-        this->myConfig.baseWeight = MBRegistry_GetFloat(mreg, "baseWeight");
         this->myConfig.nearBaseRadius = MBRegistry_GetFloat(mreg, "nearBaseRadius");
         this->myConfig.baseDefenseRadius = MBRegistry_GetFloat(mreg, "baseDefenseRadius");
 
@@ -709,13 +708,12 @@ public:
         }
     }
 
-    void findBase(Mob *mob, FRPoint *rPos, float radius, float weight) {
+    void findBase(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *base = sg->friendBase();
-
         if (base != NULL) {
-            pullVector(rPos, &mob->pos, &base->pos, radius, weight, PULL_RANGE);
+            applyBundle(mob, rForce, &myConfig.base, &base->pos);
         }
     }
 
@@ -778,7 +776,7 @@ public:
 
             avoidEdges(mob, &rForce);
             findCenter(mob, &rForce);
-            findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
+            findBase(mob, &rForce);
             findEnemies(mob, &rForce);
             findEnemyBase(mob, &rForce, myConfig.enemyBaseRadius,
                           myConfig.enemyBaseWeight);
@@ -855,9 +853,8 @@ public:
         BundleForce edges;
 
         BundleForce cores;
+        BundleForce base;
 
-        float baseRadius;
-        float baseWeight;
         float nearBaseRadius;
         float baseDefenseRadius;
 
