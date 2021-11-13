@@ -142,7 +142,6 @@ public:
             { "locusLinearYPeriod",   "8851.404297",     },
             { "locus.radius.value",   "104.198990",      },
             { "locusWeight",          "-0.655256",       },
-            { "nearBaseRadius",       "10.077254",       },
             { "randomIdle",           "TRUE",            },
             { "rotateStartingAngle",  "FALSE",           },
             { "sensorGrid.staleCoreTime",    "28.385160" },
@@ -726,6 +725,9 @@ public:
             FRPoint_Zero(&rForce);
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
+            rForce.theta = rPos.theta;
+            rForce.radius = getBundleValue(&myConfig.curHeadingWeight);
+
             flockAlign(mob, &rForce);
             flockCohere(mob, &rForce);
             flockSeparate(mob, &rForce, &myConfig.separate);
@@ -738,11 +740,9 @@ public:
             findCores(mob, &rForce);
             findLocus(mob, &rForce);
 
-            rPos.radius = getBundleValue(&myConfig.curHeadingWeight);
-            FRPoint_Add(&rPos, &rForce, &rPos);
-            rPos.radius = speed;
+            rForce.radius = speed;
 
-            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+            FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
         } else if (newlyIdle) {
