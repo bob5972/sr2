@@ -304,10 +304,7 @@ public:
 
         loadBundleValue(mreg, &this->myConfig.curHeadingWeight, "curHeadingWeight");
 
-        this->myConfig.locusRadius =
-            MBRegistry_GetFloat(mreg, "locusRadius");
-        this->myConfig.locusWeight =
-            MBRegistry_GetFloat(mreg, "locusWeight");
+        loadBundleForce(mreg, &this->myConfig.locus, "locus");
         this->myConfig.locusCircularPeriod =
             MBRegistry_GetFloat(mreg, "locusCircularPeriod");
         this->myConfig.locusCircularWeight =
@@ -594,7 +591,7 @@ public:
         applyBundle(mob, rForce, &myConfig.center, &center);
     }
 
-    void findLocus(Mob *mob, FRPoint *rPos) {
+    void findLocus(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FPoint circular;
         FPoint linear;
@@ -699,8 +696,7 @@ public:
                 }
             }
 
-            pullVector(rPos, &mob->pos, &locus,
-                       myConfig.locusRadius, myConfig.locusWeight, PULL_RANGE);
+            applyBundle(mob, rForce, &myConfig.locus, &locus);
         }
     }
 
@@ -858,8 +854,7 @@ public:
 
         BundleValue curHeadingWeight;
 
-        float locusRadius;
-        float locusWeight;
+        BundleForce locus;
         float locusCircularPeriod;
         float locusCircularWeight;
         float locusLinearXPeriod;
