@@ -39,7 +39,7 @@ typedef uint32 BundleFlags;
 #define BUNDLE_FLAG_STRICT_CROWD (1 << 1)
 
 typedef struct BundleValue {
-    float baseValue;
+    float value;
     float period;
     float amplitude;
 } BundleValue;
@@ -72,39 +72,39 @@ public:
 
     virtual void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
         BundleConfigValue defaults[] = {
-            { "cores.radius.baseValue",          "166.7", },
-            { "cores.weight.baseValue",          "0.1",   },
-            { "cores.crowd.radius",              "166.7", },
-            { "cores.crowd.size",                "0",     },
+            { "cores.radius.value",          "166.7", },
+            { "cores.weight.value",          "0.1",   },
+            { "cores.crowd.radius",          "166.7", },
+            { "cores.crowd.size",            "0",     },
 
-            { "enemy.radius.baseValue",          "166.7", },
-            { "enemy.weight.baseValue",          "0.3",   },
-            { "enemy.crowd.radius.baseValue",    "166.7", },
-            { "enemy.crowd.size.baseValue",      "2",     },
+            { "enemy.radius.value",          "166.7", },
+            { "enemy.weight.value",          "0.3",   },
+            { "enemy.crowd.radius.value",    "166.7", },
+            { "enemy.crowd.size.value",      "2",     },
 
-            { "align.radius.baseValue",          "166.7", },
-            { "align.weight.baseValue",          "0.2",   },
-            { "aligin.crowd.radius.baseValue",   "166.7", },
-            { "aligin.crowd.size.baseValue",     "3",     },
+            { "align.radius.value",          "166.7", },
+            { "align.weight.value",          "0.2",   },
+            { "aligin.crowd.radius.value",   "166.7", },
+            { "aligin.crowd.size.value",     "3",     },
 
-            { "cohere.radius.baseValue",         "166.7", },
-            { "cohere.weight.baseValue",         "0.1",   },
-            { "cohere.crowd.radius.baseValue",   "166.7", },
-            { "cohere.crowd.size.baseValue",     "3",     },
+            { "cohere.radius.value",         "166.7", },
+            { "cohere.weight.value",         "0.1",   },
+            { "cohere.crowd.radius.value",   "166.7", },
+            { "cohere.crowd.size.value",     "3",     },
 
-            { "separate.radius.baseValue",       "150.0", },
-            { "separate.weight.baseValue",       "0.8",   },
+            { "separate.radius.value",       "150.0", },
+            { "separate.weight.value",       "0.8",   },
 
-            { "attackSeparate.radius.baseValue", "166.0", },
-            { "attackSeparate.weight.baseValue", "0.5",   },
+            { "attackSeparate.radius.value", "166.0", },
+            { "attackSeparate.weight.value", "0.5",   },
 
-            { "curHeadingWeight.baseValue",      "0.5",   },
+            { "curHeadingWeight.value",      "0.5",   },
 
-            { "center.radius.baseValue",         "0.0",   },
-            { "center.weight.baseValue",         "0.0",   },
+            { "center.radius.value",         "0.0",   },
+            { "center.weight.value",         "0.0",   },
 
-            { "edges.radius.baseValue",          "100.0", },
-            { "edges.weight.baseValue",          "0.9",   },
+            { "edges.radius.value",          "100.0", },
+            { "edges.weight.value",          "0.9",   },
 
             // Legacy Values
             { "randomIdle",           "TRUE",       },
@@ -209,8 +209,8 @@ public:
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".baseValue");
-        bv->baseValue = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        MBString_AppendCStr(&s, ".value");
+        bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -523,9 +523,9 @@ public:
         if (bv->amplitude > 0.0f && bv->period > 0.0f) {
             float p = bv->period;
             float a = bv->amplitude;
-            return bv->baseValue + a * sinf(myFleetAI->tick / p);
+            return bv->value + a * sinf(myFleetAI->tick / p);
         } else {
-            return bv->baseValue;
+            return bv->value;
         }
     }
 
