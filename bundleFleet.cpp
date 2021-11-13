@@ -28,11 +28,6 @@ extern "C" {
 #include "MBMap.hpp"
 #include "MBString.hpp"
 
-typedef enum BundleLegacyPullType {
-    PULL_ALWAYS,
-    PULL_RANGE,
-} BundleLegacyPullType;
-
 typedef uint32 BundleFlags;
 #define BUNDLE_FLAG_NONE         (0)
 #define BUNDLE_FLAG_STRICT_RANGE (1 << 0)
@@ -368,27 +363,6 @@ public:
         FRPoint_Add(&drp, repulseVec, repulseVec);
     }
 
-    void pullVector(FRPoint *curForce,
-                    const FPoint *cPos, const FPoint *tPos,
-                    float radius, float weight, BundleLegacyPullType pType) {
-        ASSERT(pType == PULL_ALWAYS ||
-               pType == PULL_RANGE);
-
-        if (pType == PULL_RANGE &&
-            FPoint_Distance(cPos, tPos) > radius) {
-            return;
-        } else if (weight == 0.0f) {
-            return;
-        }
-
-        FPoint eVec;
-        FRPoint reVec;
-        FPoint_Subtract(tPos, cPos, &eVec);
-        FPoint_ToFRPoint(&eVec, NULL, &reVec);
-        reVec.radius = weight;
-        FRPoint_Add(curForce, &reVec, curForce);
-    }
-
     void flockSeparate(Mob *mob, FRPoint *rForce, BundleForce *bundle) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
@@ -545,22 +519,32 @@ public:
 
     void applyBundle(Mob *mob, FRPoint *rForce, BundleForce *bundle,
                      FPoint *focusPos) {
-        BundleLegacyPullType pType;
-
         if (!crowdCheck(mob, bundle)) {
             /* No force. */
             return;
         }
 
-        if ((bundle->flags & BUNDLE_FLAG_STRICT_RANGE) != 0) {
-            pType = PULL_RANGE;
-        } else {
-            pType = PULL_ALWAYS;
+        float radius = getBundleValue(&bundle->radius);
+
+        if ((bundle->flags & BUNDLE_FLAG_STRICT_RANGE) != 0 &&
+            FPoint_Distance(&mob->pos, focusPos) > radius) {
+            /* No force. */
+            return;
         }
 
-        float radius = getBundleValue(&bundle->radius);
         float weight = getBundleValue(&bundle->weight);
-        pullVector(rForce, &mob->pos, focusPos, radius, weight, pType);
+
+        if (weight == 0.0f) {
+            /* No force. */
+            return;
+        }
+
+        FPoint eVec;
+        FRPoint reVec;
+        FPoint_Subtract(focusPos, &mob->pos, &eVec);
+        FPoint_ToFRPoint(&eVec, NULL, &reVec);
+        reVec.radius = weight;
+        FRPoint_Add(rForce, &reVec, rForce);
     }
 
     void findCores(Mob *mob, FRPoint *rForce) {
