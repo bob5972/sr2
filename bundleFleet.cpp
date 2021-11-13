@@ -100,14 +100,15 @@ public:
 
             { "curHeadingWeight.baseValue",      "0.5",   },
 
+            { "center.radius.baseValue",         "0.0",   },
+            { "center.weight.baseValue",         "0.0",   },
+
             // Legacy Values
             { "randomIdle",           "TRUE",       },
             { "baseSpawnJitter",        "1",        },
 
             { "edgeRadius",           "100.0",      },
             { "edgesWeight",          "0.9",        },
-            { "centerRadius",         "0.0",        },
-            { "centerWeight",         "0.0",        },
 
             { "baseRadius",           "100",        },
             { "baseWeight",           "0.0",        },
@@ -140,8 +141,6 @@ public:
             { "baseSpawnJitter",      "1.000000",   },
             { "baseWeight",           "-0.328720",  },
             { "brokenCohere",         "TRUE",       },
-            { "centerRadius",         "761.465576", },
-            { "centerWeight",         "-0.048965",  },
             { "cohereWeight",         "0.048618",   },
             { "coresCrowding",        "4.913648",   },
             { "coresCrowdRadius",     "135.280548", },
@@ -297,8 +296,6 @@ public:
 
         this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
         this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
-        this->myConfig.centerRadius = MBRegistry_GetFloat(mreg, "centerRadius");
-        this->myConfig.centerWeight = MBRegistry_GetFloat(mreg, "centerWeight");
 
         loadBundleForce(mreg, &this->myConfig.align, "align");
         loadBundleForce(mreg, &this->myConfig.cohere, "cohere");
@@ -307,6 +304,8 @@ public:
 
         loadBundleForce(mreg, &this->myConfig.cores, "cores");
         loadBundleForce(mreg, &this->myConfig.cores, "enemy");
+
+        loadBundleForce(mreg, &this->myConfig.center, "center");
 
         this->myConfig.baseRadius = MBRegistry_GetFloat(mreg, "baseRadius");
         this->myConfig.baseWeight = MBRegistry_GetFloat(mreg, "baseWeight");
@@ -592,12 +591,12 @@ public:
         }
     }
 
-    void findCenter(Mob *mob, FRPoint *rPos, float radius, float weight) {
+    void findCenter(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FPoint center;
         center.x = myFleetAI->bp.width / 2;
         center.y = myFleetAI->bp.height / 2;
-        pullVector(rPos, &mob->pos, &center, radius, weight, PULL_RANGE);
+        applyBundle(mob, rForce, &myConfig.center, &center);
     }
 
     void findLocus(Mob *mob, FRPoint *rPos) {
@@ -778,7 +777,7 @@ public:
             flockSeparate(mob, &rForce, &myConfig.separate);
 
             avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
-            findCenter(mob, &rForce, myConfig.centerRadius, myConfig.centerWeight);
+            findCenter(mob, &rForce);
             findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
             findEnemies(mob, &rForce);
             findEnemyBase(mob, &rForce, myConfig.enemyBaseRadius,
@@ -854,8 +853,8 @@ public:
 
         float edgeRadius;
         float edgesWeight;
-        float centerRadius;
-        float centerWeight;
+
+        BundleForce center;
 
         BundleForce cores;
 
