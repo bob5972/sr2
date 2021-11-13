@@ -103,12 +103,12 @@ public:
             { "center.radius.baseValue",         "0.0",   },
             { "center.weight.baseValue",         "0.0",   },
 
+            { "edges.radius.baseValue",          "100.0", },
+            { "edges.weight.baseValue",          "0.9",   },
+
             // Legacy Values
             { "randomIdle",           "TRUE",       },
             { "baseSpawnJitter",        "1",        },
-
-            { "edgeRadius",           "100.0",      },
-            { "edgesWeight",          "0.9",        },
 
             { "baseRadius",           "100",        },
             { "baseWeight",           "0.0",        },
@@ -147,8 +147,6 @@ public:
             { "coresRadius",          "776.426697", },
             { "coresWeight",          "0.197949",   },
             { "creditReserve",        "120.438179", },
-            { "edgeRadius",           "26.930847",  },
-            { "edgesWeight",          "0.482821",   },
             { "enemyBaseRadius",      "224.461044", },
             { "enemyBaseWeight",      "0.633770",   },
             { "enemyCrowding",        "9.255432",   },
@@ -176,10 +174,6 @@ public:
             { "rotateStartingAngle",  "FALSE",      },
             { "sensorGrid.staleCoreTime",    "28.385160" },
             { "sensorGrid.staleFighterTime", "16.703636" },
-            { "separatePeriod",       "1543.553345",},
-            { "separateRadius",       "105.912781", },
-            { "separateScale",        "0.000000",   },
-            { "separateWeight",       "0.839316",   },
             { "useScaledLocus",       "FALSE",      },
         };
 
@@ -294,9 +288,6 @@ public:
     virtual void loadRegistry(MBRegistry *mreg) {
         this->myConfig.randomIdle = MBRegistry_GetBool(mreg, "randomIdle");
 
-        this->myConfig.edgeRadius = MBRegistry_GetFloat(mreg, "edgeRadius");
-        this->myConfig.edgesWeight = MBRegistry_GetFloat(mreg, "edgesWeight");
-
         loadBundleForce(mreg, &this->myConfig.align, "align");
         loadBundleForce(mreg, &this->myConfig.cohere, "cohere");
         loadBundleForce(mreg, &this->myConfig.separate, "separate");
@@ -306,6 +297,7 @@ public:
         loadBundleForce(mreg, &this->myConfig.cores, "enemy");
 
         loadBundleForce(mreg, &this->myConfig.center, "center");
+        loadBundleForce(mreg, &this->myConfig.edges, "edges");
 
         this->myConfig.baseRadius = MBRegistry_GetFloat(mreg, "baseRadius");
         this->myConfig.baseWeight = MBRegistry_GetFloat(mreg, "baseWeight");
@@ -461,11 +453,19 @@ public:
         return edgeDistance;
     }
 
-    void avoidEdges(Mob *mob, FRPoint *rPos, float repulseRadius, float weight) {
+    void avoidEdges(Mob *mob, FRPoint *rPos) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;
+        float radius = getBundleValue(&myConfig.edges.radius);
+        float weight = getBundleValue(&myConfig.edges.weight);
 
-        if (edgeDistance(&mob->pos) >= repulseRadius) {
+        if (edgeDistance(&mob->pos) >= radius) {
+            /* No force. */
+            return;
+        }
+
+        if (!crowdCheck(mob, &myConfig.edges)) {
+            /* No force. */
             return;
         }
 
@@ -481,9 +481,9 @@ public:
          */
         edgePoint = mob->pos;
         edgePoint.x = 0.0f;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
             repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
+                          radius);
         }
 
         /*
@@ -491,9 +491,9 @@ public:
          */
         edgePoint = mob->pos;
         edgePoint.x = ai->bp.width;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
             repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
+                          radius);
         }
 
         /*
@@ -501,9 +501,9 @@ public:
          */
         edgePoint = mob->pos;
         edgePoint.y = 0.0f;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
             repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
+                          radius);
         }
 
         /*
@@ -511,9 +511,9 @@ public:
          */
         edgePoint = mob->pos;
         edgePoint.y = ai->bp.height;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
             repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
+                          radius);
         }
 
         repulseVec.radius = weight;
@@ -776,7 +776,7 @@ public:
             flockCohere(mob, &rForce);
             flockSeparate(mob, &rForce, &myConfig.separate);
 
-            avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
+            avoidEdges(mob, &rForce);
             findCenter(mob, &rForce);
             findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
             findEnemies(mob, &rForce);
@@ -851,10 +851,8 @@ public:
         BundleForce separate;
         BundleForce attackSeparate;
 
-        float edgeRadius;
-        float edgesWeight;
-
         BundleForce center;
+        BundleForce edges;
 
         BundleForce cores;
 
