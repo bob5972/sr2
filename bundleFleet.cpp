@@ -186,16 +186,19 @@ public:
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".value");
         bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(bv->value));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".period");
         bv->period = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(bv->period));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".amplitude");
         bv->amplitude = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(bv->amplitude));
 
         MBString_Destroy(&s);
     }
@@ -469,7 +472,7 @@ public:
     }
 
     float getBundleValue(BundleValue *bv) {
-        if (bv->amplitude > 0.0f && bv->period > 0.0f) {
+        if (bv->amplitude > 0.0f && bv->period > 1.0f) {
             float p = bv->period;
             float a = bv->amplitude;
             return bv->value + a * sinf(myFleetAI->tick / p);

@@ -295,7 +295,10 @@ public:
             MBRegistry_GetFloat(mreg, "startingMinRadius");
         ASSERT(myConfig.startingMaxRadius > 0.0f);
 
-        ASSERT(myConfig.startingMinRadius < myConfig.startingMaxRadius);
+        if (myConfig.startingMinRadius >= myConfig.startingMaxRadius) {
+            myConfig.startingMaxRadius = myConfig.startingMinRadius;
+        }
+        ASSERT(myConfig.startingMinRadius <= myConfig.startingMaxRadius);
 
         myConfig.creditReserve =
             (uint)MBRegistry_GetFloat(mreg, "creditReserve");

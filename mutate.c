@@ -89,11 +89,12 @@ void Mutate_Str(MBRegistry *mreg, MutationStrParams *mpa, uint32 numParams,
                 const char **options, uint32 numOptions)
 {
     ASSERT(mpa != NULL);
+    ASSERT(numOptions > 0);
 
     for (uint32 i = 0; i < numParams; i++) {
         MutationStrParams *mp = &mpa[i];
         if (Random_Flip(mp->flipRate)) {
-            uint choice = Random_Int(0, numOptions);
+            uint choice = Random_Int(0, numOptions - 1);
             MBRegistry_PutCopy(mreg, mp->key, options[choice]);
         }
     }
