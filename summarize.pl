@@ -186,10 +186,16 @@ sub Main() {
         Console("\n");
         my $nb = $gPop->{"$maxWinsP.numBattles"};
         my $mw = $gPop->{"$maxWinsP.numWins"};
+        my $ms = $gPop->{"$maxWinsP.numSpawn"};
         my $f = $mw / $gPop->{"$maxWinsP.numBattles"};
         my $a = $gPop->{"$maxWinsP.age"};
+
+        if (!defined($ms)) {
+            $ms = 0;
+        }
+
         $f = sprintf("%1.2f%%", ($f*100));
-        Console("Leader: $maxWinsP, age=$a, numWins=$mw, fitness=$f\n");
+        Console("Leader: $maxWinsP, age=$a, numWins=$mw, numSpawn=$ms, fitness=$f\n");
     }
 
     Console("\n");

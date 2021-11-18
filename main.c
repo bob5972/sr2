@@ -705,7 +705,10 @@ static void MainDumpAddToKey(MBRegistry *source, MBRegistry *dest,
     MBString_Create(&destKey);
     MBString_Create(&tmp);
 
-    MBString_Copy(&destKey, destPrefix);
+    MBString_MakeEmpty(&destKey);
+    if (destPrefix != NULL) {
+        MBString_Copy(&destKey, destPrefix);
+    }
 
     MBString_AppendCStr(&destKey, key);
     if (source != NULL) {
@@ -1031,7 +1034,11 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                 MBRegistry_PutCopy(dest->mreg, key, value);
             }
         }
+
+        MainDumpAddToKey(breeder->mreg, breeder->mreg, NULL, "numSpawn", 1);
     }
+
+    MainDumpAddToKey(src->mreg, src->mreg, NULL, "numSpawn", 1);
 
     Fleet_Mutate(src->aiType, dest->mreg);
 
@@ -1039,6 +1046,7 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     MBRegistry_Remove(dest->mreg, "numWins");
     MBRegistry_Remove(dest->mreg, "numLosses");
     MBRegistry_Remove(dest->mreg, "numDraws");
+    MBRegistry_Remove(dest->mreg, "numSpawn");
     MBRegistry_PutConst(dest->mreg, "age", "0");
 }
 
@@ -1409,7 +1417,7 @@ int main(int argc, char **argv)
 
             if ((battleId + 1) % mainData.numThreads == 0) {
                 WorkQueue_Unlock(&mainData.workQ);
-                uint workTarget = mainData.numThreads * 4;
+                uint workTarget = MAX(10, mainData.numThreads * 4);
 
                 /*
                  * Try to process the results as they come in, to reduce
