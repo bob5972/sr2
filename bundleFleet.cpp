@@ -475,7 +475,7 @@ public:
         if (bv->amplitude > 0.0f && bv->period > 1.0f) {
             float p = bv->period;
             float a = bv->amplitude;
-            return bv->value + a * sinf(myFleetAI->tick / p);
+            return bv->value * (1.0f + a * sinf(myFleetAI->tick / p));
         } else {
             return bv->value;
         }
@@ -938,7 +938,7 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".amplitude");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType);
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_AMPLITUDE);
     Mutate_Float(mreg, &vf, 1);
 
     MBString_Destroy(&s);

@@ -30,6 +30,7 @@ typedef enum MutationType {
     MUTATION_TYPE_RADIUS,
     MUTATION_TYPE_PERIOD,
     MUTATION_TYPE_COUNT,
+    MUTATION_TYPE_AMPLITUDE,
 } MutationType;
 
 typedef struct MutationFloatParams {
