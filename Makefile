@@ -54,6 +54,7 @@ C_SOURCES = main.c \
             gatherFleet.c \
             mapperFleet.c \
             mob.c \
+			mutate.c \
             simpleFleet.c \
             sprite.c \
             workQueue.c

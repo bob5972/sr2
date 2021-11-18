@@ -36,20 +36,7 @@
 #include "MBOpt.h"
 #include "workQueue.h"
 #include "MBString.h"
-
-typedef struct MainMutationFParams {
-    const char *key;
-    float minValue;
-    float maxValue;
-    float magnitude;
-    float jumpRate;
-    float mutationRate;
-} MainMutationFParams;
-
-typedef struct MainMutationBParams {
-    const char *key;
-    float flipRate;
-} MainMutationBParams;
+#include "mutate.h"
 
 typedef enum MainEngineWorkType {
     MAIN_WORK_INVALID = 0,
@@ -1007,60 +994,6 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     NOT_REACHED();
 }
 
-static void MainMutateFValue(MBRegistry *mreg, MainMutationFParams *mp)
-{
-    ASSERT(mp != NULL);
-
-    if (Random_Flip(mp->mutationRate)) {
-        float value = MBRegistry_GetFloat(mreg, mp->key);
-
-        if (!MBRegistry_ContainsKey(mreg, mp->key) ||
-            Random_Flip(mp->jumpRate)) {
-            value = Random_Float(mp->minValue, mp->maxValue);
-        } else if (Random_Bit()) {
-            if (Random_Bit()) {
-                value *= 1.0f - mp->magnitude;
-            } else {
-                value *= 1.0f + mp->magnitude;
-            }
-        } else {
-            float range = fabsf(mp->maxValue - mp->minValue);
-            range = Random_Float(range * (1.0f - mp->magnitude),
-                                 range * (1.0f + mp->magnitude));
-            if (Random_Bit()) {
-                value += mp->magnitude * range;
-            } else {
-                value -= mp->magnitude * range;
-            }
-        }
-
-        value = MAX(mp->minValue, value);
-        value = MIN(mp->maxValue, value);
-
-        char *vStr = NULL;
-        asprintf(&vStr, "%f", value);
-        ASSERT(vStr != NULL);
-        MBRegistry_PutCopy(mreg, mp->key, vStr);
-        free(vStr);
-    }
-}
-
-
-static void MainMutateBValue(MBRegistry *mreg, MainMutationBParams *mp)
-{
-    ASSERT(mp != NULL);
-
-    if (Random_Flip(mp->flipRate)) {
-        bool value;
-
-        if (MBRegistry_ContainsKey(mreg, mp->key)) {
-            value = !MBRegistry_GetBool(mreg, mp->key);
-        } else {
-            value = Random_Bit();
-        }
-        MBRegistry_PutCopy(mreg, mp->key, value ? "TRUE" : "FALSE");
-    }
-}
 
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                             uint32 fi, uint32 mi, uint32 bi)
@@ -1115,7 +1048,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
 {
     if (Fleet_IsFlockFleet(aiType) ||
         aiType == FLEET_AI_BOB) {
-        MainMutationFParams vf[] = {
+        MutationFloatParams vf[] = {
             // key                     min    max      mag   jump   mutation
             { "gatherRange",          10.0f, 500.0f,  0.05f, 0.15f, 0.02f},
             { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.15f, 0.02f},
@@ -1181,13 +1114,13 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "locusRandomPeriod",   -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
         };
 
-        MainMutationFParams bvf[] = {
+        MutationFloatParams bvf[] = {
             // key                     min    max      mag   jump   mutation
             { "holdCount",             1.0f, 200.0f,  0.05f, 0.15f, 0.02f},
             { "holdFleetSpawnRate",   0.01f,   1.0f,  0.05f, 0.15f, 0.02f},
         };
 
-        MainMutationBParams vb[] = {
+        MutationBoolParams vb[] = {
             // key                       mutation
             { "evadeFighters",           0.01f},
             { "evadeUseStrictDistance",  0.01f},
@@ -1200,19 +1133,13 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "useScaledLocus",          0.01f},
         };
 
-        for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
-            MainMutateFValue(mreg, &vf[i]);
-        }
+        Mutate_Float(mreg, vf, ARRAYSIZE(vf));
         if (aiType == FLEET_AI_BOB) {
-            for (uint32 i = 0; i < ARRAYSIZE(bvf); i++) {
-                MainMutateFValue(mreg, &bvf[i]);
-            }
+            Mutate_Float(mreg, bvf, ARRAYSIZE(bvf));
         }
-        for (uint32 i = 0; i < ARRAYSIZE(vb); i++) {
-            MainMutateBValue(mreg, &vb[i]);
-        }
+        Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
     } else if (aiType == FLEET_AI_HOLD) {
-        MainMutationFParams vf[] = {
+        MutationFloatParams vf[] = {
             // key                     min    max       mag   jump   mutation
             { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
             { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
@@ -1224,7 +1151,7 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "holdCount",            1.0f,    200.0f,  0.05f, 0.10f, 0.20f},
         };
 
-        MainMutationBParams vb[] = {
+        MutationBoolParams vb[] = {
             // key                       mutation
             { "evadeFighters",           0.05f},
             { "evadeUseStrictDistance",  0.05f},
@@ -1233,12 +1160,8 @@ static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
             { "gatherAbandonStale",      0.05f},
         };
 
-        for (uint32 i = 0; i < ARRAYSIZE(vf); i++) {
-            MainMutateFValue(mreg, &vf[i]);
-        }
-        for (uint32 i = 0; i < ARRAYSIZE(vb); i++) {
-            MainMutateBValue(mreg, &vb[i]);
-        }
+        Mutate_Float(mreg, vf, ARRAYSIZE(vf));
+        Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
     } else {
         NOT_IMPLEMENTED();
     }
