@@ -23,6 +23,8 @@ extern "C" {
 #include "battle.h"
 }
 
+#include "mutate.h"
+
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"
 
@@ -131,6 +133,7 @@ static void HoldFleetDestroy(void *aiHandle);
 static void HoldFleetRunAITick(void *aiHandle);
 static void *HoldFleetMobSpawned(void *aiHandle, Mob *m);
 static void HoldFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
+static void HoldFleetMutate(FleetAIType aiType, MBRegistry *mreg);
 
 void HoldFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
@@ -143,8 +146,36 @@ void HoldFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
     ops->createFleet = &HoldFleetCreate;
     ops->destroyFleet = &HoldFleetDestroy;
     ops->runAITick = &HoldFleetRunAITick;
-    ops->mobSpawned = HoldFleetMobSpawned;
-    ops->mobDestroyed = HoldFleetMobDestroyed;
+    ops->mobSpawned = &HoldFleetMobSpawned;
+    ops->mobDestroyed = &HoldFleetMobDestroyed;
+    ops->mutateParams = &HoldFleetMutate;
+}
+
+static void HoldFleetMutate(FleetAIType aiType, MBRegistry *mreg)
+{
+    MutationFloatParams vf[] = {
+        // key                     min    max       mag   jump   mutation
+        { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
+        { "gatherRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "startingMaxRadius",    1000.0f, 2000.0f, 0.05f, 0.10f, 0.20f},
+        { "startingMinRadius",    300.0f,  800.0f,  0.05f, 0.10f, 0.20f},
+        { "holdCount",            1.0f,    200.0f,  0.05f, 0.10f, 0.20f},
+    };
+
+    MutationBoolParams vb[] = {
+        // key                       mutation
+        { "evadeFighters",           0.05f},
+        { "evadeUseStrictDistance",  0.05f},
+        { "attackExtendedRange",     0.05f},
+        { "rotateStartingAngle",     0.05f},
+        { "gatherAbandonStale",      0.05f},
+    };
+
+    Mutate_Float(mreg, vf, ARRAYSIZE(vf));
+    Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
 }
 
 static void *HoldFleetCreate(FleetAI *ai)

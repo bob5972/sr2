@@ -150,4 +150,14 @@ static inline FleetAIType Fleet_GetTypeFromName(const char *name)
     return FLEET_AI_INVALID;
 }
 
+static inline void Fleet_Mutate(FleetAIType aiType, MBRegistry *mreg)
+{
+    FleetAIOps ops;
+    Fleet_GetOps(aiType, &ops);
+
+    if (ops.mutateParams != NULL) {
+        ops.mutateParams(aiType, mreg);
+    }
+}
+
 #endif // _FLEET_H_202005311442

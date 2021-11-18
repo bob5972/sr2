@@ -23,6 +23,8 @@ extern "C" {
 #include "battle.h"
 }
 
+#include "mutate.h"
+
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"
 
@@ -42,6 +44,7 @@ public:
         this->holdFleetSpawnRate =
             MBRegistry_GetFloat(mreg, "holdFleetSpawnRate");
 
+        // XXX: Should match Mutate.
         MBUtil_Zero(&this->squadAI, sizeof(this->squadAI));
         ASSERT(ARRAYSIZE(this->squadAI) == 2);
         this->squadAI[0].ops.aiType = FLEET_AI_HOLD;
@@ -95,6 +98,7 @@ public:
 static void *BobFleetCreate(FleetAI *ai);
 static void BobFleetDestroy(void *aiHandle);
 static void BobFleetRunAITick(void *aiHandle);
+static void BobFleetMutate(FleetAIType aiType, MBRegistry *mreg);
 
 void BobFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
@@ -109,6 +113,21 @@ void BobFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
     ops->runAITick = &BobFleetRunAITick;
     ops->mobSpawned = &BobFleetMobSpawned;
     ops->mobDestroyed = &BobFleetMobDestroyed;
+    ops->mutateParams = &BobFleetMutate;
+}
+
+static void BobFleetMutate(FleetAIType aiType, MBRegistry *mreg)
+{
+    MutationFloatParams bvf[] = {
+        // key                     min    max      mag   jump   mutation
+        { "holdFleetSpawnRate",   0.01f,   1.0f,  0.05f, 0.15f, 0.02f},
+    };
+
+    Mutate_Float(mreg, bvf, ARRAYSIZE(bvf));
+
+    // XXX: Should match the constructor.
+    Fleet_Mutate(FLEET_AI_FLOCK4, mreg);
+    Fleet_Mutate(FLEET_AI_HOLD, mreg);
 }
 
 static void *BobFleetCreate(FleetAI *ai)

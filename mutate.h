@@ -21,6 +21,10 @@
 
 #include "MBRegistry.h"
 
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
 typedef struct MutationFloatParams {
     const char *key;
     float minValue;
@@ -38,5 +42,8 @@ typedef struct MutationBoolParams {
 void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mp, uint32 numParams);
 void Mutate_Bool(MBRegistry *mreg, MutationBoolParams *mp, uint32 numParams);
 
+#ifdef __cplusplus
+    }
+#endif
 
 #endif // _MUTATE_H_20211117

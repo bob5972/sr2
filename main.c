@@ -128,7 +128,6 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 static uint32 MainFleetCompetition(BattlePlayer *mainPlayers, uint32 mpSize,
                                    uint32 startingMPIndex, uint32 numFleets,
                                    bool useWinRatio);
-static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg);
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                             uint32 fi, uint32 mi, uint32 bi);
 
@@ -1034,137 +1033,13 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         }
     }
 
-    MainMutateParams(src->aiType, dest->mreg);
+    Fleet_Mutate(src->aiType, dest->mreg);
 
     MBRegistry_Remove(dest->mreg, "numBattles");
     MBRegistry_Remove(dest->mreg, "numWins");
     MBRegistry_Remove(dest->mreg, "numLosses");
     MBRegistry_Remove(dest->mreg, "numDraws");
     MBRegistry_PutConst(dest->mreg, "age", "0");
-}
-
-
-static void MainMutateParams(FleetAIType aiType, MBRegistry *mreg)
-{
-    if (Fleet_IsFlockFleet(aiType) ||
-        aiType == FLEET_AI_BOB) {
-        MutationFloatParams vf[] = {
-            // key                     min    max      mag   jump   mutation
-            { "gatherRange",          10.0f, 500.0f,  0.05f, 0.15f, 0.02f},
-            { "evadeStrictDistance",  -1.0f, 500.0f,  0.05f, 0.15f, 0.02f},
-            { "evadeRange",           -1.0f, 500.0f,  0.05f, 0.15f, 0.02f},
-            { "attackRange",          -1.0f, 700.0f,  0.05f, 0.15f, 0.02f},
-            { "guardRange",           -1.0f, 500.0f,  0.05f, 0.15f, 0.02f},
-
-            { "creditReserve",       100.0f,1000.0f,  0.05f, 0.15f, 0.005f},
-            { "baseSpawnJitter",       1.0f, 100.0f,  0.05f, 0.15f, 0.005f},
-            { "fighterFireJitter",     1.0f,  10.0f,  0.05f, 0.15f, 0.005f},
-
-            { "sensorGrid.staleCoreTime",
-                                       0.0f, 100.0f,  0.05f, 0.15f, 0.02f},
-            { "sensorGrid.staleFighterTime",
-                                       0.0f, 100.0f,  0.05f, 0.15f, 0.02f},
-
-            { "flockRadius",          10.0f, 500.0f, 0.05f, 0.15f, 0.02f},
-            { "flockCrowding",         0.0f,  20.0f, 0.05f, 0.15f, 0.02f},
-            { "alignWeight",          -1.0f,   1.0f, 0.05f, 0.15f, 0.02f},
-            { "cohereWeight",         -1.0f,   1.0f, 0.05f, 0.15f, 0.02f},
-
-            { "separateRadius",        5.0f, 500.0f, 0.05f, 0.15f, 0.02f},
-            { "separatePeriod",        0.0f,2000.0f, 0.05f, 0.15f, 0.02f},
-            { "separateScale",         0.0f, 500.0f, 0.05f, 0.15f, 0.02f},
-            { "separateWeight",       -1.0f,   1.0f, 0.05f, 0.15f, 0.02f},
-
-            { "edgeRadius",            1.0f, 500.0f, 0.05f, 0.15f, 0.02f},
-            { "edgesWeight",          -0.2f,   1.0f, 0.05f, 0.15f, 0.02f},
-            { "centerRadius",          0.0f, 900.0f, 0.05f, 0.15f, 0.02f},
-            { "centerWeight",         -0.1f,   0.1f, 0.05f, 0.15f, 0.01f},
-
-            { "coresRadius",           0.0f, 900.0f, 0.05f, 0.15f, 0.02f},
-            { "coresWeight",          -1.0f,   1.0f, 0.05f, 0.15f, 0.02f},
-            { "coresCrowdRadius",      0.0f, 900.0f, 0.05f, 0.15f, 0.005f},
-            { "coresCrowding",        -1.0f,  20.0f, 0.05f, 0.15f, 0.005f},
-
-            { "baseRadius",           10.0f, 500.0f, 0.05f, 0.15f, 0.01f},
-            { "baseWeight",           -1.0f,   0.3f, 0.05f, 0.15f, 0.01f},
-            { "nearBaseRadius",        1.0f, 500.0f, 0.05f, 0.15f, 0.01f},
-            { "baseDefenseRadius",     1.0f, 500.0f, 0.05f, 0.15f, 0.01f},
-
-            { "enemyRadius",           0.0f, 900.0f, 0.05f, 0.15f, 0.02f},
-            { "enemyWeight",          -1.0f,   1.0f, 0.05f, 0.15f, 0.02f},
-            { "enemyCrowdRadius",      0.0f, 900.0f, 0.05f, 0.15f, 0.01f},
-            { "enemyCrowding",        -1.0f,  20.0f, 0.05f, 0.15f, 0.01f},
-
-            { "enemyBaseRadius",       0.0f, 900.0f, 0.05f, 0.15f, 0.01f},
-            { "enemyBaseWeight",      -1.0f,   1.0f, 0.05f, 0.15f, 0.01f},
-
-            { "curHeadingWeight",     -1.0f,   2.0f, 0.05f, 0.15f, 0.02f},
-
-            { "attackSeparateRadius",  1.0f, 500.0f, 0.05f, 0.15f, 0.02f},
-            { "attackSeparateWeight", -1.0f,   1.0f, 0.05f, 0.15f, 0.02f},
-
-            { "locusRadius",          1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
-            { "locusWeight",         -1.0f,    1.0f,  0.05f, 0.15f, 0.02f},
-            { "locusCircularPeriod", -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
-            { "locusCircularWeight",  0.0f,    2.0f,  0.05f, 0.15f, 0.02f},
-            { "locusLinearXPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
-            { "locusLinearYPeriod",  -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
-            { "locusLinearWeight",    0.0f,    2.0f,  0.05f, 0.15f, 0.02f},
-            { "locusRandomWeight",    0.0f,    2.0f,  0.05f, 0.15f, 0.02f},
-            { "locusRandomPeriod",   -1.0f, 12345.0f, 0.05f, 0.15f, 0.02f},
-        };
-
-        MutationFloatParams bvf[] = {
-            // key                     min    max      mag   jump   mutation
-            { "holdCount",             1.0f, 200.0f,  0.05f, 0.15f, 0.02f},
-            { "holdFleetSpawnRate",   0.01f,   1.0f,  0.05f, 0.15f, 0.02f},
-        };
-
-        MutationBoolParams vb[] = {
-            // key                       mutation
-            { "evadeFighters",           0.01f},
-            { "evadeUseStrictDistance",  0.01f},
-            { "attackExtendedRange",     0.01f},
-            { "rotateStartingAngle",     0.01f},
-            { "gatherAbandonStale",      0.01f},
-            { "alwaysFlock",             0.01f},
-            { "randomIdle",              0.01f},
-            { "brokenCohere",            0.01f},
-            { "useScaledLocus",          0.01f},
-        };
-
-        Mutate_Float(mreg, vf, ARRAYSIZE(vf));
-        if (aiType == FLEET_AI_BOB) {
-            Mutate_Float(mreg, bvf, ARRAYSIZE(bvf));
-        }
-        Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
-    } else if (aiType == FLEET_AI_HOLD) {
-        MutationFloatParams vf[] = {
-            // key                     min    max       mag   jump   mutation
-            { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-            { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-            { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-            { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
-            { "gatherRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-            { "startingMaxRadius",    1000.0f, 2000.0f, 0.05f, 0.10f, 0.20f},
-            { "startingMinRadius",    300.0f,  800.0f,  0.05f, 0.10f, 0.20f},
-            { "holdCount",            1.0f,    200.0f,  0.05f, 0.10f, 0.20f},
-        };
-
-        MutationBoolParams vb[] = {
-            // key                       mutation
-            { "evadeFighters",           0.05f},
-            { "evadeUseStrictDistance",  0.05f},
-            { "attackExtendedRange",     0.05f},
-            { "rotateStartingAngle",     0.05f},
-            { "gatherAbandonStale",      0.05f},
-        };
-
-        Mutate_Float(mreg, vf, ARRAYSIZE(vf));
-        Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
-    } else {
-        NOT_IMPLEMENTED();
-    }
 }
 
 static int MainEngineThreadMain(void *data)
