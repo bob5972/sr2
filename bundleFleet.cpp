@@ -23,6 +23,9 @@ extern "C" {
 #include "battle.h"
 }
 
+#include "mutate.h"
+#include "MBUtil.h"
+
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"
 #include "MBMap.hpp"
@@ -32,6 +35,13 @@ typedef uint32 BundleFlags;
 #define BUNDLE_FLAG_NONE         (0)
 #define BUNDLE_FLAG_STRICT_RANGE (1 << 0)
 #define BUNDLE_FLAG_STRICT_CROWD (1 << 1)
+
+typedef enum BundleValueType {
+    BUNDLE_VALUE_TYPE_WEIGHT,
+    BUNDLE_VALUE_TYPE_RADIUS,
+    BUNDLE_VALUE_TYPE_PERIOD,
+    BUNDLE_VALUE_TYPE_COUNT,
+} BundleValueType;
 
 typedef struct BundleValue {
     float value;
@@ -867,6 +877,7 @@ static void BundleFleetDestroy(void *aiHandle);
 static void BundleFleetRunAITick(void *aiHandle);
 static void *BundleFleetMobSpawned(void *aiHandle, Mob *m);
 static void BundleFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
+static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg);
 
 void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
@@ -884,8 +895,185 @@ void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
     ops->createFleet = &BundleFleetCreate;
     ops->destroyFleet = &BundleFleetDestroy;
     ops->runAITick = &BundleFleetRunAITick;
-    ops->mobSpawned = BundleFleetMobSpawned;
-    ops->mobDestroyed = BundleFleetMobDestroyed;
+    ops->mobSpawned = &BundleFleetMobSpawned;
+    ops->mobDestroyed = &BundleFleetMobDestroyed;
+    ops->mutateParams = &BundleFleetMutate;
+}
+
+static void GetMutationFloatParams(MutationFloatParams *vf,
+                                   const char *key,
+                                   BundleValueType bType)
+{
+    MBUtil_Zero(vf, sizeof(*vf));
+
+    if (bType == BUNDLE_VALUE_TYPE_WEIGHT) {
+        vf->minValue = -1.0f;
+        vf->maxValue = 1.0f;
+        vf->magnitude = 0.1f;
+        vf->jumpRate = 0.1f;
+        vf->mutationRate = 0.1f;
+    } else if (bType == BUNDLE_VALUE_TYPE_RADIUS ||
+               bType == BUNDLE_VALUE_TYPE_PERIOD) {
+        vf->minValue = -1.0f;
+        vf->maxValue = 10000.0f;
+        vf->magnitude = 0.1f;
+        vf->jumpRate = 0.1f;
+        vf->mutationRate = 0.1f;
+    } else if (bType == BUNDLE_VALUE_TYPE_COUNT) {
+        vf->minValue = -1.0f;
+        vf->maxValue = 20.0f;
+        vf->magnitude = 0.1f;
+        vf->jumpRate = 0.1f;
+        vf->mutationRate = 0.1f;
+    }
+
+    vf->key = key;
+}
+
+static void GetMutationStrParams(MutationStrParams *svf,
+                                 const char *key)
+{
+
+    MBUtil_Zero(svf, sizeof(*svf));
+    svf->key = key;
+    svf->flipRate = 0.01;
+}
+
+static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
+                              const char *prefix,
+                              BundleValueType bType)
+{
+    MutationFloatParams vf;
+
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".value");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".period");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), BUNDLE_VALUE_TYPE_PERIOD);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".amplitude");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_Destroy(&s);
+}
+
+static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
+                              const char *prefix)
+{
+    MutationStrParams svf;
+
+    const char *options[] = {
+        "none", "strict",
+    };
+
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".crowdType");
+    GetMutationStrParams(&svf, MBString_GetCStr(&s));
+    Mutate_Str(mreg, &svf, 1, options, ARRAYSIZE(options));
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".rangeType");
+    GetMutationStrParams(&svf, MBString_GetCStr(&s));
+    Mutate_Str(mreg, &svf, 1, options, ARRAYSIZE(options));
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".weight");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      BUNDLE_VALUE_TYPE_WEIGHT);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".radius");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      BUNDLE_VALUE_TYPE_RADIUS);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".crowd.size");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      BUNDLE_VALUE_TYPE_COUNT);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".crowd.radius");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      BUNDLE_VALUE_TYPE_RADIUS);
+
+    MBString_Destroy(&s);
+}
+
+static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
+{
+    MutationFloatParams vf[] = {
+        // key                     min    max       mag   jump   mutation
+        { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
+        { "gatherRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
+        { "startingMaxRadius",    1000.0f, 2000.0f, 0.05f, 0.10f, 0.20f},
+        { "startingMinRadius",    300.0f,  800.0f,  0.05f, 0.10f, 0.20f},
+
+        { "nearBaseRadius",        1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
+        { "baseDefenseRadius",     1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
+
+        { "locusCircularPeriod",  -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+        { "locusCircularWeight",   0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
+        { "locusLinearXPeriod",   -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+        { "locusLinearYPeriod",   -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+        { "locusLinearWeight",     0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
+        { "locusRandomWeight",     0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
+        { "locusRandomPeriod",    -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+    };
+
+    MutationBoolParams vb[] = {
+        // key                       mutation
+        { "evadeFighters",           0.05f},
+        { "evadeUseStrictDistance",  0.05f},
+        { "attackExtendedRange",     0.05f},
+        { "rotateStartingAngle",     0.05f},
+        { "gatherAbandonStale",      0.05f},
+        { "useScaledLocus",          0.01f},
+        { "randomIdle",              0.01f},
+    };
+
+    Mutate_Float(mreg, vf, ARRAYSIZE(vf));
+    Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
+
+    MutateBundleForce(aiType, mreg, "align");
+    MutateBundleForce(aiType, mreg, "cohere");
+    MutateBundleForce(aiType, mreg, "separate");
+    MutateBundleForce(aiType, mreg, "attackSeparate");
+
+    MutateBundleForce(aiType, mreg, "cores");
+    MutateBundleForce(aiType, mreg, "enemy");
+    MutateBundleForce(aiType, mreg, "enemyBase");
+
+    MutateBundleForce(aiType, mreg, "center");
+    MutateBundleForce(aiType, mreg, "edges");
+    MutateBundleForce(aiType, mreg, "base");
+
+    MutateBundleValue(aiType, mreg, "curHeadingWeight", BUNDLE_VALUE_TYPE_WEIGHT);
+
+    MutateBundleForce(aiType, mreg, "locus");
 }
 
 static void *BundleFleetCreate(FleetAI *ai)

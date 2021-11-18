@@ -83,3 +83,18 @@ void Mutate_Bool(MBRegistry *mreg, MutationBoolParams *mpa, uint32 numParams)
         }
     }
 }
+
+
+void Mutate_Str(MBRegistry *mreg, MutationStrParams *mpa, uint32 numParams,
+                const char **options, uint32 numOptions)
+{
+    ASSERT(mpa != NULL);
+
+    for (uint32 i = 0; i < numParams; i++) {
+        MutationStrParams *mp = &mpa[i];
+        if (Random_Flip(mp->flipRate)) {
+            uint choice = Random_Int(0, numOptions);
+            MBRegistry_PutCopy(mreg, mp->key, options[choice]);
+        }
+    }
+}

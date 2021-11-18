@@ -39,8 +39,15 @@ typedef struct MutationBoolParams {
     float flipRate;
 } MutationBoolParams;
 
+typedef struct MutationStrParams {
+    const char *key;
+    float flipRate;
+} MutationStrParams;
+
 void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mp, uint32 numParams);
 void Mutate_Bool(MBRegistry *mreg, MutationBoolParams *mp, uint32 numParams);
+void Mutate_Str(MBRegistry *mreg, MutationStrParams *mp, uint32 numParams,
+                const char **options, uint32 numOptions);
 
 #ifdef __cplusplus
     }
