@@ -25,6 +25,13 @@
 	extern "C" {
 #endif
 
+typedef enum MutationType {
+    MUTATION_TYPE_WEIGHT,
+    MUTATION_TYPE_RADIUS,
+    MUTATION_TYPE_PERIOD,
+    MUTATION_TYPE_COUNT,
+} MutationType;
+
 typedef struct MutationFloatParams {
     const char *key;
     float minValue;
@@ -43,6 +50,8 @@ typedef struct MutationStrParams {
     const char *key;
     float flipRate;
 } MutationStrParams;
+
+void Mutate_DefaultFloatParams(MutationFloatParams *mp, MutationType type);
 
 void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mp, uint32 numParams);
 void Mutate_Bool(MBRegistry *mreg, MutationBoolParams *mp, uint32 numParams);

@@ -98,3 +98,29 @@ void Mutate_Str(MBRegistry *mreg, MutationStrParams *mpa, uint32 numParams,
         }
     }
 }
+
+void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
+{
+    if (type == MUTATION_TYPE_WEIGHT) {
+        vf->minValue = -1.0f;
+        vf->maxValue = 1.0f;
+        vf->magnitude = 0.1f;
+        vf->jumpRate = 0.1f;
+        vf->mutationRate = 0.1f;
+    } else if (type == MUTATION_TYPE_RADIUS ||
+               type == MUTATION_TYPE_PERIOD) {
+        vf->minValue = -1.0f;
+        vf->maxValue = 10000.0f;
+        vf->magnitude = 0.1f;
+        vf->jumpRate = 0.1f;
+        vf->mutationRate = 0.1f;
+    } else if (type == MUTATION_TYPE_COUNT) {
+        vf->minValue = -1.0f;
+        vf->maxValue = 20.0f;
+        vf->magnitude = 0.1f;
+        vf->jumpRate = 0.1f;
+        vf->mutationRate = 0.1f;
+    } else {
+        NOT_IMPLEMENTED();
+    }
+}

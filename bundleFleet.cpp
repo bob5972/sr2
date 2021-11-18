@@ -36,13 +36,6 @@ typedef uint32 BundleFlags;
 #define BUNDLE_FLAG_STRICT_RANGE (1 << 0)
 #define BUNDLE_FLAG_STRICT_CROWD (1 << 1)
 
-typedef enum BundleValueType {
-    BUNDLE_VALUE_TYPE_WEIGHT,
-    BUNDLE_VALUE_TYPE_RADIUS,
-    BUNDLE_VALUE_TYPE_PERIOD,
-    BUNDLE_VALUE_TYPE_COUNT,
-} BundleValueType;
-
 typedef struct BundleValue {
     float value;
     float period;
@@ -902,31 +895,10 @@ void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 
 static void GetMutationFloatParams(MutationFloatParams *vf,
                                    const char *key,
-                                   BundleValueType bType)
+                                   MutationType bType)
 {
     MBUtil_Zero(vf, sizeof(*vf));
-
-    if (bType == BUNDLE_VALUE_TYPE_WEIGHT) {
-        vf->minValue = -1.0f;
-        vf->maxValue = 1.0f;
-        vf->magnitude = 0.1f;
-        vf->jumpRate = 0.1f;
-        vf->mutationRate = 0.1f;
-    } else if (bType == BUNDLE_VALUE_TYPE_RADIUS ||
-               bType == BUNDLE_VALUE_TYPE_PERIOD) {
-        vf->minValue = -1.0f;
-        vf->maxValue = 10000.0f;
-        vf->magnitude = 0.1f;
-        vf->jumpRate = 0.1f;
-        vf->mutationRate = 0.1f;
-    } else if (bType == BUNDLE_VALUE_TYPE_COUNT) {
-        vf->minValue = -1.0f;
-        vf->maxValue = 20.0f;
-        vf->magnitude = 0.1f;
-        vf->jumpRate = 0.1f;
-        vf->mutationRate = 0.1f;
-    }
-
+    Mutate_DefaultFloatParams(vf, bType);
     vf->key = key;
 }
 
@@ -941,7 +913,7 @@ static void GetMutationStrParams(MutationStrParams *svf,
 
 static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
                               const char *prefix,
-                              BundleValueType bType)
+                              MutationType bType)
 {
     MutationFloatParams vf;
 
@@ -957,7 +929,7 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".period");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), BUNDLE_VALUE_TYPE_PERIOD);
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD);
     Mutate_Float(mreg, &vf, 1);
 
     MBString_MakeEmpty(&s);
@@ -997,25 +969,25 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".weight");
     MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
-                      BUNDLE_VALUE_TYPE_WEIGHT);
+                      MUTATION_TYPE_WEIGHT);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".radius");
     MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
-                      BUNDLE_VALUE_TYPE_RADIUS);
+                      MUTATION_TYPE_RADIUS);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".crowd.size");
     MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
-                      BUNDLE_VALUE_TYPE_COUNT);
+                      MUTATION_TYPE_COUNT);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".crowd.radius");
     MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
-                      BUNDLE_VALUE_TYPE_RADIUS);
+                      MUTATION_TYPE_RADIUS);
 
     MBString_Destroy(&s);
 }
@@ -1071,7 +1043,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     MutateBundleForce(aiType, mreg, "edges");
     MutateBundleForce(aiType, mreg, "base");
 
-    MutateBundleValue(aiType, mreg, "curHeadingWeight", BUNDLE_VALUE_TYPE_WEIGHT);
+    MutateBundleValue(aiType, mreg, "curHeadingWeight", MUTATION_TYPE_WEIGHT);
 
     MutateBundleForce(aiType, mreg, "locus");
 }
