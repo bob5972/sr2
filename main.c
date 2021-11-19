@@ -132,7 +132,9 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                             uint32 fi, uint32 mi, uint32 bi);
 static void MainKillFleet(BattlePlayer *mainPlayers,
                           uint32 mpSize, uint32 *mpIndex,
-                          uint32 startingMPIndex, uint32 *numFleets);
+                          uint32 startingMPIndex, uint32 *numFleets,
+                          uint32 *numTargetFleets, uint32 fi);
+static bool MainIsFleetDefective(BattlePlayer *player);
 
 void MainConstructScenario(void)
 {
@@ -805,7 +807,6 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
     MBRegistry *fleetReg;
     uint32 numFleets;
     uint32 numTargetFleets = 0;
-    uint32 i;
     MBString tmp;
     uint32 startingMPIndex = *mpIndex;
 
@@ -827,7 +828,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
     /*
      * Load fleets.
      */
-    for (i = 1; i <= numFleets; i++) {
+    for (uint32 i = 1; i <= numFleets; i++) {
         MBRegistry_MakeEmpty(fleetReg);
 
         MBString_IntToString(&tmp, i);
@@ -878,31 +879,62 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
      * Mutate fleets.
      */
     if (MBOpt_IsPresent("mutatePopulation")) {
+        uint actualKillCount = 0;
+
+        {
+            uint32 i = 0;
+            while (i < numFleets && numTargetFleets > 1) {
+                uint32 fi = i + startingMPIndex;
+                if (MainIsFleetDefective(&mainPlayers[fi])) {
+                    MainKillFleet(mainPlayers, mpSize, mpIndex,
+                                  startingMPIndex, &numFleets,
+                                  &numTargetFleets, fi);
+
+                    actualKillCount++;
+
+                    /*
+                     * Re-use the same i index because we swapped the fleet
+                     * out.
+                     */
+                } else {
+                    i++;
+                }
+            }
+        }
+        ASSERT(numFleets > 0);
+
         uint popLimit = MBOpt_GetUint("populationLimit");
-        float killRatio = MBOpt_GetFloat("populationKillRatio");
-        uint killCount = numTargetFleets * killRatio;
-
-        if (numFleets > popLimit) {
-            killCount = MAX(numFleets - popLimit, killCount);
-        }
-
-        killCount = MIN(numTargetFleets - 1, killCount);
-        int mutateCount = popLimit - numFleets + killCount;
-
         VERIFY(popLimit > 0);
+        float killRatio = MBOpt_GetFloat("populationKillRatio");
         VERIFY(killRatio > 0.0f && killRatio <= 1.0f);
-        VERIFY(killCount < numTargetFleets);
-        VERIFY(mutateCount >= 0);
-
-        while (killCount > 0) {
-            MainKillFleet(mainPlayers, mpSize, mpIndex,
-                          startingMPIndex, &numFleets);
-            killCount--;
-            ASSERT(numFleets > 0);
+        uint targetKillCount = popLimit * killRatio;
+        if (numFleets > popLimit) {
+            targetKillCount = MAX(numFleets - popLimit, targetKillCount);
         }
+        targetKillCount = MAX(actualKillCount, targetKillCount);
+        ASSERT(targetKillCount >= actualKillCount);
+        targetKillCount -= actualKillCount;
+        targetKillCount = MIN(numTargetFleets - 1, targetKillCount);
+        ASSERT(targgetKillCount < numTargetFleets - 1);
+
+        while (targetKillCount > 0) {
+            uint fi = MainFleetCompetition(mainPlayers, mpSize,
+                                           startingMPIndex, numFleets,
+                                           FALSE);
+            MainKillFleet(mainPlayers, mpSize, mpIndex,
+                          startingMPIndex, &numFleets, &numTargetFleets,
+                          fi);
+            targetKillCount--;
+            ASSERT(numFleets > 0);
+            actualKillCount++;
+        }
+
+        VERIFY(popLimit >= numFleets);
+        uint targetMutateCount = popLimit - numFleets;
+        uint actualMutateCount = 0;
 
         ASSERT(*mpIndex == startingMPIndex + numFleets);
-        while (mutateCount > 0) {
+        while (targetMutateCount > 0) {
             uint32 mi = MainFleetCompetition(mainPlayers, mpSize,
                                              startingMPIndex, numFleets,
                                              TRUE);
@@ -912,8 +944,16 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             ASSERT(*mpIndex < mpSize);
             MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi, bi);
             (*mpIndex)++;
-            mutateCount--;
+            targetMutateCount--;
+            actualMutateCount++;
         }
+        numFleets += actualMutateCount;
+        numTargetFleets += actualMutateCount;
+
+        VERIFY(numFleets <= popLimit);
+        VERIFY(numFleets > 0);
+        VERIFY(numTargetFleets > 0);
+        VERIFY(numTargetFleets < numFleets);
     }
 
     MBRegistry_Free(popReg);
@@ -989,14 +1029,49 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     NOT_REACHED();
 }
 
+static bool MainIsFleetDefective(BattlePlayer *player)
+{
+    MBRegistry *fleetReg = player->mreg;
+    uint numBattles = MBRegistry_GetUint(fleetReg, "numBattles");
+
+    if (numBattles == 0) {
+        /*
+         * Keep brand-new fleets.
+         */
+        return FALSE;
+    }
+
+    uint numWins = MBRegistry_GetUint(fleetReg, "numWins");
+    float winRatio = (float)numWins / (float)numBattles;
+
+    if (winRatio < 0.0f) {
+        /*
+         * Something funny happened, probably someone manually editing
+         * the population file wrong.
+         */
+        return FALSE;
+    }
+
+    float defectiveLevel = 0.1f;
+    if (MBOpt_IsPresent("populationDefectiveRatio")) {
+        defectiveLevel = MBOpt_GetFloat("populationDefectiveRatio");
+    }
+
+    if (winRatio < defectiveLevel) {
+        Warning("defective: %f\n", winRatio);//XXX bob5972
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 static void MainKillFleet(BattlePlayer *mainPlayers,
                           uint32 mpSize, uint32 *mpIndex,
-                          uint32 startingMPIndex, uint32 *numFleets)
+                          uint32 startingMPIndex, uint32 *numFleets,
+                          uint32 *numTargetFleets,
+                          uint32 fi)
 {
     uint lastI = startingMPIndex + *numFleets - 1;
-    uint fi = MainFleetCompetition(mainPlayers, mpSize,
-                                   startingMPIndex, *numFleets,
-                                   FALSE);
     ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
     mainPlayers[fi] = mainPlayers[lastI];
     MBUtil_Zero(&mainPlayers[lastI], sizeof(mainPlayers[lastI]));
@@ -1004,6 +1079,8 @@ static void MainKillFleet(BattlePlayer *mainPlayers,
 
     ASSERT(*numFleets > 0);
     (*numFleets)--;
+    ASSERT(*numTargetFleets > 0);
+    (*numTargetFleets)--;
     ASSERT(*mpIndex > 0);
     (*mpIndex)--;
 }
@@ -1261,6 +1338,9 @@ void MainParseCmdLine(int argc, char **argv)
         { "-Z", "--populationLimit",   TRUE,  "Population limit for mutating" },
         { "-K", "--populationKillRatio",
                                        TRUE,  "Kill ratio for population"     },
+        { "-D", "--populationDefectiveRatio",
+                                       TRUE,  "Win ratio to consider a fleet "
+                                              "defective"                     },
         { "-s", "--seed",              TRUE,  "Set random seed"               },
         { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
