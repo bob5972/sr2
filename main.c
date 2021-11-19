@@ -130,6 +130,9 @@ static uint32 MainFleetCompetition(BattlePlayer *mainPlayers, uint32 mpSize,
                                    bool useWinRatio);
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                             uint32 fi, uint32 mi, uint32 bi);
+static void MainKillFleet(BattlePlayer *mainPlayers,
+                          uint32 mpSize, uint32 *mpIndex,
+                          uint32 startingMPIndex, uint32 *numFleets);
 
 void MainConstructScenario(void)
 {
@@ -892,20 +895,10 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
         VERIFY(mutateCount >= 0);
 
         while (killCount > 0) {
-            uint lastI = startingMPIndex + numFleets - 1;
-            uint fi = MainFleetCompetition(mainPlayers, mpSize,
-                                           startingMPIndex, numFleets,
-                                           FALSE);
-            ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
-            mainPlayers[fi] = mainPlayers[lastI];
-            MBUtil_Zero(&mainPlayers[lastI], sizeof(mainPlayers[lastI]));
-            mainPlayers[lastI].playerType = PLAYER_TYPE_INVALID;
-
+            MainKillFleet(mainPlayers, mpSize, mpIndex,
+                          startingMPIndex, &numFleets);
             killCount--;
             ASSERT(numFleets > 0);
-            numFleets--;
-            ASSERT(*mpIndex > 0);
-            (*mpIndex)--;
         }
 
         ASSERT(*mpIndex == startingMPIndex + numFleets);
@@ -994,6 +987,25 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     }
 
     NOT_REACHED();
+}
+
+static void MainKillFleet(BattlePlayer *mainPlayers,
+                          uint32 mpSize, uint32 *mpIndex,
+                          uint32 startingMPIndex, uint32 *numFleets)
+{
+    uint lastI = startingMPIndex + *numFleets - 1;
+    uint fi = MainFleetCompetition(mainPlayers, mpSize,
+                                   startingMPIndex, *numFleets,
+                                   FALSE);
+    ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
+    mainPlayers[fi] = mainPlayers[lastI];
+    MBUtil_Zero(&mainPlayers[lastI], sizeof(mainPlayers[lastI]));
+    mainPlayers[lastI].playerType = PLAYER_TYPE_INVALID;
+
+    ASSERT(*numFleets > 0);
+    (*numFleets)--;
+    ASSERT(*mpIndex > 0);
+    (*mpIndex)--;
 }
 
 
