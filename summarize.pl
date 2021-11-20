@@ -13,11 +13,12 @@ use MBBasic;
 my $gScriptOptions = {
     "dumpFleet|d=i" => { desc => "Dump the specified fleet",
                          default => undef, },
-#    "resetHistory|r!" => { desc => "Reset fleet history",
-#                           default => FALSE },
+    "resetHistory|r!" => { desc => "Reset fleet history",
+                           default => FALSE },
 };
 
 my $gPop;
+my $gFile;
 
 sub GetCountFromRange($$$)
 {
@@ -195,19 +196,36 @@ sub DisplaySummary() {
     Console("\n");
 }
 
+sub ResetHistory() {
+    my $numFleets = $gPop->{'numFleets'};
+    VERIFY(defined($numFleets) && $numFleets > 0);
+
+    for (my $i = 1; $i <= $numFleets; $i++) {
+        my $prefix = "fleet$i";
+        delete $gPop->{"$prefix.numBattles"};
+        delete $gPop->{"$prefix.numWins"};
+        delete $gPop->{"$prefix.numLosses"};
+        delete $gPop->{"$prefix.numDraws"};
+    }
+
+    MBBasic::SaveMRegFile($gPop, $gFile);
+    Console("Fleet history reset.\n");
+}
+
 sub Main() {
     MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
     MBBasic::Init();
 
-    my $file = "build/tmp/popMutate.txt";
-    $gPop = LoadMRegFile($file);
+    $gFile = "build/tmp/popMutate.txt";
+    $gPop = MBBasic::LoadMRegFile($gFile);
 
     if (defined($OPTIONS->{'dumpFleet'})) {
         DumpFleet($OPTIONS->{'dumpFleet'});
-        return 0;
+    } elsif ($OPTIONS->{'resetHistory'}) {
+        ResetHistory();
+    } else {
+        DisplaySummary();
     }
-
-    DisplaySummary();
 
     MBBasic::Exit();
 }
