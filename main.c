@@ -915,7 +915,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
         ASSERT(targetKillCount >= actualKillCount);
         targetKillCount -= actualKillCount;
         targetKillCount = MIN(numTargetFleets - 1, targetKillCount);
-        ASSERT(targgetKillCount < numTargetFleets - 1);
+        ASSERT(targetKillCount < numTargetFleets - 1);
 
         while (targetKillCount > 0) {
             uint fi = MainFleetCompetition(mainPlayers, mpSize,
