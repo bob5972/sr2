@@ -878,6 +878,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
     /*
      * Mutate fleets.
      */
+    uint32 origNumFleets = numFleets;
     if (MBOpt_IsPresent("mutatePopulation")) {
         uint actualKillCount = 0;
 
@@ -909,7 +910,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
         VERIFY(killRatio > 0.0f && killRatio <= 1.0f);
         uint targetKillCount = popLimit * killRatio;
         if (numFleets > popLimit) {
-            targetKillCount = MAX(numFleets - popLimit, targetKillCount);
+            targetKillCount = MAX(origNumFleets - popLimit, targetKillCount);
         }
         targetKillCount = MAX(actualKillCount, targetKillCount);
         ASSERT(targetKillCount >= actualKillCount);
@@ -1058,7 +1059,6 @@ static bool MainIsFleetDefective(BattlePlayer *player)
     }
 
     if (winRatio < defectiveLevel) {
-        Warning("defective: %f\n", winRatio);//XXX bob5972
         return TRUE;
     }
 
