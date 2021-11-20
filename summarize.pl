@@ -206,6 +206,9 @@ sub ResetHistory() {
         delete $gPop->{"$prefix.numWins"};
         delete $gPop->{"$prefix.numLosses"};
         delete $gPop->{"$prefix.numDraws"};
+
+        # Keep age and numSpawn because they're just
+        # used for statistics.
     }
 
     MBBasic::SaveMRegFile($gPop, $gFile);
