@@ -13,6 +13,8 @@ use MBBasic;
 my $gScriptOptions = {
     "dumpFleet|d=i" => { desc => "Dump the specified fleet",
                          default => undef, },
+#    "resetHistory|r!" => { desc => "Reset fleet history",
+#                           default => FALSE },
 };
 
 my $gPop;
@@ -67,18 +69,7 @@ sub DumpFleet($) {
     }
 }
 
-sub Main() {
-    MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
-    MBBasic::Init();
-
-    my $file = "build/tmp/popMutate.txt";
-    $gPop = LoadMRegFile($file);
-
-    if (defined($OPTIONS->{'dumpFleet'})) {
-        DumpFleet($OPTIONS->{'dumpFleet'});
-        return 0;
-    }
-
+sub DisplaySummary() {
     my $numFleets = $gPop->{'numFleets'};
     VERIFY(defined($numFleets) && $numFleets > 0);
 
@@ -202,6 +193,21 @@ sub Main() {
     $fitness = sprintf("%1.2f", ($fitness*100));
     Console("Average Fitness: $fitness%\n");
     Console("\n");
+}
+
+sub Main() {
+    MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
+    MBBasic::Init();
+
+    my $file = "build/tmp/popMutate.txt";
+    $gPop = LoadMRegFile($file);
+
+    if (defined($OPTIONS->{'dumpFleet'})) {
+        DumpFleet($OPTIONS->{'dumpFleet'});
+        return 0;
+    }
+
+    DisplaySummary();
 
     MBBasic::Exit();
 }
