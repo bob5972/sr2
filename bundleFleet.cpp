@@ -31,12 +31,17 @@ extern "C" {
 #include "MBMap.hpp"
 #include "MBString.hpp"
 
-typedef uint32 BundleFlags;
-#define BUNDLE_FLAG_NONE         (0)
-#define BUNDLE_FLAG_STRICT_RANGE (1 << 0)
-#define BUNDLE_FLAG_STRICT_CROWD (1 << 1)
+typedef uint32 BundleForceFlags;
+#define BUNDLE_FORCE_FLAG_NONE         (0)
+#define BUNDLE_FORCE_FLAG_STRICT_RANGE (1 << 0)
+#define BUNDLE_FORCE_FLAG_STRICT_CROWD (1 << 1)
+
+typedef uint32 BundleValueFlags;
+#define BUNDLE_VALUE_FLAG_NONE     (0)
+#define BUNDLE_VALUE_FLAG_PERIODIC (1 << 0)
 
 typedef struct BundleValue {
+    BundleValueFlags flags;
     float value;
     float period;
     float amplitude;
@@ -48,7 +53,7 @@ typedef struct BundleCrowd {
 } BundleCrowd;
 
 typedef struct BundleForce {
-    BundleFlags flags;
+    BundleForceFlags flags;
     BundleValue weight;
     BundleValue radius;
     BundleCrowd crowd;
@@ -180,7 +185,24 @@ public:
     virtual void loadBundleValue(MBRegistry *mreg, BundleValue *bv,
                                  const char *prefix) {
         CMBString s;
+        const char *cs;
         MBString_Create(&s);
+
+        bv->flags = BUNDLE_VALUE_FLAG_NONE;
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".valueType");
+        cs = MBRegistry_GetCStr(mreg, MBString_GetCStr(&s));
+        if (cs == NULL ||
+            strcmp(cs, "") == 0 ||
+            strcmp(cs, "none") == 0) {
+            /* No extra flags. */
+        } else if (strcmp(cs, "periodic") == 0) {
+            bv->flags |= BUNDLE_VALUE_FLAG_PERIODIC;
+        } else {
+            PANIC("Unknown valueType = %s\n", cs);
+        }
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -209,7 +231,7 @@ public:
         const char *cs;
         MBString_Create(&s);
 
-        b->flags = BUNDLE_FLAG_NONE;
+        b->flags = BUNDLE_FORCE_FLAG_NONE;
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -220,7 +242,7 @@ public:
             strcmp(cs, "none") == 0) {
             /* No extra flags. */
         } else if (strcmp(cs, "strict") == 0) {
-            b->flags |= BUNDLE_FLAG_STRICT_RANGE;
+            b->flags |= BUNDLE_FORCE_FLAG_STRICT_RANGE;
         } else {
             PANIC("Unknown rangeType = %s\n", cs);
         }
@@ -234,7 +256,7 @@ public:
             strcmp(cs, "none") == 0) {
             /* No extra flags. */
         } else if (strcmp(cs, "strict") == 0) {
-            b->flags |= BUNDLE_FLAG_STRICT_RANGE;
+            b->flags |= BUNDLE_FORCE_FLAG_STRICT_RANGE;
         } else {
             PANIC("Unknown crowdType = %s\n", cs);
         }
@@ -472,7 +494,8 @@ public:
     }
 
     float getBundleValue(BundleValue *bv) {
-        if (bv->amplitude > 0.0f && bv->period > 1.0f) {
+        if ((bv->flags & BUNDLE_VALUE_FLAG_PERIODIC) != 0 &&
+            bv->amplitude > 0.0f && bv->period > 1.0f) {
             float p = bv->period;
             float a = bv->amplitude;
             return bv->value * (1.0f + a * sinf(myFleetAI->tick / p));
@@ -484,7 +507,7 @@ public:
     bool crowdCheck(Mob *mob, BundleForce *bundle) {
         SensorGrid *sg = mySensorGrid;
 
-        if ((bundle->flags & BUNDLE_FLAG_STRICT_CROWD) != 0) {
+        if ((bundle->flags & BUNDLE_FORCE_FLAG_STRICT_CROWD) != 0) {
             uint crowdSize = (uint)getBundleValue(&bundle->crowd.size);
             float crowdRadius = getBundleValue(&bundle->crowd.radius);
 
@@ -511,7 +534,7 @@ public:
 
         float radius = getBundleValue(&bundle->radius);
 
-        if ((bundle->flags & BUNDLE_FLAG_STRICT_RANGE) != 0 &&
+        if ((bundle->flags & BUNDLE_FORCE_FLAG_STRICT_RANGE) != 0 &&
             FPoint_Distance(&mob->pos, focusPos) > radius) {
             /* No force. */
             return;
@@ -919,9 +942,20 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
                               MutationType bType)
 {
     MutationFloatParams vf;
+    MutationStrParams svf;
 
     CMBString s;
     MBString_Create(&s);
+
+    const char *options[] = {
+        "none", "periodic",
+    };
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".valueType");
+    GetMutationStrParams(&svf, MBString_GetCStr(&s));
+    Mutate_Str(mreg, &svf, 1, options, ARRAYSIZE(options));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);

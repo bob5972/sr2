@@ -113,7 +113,7 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
         vf->maxValue = 1.0f;
         vf->magnitude = 0.1f;
         vf->jumpRate = 0.15f;
-        vf->mutationRate = 0.01f;
+        vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_RADIUS) {
         vf->minValue = -1.0f;
         vf->maxValue = 2000.0f;
@@ -125,7 +125,7 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
         vf->maxValue = 10000.0f;
         vf->magnitude = 0.1f;
         vf->jumpRate = 0.15f;
-        vf->mutationRate = 0.01f;
+        vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_COUNT) {
         vf->minValue = -1.0f;
         vf->maxValue = 20.0f;
