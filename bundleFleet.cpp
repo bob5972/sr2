@@ -196,6 +196,7 @@ public:
         cs = MBRegistry_GetCStr(mreg, MBString_GetCStr(&s));
         if (cs == NULL ||
             strcmp(cs, "") == 0 ||
+            strcmp(cs, "constant") == 0 ||
             strcmp(cs, "none") == 0) {
             /* No extra flags. */
         } else if (strcmp(cs, "periodic") == 0) {
@@ -948,7 +949,7 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_Create(&s);
 
     const char *options[] = {
-        "none", "periodic",
+        "constant", "periodic",
     };
 
     MBString_MakeEmpty(&s);
