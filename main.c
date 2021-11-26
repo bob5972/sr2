@@ -243,6 +243,7 @@ void MainConstructScenario(void)
          *    FlockFleet6
          *    FlockFleet7
          *    FlockFleet8
+         *    FlockFleet9
          *
          *    -- unrated --
          *    BobFleet (prototype, varies)
