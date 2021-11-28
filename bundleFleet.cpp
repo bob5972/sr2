@@ -1046,11 +1046,8 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
 {
     MutationStrParams svf;
 
-    const char *rangeOptions[] = {
-        "nowhere", "everywhere", "strict", "linearUp", "linearDown"
-    };
-    const char *crowdOptions[] = {
-        "never", "always", "strict", "linear",
+    const char *checkOptions[] = {
+        "never", "always", "strictOn", "strictOff", "linearUp", "linearDown"
     };
 
     CMBString s;
@@ -1060,13 +1057,13 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".crowdType");
     GetMutationStrParams(&svf, MBString_GetCStr(&s));
-    Mutate_Str(mreg, &svf, 1, crowdOptions, ARRAYSIZE(crowdOptions));
+    Mutate_Str(mreg, &svf, 1, checkOptions, ARRAYSIZE(checkOptions));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".rangeType");
     GetMutationStrParams(&svf, MBString_GetCStr(&s));
-    Mutate_Str(mreg, &svf, 1, rangeOptions, ARRAYSIZE(rangeOptions));
+    Mutate_Str(mreg, &svf, 1, checkOptions, ARRAYSIZE(checkOptions));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
