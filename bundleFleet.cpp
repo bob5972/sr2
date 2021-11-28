@@ -32,9 +32,17 @@ extern "C" {
 #include "MBString.hpp"
 
 typedef uint32 BundleForceFlags;
-#define BUNDLE_FORCE_FLAG_NONE         (0)
-#define BUNDLE_FORCE_FLAG_STRICT_RANGE (1 << 0)
-#define BUNDLE_FORCE_FLAG_STRICT_CROWD (1 << 1)
+#define BUNDLE_FORCE_FLAG_NONE              (0)
+#define BUNDLE_FORCE_FLAG_RANGE_NOWHERE     (1 << 0)
+#define BUNDLE_FORCE_FLAG_RANGE_EVERYWHERE  (1 << 1)
+#define BUNDLE_FORCE_FLAG_RANGE_STRICT      (1 << 2)
+#define BUNDLE_FORCE_FLAG_RANGE_LINEAR_UP   (1 << 4)
+#define BUNDLE_FORCE_FLAG_RANGE_LINEAR_DOWN (1 << 5)
+#define BUNDLE_FORCE_FLAG_CROWD_NEVER       (1 << 6)
+#define BUNDLE_FORCE_FLAG_CROWD_ALWAYS      (1 << 7)
+#define BUNDLE_FORCE_FLAG_CROWD_STRICT      (1 << 8)
+#define BUNDLE_FORCE_FLAG_CROWD_LINEAR      (1 << 9)
+
 
 typedef uint32 BundleValueFlags;
 #define BUNDLE_VALUE_FLAG_NONE     (0)
@@ -240,10 +248,17 @@ public:
         cs = MBRegistry_GetCStr(mreg, MBString_GetCStr(&s));
         if (cs == NULL ||
             strcmp(cs, "") == 0 ||
-            strcmp(cs, "none") == 0) {
-            /* No extra flags. */
+            strcmp(cs, "none") == 0 ||
+            strcmp(cs, "nowhere") == 0) {
+            b->flags |= BUNDLE_FORCE_FLAG_RANGE_NOWHERE;
         } else if (strcmp(cs, "strict") == 0) {
-            b->flags |= BUNDLE_FORCE_FLAG_STRICT_RANGE;
+            b->flags |= BUNDLE_FORCE_FLAG_RANGE_STRICT;
+        } else if (strcmp(cs, "everywhere") == 0) {
+            b->flags |= BUNDLE_FORCE_FLAG_RANGE_EVERYWHERE;
+        } else if (strcmp(cs, "linearUp") == 0) {
+            b->flags |= BUNDLE_FORCE_FLAG_RANGE_LINEAR_UP;
+        } else if (strcmp(cs, "linearDown") == 0) {
+            b->flags |= BUNDLE_FORCE_FLAG_RANGE_LINEAR_DOWN;
         } else {
             PANIC("Unknown rangeType = %s\n", cs);
         }
@@ -254,10 +269,15 @@ public:
         cs = MBRegistry_GetCStr(mreg, MBString_GetCStr(&s));
         if (cs == NULL ||
             strcmp(cs, "") == 0 ||
-            strcmp(cs, "none") == 0) {
-            /* No extra flags. */
+            strcmp(cs, "none") == 0 ||
+            strcmp(cs, "never") == 0) {
+            b->flags |= BUNDLE_FORCE_FLAG_CROWD_NEVER;
         } else if (strcmp(cs, "strict") == 0) {
-            b->flags |= BUNDLE_FORCE_FLAG_STRICT_RANGE;
+            b->flags |= BUNDLE_FORCE_FLAG_CROWD_STRICT;
+        } else if (strcmp(cs, "linear") == 0) {
+            b->flags |= BUNDLE_FORCE_FLAG_CROWD_LINEAR;
+        } else if (strcmp(cs, "always") == 0) {
+            b->flags |= BUNDLE_FORCE_FLAG_CROWD_ALWAYS;
         } else {
             PANIC("Unknown crowdType = %s\n", cs);
         }
@@ -295,7 +315,7 @@ public:
         loadBundleForce(mreg, &this->myConfig.attackSeparate, "attackSeparate");
 
         loadBundleForce(mreg, &this->myConfig.cores, "cores");
-        loadBundleForce(mreg, &this->myConfig.cores, "enemy");
+        loadBundleForce(mreg, &this->myConfig.enemy, "enemy");
         loadBundleForce(mreg, &this->myConfig.enemyBase, "enemyBase");
 
         loadBundleForce(mreg, &this->myConfig.center, "center");
@@ -374,14 +394,15 @@ public:
     void flockSeparate(Mob *mob, FRPoint *rForce, BundleForce *bundle) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
+        float weight;
 
-        if (!crowdCheck(mob, bundle)) {
+        if (!crowdCheck(mob, bundle, &weight)) {
             /* No force. */
             return;
         }
 
         float radius = getBundleValue(&bundle->radius);
-        float weight = getBundleValue(&bundle->weight);
+        weight *= getBundleValue(&bundle->weight);
 
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
         FRPoint repulseVec;
@@ -431,17 +452,19 @@ public:
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;
         float radius = getBundleValue(&myConfig.edges.radius);
-        float weight = getBundleValue(&myConfig.edges.weight);
+        float weight;
 
         if (edgeDistance(&mob->pos) >= radius) {
             /* No force. */
             return;
         }
 
-        if (!crowdCheck(mob, &myConfig.edges)) {
+        if (!crowdCheck(mob, &myConfig.edges, &weight)) {
             /* No force. */
             return;
         }
+
+        weight *= getBundleValue(&myConfig.edges.weight);
 
         FRPoint repulseVec;
 
@@ -505,45 +528,102 @@ public:
         }
     }
 
-    bool crowdCheck(Mob *mob, BundleForce *bundle) {
+    /*
+     * Should this force operate given the current crowd size?
+     * Returns TRUE iff the force should operate.
+     */
+    bool crowdCheck(Mob *mob, BundleForce *bundle, float *weight) {
         SensorGrid *sg = mySensorGrid;
 
-        if ((bundle->flags & BUNDLE_FORCE_FLAG_STRICT_CROWD) != 0) {
-            uint crowdSize = (uint)getBundleValue(&bundle->crowd.size);
+        if ((bundle->flags & BUNDLE_FORCE_FLAG_CROWD_NEVER) != 0) {
+            *weight = 0.0f;
+            return FALSE;
+        } else if ((bundle->flags & BUNDLE_FORCE_FLAG_CROWD_ALWAYS) != 0) {
+            *weight = 1.0f;
+            return TRUE;
+        } else if ((bundle->flags & BUNDLE_FORCE_FLAG_CROWD_STRICT) != 0 ||
+                   (bundle->flags & BUNDLE_FORCE_FLAG_CROWD_LINEAR) != 0) {
+            float crowdSize = getBundleValue(&bundle->crowd.size);
             float crowdRadius = getBundleValue(&bundle->crowd.radius);
 
-            if (crowdSize <= 1 || crowdRadius <= 0.0f) {
+            if (crowdSize <= 1) {
+                *weight = 1.0f;
                 return TRUE;
+            }
+            if (crowdRadius <= 0.0f) {
+                *weight = 0.0f;
+                return FALSE;
             }
 
             int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
                                                    &mob->pos, crowdRadius);
-            if (numFriends < crowdSize) {
-                return FALSE;
+
+            if ((bundle->flags & BUNDLE_FORCE_FLAG_CROWD_LINEAR) != 0) {
+                *weight = numFriends / (float)crowdSize;
+                *weight = MAX(0.0f, *weight);
+                if (*weight > 0.0f) {
+                    return TRUE;
+                } else {
+                    return FALSE;
+                }
+            } else {
+                ASSERT((bundle->flags & BUNDLE_FORCE_FLAG_CROWD_STRICT) != 0);
+                if (numFriends < crowdSize) {
+                    *weight = 0.0f;
+                    return FALSE;
+                } else {
+                    *weight = 1.0f;
+                    return TRUE;
+                }
             }
+        } else {
+            PANIC("Unknown crowd flags: 0x%X\n", bundle->flags);
         }
 
-        return TRUE;
+        NOT_REACHED();
     }
 
     void applyBundle(Mob *mob, FRPoint *rForce, BundleForce *bundle,
                      FPoint *focusPos) {
-        if (!crowdCheck(mob, bundle)) {
+        float cweight;
+        if (!crowdCheck(mob, bundle, &cweight)) {
+            /* No force. */
+            return;
+        }
+
+        if ((bundle->flags & BUNDLE_FORCE_FLAG_RANGE_NOWHERE) != 0) {
             /* No force. */
             return;
         }
 
         float radius = getBundleValue(&bundle->radius);
 
-        if ((bundle->flags & BUNDLE_FORCE_FLAG_STRICT_RANGE) != 0 &&
-            FPoint_Distance(&mob->pos, focusPos) > radius) {
+        if (isnanf(radius) || radius <= 0.0f) {
             /* No force. */
             return;
         }
 
-        float weight = getBundleValue(&bundle->weight);
+        float distance = FPoint_Distance(&mob->pos, focusPos);
+        float rweight;
 
-        if (weight == 0.0f) {
+        if ((bundle->flags & BUNDLE_FORCE_FLAG_RANGE_STRICT) != 0) {
+            if (distance > radius) {
+                /* No force. */
+                return;
+            }
+            rweight = 1.0f;
+        } else if ((bundle->flags & BUNDLE_FORCE_FLAG_RANGE_LINEAR_UP) != 0) {
+            rweight = distance / radius;
+        } else if ((bundle->flags & BUNDLE_FORCE_FLAG_RANGE_LINEAR_DOWN) != 0) {
+            rweight = radius / distance;
+        } else {
+            ASSERT((bundle->flags & BUNDLE_FORCE_FLAG_RANGE_EVERYWHERE) != 0);
+            rweight = 1.0f;
+        }
+
+        float vweight = rweight * cweight *getBundleValue(&bundle->weight);
+
+        if (vweight == 0.0f) {
             /* No force. */
             return;
         }
@@ -552,7 +632,7 @@ public:
         FRPoint reVec;
         FPoint_Subtract(focusPos, &mob->pos, &eVec);
         FPoint_ToFRPoint(&eVec, NULL, &reVec);
-        reVec.radius = weight;
+        reVec.radius = vweight;
         FRPoint_Add(rForce, &reVec, rForce);
     }
 
@@ -984,8 +1064,11 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
 {
     MutationStrParams svf;
 
-    const char *options[] = {
-        "none", "strict",
+    const char *rangeOptions[] = {
+        "nowhere", "everywhere", "strict", "linearUp", "linearDown"
+    };
+    const char *crowdOptions[] = {
+        "never", "always", "strict", "linear",
     };
 
     CMBString s;
@@ -995,13 +1078,13 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".crowdType");
     GetMutationStrParams(&svf, MBString_GetCStr(&s));
-    Mutate_Str(mreg, &svf, 1, options, ARRAYSIZE(options));
+    Mutate_Str(mreg, &svf, 1, crowdOptions, ARRAYSIZE(crowdOptions));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".rangeType");
     GetMutationStrParams(&svf, MBString_GetCStr(&s));
-    Mutate_Str(mreg, &svf, 1, options, ARRAYSIZE(options));
+    Mutate_Str(mreg, &svf, 1, rangeOptions, ARRAYSIZE(rangeOptions));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
