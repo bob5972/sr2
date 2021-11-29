@@ -888,6 +888,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             while (i < numFleets && numTargetFleets > 1) {
                 uint32 fi = i + startingMPIndex;
                 if (MainIsFleetDefective(&mainPlayers[fi])) {
+                    ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
                     MainKillFleet(mainPlayers, mpSize, mpIndex,
                                   startingMPIndex, &numFleets,
                                   &numTargetFleets, fi);
