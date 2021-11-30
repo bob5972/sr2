@@ -3,11 +3,12 @@
 OPTS="-H"
 OPTS="${OPTS} -t 14"
 
-POPLIMIT=100
+POPLIMIT=50
 KILLRATIO=0.30
 STALE_IT=1
-NEW_IT=2
+NEW_IT=1
 TICK_LIMIT=30000
+SCENARIO=fast
 
 POPFILE="build/tmp/popMutate.txt";
 OPTS="${OPTS} --tickLimit $TICK_LIMIT";
@@ -18,6 +19,7 @@ OPTS="${OPTS} --populationKillRatio $KILLRATIO"
 OPTS="${OPTS} --populationLimit $POPLIMIT"
 OPTS="${OPTS} --mutationNewIterations $NEW_IT"
 OPTS="${OPTS} --mutationStaleIterations $STALE_IT"
+OPTS="${OPTS} -S fast"
 
 cp -f $POPFILE $POPFILE.old
 

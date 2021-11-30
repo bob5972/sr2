@@ -598,7 +598,10 @@ void Battle_RunTick(Battle *battle)
         if (mob->alive) {
             PlayerID p = mob->playerID;
             battle->bs.players[p].numMobs++;
-            if (mob->type != MOB_TYPE_POWER_CORE) {
+
+            if ((mob->type != MOB_TYPE_POWER_CORE &&
+                 !battle->bsc.bp.baseVictory) ||
+                mob->type == MOB_TYPE_BASE) {
                 battle->bs.players[p].alive = TRUE;
             }
         } else {

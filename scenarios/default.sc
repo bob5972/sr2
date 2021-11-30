@@ -11,3 +11,4 @@ maxPowerCoreSpawn = 20
 restrictedStart = TRUE
 startingBases = 1
 startingFighters = 0
+baseVictory = FALSE

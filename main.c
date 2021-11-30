@@ -161,6 +161,7 @@ void MainConstructScenario(void)
     bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
     bsc.bp.startingBases = MBRegistry_GetUint(mreg, "startingBases");
     bsc.bp.startingFighters = MBRegistry_GetUint(mreg, "startingFighters");
+    bsc.bp.baseVictory = MBRegistry_GetBool(mreg, "baseVictory");
 
     MBRegistry_Free(mreg);
     mreg = NULL;
@@ -1276,6 +1277,7 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
         { "restrictedStart", "TRUE",   },
         { "startingBases",    "1",     },
         { "startingFighters", "0",     },
+        { "baseVictory", "FALSE",      },
     };
 
     if (scenario == NULL) {
