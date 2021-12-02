@@ -942,9 +942,9 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             uint32 mi = MainFleetCompetition(mainPlayers, mpSize,
                                              startingMPIndex, numFleets,
                                              TRUE);
-            uint32 bi = MainFindRandomFleet(mainPlayers, mpSize,
-                                            startingMPIndex, numFleets,
-                                            TRUE, NULL);
+            uint32 bi = MainFleetCompetition(mainPlayers, mpSize,
+                                             startingMPIndex, numFleets,
+                                             TRUE);
             ASSERT(*mpIndex < mpSize);
             MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi, bi);
             (*mpIndex)++;
@@ -1112,11 +1112,11 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     dest->playerType = PLAYER_TYPE_TARGET;
 
     /*
-     * Half the time, randomly mix traits with another fleet.
+     * Occaisonally, randomly mix traits with another fleet.
      * This increases the odds that two beneficial traits will end up together
      * without having to independently evolve twice.
      */
-    if (Random_Bit() &&
+    if (Random_Flip(0.1f) &&
         src != breeder &&
         breeder->aiType == src->aiType &&
         breeder->mreg != NULL) {
