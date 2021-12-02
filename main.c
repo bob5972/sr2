@@ -233,8 +233,8 @@ void MainConstructScenario(void)
          *    MapperFleet
          *    RunAwayFleet
          *    CircleFleet
-         *    FlockFleet1
          *    CowardFleet
+         *    FlockFleet1
          *    BasicFleet
          *    FlockFleet2
          *    HoldFleet
@@ -1022,7 +1022,8 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
             }
         }
 
-        i = (i + 1) % numFleets;
+        //i = (i + 1) % numFleets;
+        i = Random_Int(0, numFleets - 1);
         iterations++;
 
         if (iterations > numFleets * 101) {
