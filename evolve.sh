@@ -4,11 +4,15 @@ OPTS="-H"
 OPTS="${OPTS} -t 14"
 
 POPLIMIT=50
-KILLRATIO=0.10
+KILLRATIO=0.30
 STALE_IT=1
-NEW_IT=20
+NEW_IT=5
 TICK_LIMIT=40000
 SCENARIO=fast
+
+if [ -f evolve.local ]; then
+    source evolve.local ;
+fi;
 
 POPFILE="build/tmp/popMutate.txt";
 OPTS="${OPTS} --tickLimit $TICK_LIMIT";
