@@ -103,8 +103,8 @@ void Mutate_Str(MBRegistry *mreg, MutationStrParams *mpa, uint32 numParams,
 void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
 {
     if (type == MUTATION_TYPE_WEIGHT) {
-        vf->minValue = -1.0f;
-        vf->maxValue = 1.0f;
+        vf->minValue = -2.0f;
+        vf->maxValue = 2.0f;
         vf->magnitude = 0.1f;
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.15f;
