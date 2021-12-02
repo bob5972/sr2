@@ -51,6 +51,7 @@ typedef struct BundleValue {
     BundleValueFlags flags;
     float value;
     float period;
+    float periodRandomOffset;
     float amplitude;
 } BundleValue;
 
@@ -227,6 +228,12 @@ public:
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".periodRandomOffset");
+        bv->periodRandomOffset = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(bv->periodRandomOffset));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".amplitude");
         bv->amplitude = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
         ASSERT(!isnanf(bv->amplitude));
@@ -348,7 +355,7 @@ public:
 
     void flockAlign(Mob *mob, FRPoint *rForce) {
         FPoint avgVel;
-        float radius = getBundleValue(&myConfig.align.radius);
+        float radius = getBundleValue(mob, &myConfig.align.radius);
         SensorGrid *sg = mySensorGrid;
         sg->friendAvgVelocity(&avgVel, &mob->pos, radius, MOB_FLAG_FIGHTER);
         avgVel.x += mob->pos.x;
@@ -358,7 +365,7 @@ public:
 
     void flockCohere(Mob *mob, FRPoint *rForce) {
         FPoint avgPos;
-        float radius = getBundleValue(&myConfig.cohere.radius);
+        float radius = getBundleValue(mob, &myConfig.cohere.radius);
         SensorGrid *sg = mySensorGrid;
         sg->friendAvgPos(&avgPos, &mob->pos, radius, MOB_FLAG_FIGHTER);
         applyBundle(mob, rForce, &myConfig.cohere, &avgPos);
@@ -398,8 +405,8 @@ public:
             return;
         }
 
-        float radius = getBundleValue(&bundle->radius);
-        weight *= getBundleValue(&bundle->weight);
+        float radius = getBundleValue(mob, &bundle->radius);
+        weight *= getBundleValue(mob, &bundle->weight);
 
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
         FRPoint repulseVec;
@@ -448,7 +455,7 @@ public:
     void avoidEdges(Mob *mob, FRPoint *rPos) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;
-        float radius = getBundleValue(&myConfig.edges.radius);
+        float radius = getBundleValue(mob, &myConfig.edges.radius);
         float weight;
 
         if (edgeDistance(&mob->pos) >= radius) {
@@ -461,7 +468,7 @@ public:
             return;
         }
 
-        weight *= getBundleValue(&myConfig.edges.weight);
+        weight *= getBundleValue(mob, &myConfig.edges.weight);
 
         FRPoint repulseVec;
 
@@ -514,12 +521,29 @@ public:
         FRPoint_Add(rPos, &repulseVec, rPos);
     }
 
-    float getBundleValue(BundleValue *bv) {
+    float getMobOffset(Mob *m, float modulo) {
+        uint32 mobOffset;
+        RandomState *rs = &myRandomState;
+
+        if (modulo <= 0.0f) {
+            return 0.0f;
+        }
+
+        if (!myMobOffsets.containsKey(m->mobid)) {
+            myMobOffsets.put(m->mobid, RandomState_Uint32(rs));
+        }
+
+        mobOffset = myMobOffsets.get(m->mobid);
+        return fmodf((float)mobOffset, modulo);
+    }
+
+    float getBundleValue(Mob *m, BundleValue *bv) {
         if ((bv->flags & BUNDLE_VALUE_FLAG_PERIODIC) != 0 &&
             bv->amplitude > 0.0f && bv->period > 1.0f) {
             float p = bv->period;
+            float t = myFleetAI->tick + getMobOffset(m, bv->periodRandomOffset);
             float a = bv->amplitude;
-            return bv->value * (1.0f + a * sinf(myFleetAI->tick / p));
+            return bv->value * (1.0f + a * sinf(t / p));
         } else {
             return bv->value;
         }
@@ -574,8 +598,8 @@ public:
     bool crowdCheck(Mob *mob, BundleForce *bundle, float *weight) {
         SensorGrid *sg = mySensorGrid;
 
-        float crowdTrigger = getBundleValue(&bundle->crowd.size);
-        float crowdRadius = getBundleValue(&bundle->crowd.radius);
+        float crowdTrigger = getBundleValue(mob, &bundle->crowd.size);
+        float crowdRadius = getBundleValue(mob, &bundle->crowd.radius);
 
         float crowdValue = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
                                                  &mob->pos, crowdRadius);
@@ -590,7 +614,7 @@ public:
             return;
         }
 
-        float radius = getBundleValue(&bundle->radius);
+        float radius = getBundleValue(mob, &bundle->radius);
 
         if (isnanf(radius) || radius <= 0.0f) {
             /* No force. */
@@ -605,7 +629,7 @@ public:
             return;
         }
 
-        float vweight = rweight * cweight *getBundleValue(&bundle->weight);
+        float vweight = rweight * cweight *getBundleValue(mob, &bundle->weight);
 
         if (vweight == 0.0f) {
             /* No force. */
@@ -820,7 +844,7 @@ public:
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
             rForce.theta = rPos.theta;
-            rForce.radius = getBundleValue(&myConfig.curHeadingWeight);
+            rForce.radius = getBundleValue(mob, &myConfig.curHeadingWeight);
 
             flockAlign(mob, &rForce);
             flockCohere(mob, &rForce);
@@ -927,6 +951,8 @@ public:
         FPoint randomLocus;
         uint randomLocusTick;
     } myLive;
+
+    IntMap myMobOffsets;
 };
 
 class BundleFleet {
@@ -1041,6 +1067,13 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".period");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD,
+                           mreg);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".periodRandomOffset");
     GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD,
                            mreg);
     Mutate_Float(mreg, &vf, 1);
