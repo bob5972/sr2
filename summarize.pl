@@ -70,6 +70,34 @@ sub DumpFleet($) {
     }
 }
 
+sub ComputeDiversity() {
+    my $numFleets = $gPop->{'numFleets'};
+    VERIFY(defined($numFleets) && $numFleets > 0);
+
+    my $totalEntries = 0;
+    my $uniqueEntries = 0;
+    my $uniqueHash = {};
+
+    foreach my $k (keys %{$gPop}) {
+        $totalEntries++;
+
+        my $v = $gPop->{$k};
+        $k =~ s/^fleet\d+.//;
+        my $ue = $k . " == " . $v;
+        if (!defined($uniqueHash->{$ue})) {
+            $uniqueEntries++;
+            $uniqueHash->{$ue} = 1;
+        }
+    }
+
+    my $linesPerFleet = $totalEntries / $numFleets;
+    my $uniquePerFleet = $uniqueEntries / $numFleets;
+    my $diversity = $uniquePerFleet / $linesPerFleet;
+
+    return $diversity;
+}
+
+
 sub DisplaySummary() {
     my $numFleets = $gPop->{'numFleets'};
     VERIFY(defined($numFleets) && $numFleets > 0);
@@ -169,9 +197,9 @@ sub DisplaySummary() {
     }
 
     Console("\n");
-    Console(sprintf("%8s %8s\n", "Age", "Count"));
+    Console(sprintf("%10s %10s\n", "Age", "Count"));
     foreach my $x (sort {CompareRange($a, $b)} keys %{$ages}) {
-        Console(sprintf("%8s %8s\n", $x, $ages->{$x}));
+        Console(sprintf("%10s %10s\n", $x, $ages->{$x}));
     }
 
     if (defined($maxWinsP)) {
@@ -193,6 +221,10 @@ sub DisplaySummary() {
     Console("\n");
     $fitness = sprintf("%1.2f", ($fitness*100));
     Console("Average Fitness: $fitness%\n");
+
+    my $diversity = ComputeDiversity();
+    $diversity = sprintf("%1.2f", ($diversity*100));
+    Console("      Diversity: $diversity%\n");
     Console("\n");
 }
 
