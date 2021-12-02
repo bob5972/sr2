@@ -31,6 +31,8 @@ extern "C" {
 #include "MBMap.hpp"
 #include "MBString.hpp"
 
+#define BUNDLE_SCRAMBLE_KEY "bundleFleet.scrambleMutation"
+
 typedef enum BundleCheckType {
     BUNDLE_CHECK_INVALID = 0,
     BUNDLE_CHECK_NEVER,
@@ -984,20 +986,30 @@ void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 
 static void GetMutationFloatParams(MutationFloatParams *vf,
                                    const char *key,
-                                   MutationType bType)
+                                   MutationType bType,
+                                   MBRegistry *mreg)
 {
     MBUtil_Zero(vf, sizeof(*vf));
     Mutate_DefaultFloatParams(vf, bType);
     vf->key = key;
+
+    if (MBRegistry_GetBool(mreg, BUNDLE_SCRAMBLE_KEY)) {
+        vf->mutationRate = 1.0f;
+        vf->jumpRate = 1.0f;
+    }
 }
 
 static void GetMutationStrParams(MutationStrParams *svf,
-                                 const char *key)
+                                 const char *key,
+                                 MBRegistry *mreg)
 {
-
     MBUtil_Zero(svf, sizeof(*svf));
     svf->key = key;
-    svf->flipRate = 0.01;
+    svf->flipRate = 0.01f;
+
+    if (MBRegistry_GetBool(mreg, BUNDLE_SCRAMBLE_KEY)) {
+        svf->flipRate = 0.5f;
+    }
 }
 
 static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
@@ -1017,25 +1029,27 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".valueType");
-    GetMutationStrParams(&svf, MBString_GetCStr(&s));
+    GetMutationStrParams(&svf, MBString_GetCStr(&s), mreg);
     Mutate_Str(mreg, &svf, 1, options, ARRAYSIZE(options));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".value");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType);
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
     Mutate_Float(mreg, &vf, 1);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".period");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD);
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD,
+                           mreg);
     Mutate_Float(mreg, &vf, 1);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".amplitude");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_AMPLITUDE);
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_AMPLITUDE,
+                           mreg);
     Mutate_Float(mreg, &vf, 1);
 
     MBString_Destroy(&s);
@@ -1056,13 +1070,13 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".crowdType");
-    GetMutationStrParams(&svf, MBString_GetCStr(&s));
+    GetMutationStrParams(&svf, MBString_GetCStr(&s), mreg);
     Mutate_Str(mreg, &svf, 1, checkOptions, ARRAYSIZE(checkOptions));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".rangeType");
-    GetMutationStrParams(&svf, MBString_GetCStr(&s));
+    GetMutationStrParams(&svf, MBString_GetCStr(&s), mreg);
     Mutate_Str(mreg, &svf, 1, checkOptions, ARRAYSIZE(checkOptions));
 
     MBString_MakeEmpty(&s);
@@ -1095,7 +1109,7 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
 static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 {
     MutationFloatParams vf[] = {
-        // key                     min    max       mag   jump   mutation
+        // key                     min     max       mag   jump   mutation
         { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
         { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
         { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
@@ -1127,6 +1141,19 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "randomIdle",              0.01f},
     };
 
+    MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "FALSE");
+    if (Random_Flip(0.01)) {
+        MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "TRUE");
+
+        for (uint i = 0; i < ARRAYSIZE(vf); i++) {
+            vf[i].mutationRate = 1.0f;
+            vf[i].jumpRate = 1.0f;
+        }
+        for (uint i = 0; i < ARRAYSIZE(vb); i++) {
+            vb[i].flipRate = 0.5f;
+        }
+    }
+
     Mutate_Float(mreg, vf, ARRAYSIZE(vf));
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
 
@@ -1146,6 +1173,8 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     MutateBundleValue(aiType, mreg, "curHeadingWeight", MUTATION_TYPE_WEIGHT);
 
     MutateBundleForce(aiType, mreg, "locus");
+
+    MBRegistry_Remove(mreg, BUNDLE_SCRAMBLE_KEY);
 }
 
 static void *BundleFleetCreate(FleetAI *ai)
