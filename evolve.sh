@@ -5,6 +5,7 @@ OPTS="${OPTS} -t 14"
 
 POPLIMIT=50
 KILLRATIO=0.30
+DEFECTIVERATIO=0.0
 STALE_IT=1
 NEW_IT=5
 TICK_LIMIT=40000
@@ -23,6 +24,7 @@ OPTS="${OPTS} --populationKillRatio $KILLRATIO"
 OPTS="${OPTS} --populationLimit $POPLIMIT"
 OPTS="${OPTS} --mutationNewIterations $NEW_IT"
 OPTS="${OPTS} --mutationStaleIterations $STALE_IT"
+OPTS="${OPTS} --populationDefectiveRatio $DEFECTIVERATIO"
 OPTS="${OPTS} -S fast"
 
 cp -f $POPFILE $POPFILE.old
