@@ -529,20 +529,19 @@ public:
     }
 
     float getMobOffset(Mob *m, float modulo) {
-        uint32 mobOffset;
+        int mobOffset;
         RandomState *rs = &myRandomState;
 
         if (modulo <= 0.0f) {
             return 0.0f;
         }
 
-        if (!myMobOffsets.containsKey(m->mobid)) {
+        if (!myMobOffsets.lookup(m->mobid, &mobOffset)) {
             uint32 mask = 0xFFFFFF;
-            float seed = (float)(RandomState_Uint32(rs) & mask);
-            myMobOffsets.put(m->mobid, seed);
+            mobOffset = RandomState_Uint32(rs) & mask;
+            myMobOffsets.put(m->mobid, mobOffset);
         }
 
-        mobOffset = myMobOffsets.get(m->mobid);
         return fmodf((float)mobOffset, modulo);
     }
 
