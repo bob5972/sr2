@@ -50,6 +50,7 @@ typedef uint32 BundleValueFlags;
 typedef struct BundleValue {
     BundleValueFlags flags;
     float value;
+    float randomOffset;
     float period;
     float periodRandomOffset;
     float amplitude;
@@ -219,6 +220,12 @@ public:
         MBString_AppendCStr(&s, ".value");
         bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
         ASSERT(!isnanf(bv->value));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".value.randomOffset");
+        bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(bv->randomOffset));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -530,7 +537,9 @@ public:
         }
 
         if (!myMobOffsets.containsKey(m->mobid)) {
-            myMobOffsets.put(m->mobid, RandomState_Uint32(rs));
+            uint32 mask = 0xFFFFFF;
+            float seed = (float)(RandomState_Uint32(rs) & mask);
+            myMobOffsets.put(m->mobid, seed);
         }
 
         mobOffset = myMobOffsets.get(m->mobid);
@@ -538,15 +547,19 @@ public:
     }
 
     float getBundleValue(Mob *m, BundleValue *bv) {
+        float value;
         if ((bv->flags & BUNDLE_VALUE_FLAG_PERIODIC) != 0 &&
             bv->amplitude > 0.0f && bv->period > 1.0f) {
             float p = bv->period;
             float t = myFleetAI->tick + getMobOffset(m, bv->periodRandomOffset);
             float a = bv->amplitude;
-            return bv->value * (1.0f + a * sinf(t / p));
+            value = bv->value * (1.0f + a * sinf(t / p));
         } else {
-            return bv->value;
+            value = bv->value;
         }
+
+        value += getMobOffset(m, bv->randomOffset);
+        return value;
     }
 
 
@@ -1061,6 +1074,12 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".value");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".value.randomOffset");
     GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
     Mutate_Float(mreg, &vf, 1);
 
