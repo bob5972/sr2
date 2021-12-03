@@ -1057,9 +1057,13 @@ static bool MainIsFleetDefective(BattlePlayer *player)
         return FALSE;
     }
 
-    float defectiveLevel = 0.1f;
+    float defectiveLevel = 0.0f;
     if (MBOpt_IsPresent("populationDefectiveRatio")) {
         defectiveLevel = MBOpt_GetFloat("populationDefectiveRatio");
+    }
+
+    if (defectiveLevel == 0.0f) {
+        return FALSE;
     }
 
     if (winRatio < defectiveLevel) {
