@@ -69,6 +69,39 @@ typedef struct BundleForce {
     BundleCrowd crowd;
 } BundleForce;
 
+typedef struct BundleSpec {
+    bool randomIdle;
+
+    BundleForce align;
+    BundleForce cohere;
+    BundleForce separate;
+    BundleForce attackSeparate;
+
+    BundleForce center;
+    BundleForce edges;
+
+    BundleForce cores;
+    BundleForce base;
+
+    float nearBaseRadius;
+    float baseDefenseRadius;
+
+    BundleForce enemy;
+    BundleForce enemyBase;
+
+    BundleValue curHeadingWeight;
+
+    BundleForce locus;
+    float locusCircularPeriod;
+    float locusCircularWeight;
+    float locusLinearXPeriod;
+    float locusLinearYPeriod;
+    float locusLinearWeight;
+    float locusRandomWeight;
+    uint  locusRandomPeriod;
+    bool  useScaledLocus;
+} BundleSpec;
+
 typedef struct BundleConfigValue {
     const char *key;
     const char *value;
@@ -1179,38 +1212,7 @@ public:
         BasicAIGovernor::runMob(mob);
     }
 
-    struct {
-        bool randomIdle;
-
-        BundleForce align;
-        BundleForce cohere;
-        BundleForce separate;
-        BundleForce attackSeparate;
-
-        BundleForce center;
-        BundleForce edges;
-
-        BundleForce cores;
-        BundleForce base;
-
-        float nearBaseRadius;
-        float baseDefenseRadius;
-
-        BundleForce enemy;
-        BundleForce enemyBase;
-
-        BundleValue curHeadingWeight;
-
-        BundleForce locus;
-        float locusCircularPeriod;
-        float locusCircularWeight;
-        float locusLinearXPeriod;
-        float locusLinearYPeriod;
-        float locusLinearWeight;
-        float locusRandomWeight;
-        uint  locusRandomPeriod;
-        bool  useScaledLocus;
-    } myConfig;
+    BundleSpec myConfig;
 
     struct {
         FPoint randomLocus;
