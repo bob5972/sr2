@@ -18,7 +18,7 @@
 
 #include "fleet.h"
 #include "Random.h"
-#include "IntMap.h"
+#include "MBVarMap.h"
 #include "battle.h"
 
 typedef struct CloudShip {
@@ -143,13 +143,13 @@ static void CloudFleetRunAITick(void *aiHandle)
     CloudFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
     uint targetScanFilter = MOB_FLAG_SHIP;
-    CIntMap targetMap;
+    CMBIntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
                        (1.0f + sf->numGuard / 10);
 
-    CIntMap_Create(&targetMap);
+    CMBIntMap_Create(&targetMap);
 
     ASSERT(ai->player.aiType == FLEET_AI_CLOUD);
 
@@ -184,7 +184,7 @@ static void CloudFleetRunAITick(void *aiHandle)
                 }
 
                 if (target != NULL &&
-                    CIntMap_Increment(&targetMap, target->mobid) > 1) {
+                    CMBIntMap_Increment(&targetMap, target->mobid) > 1) {
                     /*
                      * Ideally we find the next best target, but for now just
                      * go back to random movement.
@@ -252,5 +252,5 @@ static void CloudFleetRunAITick(void *aiHandle)
         }
     }
 
-    CIntMap_Destroy(&targetMap);
+    CMBIntMap_Destroy(&targetMap);
 }

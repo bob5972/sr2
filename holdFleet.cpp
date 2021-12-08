@@ -19,7 +19,7 @@
 extern "C" {
 #include "fleet.h"
 #include "Random.h"
-#include "IntMap.h"
+#include "MBVarMap.h"
 #include "battle.h"
 }
 

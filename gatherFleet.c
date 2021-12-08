@@ -18,7 +18,7 @@
 
 #include "fleet.h"
 #include "Random.h"
-#include "IntMap.h"
+#include "MBVarMap.h"
 #include "battle.h"
 
 typedef struct Contact {
@@ -262,7 +262,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     GatherFleetData *sf = aiHandle;
     FleetAI *ai = sf->ai;
     const BattleParams *bp = &sf->ai->bp;
-    CIntMap targetMap;
+    CMBIntMap targetMap;
     float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
                         MobType_GetMaxFuel(MOB_TYPE_MISSILE);
     float guardRange = MobType_GetSensorRadius(MOB_TYPE_BASE) *
@@ -273,7 +273,7 @@ static void GatherFleetRunAITick(void *aiHandle)
     CMobIt mit;
 
     ASSERT(ai->player.aiType == FLEET_AI_GATHER);
-    CIntMap_Create(&targetMap);
+    CMBIntMap_Create(&targetMap);
 
     MobPVec_MakeEmpty(&sf->fighters);
     MobPVec_MakeEmpty(&sf->targets);
@@ -381,7 +381,7 @@ static void GatherFleetRunAITick(void *aiHandle)
                         if (ship->gov == GATHER_GOV_SCOUT) {
                             claimLimit = 1 + (sf->numScouts / 4);
                         }
-                        if (CIntMap_Increment(&targetMap, tMob->mobid) <= claimLimit ||
+                        if (CMBIntMap_Increment(&targetMap, tMob->mobid) <= claimLimit ||
                             forceClaim) {
                             // Claim the target so nobody else will go there.
                         } else {
@@ -489,5 +489,5 @@ static void GatherFleetRunAITick(void *aiHandle)
         }
     }
 
-    CIntMap_Destroy(&targetMap);
+    CMBIntMap_Destroy(&targetMap);
 }

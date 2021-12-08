@@ -19,9 +19,10 @@
 extern "C" {
 #include "fleet.h"
 #include "Random.h"
-#include "IntMap.h"
 #include "battle.h"
 }
+
+#include "MBVarMap.h"
 
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"

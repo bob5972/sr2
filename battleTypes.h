@@ -20,7 +20,7 @@
 #define _BATTLE_TYPES_H_202006071525
 
 #include "geometry.h"
-#include "IntMap.h"
+#include "MBVarMap.h"
 #include "MBRegistry.h"
 
 #define MICRON (0.1f)
@@ -113,7 +113,7 @@ DECLARE_CMBVECTOR_TYPE(Mob, MobVector);
 DECLARE_CMBVECTOR_TYPE(Mob *, MobPVec);
 
 typedef struct MobPSet {
-    CIntMap map;
+    CMBIntMap map;
     MobPVec pv;
 } MobPSet;
 

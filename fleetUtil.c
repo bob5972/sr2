@@ -18,7 +18,7 @@
 
 #include "fleet.h"
 #include "Random.h"
-#include "IntMap.h"
+#include "MBVarMap.h"
 #include "battle.h"
 
 Mob *FleetUtil_FindClosestSensor(FleetAI *ai, const FPoint *pos, uint filter)
