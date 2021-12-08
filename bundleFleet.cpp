@@ -50,9 +50,9 @@ typedef uint32 BundleValueFlags;
 typedef struct BundleValue {
     BundleValueFlags flags;
     float value;
-    float mobJitter;
+    // float mobJitter;
     float period;
-    float periodMobJitter;
+    // float periodMobJitter;
     float amplitude;
 } BundleValue;
 
@@ -182,208 +182,171 @@ public:
         BundleConfigValue configs1[] = {
             { "align.crowd.radius.amplitude", "0.321261", },
             { "align.crowd.radius.period", "5953.474121", },
-            { "align.crowd.radius.periodMobJitter", "8427.175781", },
             { "align.crowd.radius.value", "1807.180176", },
             { "align.crowd.radius.valueType", "constant", },
             { "align.crowd.size.amplitude", "0.429708", },
             { "align.crowd.size.period", "9243.138672", },
-            { "align.crowd.size.periodMobJitter", "1494.291748", },
             { "align.crowd.size.value", "11.233359", },
             { "align.crowd.size.valueType", "periodic", },
             { "align.crowdType", "never", },
             { "align.radius.amplitude", "0.566070", },
             { "align.radius.period", "9900.000000", },
-            { "align.radius.periodMobJitter", "7460.959473", },
             { "align.radius.value", "1350.809570", },
             { "align.radius.valueType", "periodic", },
             { "align.rangeType", "linearDown", },
             { "align.weight.amplitude", "0.515353", },
             { "align.weight.period", "9000.000000", },
-            { "align.weight.periodMobJitter", "9037.713867", },
             { "align.weight.value", "0.533934", },
             { "align.weight.valueType", "periodic", },
             { "attackExtendedRange", "FALSE", },
             { "attackRange", "117.644791", },
             { "attackSeparate.crowd.radius.amplitude", "0.114193", },
             { "attackSeparate.crowd.radius.period", "7805.395020", },
-            { "attackSeparate.crowd.radius.periodMobJitter", "919.714233", },
             { "attackSeparate.crowd.radius.value", "388.137054", },
             { "attackSeparate.crowd.radius.valueType", "periodic", },
             { "attackSeparate.crowd.size.amplitude", "0.095685", },
             { "attackSeparate.crowd.size.period", "8551.041992", },
-            { "attackSeparate.crowd.size.periodMobJitter", "6699.266113", },
             { "attackSeparate.crowd.size.value", "8.597579", },
             { "attackSeparate.crowd.size.valueType", "constant", },
             { "attackSeparate.crowdType", "linearDown", },
             { "attackSeparate.radius.amplitude", "1.000000", },
             { "attackSeparate.radius.period", "1345.166748", },
-            { "attackSeparate.radius.periodMobJitter", "2289.478760", },
             { "attackSeparate.radius.value", "355.393280", },
             { "attackSeparate.radius.valueType", "periodic", },
             { "attackSeparate.rangeType", "always", },
             { "attackSeparate.weight.amplitude", "0.766508", },
             { "attackSeparate.weight.period", "5715.046875", },
-            { "attackSeparate.weight.periodMobJitter", "8829.486328", },
             { "attackSeparate.weight.value", "0.689100", },
             { "attackSeparate.weight.valueType", "periodic", },
             { "base.crowd.radius.amplitude", "0.600368", },
             { "base.crowd.radius.period", "5266.161133", },
-            { "base.crowd.radius.periodMobJitter", "7427.318848", },
             { "base.crowd.radius.value", "1078.740356", },
             { "base.crowd.radius.valueType", "periodic", },
             { "base.crowd.size.amplitude", "0.664938", },
             { "base.crowd.size.period", "2936.962402", },
-            { "base.crowd.size.periodMobJitter", "5052.449219", },
             { "base.crowd.size.value", "0.521992", },
             { "base.crowd.size.valueType", "constant", },
             { "base.crowdType", "strictOff", },
             { "base.radius.amplitude", "0.407606", },
             { "base.radius.period", "4651.818359", },
-            { "base.radius.periodMobJitter", "8930.140625", },
             { "base.radius.value", "970.598145", },
             { "base.radius.valueType", "constant", },
             { "base.rangeType", "strictOff", },
             { "base.weight.amplitude", "0.753670", },
             { "base.weight.period", "-1.000000", },
-            { "base.weight.periodMobJitter", "4262.850098", },
             { "base.weight.value", "-1.416888", },
             { "base.weight.valueType", "constant", },
             { "baseDefenseRadius", "143.515045", },
             { "center.crowd.radius.amplitude", "0.733661", },
             { "center.crowd.radius.period", "6119.505371", },
-            { "center.crowd.radius.periodMobJitter", "4453.274414", },
             { "center.crowd.radius.value", "564.073486", },
             { "center.crowd.radius.valueType", "periodic", },
             { "center.crowd.size.amplitude", "1.000000", },
             { "center.crowd.size.period", "8173.202148", },
-            { "center.crowd.size.periodMobJitter", "2191.400635", },
             { "center.crowd.size.value", "0.074628", },
             { "center.crowd.size.valueType", "periodic", },
             { "center.crowdType", "never", },
             { "center.radius.amplitude", "1.000000", },
             { "center.radius.period", "7462.924316", },
-            { "center.radius.periodMobJitter", "6026.039551", },
             { "center.radius.value", "682.307922", },
             { "center.radius.valueType", "constant", },
             { "center.rangeType", "always", },
             { "center.weight.amplitude", "0.806573", },
             { "center.weight.period", "565.521851", },
-            { "center.weight.periodMobJitter", "2348.031738", },
             { "center.weight.value", "-1.305155", },
             { "center.weight.valueType", "constant", },
             { "cohere.crowd.radius.amplitude", "0.756902", },
             { "cohere.crowd.radius.period", "7789.553223", },
-            { "cohere.crowd.radius.periodMobJitter", "8247.803711", },
             { "cohere.crowd.radius.value", "1782.000000", },
             { "cohere.crowd.radius.valueType", "constant", },
             { "cohere.crowd.size.amplitude", "1.000000", },
             { "cohere.crowd.size.period", "-1.000000", },
-            { "cohere.crowd.size.periodMobJitter", "5202.102539", },
             { "cohere.crowd.size.value", "3.687377", },
             { "cohere.crowd.size.valueType", "periodic", },
             { "cohere.crowdType", "linearUp", },
             { "cohere.radius.amplitude", "0.306166", },
             { "cohere.radius.period", "10000.000000", },
-            { "cohere.radius.periodMobJitter", "6275.174316", },
             { "cohere.radius.value", "1914.735596", },
             { "cohere.radius.valueType", "periodic", },
             { "cohere.rangeType", "linearDown", },
             { "cohere.weight.amplitude", "0.266461", },
             { "cohere.weight.period", "1867.322510", },
-            { "cohere.weight.periodMobJitter", "3501.302979", },
             { "cohere.weight.value", "-0.507121", },
             { "cohere.weight.valueType", "constant", },
             { "cores.crowd.radius.amplitude", "0.525464", },
             { "cores.crowd.radius.period", "6589.460938", },
-            { "cores.crowd.radius.periodMobJitter", "3955.157471", },
             { "cores.crowd.radius.value", "174.267288", },
             { "cores.crowd.radius.valueType", "periodic", },
             { "cores.crowd.size.amplitude", "0.055397", },
             { "cores.crowd.size.period", "3110.003174", },
-            { "cores.crowd.size.periodMobJitter", "958.940796", },
             { "cores.crowd.size.value", "8.727318", },
             { "cores.crowd.size.valueType", "constant", },
             { "cores.crowdType", "linearDown", },
             { "cores.radius.amplitude", "0.640855", },
             { "cores.radius.period", "9444.480469", },
-            { "cores.radius.periodMobJitter", "3977.586182", },
             { "cores.radius.value", "35.896736", },
             { "cores.radius.valueType", "periodic", },
             { "cores.rangeType", "never", },
             { "cores.weight.amplitude", "0.010756", },
             { "cores.weight.period", "2880.781250", },
-            { "cores.weight.periodMobJitter", "2923.172607", },
             { "cores.weight.value", "1.0", },
             { "cores.weight.valueType", "constant", },
             { "curHeadingWeight.amplitude", "1.000000", },
             { "curHeadingWeight.period", "2207.250000", },
-            { "curHeadingWeight.periodMobJitter", "4729.488281", },
             { "curHeadingWeight.value", "-3.811037", },
             { "curHeadingWeight.valueType", "constant", },
             { "edges.crowd.radius.amplitude", "0.447709", },
             { "edges.crowd.radius.period", "8368.186523", },
-            { "edges.crowd.radius.periodMobJitter", "6223.491699", },
             { "edges.crowd.radius.value", "1260.249023", },
             { "edges.crowd.radius.valueType", "periodic", },
             { "edges.crowd.size.amplitude", "0.000000", },
             { "edges.crowd.size.period", "999.697876", },
-            { "edges.crowd.size.periodMobJitter", "4573.829590", },
             { "edges.crowd.size.value", "6.702061", },
             { "edges.crowd.size.valueType", "constant", },
             { "edges.crowdType", "never", },
             { "edges.radius.amplitude", "0.389971", },
             { "edges.radius.period", "1560.454834", },
-            { "edges.radius.periodMobJitter", "2084.474609", },
             { "edges.radius.value", "50.840942", },
             { "edges.radius.valueType", "constant", },
             { "edges.rangeType", "strictOff", },
             { "edges.weight.amplitude", "0", },
             { "edges.weight.period", "0", },
-            { "edges.weight.periodMobJitter", "9518.350586", },
             { "edges.weight.value", "1.0", },
             { "edges.weight.valueType", "constant", },
             { "enemy.crowd.radius.amplitude", "0.798566", },
             { "enemy.crowd.radius.period", "7607.696289", },
-            { "enemy.crowd.radius.periodMobJitter", "3514.106201", },
             { "enemy.crowd.radius.value", "203.481049", },
             { "enemy.crowd.radius.valueType", "constant", },
             { "enemy.crowd.size.amplitude", "0.618705", },
             { "enemy.crowd.size.period", "7847.218750", },
-            { "enemy.crowd.size.periodMobJitter", "974.588196", },
             { "enemy.crowd.size.value", "20.000000", },
             { "enemy.crowd.size.valueType", "periodic", },
             { "enemy.crowdType", "always", },
             { "enemy.radius.amplitude", "0.090641", },
             { "enemy.radius.period", "3363.753906", },
-            { "enemy.radius.periodMobJitter", "1729.533447", },
             { "enemy.radius.value", "611.284424", },
             { "enemy.radius.valueType", "constant", },
             { "enemy.rangeType", "strictOn", },
             { "enemy.weight.amplitude", "0.958385", },
             { "enemy.weight.period", "4596.960449", },
-            { "enemy.weight.periodMobJitter", "-1.000000", },
             { "enemy.weight.value", "-1.185188", },
             { "enemy.weight.valueType", "constant", },
             { "enemyBase.crowd.radius.amplitude", "0.736067", },
             { "enemyBase.crowd.radius.period", "6412.087402", },
-            { "enemyBase.crowd.radius.periodMobJitter", "3809.063232", },
             { "enemyBase.crowd.radius.value", "1114.323120", },
             { "enemyBase.crowd.radius.valueType", "periodic", },
             { "enemyBase.crowd.size.amplitude", "1.000000", },
             { "enemyBase.crowd.size.period", "909.905334", },
-            { "enemyBase.crowd.size.periodMobJitter", "9132.360352", },
             { "enemyBase.crowd.size.value", "10.031953", },
             { "enemyBase.crowd.size.valueType", "periodic", },
             { "enemyBase.crowdType", "always", },
             { "enemyBase.radius.amplitude", "0.559740", },
             { "enemyBase.radius.period", "4657.600586", },
-            { "enemyBase.radius.periodMobJitter", "7402.912598", },
             { "enemyBase.radius.value", "693.966919", },
             { "enemyBase.radius.valueType", "periodic", },
             { "enemyBase.rangeType", "never", },
             { "enemyBase.weight.amplitude", "0.121047", },
             { "enemyBase.weight.period", "8157.837891", },
-            { "enemyBase.weight.periodMobJitter", "6083.194824", },
             { "enemyBase.weight.value", "0.081705", },
             { "enemyBase.weight.valueType", "constant", },
             { "evadeFighters", "FALSE", },
@@ -395,24 +358,20 @@ public:
             { "guardRange", "-0.902500", },
             { "locus.crowd.radius.amplitude", "0.830518", },
             { "locus.crowd.radius.period", "705.356079", },
-            { "locus.crowd.radius.periodMobJitter", "7817.947754", },
             { "locus.crowd.radius.value", "1683.359131", },
             { "locus.crowd.radius.valueType", "constant", },
             { "locus.crowd.size.amplitude", "0.807986", },
             { "locus.crowd.size.period", "8092.102051", },
-            { "locus.crowd.size.periodMobJitter", "1793.675171", },
             { "locus.crowd.size.value", "10.801899", },
             { "locus.crowd.size.valueType", "constant", },
             { "locus.crowdType", "linearUp", },
             { "locus.radius.amplitude", "0.280220", },
             { "locus.radius.period", "6379.359375", },
-            { "locus.radius.periodMobJitter", "4677.827148", },
             { "locus.radius.value", "1326.336304", },
             { "locus.radius.valueType", "periodic", },
             { "locus.rangeType", "always", },
             { "locus.weight.amplitude", "0.000000", },
             { "locus.weight.period", "4181.989746", },
-            { "locus.weight.periodMobJitter", "1684.508057", },
             { "locus.weight.value", "4.035198", },
             { "locus.weight.valueType", "constant", },
             { "locusCircularPeriod", "10309.558594", },
@@ -427,24 +386,20 @@ public:
             { "rotateStartingAngle", "FALSE", },
             { "separate.crowd.radius.amplitude", "0.141071", },
             { "separate.crowd.radius.period", "2654.302979", },
-            { "separate.crowd.radius.periodMobJitter", "5491.818359", },
             { "separate.crowd.radius.value", "981.912476", },
             { "separate.crowd.radius.valueType", "periodic", },
             { "separate.crowd.size.amplitude", "0.782046", },
             { "separate.crowd.size.period", "6823.173828", },
-            { "separate.crowd.size.periodMobJitter", "7784.186523", },
             { "separate.crowd.size.value", "11.729516", },
             { "separate.crowd.size.valueType", "constant", },
             { "separate.crowdType", "linearUp", },
             { "separate.radius.amplitude", "0.095367", },
             { "separate.radius.period", "2932.626221", },
-            { "separate.radius.periodMobJitter", "6692.702637", },
             { "separate.radius.value", "2000.000000", },
             { "separate.radius.valueType", "periodic", },
             { "separate.rangeType", "strictOff", },
             { "separate.weight.amplitude", "0.694014", },
             { "separate.weight.period", "8443.943359", },
-            { "separate.weight.periodMobJitter", "3759.474854", },
             { "separate.weight.value", "1.573738", },
             { "separate.weight.valueType", "constant", },
             { "startingMaxRadius", "1295.414795", },
@@ -506,11 +461,11 @@ public:
         bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
         ASSERT(!isnanf(bv->value));
 
-        MBString_MakeEmpty(&s);
-        MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".value.mobJitter");
-        bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        ASSERT(!isnanf(bv->mobJitter));
+        // MBString_MakeEmpty(&s);
+        // MBString_AppendCStr(&s, prefix);
+        // MBString_AppendCStr(&s, ".value.mobJitter");
+        // bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        // ASSERT(!isnanf(bv->mobJitter));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -518,11 +473,11 @@ public:
         bv->period = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
         ASSERT(!isnanf(bv->period));
 
-        MBString_MakeEmpty(&s);
-        MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".periodMobJitter");
-        bv->periodMobJitter = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        ASSERT(!isnanf(bv->periodMobJitter));
+        // MBString_MakeEmpty(&s);
+        // MBString_AppendCStr(&s, prefix);
+        // MBString_AppendCStr(&s, ".periodMobJitter");
+        // bv->periodMobJitter = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        // ASSERT(!isnanf(bv->periodMobJitter));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -813,37 +768,39 @@ public:
         FRPoint_Add(rPos, &repulseVec, rPos);
     }
 
-    float getMobJitter(Mob *m, float modulo) {
-        int mobOffset;
-        RandomState *rs = &myRandomState;
+    // float getMobJitter(Mob *m, float modulo) {
+    //     int mobOffset;
+    //     RandomState *rs = &myRandomState;
 
-        if (modulo <= 0.0f) {
-            return 0.0f;
-        }
+    //     if (modulo <= 0.0f) {
+    //         return 0.0f;
+    //     }
 
-        if (!myMobJitters.lookup(m->mobid, &mobOffset)) {
-            // 24-bits for maximum float precision
-            uint32 mask = 0xFFFFFF;
-            mobOffset = RandomState_Uint32(rs) & mask;
-            myMobJitters.put(m->mobid, mobOffset);
-        }
+    //     if (!myMobJitters.lookup(m->mobid, &mobOffset)) {
+    //         // 24-bits for maximum float precision
+    //         uint32 mask = 0xFFFFFF;
+    //         mobOffset = RandomState_Uint32(rs) & mask;
+    //         myMobJitters.put(m->mobid, mobOffset);
+    //     }
 
-        return fmodf((float)mobOffset, modulo);
-    }
+    //     return fmodf((float)mobOffset, modulo);
+    // }
 
     float getBundleValue(Mob *m, BundleValue *bv) {
         float value;
         if ((bv->flags & BUNDLE_VALUE_FLAG_PERIODIC) != 0 &&
             bv->amplitude > 0.0f && bv->period > 1.0f) {
             float p = bv->period;
-            float t = myFleetAI->tick + getMobJitter(m, bv->periodMobJitter);
+            float t = myFleetAI->tick;
             float a = bv->amplitude;
+
+            //t += getMobJitter(m, bv->periodMobJitter);
             value = bv->value * (1.0f + a * sinf(t / p));
         } else {
             value = bv->value;
         }
 
-        value += getMobJitter(m, bv->mobJitter);
+        //value += getMobJitter(m, bv->mobJitter);
         return value;
     }
 
@@ -1219,7 +1176,7 @@ public:
         uint randomLocusTick;
     } myLive;
 
-    IntMap myMobJitters;
+    //IntMap myMobJitters;
 };
 
 class BundleFleet {
@@ -1331,11 +1288,11 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
     Mutate_Float(mreg, &vf, 1);
 
-    MBString_MakeEmpty(&s);
-    MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".value.mobJitter");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
-    Mutate_Float(mreg, &vf, 1);
+    // MBString_MakeEmpty(&s);
+    // MBString_AppendCStr(&s, prefix);
+    // MBString_AppendCStr(&s, ".value.mobJitter");
+    // GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
+    // Mutate_Float(mreg, &vf, 1);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
@@ -1344,12 +1301,12 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
                            mreg);
     Mutate_Float(mreg, &vf, 1);
 
-    MBString_MakeEmpty(&s);
-    MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".periodMobJitter");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD,
-                           mreg);
-    Mutate_Float(mreg, &vf, 1);
+    // MBString_MakeEmpty(&s);
+    // MBString_AppendCStr(&s, prefix);
+    // MBString_AppendCStr(&s, ".periodMobJitter");
+    // GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD,
+    //                        mreg);
+    // Mutate_Float(mreg, &vf, 1);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
