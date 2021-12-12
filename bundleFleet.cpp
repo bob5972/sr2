@@ -51,9 +51,9 @@ typedef uint32 BundleValueFlags;
 typedef struct BundleValue {
     BundleValueFlags flags;
     float value;
-    // float mobJitter;
+    float mobJitter;
     float period;
-    // float periodMobJitter;
+    float periodMobJitter;
     float amplitude;
 } BundleValue;
 
@@ -113,9 +113,13 @@ class BundleAIGovernor : public BasicAIGovernor
 public:
     BundleAIGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
-    { }
+    {
+        CMBVarMap_Create(&myMobJitters);
+    }
 
-    virtual ~BundleAIGovernor() { }
+    virtual ~BundleAIGovernor() {
+        CMBVarMap_Destroy(&myMobJitters);
+    }
 
     virtual void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
         BundleConfigValue defaults[] = {
@@ -462,11 +466,11 @@ public:
         bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
         ASSERT(!isnanf(bv->value));
 
-        // MBString_MakeEmpty(&s);
-        // MBString_AppendCStr(&s, prefix);
-        // MBString_AppendCStr(&s, ".value.mobJitter");
-        // bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        // ASSERT(!isnanf(bv->mobJitter));
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".value.mobJitter");
+        bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(bv->mobJitter));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -474,11 +478,11 @@ public:
         bv->period = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
         ASSERT(!isnanf(bv->period));
 
-        // MBString_MakeEmpty(&s);
-        // MBString_AppendCStr(&s, prefix);
-        // MBString_AppendCStr(&s, ".periodMobJitter");
-        // bv->periodMobJitter = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        // ASSERT(!isnanf(bv->periodMobJitter));
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".periodMobJitter");
+        bv->periodMobJitter = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(bv->periodMobJitter));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -769,23 +773,26 @@ public:
         FRPoint_Add(rPos, &repulseVec, rPos);
     }
 
-    // float getMobJitter(Mob *m, float modulo) {
-    //     int mobOffset;
-    //     RandomState *rs = &myRandomState;
+    float getMobJitter(Mob *m, float *value) {
+        RandomState *rs = &myRandomState;
+        MBVar key;
+        MBVar mj;
 
-    //     if (modulo <= 0.0f) {
-    //         return 0.0f;
-    //     }
+        ASSERT(value >= (void *)&myConfig && value < (void *)&(&myConfig)[1]);
 
-    //     if (!myMobJitters.lookup(m->mobid, &mobOffset)) {
-    //         // 24-bits for maximum float precision
-    //         uint32 mask = 0xFFFFFF;
-    //         mobOffset = RandomState_Uint32(rs) & mask;
-    //         myMobJitters.put(m->mobid, mobOffset);
-    //     }
+        if (*value <= 0.0f) {
+            return 0.0f;
+        }
 
-    //     return fmodf((float)mobOffset, modulo);
-    // }
+        key.all = 0;
+        key.vPtr = value;
+        if (!CMBVarMap_Lookup(&myMobJitters, key, &mj)) {
+            mj.vFloat = RandomState_Float(rs, -*value, *value);
+            CMBVarMap_Put(&myMobJitters, key, mj);
+        }
+
+        return mj.vFloat;
+    }
 
     float getBundleValue(Mob *m, BundleValue *bv) {
         float value;
@@ -795,13 +802,13 @@ public:
             float t = myFleetAI->tick;
             float a = bv->amplitude;
 
-            //t += getMobJitter(m, bv->periodMobJitter);
+            t += t * getMobJitter(m, &bv->periodMobJitter);
             value = bv->value * (1.0f + a * sinf(t / p));
         } else {
             value = bv->value;
         }
 
-        //value += getMobJitter(m, bv->mobJitter);
+        value += value * getMobJitter(m, &bv->mobJitter);
         return value;
     }
 
@@ -1177,7 +1184,7 @@ public:
         uint randomLocusTick;
     } myLive;
 
-    //IntMap myMobJitters;
+    CMBVarMap myMobJitters;
 };
 
 class BundleFleet {
@@ -1289,11 +1296,12 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
     Mutate_Float(mreg, &vf, 1);
 
-    // MBString_MakeEmpty(&s);
-    // MBString_AppendCStr(&s, prefix);
-    // MBString_AppendCStr(&s, ".value.mobJitter");
-    // GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
-    // Mutate_Float(mreg, &vf, 1);
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".value.mobJitter");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_MOB_JITTER,
+                          mreg);
+    Mutate_Float(mreg, &vf, 1);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
@@ -1302,12 +1310,12 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
                            mreg);
     Mutate_Float(mreg, &vf, 1);
 
-    // MBString_MakeEmpty(&s);
-    // MBString_AppendCStr(&s, prefix);
-    // MBString_AppendCStr(&s, ".periodMobJitter");
-    // GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD,
-    //                        mreg);
-    // Mutate_Float(mreg, &vf, 1);
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".periodMobJitter");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_MOB_JITTER,
+                           mreg);
+    Mutate_Float(mreg, &vf, 1);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
