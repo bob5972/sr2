@@ -739,7 +739,7 @@ public:
         return edgeDistance;
     }
 
-    void avoidEdges(Mob *mob, FRPoint *rPos) {
+    void flockEdges(Mob *mob, FRPoint *rPos) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;
         float radius = getBundleValue(mob, &myConfig.edges.radius);
@@ -955,7 +955,7 @@ public:
         FRPoint_Add(rForce, &reVec, rForce);
     }
 
-    void findCores(Mob *mob, FRPoint *rForce) {
+    void flockCores(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *core = sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
@@ -965,7 +965,7 @@ public:
         }
     }
 
-    void findEnemies(Mob *mob, FRPoint *rForce) {
+    void flockEnemies(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
@@ -975,7 +975,7 @@ public:
         }
     }
 
-    void findCenter(Mob *mob, FRPoint *rForce) {
+    void flockCenter(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FPoint center;
         center.x = myFleetAI->bp.width / 2;
@@ -983,7 +983,7 @@ public:
         applyBundle(mob, rForce, &myConfig.center, &center);
     }
 
-    void findLocus(Mob *mob, FRPoint *rForce) {
+    void flockLocus(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FPoint circular;
         FPoint linear;
@@ -1092,7 +1092,7 @@ public:
         }
     }
 
-    void findBase(Mob *mob, FRPoint *rForce) {
+    void flockBase(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *base = sg->friendBase();
@@ -1101,7 +1101,7 @@ public:
         }
     }
 
-    void findBaseDefense(Mob *mob, FRPoint *rForce) {
+    void flockBaseDefense(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *base = sg->friendBase();
@@ -1115,7 +1115,7 @@ public:
         }
     }
 
-    void findEnemyBase(Mob *mob, FRPoint *rForce) {
+    void flockEnemyBase(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
         Mob *base = sg->enemyBase();
@@ -1175,14 +1175,14 @@ public:
             flockCohere(mob, &rForce);
             flockSeparate(mob, &rForce, &myConfig.separate);
 
-            avoidEdges(mob, &rForce);
-            findCenter(mob, &rForce);
-            findBase(mob, &rForce);
-            findBaseDefense(mob, &rForce);
-            findEnemies(mob, &rForce);
-            findEnemyBase(mob, &rForce);
-            findCores(mob, &rForce);
-            findLocus(mob, &rForce);
+            flockEdges(mob, &rForce);
+            flockCenter(mob, &rForce);
+            flockBase(mob, &rForce);
+            flockBaseDefense(mob, &rForce);
+            flockEnemies(mob, &rForce);
+            flockEnemyBase(mob, &rForce);
+            flockCores(mob, &rForce);
+            flockLocus(mob, &rForce);
 
             rForce.radius = speed;
 
