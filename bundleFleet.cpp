@@ -48,13 +48,22 @@ typedef uint32 BundleValueFlags;
 #define BUNDLE_VALUE_FLAG_NONE     (0)
 #define BUNDLE_VALUE_FLAG_PERIODIC (1 << 0)
 
+typedef struct BundleAtom {
+    float value;
+    float mobJitterScale;
+} BundleAtom;
+
+typedef struct BundlePeriodicParams {
+    BundleAtom period;
+    BundleAtom amplitude;
+    BundleAtom tickShift;
+} BundlePeriodicParams;
+
 typedef struct BundleValue {
     BundleValueFlags flags;
-    float value;
-    float mobJitter;
-    float period;
-    float periodMobJitter;
-    float amplitude;
+    BundleAtom value;
+
+    BundlePeriodicParams periodic;
 } BundleValue;
 
 typedef struct BundleCrowd {
@@ -437,6 +446,50 @@ public:
         }
     }
 
+    virtual void loadBundleAtom(MBRegistry *mreg, BundleAtom *ba,
+                                const char *prefix) {
+        CMBString s;
+        MBString_Create(&s);
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".value");
+        ba->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(ba->value));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".mobJitterScale");
+        ba->mobJitterScale = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(ba->mobJitterScale));
+
+        MBString_Destroy(&s);
+    }
+
+    virtual void loadBundlePeriodicParams(MBRegistry *mreg,
+                                          BundlePeriodicParams *bpp,
+                                          const char *prefix) {
+        CMBString s;
+        MBString_Create(&s);
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".period");
+        loadBundleAtom(mreg, &bpp->period, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".amplitude");
+        loadBundleAtom(mreg, &bpp->amplitude, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".tickShift");
+        loadBundleAtom(mreg, &bpp->tickShift, MBString_GetCStr(&s));
+
+        MBString_Destroy(&s);
+    }
+
     virtual void loadBundleValue(MBRegistry *mreg, BundleValue *bv,
                                  const char *prefix) {
         CMBString s;
@@ -463,32 +516,12 @@ public:
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".value");
-        bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        ASSERT(!isnanf(bv->value));
+        loadBundleAtom(mreg, &bv->value, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".value.mobJitter");
-        bv->value = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        ASSERT(!isnanf(bv->mobJitter));
-
-        MBString_MakeEmpty(&s);
-        MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".period");
-        bv->period = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        ASSERT(!isnanf(bv->period));
-
-        MBString_MakeEmpty(&s);
-        MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".periodMobJitter");
-        bv->periodMobJitter = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        ASSERT(!isnanf(bv->periodMobJitter));
-
-        MBString_MakeEmpty(&s);
-        MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".amplitude");
-        bv->amplitude = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
-        ASSERT(!isnanf(bv->amplitude));
+        MBString_AppendCStr(&s, ".periodic");
+        loadBundlePeriodicParams(mreg, &bv->periodic, MBString_GetCStr(&s));
 
         MBString_Destroy(&s);
     }
@@ -794,24 +827,35 @@ public:
         return mj.vFloat;
     }
 
+    float getBundleAtom(Mob *m, BundleAtom *ba) {
+        float jitter = getMobJitter(m, &ba->mobJitterScale);
+
+        if (jitter == 0.0f) {
+            return ba->value;
+        } else {
+            return ba->value * (1.0f + jitter);
+        }
+    }
+
     float getBundleValue(Mob *m, BundleValue *bv) {
         float value;
         if ((bv->flags & BUNDLE_VALUE_FLAG_PERIODIC) != 0 &&
-            bv->amplitude > 0.0f && bv->period > 1.0f) {
-            float p = bv->period;
+            bv->periodic.amplitude.value > 0.0f &&
+            bv->periodic.period.value > 1.0f) {
+            float p = getBundleAtom(m, &bv->periodic.period);
             float t = myFleetAI->tick;
-            float a = bv->amplitude;
+            float a = getBundleAtom(m, &bv->periodic.amplitude);
 
             /*
              * Shift the wave by a constant factor of the period.
              */
-            t += p * getMobJitter(m, &bv->periodMobJitter);
-            value = bv->value * (1.0f + a * sinf(t / p));
+            t += bv->periodic.tickShift.value;
+            t += p * getMobJitter(m, &bv->periodic.tickShift.mobJitterScale);
+            value = getBundleAtom(m, &bv->value) * (1.0f + a * sinf(t / p));
         } else {
-            value = bv->value;
+            value = getBundleAtom(m, &bv->value);
         }
 
-        value += value * getMobJitter(m, &bv->mobJitter);
         return value;
     }
 
@@ -1273,11 +1317,60 @@ static void GetMutationStrParams(MutationStrParams *svf,
     }
 }
 
+static void MutateBundleAtom(FleetAIType aiType, MBRegistry *mreg,
+                             const char *prefix,
+                             MutationType bType)
+{
+    MutationFloatParams vf;
+
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".value");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".mobJitterScale");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s),
+                           MUTATION_TYPE_MOB_JITTER_SCALE, mreg);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_Destroy(&s);
+}
+
+static void MutateBundlePeriodicParams(FleetAIType aiType, MBRegistry *mreg,
+                                       const char *prefix)
+{
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".period");
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".amplitude");
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s),
+                     MUTATION_TYPE_AMPLITUDE);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".tickShift");
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD);
+
+    MBString_Destroy(&s);
+}
+
 static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
                               const char *prefix,
                               MutationType bType)
 {
-    MutationFloatParams vf;
     MutationStrParams svf;
 
     CMBString s;
@@ -1296,36 +1389,12 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".value");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), bType, mreg);
-    Mutate_Float(mreg, &vf, 1);
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s), bType);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".value.mobJitter");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_MOB_JITTER,
-                          mreg);
-    Mutate_Float(mreg, &vf, 1);
-
-    MBString_MakeEmpty(&s);
-    MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".period");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_PERIOD,
-                           mreg);
-    Mutate_Float(mreg, &vf, 1);
-
-    MBString_MakeEmpty(&s);
-    MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".periodMobJitter");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_MOB_JITTER,
-                           mreg);
-    Mutate_Float(mreg, &vf, 1);
-
-    MBString_MakeEmpty(&s);
-    MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".amplitude");
-    GetMutationFloatParams(&vf, MBString_GetCStr(&s), MUTATION_TYPE_AMPLITUDE,
-                           mreg);
-    Mutate_Float(mreg, &vf, 1);
+    MBString_AppendCStr(&s, ".periodic");
+    MutateBundlePeriodicParams(aiType, mreg, MBString_GetCStr(&s));
 
     MBString_Destroy(&s);
 }
