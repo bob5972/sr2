@@ -802,7 +802,10 @@ public:
             float t = myFleetAI->tick;
             float a = bv->amplitude;
 
-            t += t * getMobJitter(m, &bv->periodMobJitter);
+            /*
+             * Shift the wave by a constant factor of the period.
+             */
+            t += p * getMobJitter(m, &bv->periodMobJitter);
             value = bv->value * (1.0f + a * sinf(t / p));
         } else {
             value = bv->value;
