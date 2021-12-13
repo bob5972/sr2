@@ -114,9 +114,23 @@ sub ComputeDiversity() {
         }
     }
 
-    my $linesPerFleet = $totalEntries / $numFleets;
-    my $uniquePerFleet = $uniqueEntries / $numFleets;
-    my $diversity = $uniquePerFleet / $linesPerFleet;
+    my $linesPerFleet;
+    my $uniquePerFleet;
+    my $diversity;
+
+    if ($numFleets != 0) {
+        $linesPerFleet = $totalEntries / $numFleets;
+        $uniquePerFleet = $uniqueEntries / $numFleets;
+    } else {
+        $linesPerFleet = 0;
+        $uniquePerFleet = 0;
+    }
+
+    if ($linesPerFleet != 0) {
+        $diversity = $uniquePerFleet / $linesPerFleet;
+    } else {
+        $diversity = 0;
+    }
 
     return $diversity;
 }
