@@ -78,15 +78,36 @@ sub ComputeDiversity() {
     my $uniqueEntries = 0;
     my $uniqueHash = {};
 
-    foreach my $k (keys %{$gPop}) {
-        $totalEntries++;
+    my $targetHash = {};
 
-        my $v = $gPop->{$k};
-        $k =~ s/^fleet\d+.//;
-        my $ue = $k . " == " . $v;
-        if (!defined($uniqueHash->{$ue})) {
-            $uniqueEntries++;
-            $uniqueHash->{$ue} = 1;
+    for (my $i = 1; $i <= $numFleets; $i++) {
+        my $prefix = "fleet$i";
+        if ($gPop->{"$prefix.playerType"} eq "Target") {
+            $targetHash->{$prefix} = 1;
+        }
+    }
+
+    foreach my $k (keys %{$gPop}) {
+        if ($k eq 'numFleets') {
+            # Not a fleet entry.
+        } elsif ($k =~ /^(fleet\d+)\./) {
+            my $prefix = $1;
+            if ($targetHash->{$prefix}) {
+                # Target fleet entry.
+                $totalEntries++;
+
+                my $v = $gPop->{$k};
+                $k =~ s/^fleet\d+.//;
+                my $ue = $k . " == " . $v;
+                if (!defined($uniqueHash->{$ue})) {
+                    $uniqueEntries++;
+                    $uniqueHash->{$ue} = 1;
+                }
+            } else {
+                # Control fleet entry
+            }
+        } else {
+            Panic("Unknown entry: $k\n");
         }
     }
 
