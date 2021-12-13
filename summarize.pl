@@ -94,7 +94,8 @@ sub ComputeDiversity() {
             my $prefix = $1;
             if ($targetHash->{$prefix} &&
                 $k !~ /^fleet\d+\.age$/ &&
-                $k !~ /^fleet\d+\.num(Battles|Wins|Losses|Draws|Spawn)$/) {
+                $k !~ /^fleet\d+\.num(Battles|Wins|Losses|Draws|Spawn)$/ &&
+                $k !~ /^fleet\d+\.(fleetName|playerName|playerType)$/) {
                 # Target fleet entry.
                 $totalEntries++;
 
