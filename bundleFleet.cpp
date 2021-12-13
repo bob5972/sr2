@@ -92,6 +92,7 @@ typedef struct BundleSpec {
 
     BundleForce cores;
     BundleForce base;
+    BundleForce baseDefense;
 
     float nearBaseRadius;
     float baseDefenseRadius;
@@ -610,6 +611,7 @@ public:
         loadBundleForce(mreg, &this->myConfig.center, "center");
         loadBundleForce(mreg, &this->myConfig.edges, "edges");
         loadBundleForce(mreg, &this->myConfig.base, "base");
+        loadBundleForce(mreg, &this->myConfig.baseDefense, "baseDefense");
 
         this->myConfig.nearBaseRadius = MBRegistry_GetFloat(mreg, "nearBaseRadius");
         this->myConfig.baseDefenseRadius = MBRegistry_GetFloat(mreg, "baseDefenseRadius");
@@ -1099,6 +1101,20 @@ public:
         }
     }
 
+    void findBaseDefense(Mob *mob, FRPoint *rForce) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        SensorGrid *sg = mySensorGrid;
+        Mob *base = sg->friendBase();
+
+        if (base != NULL) {
+            Mob *enemy = sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
+
+            if (enemy != NULL) {
+                applyBundle(mob, rForce, &myConfig.baseDefense, &enemy->pos);
+            }
+        }
+    }
+
     void findEnemyBase(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
@@ -1162,6 +1178,7 @@ public:
             avoidEdges(mob, &rForce);
             findCenter(mob, &rForce);
             findBase(mob, &rForce);
+            findBaseDefense(mob, &rForce);
             findEnemies(mob, &rForce);
             findEnemyBase(mob, &rForce);
             findCores(mob, &rForce);
@@ -1519,6 +1536,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     MutateBundleForce(aiType, mreg, "center");
     MutateBundleForce(aiType, mreg, "edges");
     MutateBundleForce(aiType, mreg, "base");
+    MutateBundleForce(aiType, mreg, "baseDefense");
 
     MutateBundleValue(aiType, mreg, "curHeadingWeight", MUTATION_TYPE_WEIGHT);
 
