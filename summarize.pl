@@ -92,7 +92,9 @@ sub ComputeDiversity() {
             # Not a fleet entry.
         } elsif ($k =~ /^(fleet\d+)\./) {
             my $prefix = $1;
-            if ($targetHash->{$prefix}) {
+            if ($targetHash->{$prefix} &&
+                $k !~ /^fleet\d+\.age$/ &&
+                $k !~ /^fleet\d+\.num(Battles|Wins|Losses|Draws|Spawn)$/) {
                 # Target fleet entry.
                 $totalEntries++;
 
@@ -104,7 +106,7 @@ sub ComputeDiversity() {
                     $uniqueHash->{$ue} = 1;
                 }
             } else {
-                # Control fleet entry
+                # Control fleet or meta entry
             }
         } else {
             Panic("Unknown entry: $k\n");
