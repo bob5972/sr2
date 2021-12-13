@@ -838,22 +838,21 @@ public:
     }
 
     float getBundleValue(Mob *m, BundleValue *bv) {
-        float value;
-        if ((bv->flags & BUNDLE_VALUE_FLAG_PERIODIC) != 0 &&
-            bv->periodic.amplitude.value > 0.0f &&
-            bv->periodic.period.value > 1.0f) {
-            float p = getBundleAtom(m, &bv->periodic.period);
-            float t = myFleetAI->tick;
-            float a = getBundleAtom(m, &bv->periodic.amplitude);
+        float value = getBundleAtom(m, &bv->value);
 
-            /*
-             * Shift the wave by a constant factor of the period.
-             */
-            t += bv->periodic.tickShift.value;
-            t += p * getMobJitter(m, &bv->periodic.tickShift.mobJitterScale);
-            value = getBundleAtom(m, &bv->value) * (1.0f + a * sinf(t / p));
-        } else {
-            value = getBundleAtom(m, &bv->value);
+        if ((bv->flags & BUNDLE_VALUE_FLAG_PERIODIC) != 0) {
+            float p = getBundleAtom(m, &bv->periodic.period);
+            float a = getBundleAtom(m, &bv->periodic.amplitude);
+            float t = myFleetAI->tick;
+
+            if (a > 0.0f && p > 1.0f) {
+                /*
+                 * Shift the wave by a constant factor of the period.
+                 */
+                t += bv->periodic.tickShift.value;
+                t += p * getMobJitter(m, &bv->periodic.tickShift.mobJitterScale);
+                value *= 1.0f + a * sinf(t / p);
+            }
         }
 
         return value;
