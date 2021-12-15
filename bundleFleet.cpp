@@ -860,6 +860,10 @@ public:
         return value;
     }
 
+    bool isConstantBundleCheck(BundleCheckType bc) {
+        return bc == BUNDLE_CHECK_NEVER ||
+               bc == BUNDLE_CHECK_ALWAYS;
+    }
 
     /*
      * Should this force operate given the current conditions?
@@ -909,11 +913,21 @@ public:
     bool crowdCheck(Mob *mob, BundleForce *bundle, float *weight) {
         SensorGrid *sg = mySensorGrid;
 
-        float crowdTrigger = getBundleValue(mob, &bundle->crowd.size);
-        float crowdRadius = getBundleValue(mob, &bundle->crowd.radius);
+        float crowdTrigger = 0.0f;
+        float crowdRadius = 0.0f;
+        float crowdValue = 0.0f;
 
-        float crowdValue = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                                 &mob->pos, crowdRadius);
+        /*
+         * Skip the complicated calculations if the bundle-check was constant.
+         */
+        if (!isConstantBundleCheck(bundle->crowdCheck)) {
+            crowdTrigger = getBundleValue(mob, &bundle->crowd.size);
+            crowdRadius = getBundleValue(mob, &bundle->crowd.radius);
+
+            crowdValue = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                               &mob->pos, crowdRadius);
+        }
+
         return bundleCheck(bundle->crowdCheck, crowdValue, crowdTrigger, weight);
     }
 
@@ -932,15 +946,18 @@ public:
             return;
         }
 
-        float distance = FPoint_Distance(&mob->pos, focusPos);
         float rweight;
+        float distance = 0.0f;
+        if (!isConstantBundleCheck(bundle->rangeCheck)) {
+            distance = FPoint_Distance(&mob->pos, focusPos);
+        }
 
         if (!bundleCheck(bundle->rangeCheck, distance, radius, &rweight)) {
             /* No force. */
             return;
         }
 
-        float vweight = rweight * cweight *getBundleValue(mob, &bundle->weight);
+        float vweight = rweight * cweight * getBundleValue(mob, &bundle->weight);
 
         if (vweight == 0.0f) {
             /* No force. */
