@@ -123,6 +123,7 @@ typedef struct BundleSpec {
     BundleValue curHeadingWeight;
 
     BundleLocus fleetLocus;
+    //BundleLocus mobLocus;
 } BundleSpec;
 
 typedef struct BundleConfigValue {
@@ -651,6 +652,7 @@ public:
                         "curHeadingWeight");
 
         loadBundleLocus(mreg, &this->myConfig.fleetLocus, "fleetLocus");
+        //loadBundleLocus(mreg, &this->myConfig.mobLocus, "mobLocus");
 
         this->BasicAIGovernor::loadRegistry(mreg);
     }
@@ -1015,7 +1017,8 @@ public:
         applyBundle(mob, rForce, &myConfig.center, &center);
     }
 
-    void flockLocus(Mob *mob, FRPoint *rForce, BundleLocus *bl) {
+    void flockLocus(Mob *mob, FRPoint *rForce, BundleLocus *bl,
+                    bool useMobValues) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FPoint circular;
         FPoint linear;
@@ -1026,6 +1029,7 @@ public:
         float width = myFleetAI->bp.width;
         float height = myFleetAI->bp.height;
         float temp;
+        FPoint randomPoint;
 
         if (bl->circularPeriod > 0.0f &&
             bl->circularWeight != 0.0f) {
@@ -1054,9 +1058,20 @@ public:
                 myFleetAI->tick - bl->live.randomTick >
                 bl->randomPeriod) {
                 RandomState *rs = &myRandomState;
-                bl->live.randomPoint.x = RandomState_Float(rs, 0.0f, width);
-                bl->live.randomPoint.y = RandomState_Float(rs, 0.0f, height);
-                bl->live.randomTick = myFleetAI->tick;
+
+                if (useMobValues) {
+                    NOT_IMPLEMENTED();
+                } else {
+                    bl->live.randomPoint.x = RandomState_Float(rs, 0.0f, width);
+                    bl->live.randomPoint.y = RandomState_Float(rs, 0.0f, height);
+                    bl->live.randomTick = myFleetAI->tick;
+                }
+            }
+
+            if (useMobValues) {
+                NOT_IMPLEMENTED();
+            } else {
+                randomPoint = bl->live.randomPoint;
             }
             haveRandom = TRUE;
         }
@@ -1108,8 +1123,8 @@ public:
                 scale += bl->circularWeight;
             }
             if (haveRandom) {
-                locusPoint.x += bl->randomWeight *  bl->live.randomPoint.x;
-                locusPoint.y += bl->randomWeight *   bl->live.randomPoint.y;
+                locusPoint.x += bl->randomWeight * randomPoint.x;
+                locusPoint.y += bl->randomWeight * randomPoint.y;
                 scale += bl->randomWeight;
             }
 
@@ -1214,7 +1229,8 @@ public:
             flockEnemies(mob, &rForce);
             flockEnemyBase(mob, &rForce);
             flockCores(mob, &rForce);
-            flockLocus(mob, &rForce, &myConfig.fleetLocus);
+            flockLocus(mob, &rForce, &myConfig.fleetLocus, FALSE);
+            //flockLocus(mob, &rForce, &myConfig.mobLocus, TRUE);
 
             rForce.radius = speed;
 
@@ -1621,6 +1637,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     MutateBundleValue(aiType, mreg, "curHeadingWeight", MUTATION_TYPE_WEIGHT);
 
     MutateBundleLocus(aiType, mreg, "fleetLocus");
+    //MutateBundleLocus(aiType, mreg, "mobLocus");
 
     MBRegistry_Remove(mreg, BUNDLE_SCRAMBLE_KEY);
 }
