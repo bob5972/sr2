@@ -79,6 +79,11 @@ typedef struct BundleForce {
     BundleCrowd crowd;
 } BundleForce;
 
+typedef struct LiveLocus {
+    FPoint randomPoint;
+    uint randomTick;
+} LiveLocus;
+
 typedef struct BundleLocus {
     BundleForce force;
 
@@ -90,6 +95,8 @@ typedef struct BundleLocus {
     float randomWeight;
     float randomPeriod;
     bool  useScaled;
+
+    LiveLocus live;
 } BundleLocus;
 
 typedef struct BundleSpec {
@@ -612,6 +619,8 @@ public:
         MBString_AppendCStr(&s, ".useScaled");
         lp->useScaled = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
 
+        MBUtil_Zero(&lp->live, sizeof(lp->live));
+
         MBString_Destroy(&s);
     }
 
@@ -1041,13 +1050,13 @@ public:
              * XXX: Each ship will get a different random locus on the first
              * tick.
              */
-            if (myLive.randomLocusTick == 0 ||
-                myFleetAI->tick - myLive.randomLocusTick >
+            if (bl->live.randomTick == 0 ||
+                myFleetAI->tick - bl->live.randomTick >
                 bl->randomPeriod) {
                 RandomState *rs = &myRandomState;
-                myLive.randomLocus.x = RandomState_Float(rs, 0.0f, width);
-                myLive.randomLocus.y = RandomState_Float(rs, 0.0f, height);
-                myLive.randomLocusTick = myFleetAI->tick;
+                bl->live.randomPoint.x = RandomState_Float(rs, 0.0f, width);
+                bl->live.randomPoint.y = RandomState_Float(rs, 0.0f, height);
+                bl->live.randomTick = myFleetAI->tick;
             }
             haveRandom = TRUE;
         }
@@ -1099,8 +1108,8 @@ public:
                 scale += bl->circularWeight;
             }
             if (haveRandom) {
-                locusPoint.x += bl->randomWeight * myLive.randomLocus.x;
-                locusPoint.y += bl->randomWeight *  myLive.randomLocus.y;
+                locusPoint.x += bl->randomWeight *  bl->live.randomPoint.x;
+                locusPoint.y += bl->randomWeight *   bl->live.randomPoint.y;
                 scale += bl->randomWeight;
             }
 
@@ -1264,11 +1273,6 @@ public:
     }
 
     BundleSpec myConfig;
-
-    struct {
-        FPoint randomLocus;
-        uint randomLocusTick;
-    } myLive;
 
     CMBVarMap myMobJitters;
 };
