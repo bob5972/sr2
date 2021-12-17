@@ -79,6 +79,19 @@ typedef struct BundleForce {
     BundleCrowd crowd;
 } BundleForce;
 
+typedef struct BundleLocus {
+    BundleForce force;
+
+    float circularPeriod;
+    float circularWeight;
+    float linearXPeriod;
+    float linearYPeriod;
+    float linearWeight;
+    float randomWeight;
+    float randomPeriod;
+    bool  useScaled;
+} BundleLocus;
+
 typedef struct BundleSpec {
     bool randomIdle;
 
@@ -102,15 +115,7 @@ typedef struct BundleSpec {
 
     BundleValue curHeadingWeight;
 
-    BundleForce locus;
-    float locusCircularPeriod;
-    float locusCircularWeight;
-    float locusLinearXPeriod;
-    float locusLinearYPeriod;
-    float locusLinearWeight;
-    float locusRandomWeight;
-    uint  locusRandomPeriod;
-    bool  useScaledLocus;
+    BundleLocus fleetLocus;
 } BundleSpec;
 
 typedef struct BundleConfigValue {
@@ -131,7 +136,7 @@ public:
         CMBVarMap_Destroy(&myMobJitters);
     }
 
-    virtual void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
+    void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
         BundleConfigValue defaults[] = {
             { "creditReserve",               "120.43817",},
             { "sensorGrid.staleCoreTime",    "28.385160" },
@@ -174,24 +179,12 @@ public:
             { "edges.radius.value",          "100.0",    },
             { "edges.weight.value",          "0.9",      },
 
-            { "locus.radius.value",          "1000.0",   },
-            { "locus.weight.value",          "0.0",      },
-
             // Legacy Values
             { "randomIdle",           "TRUE",            },
             { "baseSpawnJitter",        "1",             },
 
             { "nearBaseRadius",       "250.0",           },
             { "baseDefenseRadius",    "250.0",           },
-
-            { "locusCircularPeriod",  "1000.0",          },
-            { "locusCircularWeight",  "0.0",             },
-            { "locusLinearXPeriod",   "1000.0",          },
-            { "locusLinearYPeriod",   "1000.0",          },
-            { "locusLinearWeight",    "0.0",             },
-            { "locusRandomWeight",    "0.0",             },
-            { "locusRandomPeriod",    "1000.0",          },
-            { "useScaledLocus",       "TRUE",            },
         };
 
         BundleConfigValue configs1[] = {
@@ -371,31 +364,6 @@ public:
             { "gatherAbandonStale", "TRUE", },
             { "gatherRange", "216.282059", },
             { "guardRange", "-0.902500", },
-            { "locus.crowd.radius.amplitude", "0.830518", },
-            { "locus.crowd.radius.period", "705.356079", },
-            { "locus.crowd.radius.value", "1683.359131", },
-            { "locus.crowd.radius.valueType", "constant", },
-            { "locus.crowd.size.amplitude", "0.807986", },
-            { "locus.crowd.size.period", "8092.102051", },
-            { "locus.crowd.size.value", "10.801899", },
-            { "locus.crowd.size.valueType", "constant", },
-            { "locus.crowdType", "linearUp", },
-            { "locus.radius.amplitude", "0.280220", },
-            { "locus.radius.period", "6379.359375", },
-            { "locus.radius.value", "1326.336304", },
-            { "locus.radius.valueType", "periodic", },
-            { "locus.rangeType", "always", },
-            { "locus.weight.amplitude", "0.000000", },
-            { "locus.weight.period", "4181.989746", },
-            { "locus.weight.value", "4.035198", },
-            { "locus.weight.valueType", "constant", },
-            { "locusCircularPeriod", "10309.558594", },
-            { "locusCircularWeight", "0.856374", },
-            { "locusLinearWeight", "1.804331", },
-            { "locusLinearXPeriod", "1598.433105", },
-            { "locusLinearYPeriod", "9407.249023", },
-            { "locusRandomPeriod", "7426.138184", },
-            { "locusRandomWeight", "0.471003", },
             { "nearBaseRadius", "423.256439", },
             { "randomIdle", "TRUE", },
             { "rotateStartingAngle", "FALSE", },
@@ -419,7 +387,6 @@ public:
             { "separate.weight.valueType", "constant", },
             { "startingMaxRadius", "1295.414795", },
             { "startingMinRadius", "642.803894", },
-            { "useScaledLocus", "TRUE", },
         };
 
         BundleConfigValue *configDefaults;
@@ -447,8 +414,8 @@ public:
         }
     }
 
-    virtual void loadBundleAtom(MBRegistry *mreg, BundleAtom *ba,
-                                const char *prefix) {
+    void loadBundleAtom(MBRegistry *mreg, BundleAtom *ba,
+                        const char *prefix) {
         CMBString s;
         MBString_Create(&s);
 
@@ -467,9 +434,9 @@ public:
         MBString_Destroy(&s);
     }
 
-    virtual void loadBundlePeriodicParams(MBRegistry *mreg,
-                                          BundlePeriodicParams *bpp,
-                                          const char *prefix) {
+    void loadBundlePeriodicParams(MBRegistry *mreg,
+                                  BundlePeriodicParams *bpp,
+                                  const char *prefix) {
         CMBString s;
         MBString_Create(&s);
 
@@ -491,8 +458,8 @@ public:
         MBString_Destroy(&s);
     }
 
-    virtual void loadBundleValue(MBRegistry *mreg, BundleValue *bv,
-                                 const char *prefix) {
+    void loadBundleValue(MBRegistry *mreg, BundleValue *bv,
+                         const char *prefix) {
         CMBString s;
         const char *cs;
         MBString_Create(&s);
@@ -527,8 +494,8 @@ public:
         MBString_Destroy(&s);
     }
 
-    virtual void loadBundleCheck(MBRegistry *mreg, BundleCheckType *bc,
-                                 const char *prefix) {
+    void loadBundleCheck(MBRegistry *mreg, BundleCheckType *bc,
+                         const char *prefix) {
         CMBString s;
         const char *cs;
         MBString_Create(&s);
@@ -557,8 +524,8 @@ public:
         }
     }
 
-    virtual void loadBundleForce(MBRegistry *mreg, BundleForce *b,
-                                 const char *prefix) {
+    void loadBundleForce(MBRegistry *mreg, BundleForce *b,
+                         const char *prefix) {
         CMBString s;
         MBString_Create(&s);
 
@@ -595,6 +562,59 @@ public:
         MBString_Destroy(&s);
     }
 
+    void loadBundleLocus(MBRegistry *mreg, BundleLocus *lp,
+                         const char *prefix) {
+        CMBString s;
+        MBString_Create(&s);
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".force");
+        loadBundleForce(mreg, &lp->force, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".circularPeriod");
+        lp->circularPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".circularWeight");
+        lp->circularWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".linearXPeriod");
+        lp->linearXPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".linearYPeriod");
+        lp->linearYPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".linearWeight");
+        lp->linearWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".randomWeight");
+        lp->randomWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".randomPeriod");
+        lp->randomPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".useScaled");
+        lp->useScaled = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
+
+        MBString_Destroy(&s);
+    }
+
 
     virtual void loadRegistry(MBRegistry *mreg) {
         this->myConfig.randomIdle = MBRegistry_GetBool(mreg, "randomIdle");
@@ -613,29 +633,15 @@ public:
         loadBundleForce(mreg, &this->myConfig.base, "base");
         loadBundleForce(mreg, &this->myConfig.baseDefense, "baseDefense");
 
-        this->myConfig.nearBaseRadius = MBRegistry_GetFloat(mreg, "nearBaseRadius");
-        this->myConfig.baseDefenseRadius = MBRegistry_GetFloat(mreg, "baseDefenseRadius");
+        this->myConfig.nearBaseRadius =
+            MBRegistry_GetFloat(mreg, "nearBaseRadius");
+        this->myConfig.baseDefenseRadius =
+            MBRegistry_GetFloat(mreg, "baseDefenseRadius");
 
-        loadBundleValue(mreg, &this->myConfig.curHeadingWeight, "curHeadingWeight");
+        loadBundleValue(mreg, &this->myConfig.curHeadingWeight,
+                        "curHeadingWeight");
 
-        loadBundleForce(mreg, &this->myConfig.locus, "locus");
-        this->myConfig.locusCircularPeriod =
-            MBRegistry_GetFloat(mreg, "locusCircularPeriod");
-        this->myConfig.locusCircularWeight =
-            MBRegistry_GetFloat(mreg, "locusCircularWeight");
-        this->myConfig.locusLinearXPeriod =
-            MBRegistry_GetFloat(mreg, "locusLinearXPeriod");
-        this->myConfig.locusLinearYPeriod =
-            MBRegistry_GetFloat(mreg, "locusLinearYPeriod");
-        this->myConfig.locusLinearWeight =
-            MBRegistry_GetFloat(mreg, "locusLinearWeight");
-        this->myConfig.useScaledLocus =
-            MBRegistry_GetFloat(mreg, "useScaledLocus");
-
-        this->myConfig.locusRandomWeight =
-            MBRegistry_GetFloat(mreg, "locusRandomWeight");
-        this->myConfig.locusRandomPeriod =
-            (uint)MBRegistry_GetFloat(mreg, "locusRandomPeriod");
+        loadBundleLocus(mreg, &this->myConfig.fleetLocus, "fleetLocus");
 
         this->BasicAIGovernor::loadRegistry(mreg);
     }
@@ -1000,11 +1006,11 @@ public:
         applyBundle(mob, rForce, &myConfig.center, &center);
     }
 
-    void flockLocus(Mob *mob, FRPoint *rForce) {
+    void flockLocus(Mob *mob, FRPoint *rForce, BundleLocus *bl) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FPoint circular;
         FPoint linear;
-        FPoint locus;
+        FPoint locusPoint;
         bool haveCircular = FALSE;
         bool haveLinear = FALSE;
         bool haveRandom = FALSE;
@@ -1012,11 +1018,11 @@ public:
         float height = myFleetAI->bp.height;
         float temp;
 
-        if (myConfig.locusCircularPeriod > 0.0f &&
-            myConfig.locusCircularWeight != 0.0f) {
+        if (bl->circularPeriod > 0.0f &&
+            bl->circularWeight != 0.0f) {
             float cwidth = width / 2;
             float cheight = height / 2;
-            float ct = myFleetAI->tick / myConfig.locusCircularPeriod;
+            float ct = myFleetAI->tick / bl->circularPeriod;
 
             /*
              * This isn't actually the circumference of an ellipse,
@@ -1029,15 +1035,15 @@ public:
             haveCircular = TRUE;
         }
 
-        if (myConfig.locusRandomPeriod > 0.0f &&
-            myConfig.locusRandomWeight != 0.0f) {
+        if (bl->randomPeriod > 0.0f &&
+            bl->randomWeight != 0.0f) {
             /*
              * XXX: Each ship will get a different random locus on the first
              * tick.
              */
             if (myLive.randomLocusTick == 0 ||
                 myFleetAI->tick - myLive.randomLocusTick >
-                myConfig.locusRandomPeriod) {
+                bl->randomPeriod) {
                 RandomState *rs = &myRandomState;
                 myLive.randomLocus.x = RandomState_Float(rs, 0.0f, width);
                 myLive.randomLocus.y = RandomState_Float(rs, 0.0f, height);
@@ -1046,9 +1052,9 @@ public:
             haveRandom = TRUE;
         }
 
-        if (myConfig.locusLinearXPeriod > 0.0f &&
-            myConfig.locusLinearWeight != 0.0f) {
-            float ltx = myFleetAI->tick / myConfig.locusLinearXPeriod;
+        if (bl->linearXPeriod > 0.0f &&
+            bl->linearWeight != 0.0f) {
+            float ltx = myFleetAI->tick / bl->linearXPeriod;
             ltx /= 2 * width;
             linear.x = width * modff(ltx / width, &temp);
             if (((uint)temp) % 2 == 1) {
@@ -1062,9 +1068,9 @@ public:
             linear.x = mob->pos.x;
         }
 
-        if (myConfig.locusLinearYPeriod > 0.0f &&
-            myConfig.locusLinearWeight != 0.0f) {
-            float lty = myFleetAI->tick / myConfig.locusLinearYPeriod;
+        if (bl->linearYPeriod > 0.0f &&
+            bl->linearWeight != 0.0f) {
+            float lty = myFleetAI->tick / bl->linearYPeriod;
             lty /= 2 * height;
             linear.y = height * modff(lty / height, &temp);
             if (((uint)temp) % 2 == 1) {
@@ -1080,32 +1086,32 @@ public:
 
         if (haveLinear || haveCircular || haveRandom) {
             float scale = 0.0f;
-            locus.x = 0.0f;
-            locus.y = 0.0f;
+            locusPoint.x = 0.0f;
+            locusPoint.y = 0.0f;
             if (haveLinear) {
-                locus.x += myConfig.locusLinearWeight * linear.x;
-                locus.y += myConfig.locusLinearWeight * linear.y;
-                scale += myConfig.locusLinearWeight;
+                locusPoint.x += bl->linearWeight * linear.x;
+                locusPoint.y += bl->linearWeight * linear.y;
+                scale += bl->linearWeight;
             }
             if (haveCircular) {
-                locus.x += myConfig.locusCircularWeight * circular.x;
-                locus.y += myConfig.locusCircularWeight * circular.y;
-                scale += myConfig.locusCircularWeight;
+                locusPoint.x += bl->circularWeight * circular.x;
+                locusPoint.y += bl->circularWeight * circular.y;
+                scale += bl->circularWeight;
             }
             if (haveRandom) {
-                locus.x += myConfig.locusRandomWeight * myLive.randomLocus.x;
-                locus.y += myConfig.locusRandomWeight *  myLive.randomLocus.y;
-                scale += myConfig.locusRandomWeight;
+                locusPoint.x += bl->randomWeight * myLive.randomLocus.x;
+                locusPoint.y += bl->randomWeight *  myLive.randomLocus.y;
+                scale += bl->randomWeight;
             }
 
-            if (myConfig.useScaledLocus) {
+            if (bl->useScaled) {
                 if (scale != 0.0f) {
-                    locus.x /= scale;
-                    locus.y /= scale;
+                    locusPoint.x /= scale;
+                    locusPoint.y /= scale;
                 }
             }
 
-            applyBundle(mob, rForce, &myConfig.locus, &locus);
+            applyBundle(mob, rForce, &bl->force, &locusPoint);
         }
     }
 
@@ -1199,7 +1205,7 @@ public:
             flockEnemies(mob, &rForce);
             flockEnemyBase(mob, &rForce);
             flockCores(mob, &rForce);
-            flockLocus(mob, &rForce);
+            flockLocus(mob, &rForce, &myConfig.fleetLocus);
 
             rForce.radius = speed;
 
@@ -1483,6 +1489,68 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MBString_Destroy(&s);
 }
 
+
+static void MutateBundleLocus(FleetAIType aiType, MBRegistry *mreg,
+                              const char *prefix)
+{
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".force");
+    MutateBundleForce(aiType, mreg, MBString_GetCStr(&s));
+
+    MutationFloatParams vf[] = {
+        // key                min     max       mag   jump   mutation
+        { ".circularPeriod",  -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+        { ".circularWeight",   0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
+        { ".linearXPeriod",   -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+        { ".linearYPeriod",   -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+        { ".linearWeight",     0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
+        { ".randomWeight",     0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
+        { ".randomPeriod",    -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
+    };
+
+    MutationBoolParams vb[] = {
+        // key                       mutation
+        { ".useScaledLocus",          0.01f},
+    };
+
+    for (uint i = 0; i < ARRAYSIZE(vf); i++) {
+        MutationFloatParams mfp = vf[i];
+
+        if (MBRegistry_GetBool(mreg, BUNDLE_SCRAMBLE_KEY)) {
+            mfp.mutationRate = 1.0f;
+            mfp.jumpRate = 1.0f;
+        }
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, mfp.key);
+        mfp.key = MBString_GetCStr(&s);
+
+        Mutate_Float(mreg, &mfp, 1);
+    }
+
+    for (uint i = 0; i < ARRAYSIZE(vb); i++) {
+        MutationBoolParams mbp = vb[i];
+
+        if (MBRegistry_GetBool(mreg, BUNDLE_SCRAMBLE_KEY)) {
+            mbp.flipRate = 0.5f;
+        }
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, mbp.key);
+        mbp.key = MBString_GetCStr(&s);
+
+        Mutate_Bool(mreg, &mbp, 1);
+    }
+
+    MBString_Destroy(&s);
+}
+
 static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 {
     MutationFloatParams vf[] = {
@@ -1497,14 +1565,6 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
         { "nearBaseRadius",        1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
         { "baseDefenseRadius",     1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
-
-        { "locusCircularPeriod",  -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
-        { "locusCircularWeight",   0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
-        { "locusLinearXPeriod",   -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
-        { "locusLinearYPeriod",   -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
-        { "locusLinearWeight",     0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
-        { "locusRandomWeight",     0.0f,     2.0f,  0.05f, 0.15f, 0.02f},
-        { "locusRandomPeriod",    -1.0f, 12345.0f,  0.05f, 0.15f, 0.02f},
 
         /*
          * Not mutated:
@@ -1521,7 +1581,6 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "attackExtendedRange",     0.05f},
         { "rotateStartingAngle",     0.05f},
         { "gatherAbandonStale",      0.05f},
-        { "useScaledLocus",          0.01f},
         { "randomIdle",              0.01f},
     };
 
@@ -1557,7 +1616,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutateBundleValue(aiType, mreg, "curHeadingWeight", MUTATION_TYPE_WEIGHT);
 
-    MutateBundleForce(aiType, mreg, "locus");
+    MutateBundleLocus(aiType, mreg, "fleetLocus");
 
     MBRegistry_Remove(mreg, BUNDLE_SCRAMBLE_KEY);
 }
