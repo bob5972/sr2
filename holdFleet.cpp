@@ -26,16 +26,13 @@ extern "C" {
 #include "mutate.h"
 
 #include "sensorGrid.hpp"
-#include "shipAI.hpp"
+#include "basicShipAI.hpp"
 
 class HoldFleetGovernor : public BasicAIGovernor
 {
 public:
     HoldFleetGovernor(FleetAI *ai, SensorGrid *sg)
-    :BasicAIGovernor(ai, sg)
-    {
-
-    }
+    :BasicAIGovernor(ai, sg) { }
 
     virtual ~HoldFleetGovernor() { }
 

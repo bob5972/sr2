@@ -54,7 +54,7 @@ C_SOURCES = main.c \
             gatherFleet.c \
             mapperFleet.c \
             mob.c \
-			mutate.c \
+	    mutate.c \
             simpleFleet.c \
             sprite.c \
             workQueue.c
@@ -67,7 +67,7 @@ CPP_SOURCES = basicFleet.cpp \
               holdFleet.cpp \
               mobSet.cpp \
               sensorGrid.cpp \
-              shipAI.cpp
+              basicShipAI.cpp
 
 ifeq ($(SR2_GUI), 1)
 	C_SOURCES += display.c

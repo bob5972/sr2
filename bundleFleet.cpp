@@ -28,7 +28,7 @@ extern "C" {
 #include "MBUtil.h"
 
 #include "sensorGrid.hpp"
-#include "shipAI.hpp"
+#include "basicShipAI.hpp"
 #include "MBMap.hpp"
 #include "MBString.hpp"
 
@@ -1030,6 +1030,11 @@ public:
         float height = myFleetAI->bp.height;
         float temp;
         FPoint randomPoint;
+
+        MBUtil_Zero(&randomPoint, sizeof(randomPoint));
+        MBUtil_Zero(&circular, sizeof(circular));
+        MBUtil_Zero(&linear, sizeof(linear));
+        MBUtil_Zero(&locusPoint, sizeof(locusPoint));
 
         if (bl->circularPeriod > 0.0f &&
             bl->circularWeight != 0.0f) {

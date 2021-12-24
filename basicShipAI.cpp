@@ -1,5 +1,5 @@
 /*
- * shipAI.cpp -- part of SpaceRobots2
+ * basicShipAI.cpp -- part of SpaceRobots2
  * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,23 +21,110 @@ extern "C" {
 #include "fleet.h"
 }
 
-#include "shipAI.hpp"
+#include "basicShipAI.hpp"
 
-BasicAIGovernor::ShipAI *BasicAIGovernor::newShip(MobID mobid)
+void BasicAIGovernor::doSpawn(Mob *mob)
 {
-        BasicShipAI *ship = new BasicShipAI(mobid, this);
+    FleetAI *ai = myFleetAI;
 
-        Mob *m = getMob(mobid);
-        if (m != NULL) {
-            ShipAI *p = getShip(m->parentMobid);
-            if (p != NULL) {
-                BasicShipAI *pShip = (BasicShipAI *)p;
-                ship->attackData.pos = pShip->attackData.pos;
-            }
+    BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+    if (ship != NULL) {
+        BasicShipAI *p = (BasicShipAI *)getShip(mob->parentMobid);
+        if (p != NULL) {
+            BasicShipAI *pShip = (BasicShipAI *)p;
+            ship->attackData.pos = pShip->attackData.pos;
         }
-
-        return (ShipAI *)ship;
     }
+
+    if (myConfig.rotateStartingAngle &&
+        mob->type == MOB_TYPE_FIGHTER) {
+        FRPoint p;
+        uint i = 0;
+        bool keepGoing = TRUE;
+
+        do {
+            // Rotate by the Golden Angle
+            myStartingAngle += M_PI * (3 - sqrtf(5.0f));
+            p.radius = myConfig.startingMaxRadius;
+            p.theta = myStartingAngle;
+
+            do {
+                FRPoint_ToFPoint(&p, &mob->pos, &mob->cmd.target);
+                p.radius /= 1.1f;
+
+                i++;
+                if (i >= 10 * 1000) {
+                    /*
+                        * If the min/max radius are set wrong,
+                        * we could otherwise loop here forever.
+                        */
+                    mob->cmd.target = mob->pos;
+                    keepGoing = FALSE;
+                }
+            } while (keepGoing &&
+                        p.radius >= myConfig.startingMinRadius &&
+                        FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
+                                    0.0f, ai->bp.height));
+        } while (keepGoing &&
+                    p.radius < myConfig.startingMinRadius);
+    }
+}
+
+void BasicAIGovernor::doIdle(Mob *mob, bool newlyIdle)
+{
+    FleetAI *ai = myFleetAI;
+    RandomState *rs = &myRandomState;
+    BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+
+    ship->state = BSAI_STATE_IDLE;
+
+    if (newlyIdle) {
+        mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+        mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+    }
+}
+
+void BasicAIGovernor::doAttack(Mob *mob, Mob *enemyTarget)
+{
+    RandomState *rs = &myRandomState;
+    BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
+    SensorGrid *sg = mySensorGrid;
+    Mob *friendBase = sg->friendBase();
+
+    float firingRange = MobType_GetSpeed(MOB_TYPE_MISSILE) *
+                        MobType_GetMaxFuel(MOB_TYPE_MISSILE);
+    float scanningRange = MobType_GetSensorRadius(MOB_TYPE_FIGHTER);
+
+    bool beAggressive = FALSE;
+
+    ship->state = BSAI_STATE_ATTACK;
+    ship->attackData.pos = enemyTarget->pos;
+
+    if (RandomState_Int(rs, 0, myConfig.fighterFireJitter) == 0 &&
+        FPoint_Distance(&mob->pos, &enemyTarget->pos) <= firingRange) {
+        mob->cmd.spawnType = MOB_TYPE_MISSILE;
+    }
+
+    if (myConfig.attackRange > 0 &&
+        FPoint_Distance(&mob->pos, &enemyTarget->pos) <
+        myConfig.attackRange) {
+        beAggressive = TRUE;
+    } else if (enemyTarget->type == MOB_TYPE_BASE) {
+        beAggressive = TRUE;
+    } else if (friendBase != NULL && myConfig.guardRange > 0 &&
+                FPoint_Distance(&enemyTarget->pos, &friendBase->pos) <=
+                myConfig.guardRange) {
+        beAggressive = TRUE;
+    }
+
+
+    if (beAggressive) {
+        float range = MIN(firingRange, scanningRange) - 1;
+        FleetUtil_RandomPointInRange(rs, &mob->cmd.target,
+                                        &enemyTarget->pos, range);
+    }
+}
+
 
 void BasicAIGovernor::runMob(Mob *mob)
 {

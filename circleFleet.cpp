@@ -25,7 +25,7 @@ extern "C" {
 #include "MBVarMap.h"
 
 #include "sensorGrid.hpp"
-#include "shipAI.hpp"
+#include "basicShipAI.hpp"
 #include "MBMap.hpp"
 
 class CircleAIGovernor : public BasicAIGovernor

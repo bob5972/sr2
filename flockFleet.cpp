@@ -26,7 +26,7 @@ extern "C" {
 
 #include "mutate.h"
 #include "sensorGrid.hpp"
-#include "shipAI.hpp"
+#include "basicShipAI.hpp"
 #include "MBMap.hpp"
 
 typedef struct FlockConfigValue {
@@ -43,8 +43,7 @@ class FlockAIGovernor : public BasicAIGovernor
 {
 public:
     FlockAIGovernor(FleetAI *ai, SensorGrid *sg)
-    :BasicAIGovernor(ai, sg)
-    { }
+    :BasicAIGovernor(ai, sg) { }
 
     virtual ~FlockAIGovernor() { }
 
