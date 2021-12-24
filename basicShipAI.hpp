@@ -114,10 +114,6 @@ public:
      */
     virtual ~BasicAIGovernor() { }
 
-    virtual BasicAIGovernor::ShipAI *newShip(MobID mobid) {
-        return new BasicShipAI(mobid, this);
-    }
-
     virtual void runMob(Mob *mob);
 
     virtual void runTick() {
@@ -143,7 +139,7 @@ protected:
 
     class BasicShipAI : public ShipAI
     {
-    public:
+        public:
         BasicShipAI(MobID mobid, BasicAIGovernor *gov)
         :ShipAI(mobid), myGov(gov)
         {
@@ -156,7 +152,7 @@ protected:
             stateChanged = FALSE;
         }
 
-        ~BasicShipAI() { }
+        virtual ~BasicShipAI() { }
 
         void hold(const FPoint *holdPos, uint holdCount) {
             state = BSAI_STATE_HOLD;
@@ -190,6 +186,12 @@ protected:
         } holdData;
     };
 
+public:
+    virtual BasicShipAI *newShip(MobID mobid) {
+        return new BasicShipAI(mobid, this);
+    }
+
+protected:
     /*
      * BasicAIGovernor data
      */

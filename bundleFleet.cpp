@@ -79,25 +79,38 @@ typedef struct BundleForce {
     BundleCrowd crowd;
 } BundleForce;
 
-typedef struct LiveLocus {
+typedef struct LiveLocusState {
     FPoint randomPoint;
     uint randomTick;
-} LiveLocus;
+} LiveLocusState;
 
-typedef struct BundleLocus {
-    BundleForce force;
-
+typedef struct BundleLocusPointParams {
     float circularPeriod;
     float circularWeight;
     float linearXPeriod;
     float linearYPeriod;
     float linearWeight;
     float randomWeight;
-    float randomPeriod;
-    bool  useScaled;
+    bool useScaled;
+} BundleLocusPointParams;
 
-    LiveLocus live;
-} BundleLocus;
+typedef struct BundleFleetLocus {
+    BundleForce force;
+    BundleLocusPointParams params;
+    float randomPeriod;
+} BundleFleetLocus;
+
+typedef struct BundleMobLocus {
+    BundleForce force;
+    BundleAtom circularPeriod;
+    BundleValue circularWeight;
+    BundleAtom linearXPeriod;
+    BundleAtom linearYPeriod;
+    BundleValue linearWeight;
+    BundleAtom randomPeriod;
+    BundleValue randomWeight;
+    bool useScaled;
+} BundleMobLocus;
 
 typedef struct BundleSpec {
     bool randomIdle;
@@ -122,8 +135,8 @@ typedef struct BundleSpec {
 
     BundleValue curHeadingWeight;
 
-    BundleLocus fleetLocus;
-    //BundleLocus mobLocus;
+    BundleFleetLocus fleetLocus;
+    BundleMobLocus mobLocus;
 } BundleSpec;
 
 typedef struct BundleConfigValue {
@@ -137,11 +150,33 @@ public:
     BundleAIGovernor(FleetAI *ai, SensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     {
-        CMBVarMap_Create(&myMobJitters);
+        MBUtil_Zero(&myLive, sizeof(myLive));
     }
 
-    virtual ~BundleAIGovernor() {
-        CMBVarMap_Destroy(&myMobJitters);
+    virtual ~BundleAIGovernor() { }
+
+    class BundleShipAI : public BasicShipAI
+    {
+        public:
+        BundleShipAI(MobID mobid, BundleAIGovernor *gov)
+        :BasicShipAI(mobid, gov)
+        {
+            CMBVarMap_Create(&myMobJitters);
+            MBUtil_Zero(&myShipLive, sizeof(myShipLive));
+        }
+
+        virtual ~BundleShipAI() {
+            CMBVarMap_Destroy(&myMobJitters);
+        }
+
+        CMBVarMap myMobJitters;
+        struct {
+            LiveLocusState mobLocus;
+        } myShipLive;
+    };
+
+    virtual BundleShipAI *newShip(MobID mobid) {
+        return new BundleShipAI(mobid, this);
     }
 
     void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
@@ -570,8 +605,8 @@ public:
         MBString_Destroy(&s);
     }
 
-    void loadBundleLocus(MBRegistry *mreg, BundleLocus *lp,
-                         const char *prefix) {
+    void loadBundleFleetLocus(MBRegistry *mreg, BundleFleetLocus *lp,
+                              const char *prefix) {
         CMBString s;
         MBString_Create(&s);
 
@@ -583,32 +618,32 @@ public:
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".circularPeriod");
-        lp->circularPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        lp->params.circularPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".circularWeight");
-        lp->circularWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        lp->params.circularWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".linearXPeriod");
-        lp->linearXPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        lp->params.linearXPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".linearYPeriod");
-        lp->linearYPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        lp->params.linearYPeriod = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".linearWeight");
-        lp->linearWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        lp->params.linearWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".randomWeight");
-        lp->randomWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        lp->params.randomWeight = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
@@ -618,9 +653,60 @@ public:
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".useScaled");
-        lp->useScaled = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
+        lp->params.useScaled = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
 
-        MBUtil_Zero(&lp->live, sizeof(lp->live));
+        MBString_Destroy(&s);
+    }
+
+    void loadBundleMobLocus(MBRegistry *mreg, BundleMobLocus *lp,
+                            const char *prefix) {
+        CMBString s;
+        MBString_Create(&s);
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".force");
+        loadBundleForce(mreg, &lp->force, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".circularPeriod");
+        loadBundleAtom(mreg, &lp->circularPeriod, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".circularWeight");
+        loadBundleValue(mreg, &lp->circularWeight, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".linearXPeriod");
+        loadBundleAtom(mreg, &lp->linearXPeriod, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".linearYPeriod");
+        loadBundleAtom(mreg, &lp->linearYPeriod, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".linearWeight");
+        loadBundleValue(mreg, &lp->linearWeight, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".randomWeight");
+        loadBundleValue(mreg, &lp->randomWeight, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".randomPeriod");
+        loadBundleAtom(mreg, &lp->randomPeriod, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".useScaled");
+        lp->useScaled = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
 
         MBString_Destroy(&s);
     }
@@ -651,8 +737,8 @@ public:
         loadBundleValue(mreg, &this->myConfig.curHeadingWeight,
                         "curHeadingWeight");
 
-        loadBundleLocus(mreg, &this->myConfig.fleetLocus, "fleetLocus");
-        //loadBundleLocus(mreg, &this->myConfig.mobLocus, "mobLocus");
+        loadBundleFleetLocus(mreg, &this->myConfig.fleetLocus, "fleetLocus");
+        loadBundleMobLocus(mreg, &this->myConfig.mobLocus, "mobLocus");
 
         this->BasicAIGovernor::loadRegistry(mreg);
     }
@@ -830,6 +916,9 @@ public:
         MBVar key;
         MBVar mj;
 
+        BundleShipAI *ship = (BundleShipAI *)getShip(m->mobid);
+
+        ASSERT(ship != NULL);
         ASSERT(value >= (void *)&myConfig && value < (void *)&(&myConfig)[1]);
 
         if (*value <= 0.0f) {
@@ -838,14 +927,18 @@ public:
 
         key.all = 0;
         key.vPtr = value;
-        if (!CMBVarMap_Lookup(&myMobJitters, key, &mj)) {
+        if (!CMBVarMap_Lookup(&ship->myMobJitters, key, &mj)) {
             mj.vFloat = RandomState_Float(rs, -*value, *value);
-            CMBVarMap_Put(&myMobJitters, key, mj);
+            CMBVarMap_Put(&ship->myMobJitters, key, mj);
         }
 
         return mj.vFloat;
     }
 
+    /*
+     * getBundleAtom --
+     *     Compute a bundle atom.
+     */
     float getBundleAtom(Mob *m, BundleAtom *ba) {
         float jitter = getMobJitter(m, &ba->mobJitterScale);
 
@@ -856,6 +949,10 @@ public:
         }
     }
 
+    /*
+     * getBundleValue --
+     *     Compute a bundle value.
+     */
     float getBundleValue(Mob *m, BundleValue *bv) {
         float value = getBundleAtom(m, &bv->value);
 
@@ -948,6 +1045,10 @@ public:
         return bundleCheck(bundle->crowdCheck, crowdValue, crowdTrigger, weight);
     }
 
+    /*
+     * applyBundle --
+     *      Apply a bundle to a given mob to calculate the force.
+     */
     void applyBundle(Mob *mob, FRPoint *rForce, BundleForce *bundle,
                      FPoint *focusPos) {
         float cweight;
@@ -1017,30 +1118,106 @@ public:
         applyBundle(mob, rForce, &myConfig.center, &center);
     }
 
-    void flockLocus(Mob *mob, FRPoint *rForce, BundleLocus *bl,
-                    bool useMobValues) {
+    void flockMobLocus(Mob *mob, FRPoint *rForce) {
+        FPoint mobLocus;
+        FPoint *randomPoint = NULL;
+        uint tick = myFleetAI->tick;
+        BundleLocusPointParams pp;
+        BundleShipAI *ship = (BundleShipAI *)getShip(mob->mobid);
+        float randomPeriod = getBundleAtom(mob, &myConfig.mobLocus.randomPeriod);
+        float randomWeight = getBundleValue(mob, &myConfig.mobLocus.randomWeight);
+        LiveLocusState *live;
+        float width = myFleetAI->bp.width;
+        float height = myFleetAI->bp.height;
+
+        ASSERT(ship != NULL);
+        live = &ship->myShipLive.mobLocus;
+
+        if (randomPeriod > 0.0f && randomWeight != 0.0f) {
+            if (live->randomTick == 0 ||
+                tick - live->randomTick > randomPeriod) {
+                RandomState *rs = &myRandomState;
+                live->randomPoint.x = RandomState_Float(rs, 0.0f, width);
+                live->randomPoint.y = RandomState_Float(rs, 0.0f, height);
+                live->randomTick = tick;
+            }
+
+            randomPoint = &live->randomPoint;
+        }
+
+        pp.circularPeriod = getBundleAtom(mob, &myConfig.mobLocus.circularPeriod);
+        pp.circularWeight = getBundleValue(mob, &myConfig.mobLocus.circularWeight);
+        pp.linearXPeriod = getBundleAtom(mob, &myConfig.mobLocus.linearXPeriod);
+        pp.linearYPeriod = getBundleAtom(mob, &myConfig.mobLocus.linearYPeriod);
+        pp.linearWeight = getBundleValue(mob, &myConfig.mobLocus.linearWeight);
+        pp.randomWeight = getBundleValue(mob, &myConfig.mobLocus.randomWeight);
+        pp.useScaled = myConfig.mobLocus.useScaled;
+
+        if (getLocusPoint(mob, &pp, randomPoint, &mobLocus)) {
+            applyBundle(mob, rForce, &myConfig.mobLocus.force, &mobLocus);
+        }
+    }
+
+    void flockFleetLocus(Mob *mob, FRPoint *rForce) {
+        FPoint fleetLocus;
+        FPoint *randomPoint = NULL;
+        uint tick = myFleetAI->tick;
+        float randomPeriod = myConfig.fleetLocus.randomPeriod;
+        LiveLocusState *live = &myLive.fleetLocus;
+        float width = myFleetAI->bp.width;
+        float height = myFleetAI->bp.height;
+
+        if (randomPeriod > 0.0f &&
+            myConfig.fleetLocus.params.randomWeight != 0.0f) {
+            /*
+             * XXX: Each ship will get a different random locus on the first
+             * tick.
+             */
+            if (live->randomTick == 0 ||
+                tick - live->randomTick > randomPeriod) {
+                RandomState *rs = &myRandomState;
+                live->randomPoint.x = RandomState_Float(rs, 0.0f, width);
+                live->randomPoint.y = RandomState_Float(rs, 0.0f, height);
+                live->randomTick = tick;
+            }
+
+            randomPoint = &live->randomPoint;
+        }
+
+        if (getLocusPoint(mob, &myConfig.fleetLocus.params, randomPoint,
+                          &fleetLocus)) {
+            applyBundle(mob, rForce, &myConfig.fleetLocus.force, &fleetLocus);
+        }
+    }
+
+    /*
+     * getLocusPoint --
+     *    Calculate the locus point from the provided parameters.
+     *    Returns TRUE iff we have a locus point.
+     */
+    bool getLocusPoint(Mob *mob, BundleLocusPointParams *pp,
+                       const FPoint *randomPointIn,
+                       FPoint *outPoint) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FPoint circular;
         FPoint linear;
-        FPoint locusPoint;
+        FPoint randomPoint;
         bool haveCircular = FALSE;
         bool haveLinear = FALSE;
         bool haveRandom = FALSE;
+        uint tick = myFleetAI->tick;
         float width = myFleetAI->bp.width;
         float height = myFleetAI->bp.height;
         float temp;
-        FPoint randomPoint;
 
         MBUtil_Zero(&randomPoint, sizeof(randomPoint));
         MBUtil_Zero(&circular, sizeof(circular));
         MBUtil_Zero(&linear, sizeof(linear));
-        MBUtil_Zero(&locusPoint, sizeof(locusPoint));
 
-        if (bl->circularPeriod > 0.0f &&
-            bl->circularWeight != 0.0f) {
+        if (pp->circularPeriod > 0.0f && pp->circularWeight != 0.0f) {
             float cwidth = width / 2;
             float cheight = height / 2;
-            float ct = myFleetAI->tick / bl->circularPeriod;
+            float ct = tick / pp->circularPeriod;
 
             /*
              * This isn't actually the circumference of an ellipse,
@@ -1053,37 +1230,14 @@ public:
             haveCircular = TRUE;
         }
 
-        if (bl->randomPeriod > 0.0f &&
-            bl->randomWeight != 0.0f) {
-            /*
-             * XXX: Each ship will get a different random locus on the first
-             * tick.
-             */
-            if (bl->live.randomTick == 0 ||
-                myFleetAI->tick - bl->live.randomTick >
-                bl->randomPeriod) {
-                RandomState *rs = &myRandomState;
-
-                if (useMobValues) {
-                    NOT_IMPLEMENTED();
-                } else {
-                    bl->live.randomPoint.x = RandomState_Float(rs, 0.0f, width);
-                    bl->live.randomPoint.y = RandomState_Float(rs, 0.0f, height);
-                    bl->live.randomTick = myFleetAI->tick;
-                }
-            }
-
-            if (useMobValues) {
-                NOT_IMPLEMENTED();
-            } else {
-                randomPoint = bl->live.randomPoint;
-            }
+        if (randomPointIn != NULL) {
+            ASSERT(pp->randomWeight != 0.0f);
+            randomPoint = *randomPointIn;
             haveRandom = TRUE;
         }
 
-        if (bl->linearXPeriod > 0.0f &&
-            bl->linearWeight != 0.0f) {
-            float ltx = myFleetAI->tick / bl->linearXPeriod;
+        if (pp->linearXPeriod > 0.0f && pp->linearWeight != 0.0f) {
+            float ltx = tick / pp->linearXPeriod;
             ltx /= 2 * width;
             linear.x = width * modff(ltx / width, &temp);
             if (((uint)temp) % 2 == 1) {
@@ -1097,9 +1251,8 @@ public:
             linear.x = mob->pos.x;
         }
 
-        if (bl->linearYPeriod > 0.0f &&
-            bl->linearWeight != 0.0f) {
-            float lty = myFleetAI->tick / bl->linearYPeriod;
+        if (pp->linearYPeriod > 0.0f && pp->linearWeight != 0.0f) {
+            float lty = tick / pp->linearYPeriod;
             lty /= 2 * height;
             linear.y = height * modff(lty / height, &temp);
             if (((uint)temp) % 2 == 1) {
@@ -1114,34 +1267,38 @@ public:
         }
 
         if (haveLinear || haveCircular || haveRandom) {
+            FPoint locusPoint;
             float scale = 0.0f;
             locusPoint.x = 0.0f;
             locusPoint.y = 0.0f;
             if (haveLinear) {
-                locusPoint.x += bl->linearWeight * linear.x;
-                locusPoint.y += bl->linearWeight * linear.y;
-                scale += bl->linearWeight;
+                locusPoint.x += pp->linearWeight * linear.x;
+                locusPoint.y += pp->linearWeight * linear.y;
+                scale += pp->linearWeight;
             }
             if (haveCircular) {
-                locusPoint.x += bl->circularWeight * circular.x;
-                locusPoint.y += bl->circularWeight * circular.y;
-                scale += bl->circularWeight;
+                locusPoint.x += pp->circularWeight * circular.x;
+                locusPoint.y += pp->circularWeight * circular.y;
+                scale += pp->circularWeight;
             }
             if (haveRandom) {
-                locusPoint.x += bl->randomWeight * randomPoint.x;
-                locusPoint.y += bl->randomWeight * randomPoint.y;
-                scale += bl->randomWeight;
+                locusPoint.x += pp->randomWeight * randomPoint.x;
+                locusPoint.y += pp->randomWeight * randomPoint.y;
+                scale += pp->randomWeight;
             }
 
-            if (bl->useScaled) {
+            if (pp->useScaled) {
                 if (scale != 0.0f) {
                     locusPoint.x /= scale;
                     locusPoint.y /= scale;
                 }
             }
 
-            applyBundle(mob, rForce, &bl->force, &locusPoint);
+            *outPoint = locusPoint;
+            return TRUE;
         }
+
+        return FALSE;
     }
 
     void flockBase(Mob *mob, FRPoint *rForce) {
@@ -1234,8 +1391,8 @@ public:
             flockEnemies(mob, &rForce);
             flockEnemyBase(mob, &rForce);
             flockCores(mob, &rForce);
-            flockLocus(mob, &rForce, &myConfig.fleetLocus, FALSE);
-            //flockLocus(mob, &rForce, &myConfig.mobLocus, TRUE);
+            flockFleetLocus(mob, &rForce);
+            flockMobLocus(mob, &rForce);
 
             rForce.radius = speed;
 
@@ -1294,8 +1451,9 @@ public:
     }
 
     BundleSpec myConfig;
-
-    CMBVarMap myMobJitters;
+    struct {
+        LiveLocusState fleetLocus;
+    } myLive;
 };
 
 class BundleFleet {
@@ -1515,8 +1673,8 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
 }
 
 
-static void MutateBundleLocus(FleetAIType aiType, MBRegistry *mreg,
-                              const char *prefix)
+static void MutateBundleFleetLocus(FleetAIType aiType, MBRegistry *mreg,
+                                   const char *prefix)
 {
     CMBString s;
     MBString_Create(&s);
@@ -1557,6 +1715,82 @@ static void MutateBundleLocus(FleetAIType aiType, MBRegistry *mreg,
 
         Mutate_Float(mreg, &mfp, 1);
     }
+
+    for (uint i = 0; i < ARRAYSIZE(vb); i++) {
+        MutationBoolParams mbp = vb[i];
+
+        if (MBRegistry_GetBool(mreg, BUNDLE_SCRAMBLE_KEY)) {
+            mbp.flipRate = 0.5f;
+        }
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, mbp.key);
+        mbp.key = MBString_GetCStr(&s);
+
+        Mutate_Bool(mreg, &mbp, 1);
+    }
+
+    MBString_Destroy(&s);
+}
+
+static void MutateBundleMobLocus(FleetAIType aiType, MBRegistry *mreg,
+                                 const char *prefix)
+{
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".force");
+    MutateBundleForce(aiType, mreg, MBString_GetCStr(&s));
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".circularPeriod");
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s),
+                     MUTATION_TYPE_PERIOD);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".circularWeight");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      MUTATION_TYPE_WEIGHT);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".linearXPeriod");
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s),
+                     MUTATION_TYPE_PERIOD);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".linearYPeriod");
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s),
+                     MUTATION_TYPE_PERIOD);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".linearWeight");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      MUTATION_TYPE_WEIGHT);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".randomPeriod");
+    MutateBundleAtom(aiType, mreg, MBString_GetCStr(&s),
+                     MUTATION_TYPE_PERIOD);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".randomWeight");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      MUTATION_TYPE_WEIGHT);
+
+    MutationBoolParams vb[] = {
+        // key                       mutation
+        { ".useScaledLocus",          0.01f},
+    };
 
     for (uint i = 0; i < ARRAYSIZE(vb); i++) {
         MutationBoolParams mbp = vb[i];
@@ -1641,8 +1875,8 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutateBundleValue(aiType, mreg, "curHeadingWeight", MUTATION_TYPE_WEIGHT);
 
-    MutateBundleLocus(aiType, mreg, "fleetLocus");
-    //MutateBundleLocus(aiType, mreg, "mobLocus");
+    MutateBundleFleetLocus(aiType, mreg, "fleetLocus");
+    MutateBundleMobLocus(aiType, mreg, "mobLocus");
 
     MBRegistry_Remove(mreg, BUNDLE_SCRAMBLE_KEY);
 }
