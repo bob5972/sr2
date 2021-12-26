@@ -42,6 +42,8 @@ typedef enum BundleCheckType {
     BUNDLE_CHECK_STRICT_OFF,
     BUNDLE_CHECK_LINEAR_UP,
     BUNDLE_CHECK_LINEAR_DOWN,
+    BUNDLE_CHECK_QUADRATIC_UP,
+    BUNDLE_CHECK_QUADRATIC_DOWN,
 } BundleCheckType;
 
 typedef uint32 BundleValueFlags;
@@ -562,6 +564,10 @@ public:
             *bc = BUNDLE_CHECK_LINEAR_UP;
         } else if (strcmp(cs, "linearDown") == 0) {
             *bc = BUNDLE_CHECK_LINEAR_DOWN;
+        } else if (strcmp(cs, "quadraticUp") == 0) {
+            *bc = BUNDLE_CHECK_QUADRATIC_UP;
+        } else if (strcmp(cs, "quadraticDown") == 0) {
+            *bc = BUNDLE_CHECK_QUADRATIC_DOWN;
         } else {
             PANIC("Unknown rangeType = %s\n", cs);
         }
@@ -1012,6 +1018,14 @@ public:
             return TRUE;
         } else if (bc == BUNDLE_CHECK_LINEAR_DOWN) {
             *weight = trigger / value;
+            return TRUE;
+        } else if (bc == BUNDLE_CHECK_QUADRATIC_UP) {
+            float x = value / trigger;
+            *weight = x * x;
+            return TRUE;
+        } else if (bc == BUNDLE_CHECK_QUADRATIC_DOWN) {
+            float x = trigger / value;
+            *weight = x * x;
             return TRUE;
         } else {
             PANIC("Unknown BundleCheckType: %d\n", bc);
@@ -1627,7 +1641,8 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MutationStrParams svf;
 
     const char *checkOptions[] = {
-        "never", "always", "strictOn", "strictOff", "linearUp", "linearDown"
+        "never", "always", "strictOn", "strictOff", "linearUp", "linearDown",
+        "quadraticUp", "quadraticDown"
     };
 
     CMBString s;
