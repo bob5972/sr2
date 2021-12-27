@@ -997,6 +997,12 @@ public:
         } else if (bc == BUNDLE_CHECK_ALWAYS) {
             *weight = 1.0f;
             return TRUE;
+        } else if (isnanf(trigger) || isnanf(value)) {
+            /*
+             * Throw out malformed values after checking for ALWAYS/NEVER.
+             */
+            *weight = 0.0f;
+            return FALSE;
         } else if (bc == BUNDLE_CHECK_STRICT_ON) {
             if (value >= trigger) {
                 *weight = 1.0f;
@@ -1013,6 +1019,24 @@ public:
                 *weight = 1.0f;
                 return TRUE;
             }
+        } else if (trigger <= 0.0f) {
+            /*
+             * For the DOWN checks, the force decreases to zero as the trigger
+             * approaches zero, so it makes sense to treat negative numbers
+             * as a disabled check.
+             *
+             * For the UP checks, the force value should be infinte as the
+             * trigger approaches zero, which we don't really have a good way
+             * to handle here.  The only things that make sense would be to
+             * hard code some weight (1.0f ?  1000.0f ?), or else treat this
+             * as an invalid value to disable the check.  Since any specific
+             * weight we could pick here still shows a discontinuous jump as
+             * we cross zero, treating this as disabled seems to not be any
+             * worse than that.  It's also nicely consistent with the DOWN
+             * checks.
+             */
+            *weight = 0.0f;
+            return FALSE;
         } else if (bc == BUNDLE_CHECK_LINEAR_UP) {
             *weight = value / trigger;
             return TRUE;
@@ -1071,17 +1095,12 @@ public:
             return;
         }
 
-        float radius = getBundleValue(mob, &bundle->radius);
-
-        if (isnanf(radius) || radius <= 0.0f) {
-            /* No force. */
-            return;
-        }
-
         float rweight;
+        float radius = 0.0f;
         float distance = 0.0f;
         if (!isConstantBundleCheck(bundle->rangeCheck)) {
             distance = FPoint_Distance(&mob->pos, focusPos);
+            radius = getBundleValue(mob, &bundle->radius);
         }
 
         if (!bundleCheck(bundle->rangeCheck, distance, radius, &rweight)) {
