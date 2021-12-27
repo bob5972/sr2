@@ -551,15 +551,12 @@ public:
     void flockSeparate(Mob *mob, FRPoint *rForce, BundleForce *bundle) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
-        float weight;
+        float cweight;
 
-        if (!crowdCheck(mob, bundle, &weight)) {
+        if (!crowdCheck(mob, bundle, &cweight)) {
             /* No force. */
             return;
         }
-
-        float radius = getBundleValue(mob, &bundle->radius);
-        weight *= getBundleValue(mob, &bundle->weight);
 
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
 
@@ -567,8 +564,7 @@ public:
             Mob *f = mit.next();
             ASSERT(f != NULL);
 
-            if (f->mobid != mob->mobid &&
-                FPoint_DistanceSquared(&f->pos, &mob->pos) <= radius * radius) {
+            if (f->mobid != mob->mobid) {
                 applyBundle(mob, rForce, bundle, &f->pos);
             }
         }
@@ -603,6 +599,12 @@ public:
         FleetAI *ai = myFleetAI;
         BundleForce *bundle = &myConfig.edges;
         FPoint edgePoint;
+        float cweight;
+
+        if (!crowdCheck(mob, bundle, &cweight)) {
+            /* No force. */
+            return;
+        }
 
         /*
          * Left Edge
@@ -638,6 +640,12 @@ public:
         FleetAI *ai = myFleetAI;
         BundleForce *bundle = &myConfig.edges;
         FPoint cornerPoint;
+        float cweight;
+
+        if (!crowdCheck(mob, bundle, &cweight)) {
+            /* No force. */
+            return;
+        }
 
         cornerPoint.x = 0.0f;
         cornerPoint.y = 0.0f;
@@ -825,6 +833,7 @@ public:
     }
 
     /*
+     * crowdCheck --
      * Should this force operate given the current crowd size?
      * Returns TRUE iff the force should operate.
      */
