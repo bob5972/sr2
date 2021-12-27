@@ -815,7 +815,7 @@ public:
             ASSERT(f != NULL);
 
             if (f->mobid != mob->mobid &&
-                FPoint_Distance(&f->pos, &mob->pos) <= radius) {
+                FPoint_DistanceSquared(&f->pos, &mob->pos) <= radius * radius) {
                 repulseVector(&repulseVec, &f->pos, &mob->pos, radius);
             }
         }
