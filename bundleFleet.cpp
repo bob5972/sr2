@@ -154,6 +154,7 @@ public:
     :BasicAIGovernor(ai, sg)
     {
         MBUtil_Zero(&myLive, sizeof(myLive));
+        MBUtil_Zero(&myCache, sizeof(myCache));
     }
 
     virtual ~BundleAIGovernor() { }
@@ -832,14 +833,35 @@ public:
         return retVal;
     }
 
+    float getCrowdCount(Mob *mob, float crowdRadius) {
+        FleetAI *ai = myFleetAI;
+        SensorGrid *sg = mySensorGrid;
+        uint tick = ai->tick;
+
+        /*
+         * Reuse the last value if this is a repeat call.
+         */
+        if (myCache.crowdCache.mobid == mob->mobid &&
+            myCache.crowdCache.tick == tick &&
+            myCache.crowdCache.radius == crowdRadius) {
+            return myCache.crowdCache.count;
+        }
+
+        myCache.crowdCache.mobid = mob->mobid;
+        myCache.crowdCache.tick = tick;
+        myCache.crowdCache.radius = crowdRadius;
+        myCache.crowdCache.count =
+            sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, crowdRadius);
+
+        return myCache.crowdCache.count;
+    }
+
     /*
      * crowdCheck --
      * Should this force operate given the current crowd size?
      * Returns TRUE iff the force should operate.
      */
     bool crowdCheck(Mob *mob, BundleForce *bundle, float *weight) {
-        SensorGrid *sg = mySensorGrid;
-
         float crowdTrigger = 0.0f;
         float crowdRadius = 0.0f;
         float crowdValue = 0.0f;
@@ -850,9 +872,7 @@ public:
         if (!isConstantBundleCheck(bundle->crowdCheck)) {
             crowdTrigger = getBundleValue(mob, &bundle->crowd.size);
             crowdRadius = getBundleValue(mob, &bundle->crowd.radius);
-
-            crowdValue = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                               &mob->pos, crowdRadius);
+            getCrowdCount(mob, crowdRadius);
         }
 
         return bundleCheck(bundle->crowdCheck, crowdValue, crowdTrigger,
@@ -1264,6 +1284,14 @@ public:
     struct {
         LiveLocusState fleetLocus;
     } myLive;
+    struct {
+        struct {
+            MobID mobid;
+            uint tick;
+            float radius;
+            float count;
+        } crowdCache;
+    } myCache;
 };
 
 class BundleFleet {
