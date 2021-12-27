@@ -187,43 +187,6 @@ public:
             { "sensorGrid.staleCoreTime",    "28.385160" },
             { "sensorGrid.staleFighterTime", "16.703636" },
 
-            { "cores.radius.value",          "166.7",    },
-            { "cores.weight.value",          "0.1",      },
-            { "cores.crowd.radius",          "166.7",    },
-            { "cores.crowd.size",            "0",        },
-
-            { "enemy.radius.value",          "166.7",    },
-            { "enemy.weight.value",          "0.3",      },
-            { "enemy.crowd.radius.value",    "166.7",    },
-            { "enemy.crowd.size.value",      "2",        },
-
-            { "enemyBase.radius.value",      "166.7",    },
-            { "enemyBase.weight.value",      "0.3",      },
-
-            { "align.radius.value",          "166.7",    },
-            { "align.weight.value",          "0.2",      },
-            { "aligin.crowd.radius.value",   "166.7",    },
-            { "aligin.crowd.size.value",     "3",        },
-
-            { "cohere.radius.value",         "166.7",    },
-            { "cohere.weight.value",         "0.1",      },
-            { "cohere.crowd.radius.value",   "166.7",    },
-            { "cohere.crowd.size.value",     "3",        },
-
-            { "separate.radius.value",       "150.0",    },
-            { "separate.weight.value",       "0.8",      },
-
-            { "attackSeparate.radius.value", "166.0",    },
-            { "attackSeparate.weight.value", "0.5",      },
-
-            { "curHeadingWeight.value",      "0.5",      },
-
-            { "center.radius.value",         "0.0",      },
-            { "center.weight.value",         "0.0",      },
-
-            { "edges.radius.value",          "100.0",    },
-            { "edges.weight.value",          "0.9",      },
-
             // Legacy Values
             { "randomIdle",           "TRUE",            },
             { "baseSpawnJitter",        "1",             },
@@ -233,175 +196,9 @@ public:
         };
 
         BundleConfigValue configs1[] = {
-            { "align.crowd.radius.amplitude", "0.321261", },
-            { "align.crowd.radius.period", "5953.474121", },
-            { "align.crowd.radius.value", "1807.180176", },
-            { "align.crowd.radius.valueType", "constant", },
-            { "align.crowd.size.amplitude", "0.429708", },
-            { "align.crowd.size.period", "9243.138672", },
-            { "align.crowd.size.value", "11.233359", },
-            { "align.crowd.size.valueType", "periodic", },
-            { "align.crowdType", "never", },
-            { "align.radius.amplitude", "0.566070", },
-            { "align.radius.period", "9900.000000", },
-            { "align.radius.value", "1350.809570", },
-            { "align.radius.valueType", "periodic", },
-            { "align.rangeType", "linearDown", },
-            { "align.weight.amplitude", "0.515353", },
-            { "align.weight.period", "9000.000000", },
-            { "align.weight.value", "0.533934", },
-            { "align.weight.valueType", "periodic", },
             { "attackExtendedRange", "FALSE", },
             { "attackRange", "117.644791", },
-            { "attackSeparate.crowd.radius.amplitude", "0.114193", },
-            { "attackSeparate.crowd.radius.period", "7805.395020", },
-            { "attackSeparate.crowd.radius.value", "388.137054", },
-            { "attackSeparate.crowd.radius.valueType", "periodic", },
-            { "attackSeparate.crowd.size.amplitude", "0.095685", },
-            { "attackSeparate.crowd.size.period", "8551.041992", },
-            { "attackSeparate.crowd.size.value", "8.597579", },
-            { "attackSeparate.crowd.size.valueType", "constant", },
-            { "attackSeparate.crowdType", "linearDown", },
-            { "attackSeparate.radius.amplitude", "1.000000", },
-            { "attackSeparate.radius.period", "1345.166748", },
-            { "attackSeparate.radius.value", "355.393280", },
-            { "attackSeparate.radius.valueType", "periodic", },
-            { "attackSeparate.rangeType", "always", },
-            { "attackSeparate.weight.amplitude", "0.766508", },
-            { "attackSeparate.weight.period", "5715.046875", },
-            { "attackSeparate.weight.value", "0.689100", },
-            { "attackSeparate.weight.valueType", "periodic", },
-            { "base.crowd.radius.amplitude", "0.600368", },
-            { "base.crowd.radius.period", "5266.161133", },
-            { "base.crowd.radius.value", "1078.740356", },
-            { "base.crowd.radius.valueType", "periodic", },
-            { "base.crowd.size.amplitude", "0.664938", },
-            { "base.crowd.size.period", "2936.962402", },
-            { "base.crowd.size.value", "0.521992", },
-            { "base.crowd.size.valueType", "constant", },
-            { "base.crowdType", "strictOff", },
-            { "base.radius.amplitude", "0.407606", },
-            { "base.radius.period", "4651.818359", },
-            { "base.radius.value", "970.598145", },
-            { "base.radius.valueType", "constant", },
-            { "base.rangeType", "strictOff", },
-            { "base.weight.amplitude", "0.753670", },
-            { "base.weight.period", "-1.000000", },
-            { "base.weight.value", "-1.416888", },
-            { "base.weight.valueType", "constant", },
             { "baseDefenseRadius", "143.515045", },
-            { "center.crowd.radius.amplitude", "0.733661", },
-            { "center.crowd.radius.period", "6119.505371", },
-            { "center.crowd.radius.value", "564.073486", },
-            { "center.crowd.radius.valueType", "periodic", },
-            { "center.crowd.size.amplitude", "1.000000", },
-            { "center.crowd.size.period", "8173.202148", },
-            { "center.crowd.size.value", "0.074628", },
-            { "center.crowd.size.valueType", "periodic", },
-            { "center.crowdType", "never", },
-            { "center.radius.amplitude", "1.000000", },
-            { "center.radius.period", "7462.924316", },
-            { "center.radius.value", "682.307922", },
-            { "center.radius.valueType", "constant", },
-            { "center.rangeType", "always", },
-            { "center.weight.amplitude", "0.806573", },
-            { "center.weight.period", "565.521851", },
-            { "center.weight.value", "-1.305155", },
-            { "center.weight.valueType", "constant", },
-            { "cohere.crowd.radius.amplitude", "0.756902", },
-            { "cohere.crowd.radius.period", "7789.553223", },
-            { "cohere.crowd.radius.value", "1782.000000", },
-            { "cohere.crowd.radius.valueType", "constant", },
-            { "cohere.crowd.size.amplitude", "1.000000", },
-            { "cohere.crowd.size.period", "-1.000000", },
-            { "cohere.crowd.size.value", "3.687377", },
-            { "cohere.crowd.size.valueType", "periodic", },
-            { "cohere.crowdType", "linearUp", },
-            { "cohere.radius.amplitude", "0.306166", },
-            { "cohere.radius.period", "10000.000000", },
-            { "cohere.radius.value", "1914.735596", },
-            { "cohere.radius.valueType", "periodic", },
-            { "cohere.rangeType", "linearDown", },
-            { "cohere.weight.amplitude", "0.266461", },
-            { "cohere.weight.period", "1867.322510", },
-            { "cohere.weight.value", "-0.507121", },
-            { "cohere.weight.valueType", "constant", },
-            { "cores.crowd.radius.amplitude", "0.525464", },
-            { "cores.crowd.radius.period", "6589.460938", },
-            { "cores.crowd.radius.value", "174.267288", },
-            { "cores.crowd.radius.valueType", "periodic", },
-            { "cores.crowd.size.amplitude", "0.055397", },
-            { "cores.crowd.size.period", "3110.003174", },
-            { "cores.crowd.size.value", "8.727318", },
-            { "cores.crowd.size.valueType", "constant", },
-            { "cores.crowdType", "linearDown", },
-            { "cores.radius.amplitude", "0.640855", },
-            { "cores.radius.period", "9444.480469", },
-            { "cores.radius.value", "35.896736", },
-            { "cores.radius.valueType", "periodic", },
-            { "cores.rangeType", "never", },
-            { "cores.weight.amplitude", "0.010756", },
-            { "cores.weight.period", "2880.781250", },
-            { "cores.weight.value", "1.0", },
-            { "cores.weight.valueType", "constant", },
-            { "curHeadingWeight.amplitude", "1.000000", },
-            { "curHeadingWeight.period", "2207.250000", },
-            { "curHeadingWeight.value", "-3.811037", },
-            { "curHeadingWeight.valueType", "constant", },
-            { "edges.crowd.radius.amplitude", "0.447709", },
-            { "edges.crowd.radius.period", "8368.186523", },
-            { "edges.crowd.radius.value", "1260.249023", },
-            { "edges.crowd.radius.valueType", "periodic", },
-            { "edges.crowd.size.amplitude", "0.000000", },
-            { "edges.crowd.size.period", "999.697876", },
-            { "edges.crowd.size.value", "6.702061", },
-            { "edges.crowd.size.valueType", "constant", },
-            { "edges.crowdType", "never", },
-            { "edges.radius.amplitude", "0.389971", },
-            { "edges.radius.period", "1560.454834", },
-            { "edges.radius.value", "50.840942", },
-            { "edges.radius.valueType", "constant", },
-            { "edges.rangeType", "strictOff", },
-            { "edges.weight.amplitude", "0", },
-            { "edges.weight.period", "0", },
-            { "edges.weight.value", "1.0", },
-            { "edges.weight.valueType", "constant", },
-            { "enemy.crowd.radius.amplitude", "0.798566", },
-            { "enemy.crowd.radius.period", "7607.696289", },
-            { "enemy.crowd.radius.value", "203.481049", },
-            { "enemy.crowd.radius.valueType", "constant", },
-            { "enemy.crowd.size.amplitude", "0.618705", },
-            { "enemy.crowd.size.period", "7847.218750", },
-            { "enemy.crowd.size.value", "20.000000", },
-            { "enemy.crowd.size.valueType", "periodic", },
-            { "enemy.crowdType", "always", },
-            { "enemy.radius.amplitude", "0.090641", },
-            { "enemy.radius.period", "3363.753906", },
-            { "enemy.radius.value", "611.284424", },
-            { "enemy.radius.valueType", "constant", },
-            { "enemy.rangeType", "strictOn", },
-            { "enemy.weight.amplitude", "0.958385", },
-            { "enemy.weight.period", "4596.960449", },
-            { "enemy.weight.value", "-1.185188", },
-            { "enemy.weight.valueType", "constant", },
-            { "enemyBase.crowd.radius.amplitude", "0.736067", },
-            { "enemyBase.crowd.radius.period", "6412.087402", },
-            { "enemyBase.crowd.radius.value", "1114.323120", },
-            { "enemyBase.crowd.radius.valueType", "periodic", },
-            { "enemyBase.crowd.size.amplitude", "1.000000", },
-            { "enemyBase.crowd.size.period", "909.905334", },
-            { "enemyBase.crowd.size.value", "10.031953", },
-            { "enemyBase.crowd.size.valueType", "periodic", },
-            { "enemyBase.crowdType", "always", },
-            { "enemyBase.radius.amplitude", "0.559740", },
-            { "enemyBase.radius.period", "4657.600586", },
-            { "enemyBase.radius.value", "693.966919", },
-            { "enemyBase.radius.valueType", "periodic", },
-            { "enemyBase.rangeType", "never", },
-            { "enemyBase.weight.amplitude", "0.121047", },
-            { "enemyBase.weight.period", "8157.837891", },
-            { "enemyBase.weight.value", "0.081705", },
-            { "enemyBase.weight.valueType", "constant", },
             { "evadeFighters", "FALSE", },
             { "evadeRange", "283.460571", },
             { "evadeStrictDistance", "87.064606", },
@@ -412,24 +209,6 @@ public:
             { "nearBaseRadius", "423.256439", },
             { "randomIdle", "TRUE", },
             { "rotateStartingAngle", "FALSE", },
-            { "separate.crowd.radius.amplitude", "0.141071", },
-            { "separate.crowd.radius.period", "2654.302979", },
-            { "separate.crowd.radius.value", "981.912476", },
-            { "separate.crowd.radius.valueType", "periodic", },
-            { "separate.crowd.size.amplitude", "0.782046", },
-            { "separate.crowd.size.period", "6823.173828", },
-            { "separate.crowd.size.value", "11.729516", },
-            { "separate.crowd.size.valueType", "constant", },
-            { "separate.crowdType", "linearUp", },
-            { "separate.radius.amplitude", "0.095367", },
-            { "separate.radius.period", "2932.626221", },
-            { "separate.radius.value", "2000.000000", },
-            { "separate.radius.valueType", "periodic", },
-            { "separate.rangeType", "strictOff", },
-            { "separate.weight.amplitude", "0.694014", },
-            { "separate.weight.period", "8443.943359", },
-            { "separate.weight.value", "1.573738", },
-            { "separate.weight.valueType", "constant", },
             { "startingMaxRadius", "1295.414795", },
             { "startingMinRadius", "642.803894", },
         };
@@ -767,30 +546,6 @@ public:
         applyBundle(mob, rForce, &myConfig.cohere, &avgPos);
     }
 
-    void repulseVector(FRPoint *repulseVec, FPoint *pos, FPoint *c,
-                       float repulseRadius) {
-        RandomState *rs = &myRandomState;
-
-        FRPoint drp;
-
-        FPoint_ToFRPoint(pos, c, &drp);
-
-        ASSERT(drp.radius >= 0.0f);
-        ASSERT(repulseRadius >= 0.0f);
-
-        if (drp.radius <= MICRON) {
-            drp.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
-            drp.radius = 1.0f;
-        } else {
-            float repulsion;
-            float k = (drp.radius / repulseRadius) + 1.0f;
-            repulsion = 1.0f / (k * k);
-            drp.radius = -1.0f * repulsion;
-        }
-
-        FRPoint_Add(&drp, repulseVec, repulseVec);
-    }
-
     void flockSeparate(Mob *mob, FRPoint *rForce, BundleForce *bundle) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         SensorGrid *sg = mySensorGrid;
@@ -805,10 +560,6 @@ public:
         weight *= getBundleValue(mob, &bundle->weight);
 
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
-        FRPoint repulseVec;
-
-        repulseVec.radius = 0.0f;
-        repulseVec.theta = 0.0f;
 
         while (mit.hasNext()) {
             Mob *f = mit.next();
@@ -816,12 +567,9 @@ public:
 
             if (f->mobid != mob->mobid &&
                 FPoint_DistanceSquared(&f->pos, &mob->pos) <= radius * radius) {
-                repulseVector(&repulseVec, &f->pos, &mob->pos, radius);
+                applyBundle(mob, rForce, bundle, &f->pos);
             }
         }
-
-        repulseVec.radius = weight;
-        FRPoint_Add(rForce, &repulseVec, rForce);
     }
 
     float edgeDistance(FPoint *pos) {
@@ -848,10 +596,11 @@ public:
         return edgeDistance;
     }
 
-    void flockEdges(Mob *mob, FRPoint *rPos) {
+    void flockEdges(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;
-        float radius = getBundleValue(mob, &myConfig.edges.radius);
+        BundleForce *bundle = &myConfig.edges;
+        float radius = getBundleValue(mob, &bundle->radius);
         float weight;
 
         if (edgeDistance(&mob->pos) >= radius) {
@@ -866,11 +615,6 @@ public:
 
         weight *= getBundleValue(mob, &myConfig.edges.weight);
 
-        FRPoint repulseVec;
-
-        repulseVec.radius = 0.0f;
-        repulseVec.theta = 0.0f;
-
         FPoint edgePoint;
 
         /*
@@ -879,8 +623,7 @@ public:
         edgePoint = mob->pos;
         edgePoint.x = 0.0f;
         if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          radius);
+            applyBundle(mob, rForce, bundle, &edgePoint);
         }
 
         /*
@@ -889,8 +632,7 @@ public:
         edgePoint = mob->pos;
         edgePoint.x = ai->bp.width;
         if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          radius);
+            applyBundle(mob, rForce, bundle, &edgePoint);
         }
 
         /*
@@ -899,8 +641,7 @@ public:
         edgePoint = mob->pos;
         edgePoint.y = 0.0f;
         if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          radius);
+            applyBundle(mob, rForce, bundle, &edgePoint);
         }
 
         /*
@@ -909,12 +650,8 @@ public:
         edgePoint = mob->pos;
         edgePoint.y = ai->bp.height;
         if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          radius);
+            applyBundle(mob, rForce, bundle, &edgePoint);
         }
-
-        repulseVec.radius = weight;
-        FRPoint_Add(rPos, &repulseVec, rPos);
     }
 
     float getMobJitter(Mob *m, float *value) {
@@ -1107,7 +844,8 @@ public:
                                                &mob->pos, crowdRadius);
         }
 
-        return bundleCheck(bundle->crowdCheck, crowdValue, crowdTrigger, weight);
+        return bundleCheck(bundle->crowdCheck, crowdValue, crowdTrigger,
+                           weight);
     }
 
     /*
@@ -1886,12 +1624,11 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "nearBaseRadius",        1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
         { "baseDefenseRadius",     1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
 
-        /*
-         * Not mutated:
-         *    creditReserve
-         *    sensorGrid.staleCoreTime
-         *    sensorGrid.staleFighterTime
-         */
+        { "sensorGrid.staleCoreTime",
+                                   0.0f,   50.0f,   0.05f, 0.2f, 0.001f},
+        { "sensorGrid.staleFighterTime",
+                                   0.0f,   20.0f,   0.05f, 0.2f, 0.001f},
+        { "creditReserve",       100.0f,  200.0f,   0.05f, 0.1f, 0.001f},
     };
 
     MutationBoolParams vb[] = {
