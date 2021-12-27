@@ -112,6 +112,8 @@ typedef struct BundleMobLocus {
     BundleAtom randomPeriod;
     BundleValue randomWeight;
     bool useScaled;
+    bool resetOnProximity;
+    BundleValue proximityRadius;
 } BundleMobLocus;
 
 typedef struct BundleSpec {
@@ -494,6 +496,17 @@ public:
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".useScaled");
         lp->useScaled = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".resetOnProximity");
+        lp->resetOnProximity =
+            MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".proximityRadius");
+        loadBundleValue(mreg, &lp->proximityRadius, MBString_GetCStr(&s));
 
         MBString_Destroy(&s);
     }
@@ -984,6 +997,19 @@ public:
 
         if (getLocusPoint(mob, &pp, randomPoint, &mobLocus)) {
             applyBundle(mob, rForce, &myConfig.mobLocus.force, &mobLocus);
+
+            float proximityRadius =
+                getBundleValue(mob, &myConfig.mobLocus.proximityRadius);
+
+            if (myConfig.mobLocus.resetOnProximity &&
+                proximityRadius > 0.0f &&
+                FPoint_Distance(&mobLocus, &mob->pos) <= proximityRadius) {
+                /*
+                 * If we're within the proximity radius, reset the random point
+                 * on the next tick.
+                 */
+                live->randomTick = 0;
+            }
         }
     }
 
@@ -1536,7 +1562,7 @@ static void MutateBundleFleetLocus(FleetAIType aiType, MBRegistry *mreg,
 
     MutationBoolParams vb[] = {
         // key                       mutation
-        { ".useScaledLocus",          0.01f},
+        { ".useScaled",          0.01f},
     };
 
     for (uint i = 0; i < ARRAYSIZE(vf); i++) {
@@ -1626,9 +1652,16 @@ static void MutateBundleMobLocus(FleetAIType aiType, MBRegistry *mreg,
     MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
                       MUTATION_TYPE_WEIGHT);
 
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".proximityRadius");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      MUTATION_TYPE_RADIUS);
+
     MutationBoolParams vb[] = {
-        // key                       mutation
-        { ".useScaledLocus",          0.01f},
+        // key                  mutation
+        { ".useScaled",          0.01f},
+        { ".resetOnProximity",   0.01f},
     };
 
     for (uint i = 0; i < ARRAYSIZE(vb); i++) {
