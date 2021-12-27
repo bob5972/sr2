@@ -1019,43 +1019,70 @@ public:
                 *weight = 1.0f;
                 return TRUE;
             }
-        } else if (trigger <= 0.0f) {
+        }
+
+
+        float localWeight;
+        float maxWeight = 100.0f;
+        if (trigger <= 0.0f) {
+            if (bc == BUNDLE_CHECK_LINEAR_DOWN ||
+                bc == BUNDLE_CHECK_QUADRATIC_DOWN) {
+                /*
+                 * For the DOWN checks, the force decreases to zero as the trigger
+                 * approaches zero, so it makes sense to treat negative numbers
+                 * as a disabled check.
+                 */
+                *weight = 0.0f;
+                return FALSE;
+            } else {
+                ASSERT(bc == BUNDLE_CHECK_LINEAR_UP ||
+                       bc == BUNDLE_CHECK_QUADRATIC_UP);
+
+                /*
+                * For the UP checks, the force value should be infinite as the
+                * trigger approaches zero, so use our clamped max force.
+                */
+                *weight = maxWeight;
+                return TRUE;
+            }
+        } else if (value <= 0.0f) {
             /*
-             * For the DOWN checks, the force decreases to zero as the trigger
-             * approaches zero, so it makes sense to treat negative numbers
-             * as a disabled check.
-             *
-             * For the UP checks, the force value should be infinte as the
-             * trigger approaches zero, which we don't really have a good way
-             * to handle here.  The only things that make sense would be to
-             * hard code some weight (1.0f ?  1000.0f ?), or else treat this
-             * as an invalid value to disable the check.  Since any specific
-             * weight we could pick here still shows a discontinuous jump as
-             * we cross zero, treating this as disabled seems to not be any
-             * worse than that.  It's also nicely consistent with the DOWN
-             * checks.
+             * These are the reverse of the trigger <= 0 checks above.
              */
-            *weight = 0.0f;
-            return FALSE;
+            if (bc == BUNDLE_CHECK_LINEAR_DOWN ||
+                bc == BUNDLE_CHECK_QUADRATIC_DOWN) {
+                *weight = maxWeight;
+                return TRUE;
+            } else {
+                ASSERT(bc == BUNDLE_CHECK_LINEAR_UP ||
+                       bc == BUNDLE_CHECK_QUADRATIC_UP);
+                *weight = 0.0f;
+                return FALSE;
+            }
         } else if (bc == BUNDLE_CHECK_LINEAR_UP) {
-            *weight = value / trigger;
-            return TRUE;
+            localWeight = value / trigger;
         } else if (bc == BUNDLE_CHECK_LINEAR_DOWN) {
-            *weight = trigger / value;
-            return TRUE;
+            localWeight = trigger / value;
         } else if (bc == BUNDLE_CHECK_QUADRATIC_UP) {
             float x = value / trigger;
-            *weight = x * x;
-            return TRUE;
+            localWeight = x * x;
         } else if (bc == BUNDLE_CHECK_QUADRATIC_DOWN) {
             float x = trigger / value;
-            *weight = x * x;
-            return TRUE;
+            localWeight = x * x;
         } else {
             PANIC("Unknown BundleCheckType: %d\n", bc);
         }
 
-        NOT_REACHED();
+        bool retVal = TRUE;
+        if (localWeight <= 0.0f || isnanf(localWeight)) {
+            localWeight = 0.0f;
+            retVal = FALSE;
+        } else if (localWeight >= maxWeight) {
+            localWeight = maxWeight;
+        }
+
+        *weight = localWeight;
+        return retVal;
     }
 
     /*
