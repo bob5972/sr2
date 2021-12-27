@@ -124,6 +124,7 @@ typedef struct BundleSpec {
 
     BundleForce center;
     BundleForce edges;
+    BundleForce corners;
 
     BundleForce cores;
     BundleForce base;
@@ -511,6 +512,7 @@ public:
 
         loadBundleForce(mreg, &this->myConfig.center, "center");
         loadBundleForce(mreg, &this->myConfig.edges, "edges");
+        loadBundleForce(mreg, &this->myConfig.corners, "corners");
         loadBundleForce(mreg, &this->myConfig.base, "base");
         loadBundleForce(mreg, &this->myConfig.baseDefense, "baseDefense");
 
@@ -600,21 +602,6 @@ public:
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;
         BundleForce *bundle = &myConfig.edges;
-        float radius = getBundleValue(mob, &bundle->radius);
-        float weight;
-
-        if (edgeDistance(&mob->pos) >= radius) {
-            /* No force. */
-            return;
-        }
-
-        if (!crowdCheck(mob, &myConfig.edges, &weight)) {
-            /* No force. */
-            return;
-        }
-
-        weight *= getBundleValue(mob, &myConfig.edges.weight);
-
         FPoint edgePoint;
 
         /*
@@ -622,36 +609,51 @@ public:
          */
         edgePoint = mob->pos;
         edgePoint.x = 0.0f;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            applyBundle(mob, rForce, bundle, &edgePoint);
-        }
+        applyBundle(mob, rForce, bundle, &edgePoint);
 
         /*
          * Right Edge
          */
         edgePoint = mob->pos;
         edgePoint.x = ai->bp.width;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            applyBundle(mob, rForce, bundle, &edgePoint);
-        }
+        applyBundle(mob, rForce, bundle, &edgePoint);
 
         /*
          * Top Edge
          */
         edgePoint = mob->pos;
         edgePoint.y = 0.0f;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            applyBundle(mob, rForce, bundle, &edgePoint);
-        }
+        applyBundle(mob, rForce, bundle, &edgePoint);
 
         /*
          * Bottom edge
          */
         edgePoint = mob->pos;
         edgePoint.y = ai->bp.height;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= radius) {
-            applyBundle(mob, rForce, bundle, &edgePoint);
-        }
+        applyBundle(mob, rForce, bundle, &edgePoint);
+    }
+
+    void flockCorners(Mob *mob, FRPoint *rForce) {
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+        FleetAI *ai = myFleetAI;
+        BundleForce *bundle = &myConfig.edges;
+        FPoint cornerPoint;
+
+        cornerPoint.x = 0.0f;
+        cornerPoint.y = 0.0f;
+        applyBundle(mob, rForce, bundle, &cornerPoint);
+
+        cornerPoint.x = ai->bp.width;
+        cornerPoint.y = 0.0f;
+        applyBundle(mob, rForce, bundle, &cornerPoint);
+
+        cornerPoint.x = 0.0f;
+        cornerPoint.y = ai->bp.height;
+        applyBundle(mob, rForce, bundle, &cornerPoint);
+
+        cornerPoint.x = ai->bp.width;
+        cornerPoint.y = ai->bp.height;
+        applyBundle(mob, rForce, bundle, &cornerPoint);
     }
 
     float getMobJitter(Mob *m, float *value) {
@@ -1183,6 +1185,7 @@ public:
             flockSeparate(mob, &rForce, &myConfig.separate);
 
             flockEdges(mob, &rForce);
+            flockCorners(mob, &rForce);
             flockCenter(mob, &rForce);
             flockBase(mob, &rForce);
             flockBaseDefense(mob, &rForce);
@@ -1668,6 +1671,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutateBundleForce(aiType, mreg, "center");
     MutateBundleForce(aiType, mreg, "edges");
+    MutateBundleForce(aiType, mreg, "corners");
     MutateBundleForce(aiType, mreg, "base");
     MutateBundleForce(aiType, mreg, "baseDefense");
 
