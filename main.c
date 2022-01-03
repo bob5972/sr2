@@ -37,6 +37,7 @@
 #include "workQueue.h"
 #include "MBString.h"
 #include "mutate.h"
+#include "MBStrTable.h"
 
 typedef enum MainEngineWorkType {
     MAIN_WORK_INVALID = 0,
@@ -1444,6 +1445,7 @@ int main(int argc, char **argv)
                RandomState_GetSeed(&mainData.rs));
 
     SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
+    MBStrTable_Init();
 
     WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
     WorkQueue_Create(&mainData.resultQ, sizeof(MainEngineResultUnit));
