@@ -18,14 +18,15 @@ sub Main() {
 
     my $defines = {};
 
-    if (! -f '/usr/lib64/libX11.so') {
-        Warning("libX11 NOT detected: disabling GUI\n");
-        $defines->{'SR2_GUI'} = FALSE;
-        $defines->{'OPENGL'} = FALSE;
-    } else {
+    if (-f '/usr/lib64/libX11.so' ||
+        -f '/usr/lib/x86_64-linux-gnu/libX11.so') {
         Warning("libX11 detected: enabling GUI\n");
         $defines->{'SR2_GUI'} = TRUE;
         $defines->{'OPENGL'} = TRUE;
+    } else {
+        Warning("libX11 NOT detected: disabling GUI\n");
+        $defines->{'SR2_GUI'} = FALSE;
+        $defines->{'OPENGL'} = FALSE;
     }
 
     MBBuild::Configure($defines);
@@ -38,4 +39,3 @@ eval {
    $exitCode = Main();
 }; Panic($@) if $@;
 exit $exitCode;
-
