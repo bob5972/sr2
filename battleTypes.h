@@ -148,7 +148,8 @@ typedef enum FleetAIType {
     FLEET_AI_FLOCK9      = 20,
     FLEET_AI_BUNDLE1     = 21,
     FLEET_AI_BUNDLE2     = 22,
-    FLEET_AI_BOB         = 23,
+    FLEET_AI_BUNDLE3     = 23,
+    FLEET_AI_BOB         = 24,
     FLEET_AI_MAX,
 } FleetAIType;
 

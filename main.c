@@ -240,6 +240,7 @@ void MainConstructScenario(void)
          *    BundleFleet1
          *    BundleFleet2
          *    FlockFleet2
+         *    BundleFleet3
          *    HoldFleet
          *    FlockFleet3
          *    FlockFleet4
@@ -280,8 +281,8 @@ void MainConstructScenario(void)
 //        mainData.players[p].aiType = FLEET_AI_COWARD;
 //        p++;
 
-        mainData.players[p].aiType = FLEET_AI_BASIC;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_BASIC;
+        // p++;
 
         // mainData.players[p].aiType = FLEET_AI_FLOCK2;
         // p++;
@@ -314,6 +315,9 @@ void MainConstructScenario(void)
         // p++;
 
         mainData.players[p].aiType = FLEET_AI_BUNDLE2;
+        p++;
+
+        mainData.players[p].aiType = FLEET_AI_BUNDLE3;
         p++;
 
         // mainData.players[p].aiType = FLEET_AI_BOB;
@@ -447,8 +451,8 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[*tpIndex].aiType = FLEET_AI_BUNDLE2;
-        targetPlayers[*tpIndex].playerName = "BundleFleet2.Test";
+        targetPlayers[*tpIndex].aiType = FLEET_AI_BUNDLE3;
+        targetPlayers[*tpIndex].playerName = "BundleFleet3.Test";
 
         // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
