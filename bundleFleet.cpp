@@ -1741,15 +1741,15 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutationBoolParams vb[] = {
         // key                       mutation
-        { "evadeFighters",            0.05f},
-        { "evadeUseStrictDistance",   0.05f},
-        { "attackExtendedRange",      0.05f},
-        { "rotateStartingAngle",      0.05f},
-        { "gatherAbandonStale",       0.05f},
-        { "randomIdle",               0.05f},
-        { "nearBaseRandomIdle",      0.001f},
-        { "randomizeStoppedVelocity", 0.05f},
-        { "simpleAttack",             0.05f},
+        { "evadeFighters",            0.05f },
+        { "evadeUseStrictDistance",   0.05f },
+        { "attackExtendedRange",      0.05f },
+        { "rotateStartingAngle",      0.05f },
+        { "gatherAbandonStale",       0.05f },
+        { "randomIdle",               0.05f },
+        { "nearBaseRandomIdle",       0.005f},
+        { "randomizeStoppedVelocity", 0.05f },
+        { "simpleAttack",             0.05f },
     };
 
     MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "FALSE");
