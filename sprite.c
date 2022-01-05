@@ -809,7 +809,7 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
     }
 
     if (ss >= SPRITE_SET_ALTAIR_PURPLE &&
-        ss <= SPRITE_SET_ALTAIR_PURPLE) {
+        ss <= SPRITE_SET_ALTAIR_BLUE3) {
         ASSERT(MOB_TYPE_BASE == 1);
         ASSERT(MOB_TYPE_FIGHTER == 2);
         ASSERT(MOB_TYPE_MISSILE == 3);
@@ -877,6 +877,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
 
         case FLEET_AI_BUNDLE1:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_PURPLE);
+        case FLEET_AI_BUNDLE2:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_PURPLE2);
 
         case FLEET_AI_BOB:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);

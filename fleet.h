@@ -104,6 +104,7 @@ static inline void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         { FLEET_AI_HOLD,        HoldFleet_GetOps        },
         { FLEET_AI_CIRCLE,      CircleFleet_GetOps      },
         { FLEET_AI_BUNDLE1,     BundleFleet_GetOps      },
+        { FLEET_AI_BUNDLE2,     BundleFleet_GetOps      },
     };
 
     ASSERT(aiType != FLEET_AI_INVALID);
