@@ -118,6 +118,9 @@ typedef struct BundleMobLocus {
 
 typedef struct BundleSpec {
     bool randomIdle;
+    bool nearBaseRandomIdle;
+    bool randomizeStoppedVelocity;
+    bool simpleAttack;
 
     BundleForce align;
     BundleForce cohere;
@@ -187,34 +190,40 @@ public:
 
     void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
         BundleConfigValue defaults[] = {
-            { "creditReserve",               "120.43817",},
+            { "attackExtendedRange",         "TRUE"      },
+            { "attackRange",                 "117.644791"},
+            { "baseDefenseRadius",           "143.515045"},
+            { "baseSpawnJitter",             "1"         },
+            { "creditReserve",               "200"       },
+
+            { "evadeFighters",               "FALSE"     },
+            { "evadeRange",                  "289.852631"},
+            { "evadeStrictDistance",         "105.764320"},
+            { "evadeUseStrictDistance",      "TRUE"      },
+
+            { "gatherAbandonStale",          "FALSE"     },
+            { "gatherRange",                 "50"        },
+            { "guardRange",                  "0"         },
+
+            { "nearBaseRandomIdle",          "TRUE"      },
+            { "randomIdle",                  "TRUE"      },
+            { "randomizeStoppedVelocity",    "TRUE"      },
+            { "rotateStartingAngle",         "TRUE",     },
+            { "simpleAttack",                "TRUE"      },
+
+            { "nearBaseRadius",              "100.0"     },
+            { "baseDefenseRadius",           "250.0"     },
+
             { "sensorGrid.staleCoreTime",    "28.385160" },
             { "sensorGrid.staleFighterTime", "16.703636" },
 
-            // Legacy Values
-            { "randomIdle",           "TRUE",            },
-            { "baseSpawnJitter",        "1",             },
-
-            { "nearBaseRadius",       "250.0",           },
-            { "baseDefenseRadius",    "250.0",           },
+            { "startingMaxRadius",           "300"       },
+            { "startingMinRadius",           "250"       },
         };
 
         BundleConfigValue configs1[] = {
-            { "attackExtendedRange", "FALSE", },
-            { "attackRange", "117.644791", },
-            { "baseDefenseRadius", "143.515045", },
-            { "evadeFighters", "FALSE", },
-            { "evadeRange", "283.460571", },
-            { "evadeStrictDistance", "87.064606", },
-            { "evadeUseStrictDistance", "FALSE", },
-            { "gatherAbandonStale", "TRUE", },
-            { "gatherRange", "216.282059", },
-            { "guardRange", "-0.902500", },
-            { "nearBaseRadius", "423.256439", },
-            { "randomIdle", "TRUE", },
-            { "rotateStartingAngle", "FALSE", },
-            { "startingMaxRadius", "1295.414795", },
-            { "startingMinRadius", "642.803894", },
+            { "curHeadingWeight.value.value", "1"        },
+            { "curHeadingWeight.valueType",   "constant" },
         };
 
         BundleConfigValue *configDefaults;
@@ -514,6 +523,11 @@ public:
 
     virtual void loadRegistry(MBRegistry *mreg) {
         this->myConfig.randomIdle = MBRegistry_GetBool(mreg, "randomIdle");
+        this->myConfig.nearBaseRandomIdle =
+            MBRegistry_GetBool(mreg, "nearBaseRandomIdle");
+        this->myConfig.randomizeStoppedVelocity =
+            MBRegistry_GetBool(mreg, "randomizeStoppedVelocity");
+        this->myConfig.simpleAttack = MBRegistry_GetBool(mreg, "simpleAttack");
 
         loadBundleForce(mreg, &this->myConfig.align, "align");
         loadBundleForce(mreg, &this->myConfig.cohere, "cohere");
@@ -1190,8 +1204,14 @@ public:
     }
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+
         BasicAIGovernor::doAttack(mob, enemyTarget);
+
+        if (myConfig.simpleAttack) {
+            return;
+        }
+
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         FRPoint rPos;
         FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
@@ -1219,6 +1239,11 @@ public:
             return;
         }
 
+        if (newlyIdle && myConfig.randomIdle) {
+            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+        }
+
         nearBase = FALSE;
         if (base != NULL &&
             myConfig.nearBaseRadius > 0.0f &&
@@ -1231,6 +1256,11 @@ public:
 
             FRPoint_Zero(&rForce);
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+
+            if (myConfig.randomizeStoppedVelocity &&
+                rPos.radius < MICRON) {
+                rPos.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+            }
 
             rForce.theta = rPos.theta;
             rForce.radius = getBundleValue(mob, &myConfig.curHeadingWeight);
@@ -1250,13 +1280,18 @@ public:
             flockFleetLocus(mob, &rForce);
             flockMobLocus(mob, &rForce);
 
+            if (myConfig.randomizeStoppedVelocity &&
+                rForce.radius < MICRON) {
+                rForce.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+            }
+
             rForce.radius = speed;
 
             FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
         } else if (newlyIdle) {
-            if (myConfig.randomIdle) {
+            if (myConfig.nearBaseRandomIdle) {
                 mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
                 mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
             }
@@ -1706,12 +1741,15 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutationBoolParams vb[] = {
         // key                       mutation
-        { "evadeFighters",           0.05f},
-        { "evadeUseStrictDistance",  0.05f},
-        { "attackExtendedRange",     0.05f},
-        { "rotateStartingAngle",     0.05f},
-        { "gatherAbandonStale",      0.05f},
-        { "randomIdle",              0.01f},
+        { "evadeFighters",            0.05f},
+        { "evadeUseStrictDistance",   0.05f},
+        { "attackExtendedRange",      0.05f},
+        { "rotateStartingAngle",      0.05f},
+        { "gatherAbandonStale",       0.05f},
+        { "randomIdle",               0.05f},
+        { "nearBaseRandomIdle",      0.001f},
+        { "randomizeStoppedVelocity", 0.05f},
+        { "simpleAttack",             0.05f},
     };
 
     MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "FALSE");
