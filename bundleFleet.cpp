@@ -1733,10 +1733,10 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "baseDefenseRadius",     1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
 
         { "sensorGrid.staleCoreTime",
-                                   0.0f,   50.0f,   0.05f, 0.2f, 0.001f},
+                                   0.0f,   50.0f,   0.05f, 0.2f, 0.005f},
         { "sensorGrid.staleFighterTime",
-                                   0.0f,   20.0f,   0.05f, 0.2f, 0.001f},
-        { "creditReserve",       100.0f,  200.0f,   0.05f, 0.1f, 0.001f},
+                                   0.0f,   20.0f,   0.05f, 0.2f, 0.005f},
+        { "creditReserve",       100.0f,  200.0f,   0.05f, 0.1f, 0.005f},
     };
 
     MutationBoolParams vb[] = {
