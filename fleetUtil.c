@@ -40,7 +40,7 @@ Mob *FleetUtil_FindClosestMob(MobPSet *ms, const FPoint *pos, uint filter)
             continue;
         }
         if (((1 << m->type) & filter) != 0) {
-            float curDistance = FPoint_Distance(pos, &m->pos);
+            float curDistance = FPoint_DistanceSquared(pos, &m->pos);
             if (best == NULL || curDistance < distance) {
                 distance = curDistance;
                 best = m;
