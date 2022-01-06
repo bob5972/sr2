@@ -124,6 +124,7 @@ typedef struct BundleSpec {
     BundleForce cohere;
     BundleForce separate;
     BundleForce attackSeparate;
+    BundleForce nearestFriend;
 
     BundleForce center;
     BundleForce edges;
@@ -1510,6 +1511,7 @@ public:
         loadBundleForce(mreg, &this->myConfig.cohere, "cohere");
         loadBundleForce(mreg, &this->myConfig.separate, "separate");
         loadBundleForce(mreg, &this->myConfig.attackSeparate, "attackSeparate");
+        loadBundleForce(mreg, &this->myConfig.nearestFriend, "nearestFriend");
 
         loadBundleForce(mreg, &this->myConfig.cores, "cores");
         loadBundleForce(mreg, &this->myConfig.enemy, "enemy");
@@ -1573,6 +1575,21 @@ public:
                 applyBundle(mob, rForce, bundle, &f->pos);
             }
         }
+    }
+
+    void flockNearestFriend(Mob *mob, FRPoint *rForce) {
+        SensorGrid *sg = mySensorGrid;
+        Mob *m;
+        int n = 0;
+
+        do {
+            m = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
+
+            if (m != NULL && m->mobid != mob->mobid) {
+                applyBundle(mob, rForce, &myConfig.nearestFriend, &m->pos);
+                return;
+            }
+        } while (m != NULL);
     }
 
     float edgeDistance(FPoint *pos) {
@@ -2252,6 +2269,7 @@ public:
             flockAlign(mob, &rForce);
             flockCohere(mob, &rForce);
             flockSeparate(mob, &rForce, &myConfig.separate);
+            flockNearestFriend(mob, &rForce);
 
             flockEdges(mob, &rForce);
             flockCorners(mob, &rForce);
@@ -2759,6 +2777,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     MutateBundleForce(aiType, mreg, "cohere");
     MutateBundleForce(aiType, mreg, "separate");
     MutateBundleForce(aiType, mreg, "attackSeparate");
+    MutateBundleForce(aiType, mreg, "nearestFriend");
 
     MutateBundleForce(aiType, mreg, "cores");
     MutateBundleForce(aiType, mreg, "enemy");

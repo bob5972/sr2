@@ -108,7 +108,6 @@ public:
         return myTargets.numMobsInRange(filter, pos, range);
     }
 
-
     /**
      * Find the friendly mob closest to the specified point.
      */
