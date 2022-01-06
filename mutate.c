@@ -34,7 +34,18 @@ void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mpa, uint32 numParams)
 
             if (!MBRegistry_ContainsKey(mreg, mp->key) ||
                 Random_Flip(mp->jumpRate)) {
-                value = Random_Float(mp->minValue, mp->maxValue);
+                /*
+                 * Bias jumps slightly towards interesting values.
+                 */
+                if (Random_Flip(0.01)) {
+                    float f[] = {
+                        -1.0f, 0.0f, 1.0f, mp->minValue, mp->maxValue,
+                    };
+                    uint32 r = Random_Uint32() % ARRAYSIZE(f);
+                    value = f[r];
+                } else {
+                    value = Random_Float(mp->minValue, mp->maxValue);
+                }
             } else if (Random_Bit()) {
                 if (Random_Bit()) {
                     value *= 1.0f - mp->magnitude;
