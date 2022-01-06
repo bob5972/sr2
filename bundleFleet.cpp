@@ -147,6 +147,8 @@ typedef struct BundleSpec {
     BundleMobLocus mobLocus;
 } BundleSpec;
 
+#define NUM_MOB_JITTERS (sizeof(BundleSpec) / sizeof(float))
+
 typedef struct BundleConfigValue {
     const char *key;
     const char *value;
@@ -170,16 +172,16 @@ public:
         BundleShipAI(MobID mobid, BundleAIGovernor *gov)
         :BasicShipAI(mobid, gov)
         {
-            CMBVarMap_Create(&myMobJitters);
             MBUtil_Zero(&myShipLive, sizeof(myShipLive));
         }
 
-        virtual ~BundleShipAI() {
-            CMBVarMap_Destroy(&myMobJitters);
-        }
+        virtual ~BundleShipAI() {}
 
-        CMBVarMap myMobJitters;
         struct {
+            struct {
+                float value;
+                bool initialized;
+            } mobJitters[NUM_MOB_JITTERS];
             LiveLocusState mobLocus;
         } myShipLive;
     };
@@ -1200,7 +1202,6 @@ public:
             { "startingMinRadius", "673.257263" },
         };
 
-
         struct {
             BundleConfigValue *values;
             uint numValues;
@@ -1670,28 +1671,35 @@ public:
         applyBundle(mob, rForce, bundle, &cornerPoint);
     }
 
+    int getMobJitterIndex(float *valuePtr) {
+        uintptr_t value = (uintptr_t)valuePtr;
+        uintptr_t configStart = (uintptr_t)&myConfig;
+        uintptr_t configEnd = (uintptr_t)&((&myConfig)[1]);
+        ASSERT(value >= configStart && value + sizeof(float) <= configEnd);
+        ASSERT(value % sizeof(float) == 0);
+        int index = (value - configStart) / sizeof(float);
+        ASSERT(index >= 0);
+        ASSERT(index < NUM_MOB_JITTERS);
+        return index;
+    }
+
     float getMobJitter(Mob *m, float *value) {
         RandomState *rs = &myRandomState;
-        MBVar key;
-        MBVar mj;
 
         BundleShipAI *ship = (BundleShipAI *)getShip(m->mobid);
-
         ASSERT(ship != NULL);
-        ASSERT(value >= (void *)&myConfig && value < (void *)&(&myConfig)[1]);
 
         if (*value <= 0.0f) {
             return 0.0f;
         }
 
-        key.all = 0;
-        key.vPtr = value;
-        if (!CMBVarMap_Lookup(&ship->myMobJitters, key, &mj)) {
-            mj.vFloat = RandomState_Float(rs, -*value, *value);
-            CMBVarMap_Put(&ship->myMobJitters, key, mj);
+        int index = getMobJitterIndex(value);
+        if (!ship->myShipLive.mobJitters[index].initialized) {
+            ship->myShipLive.mobJitters[index].value =
+                RandomState_Float(rs, -*value, *value);
         }
 
-        return mj.vFloat;
+        return ship->myShipLive.mobJitters[index].value;
     }
 
     /*
