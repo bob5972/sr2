@@ -107,6 +107,17 @@ Mob *MobSet::findClosestMob(const FPoint *pos,
     return best;
 }
 
+void MobSet::pushMobs(MBVector<Mob *> &v, MobTypeFlags filter) {
+    v.ensureCapacity(v.size() + myMobs.size());
+
+    for (uint i = 0; i < myMobs.size(); i++) {
+        Mob *m = &myMobs[i];
+        if (((1 << m->type) & filter) != 0) {
+            v.push(m);
+        }
+    }
+}
+
 Mob *MobSet::findNthClosestMob(const FPoint *pos,
                                MobTypeFlags filter, int n)
 {

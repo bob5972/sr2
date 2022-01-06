@@ -116,14 +116,14 @@ public:
     }
 
 
-
     /**
      * Find the Nth closest mob to the specified point.
      * This is 0-based, so the closest mob is found when n=0.
      */
     Mob *findNthClosestMob(const FPoint *pos, MobTypeFlags filter, int n);
-
     Mob *findClosestMob(const FPoint *pos, MobTypeFlags filter);
+
+    void pushMobs(MBVector<Mob *> &v, MobTypeFlags filter);
 
     class MobIt {
     public:

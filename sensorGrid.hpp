@@ -222,6 +222,14 @@ public:
         return myFriends.iterator(filter);
     }
 
+    void pushFriends(MBVector<Mob *> &v, MobTypeFlags filter) {
+        myFriends.pushMobs(v, filter);
+    }
+
+    void pushTargets(MBVector<Mob *> &v, MobTypeFlags filter) {
+        myTargets.pushMobs(v, filter);
+    }
+
     /**
      * Return the tick we last scanned the specified mob at, if it's
      * still tracked on the SensorGrid.

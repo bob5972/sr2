@@ -1160,30 +1160,32 @@ public:
         Mob *base = sg->friendBase();
 
         if (base != NULL) {
-            int numEnemies = sg->numTargetsInRange(MOB_FLAG_SHIP, &base->pos,
-                                                   myConfig.baseDefenseRadius);
+            MBVector<Mob *> fv;
+            MBVector<Mob *>tv;
             int f = 0;
-            int e = 0;
+            int t = 0;
 
-            Mob *fighter = sg->findNthClosestFriend(&base->pos,
-                                                    MOB_FLAG_FIGHTER, f++);
-            Mob *enemyTarget = sg->findNthClosestTarget(&base->pos,
-                                                        MOB_FLAG_SHIP, e++);
+            sg->pushFriends(fv, MOB_FLAG_FIGHTER);
+            sg->pushTargets(tv, MOB_FLAG_SHIP);
 
-            while (numEnemies > 0 && fighter != NULL) {
+            CMBComparator comp;
+            MobP_InitDistanceComparator(&comp, &base->pos);
+
+            fv.sort(MBComparator<Mob *>(&comp));
+            tv.sort(MBComparator<Mob *>(&comp));
+
+            Mob *fighter = (f < fv.size()) ? fv[f++] : NULL;
+            Mob *target = (t < tv.size()) ? tv[t++] : NULL;
+
+            while (target != NULL && fighter != NULL &&
+                   FPoint_Distance(&target->pos, &base->pos) <=
+                   myConfig.baseDefenseRadius) {
                 BasicShipAI *ship = (BasicShipAI *)getShip(fighter->mobid);
 
-                if (enemyTarget != NULL) {
-                    ship->attack(enemyTarget);
-                }
+                ship->attack(target);
 
-                fighter = sg->findNthClosestFriend(&base->pos,
-                                                   MOB_FLAG_FIGHTER, f++);
-
-                enemyTarget = sg->findNthClosestTarget(&base->pos,
-                                                       MOB_FLAG_SHIP, e++);
-
-                numEnemies--;
+                fighter = (f < fv.size()) ? fv[f++] : NULL;
+                target = (t < tv.size()) ? tv[t++] : NULL;
             }
         }
     }

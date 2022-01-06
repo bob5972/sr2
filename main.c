@@ -290,8 +290,8 @@ void MainConstructScenario(void)
         // mainData.players[p].aiType = FLEET_AI_HOLD;
         // p++;
 
-        // mainData.players[p].aiType = FLEET_AI_FLOCK3;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_FLOCK3;
+        p++;
 
         // mainData.players[p].aiType = FLEET_AI_FLOCK4;
         // p++;
@@ -314,8 +314,8 @@ void MainConstructScenario(void)
         // mainData.players[p].aiType = FLEET_AI_BUNDLE1;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_BUNDLE2;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_BUNDLE2;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_BUNDLE3;
         p++;
