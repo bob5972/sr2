@@ -22,8 +22,6 @@ extern "C" {
 #include "battle.h"
 }
 
-#include "MBVarMap.h"
-
 #include "mutate.h"
 #include "MBUtil.h"
 
