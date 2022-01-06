@@ -2288,25 +2288,22 @@ public:
 
         if (base != NULL) {
             MBVector<Mob *> fv;
-            MBVector<Mob *>tv;
+            MBVector<Mob *> tv;
             int f = 0;
             int t = 0;
 
             sg->pushFriends(fv, MOB_FLAG_FIGHTER);
-            sg->pushTargets(tv, MOB_FLAG_SHIP);
+            sg->pushClosestTargetsInRange(tv, MOB_FLAG_SHIP, &base->pos,
+                                          myConfig.baseDefenseRadius);
 
             CMBComparator comp;
             MobP_InitDistanceComparator(&comp, &base->pos);
-
             fv.sort(MBComparator<Mob *>(&comp));
-            tv.sort(MBComparator<Mob *>(&comp));
 
             Mob *fighter = (f < fv.size()) ? fv[f++] : NULL;
             Mob *target = (t < tv.size()) ? tv[t++] : NULL;
 
-            while (target != NULL && fighter != NULL &&
-                   FPoint_Distance(&target->pos, &base->pos) <=
-                   myConfig.baseDefenseRadius) {
+            while (target != NULL && fighter != NULL) {
                 BasicShipAI *ship = (BasicShipAI *)getShip(fighter->mobid);
 
                 ship->attack(target);

@@ -226,8 +226,18 @@ public:
         myFriends.pushMobs(v, filter);
     }
 
+    void pushClosestFriendsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
+                                   const FPoint *pos, float range) {
+        myFriends.pushClosestMobsInRange(v, filter, pos, range);
+    }
+
     void pushTargets(MBVector<Mob *> &v, MobTypeFlags filter) {
         myTargets.pushMobs(v, filter);
+    }
+
+    void pushClosestTargetsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
+                                   const FPoint *pos, float range) {
+        myTargets.pushClosestMobsInRange(v, filter, pos, range);
     }
 
     /**

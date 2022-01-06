@@ -125,6 +125,13 @@ public:
 
     void pushMobs(MBVector<Mob *> &v, MobTypeFlags filter);
 
+    /*
+     * Push all the mobs that match filter and are in the specified range,
+     * and sort them ascending by distance.
+     */
+    void pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
+                                const FPoint *pos, float range);
+
     class MobIt {
     public:
         MobIt(MobSet *ms, MobTypeFlags filter) {
