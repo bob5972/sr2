@@ -1581,6 +1581,12 @@ public:
         SensorGrid *sg = mySensorGrid;
         Mob *m;
         int n = 0;
+        float cweight;
+
+        if (!crowdCheck(mob, &myConfig.nearestFriend, &cweight)) {
+            /* No force. */
+            return;
+        }
 
         do {
             m = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
