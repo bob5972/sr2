@@ -84,20 +84,47 @@ void MobSet::removeMob(MobID badMobid)
     myMap.remove(badMobid);
 }
 
+Mob *MobSet::findClosestMob(const FPoint *pos,
+                            MobTypeFlags filter)
+{
+    Mob *best = NULL;
+    float bestDistance;
+    uint32 size = myMobs.size();
+
+    ASSERT(filter != 0);
+
+    for (uint i = 0; i < size; i++) {
+        Mob *m = &myMobs[i];
+        if (((1 << m->type) & filter) != 0) {
+            float curDistance = FPoint_DistanceSquared(pos, &m->pos);
+            if (best == NULL || curDistance < bestDistance) {
+                best = m;
+                bestDistance = curDistance;
+            }
+        }
+    }
+
+    return best;
+}
+
 Mob *MobSet::findNthClosestMob(const FPoint *pos,
                                MobTypeFlags filter, int n)
 {
+    uint32 size = myMobs.size();
+
     ASSERT(n >= 0);
     ASSERT(filter != 0);
 
-    if (n >= myMobs.size()) {
+    if (n == 0) {
+        return findClosestMob(pos, filter);
+    } else if (n >= size) {
         return NULL;
     }
 
     MBVector<Mob *> v;
-    v.ensureCapacity(myMobs.size());
+    v.ensureCapacity(size);
 
-    for (uint i = 0; i < myMobs.size(); i++) {
+    for (uint i = 0; i < size; i++) {
         Mob *m = &myMobs[i];
         if (((1 << m->type) & filter) != 0) {
             v.push(m);
@@ -110,14 +137,8 @@ Mob *MobSet::findNthClosestMob(const FPoint *pos,
 
     CMBComparator comp;
     MobP_InitDistanceComparator(&comp, pos);
-
-    if (n == 0) {
-        int min = v.findMin(MBComparator<Mob *>(&comp));
-        return v[min];
-    } else {
-        v.sort(MBComparator<Mob *>(&comp));
-        return v[n];
-    }
+    v.sort(MBComparator<Mob *>(&comp));
+    return v[n];
 }
 
 Mob *MobSet::getBase()
