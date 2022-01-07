@@ -242,6 +242,7 @@ void MainConstructScenario(void)
          *    FlockFleet2
          *    BundleFleet3
          *    HoldFleet
+         *    BundleFleet4
          *    FlockFleet3
          *    FlockFleet4
          *    FlockFleet5
@@ -317,7 +318,10 @@ void MainConstructScenario(void)
         // mainData.players[p].aiType = FLEET_AI_BUNDLE2;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_BUNDLE3;
+        // mainData.players[p].aiType = FLEET_AI_BUNDLE3;
+        // p++;
+
+        mainData.players[p].aiType = FLEET_AI_BUNDLE4;
         p++;
 
         // mainData.players[p].aiType = FLEET_AI_BOB;
