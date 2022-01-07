@@ -216,6 +216,12 @@ protected:
         return myAIData[i];
     }
 
+public:
+    // XXX: Merge this into fleet driver?
+    void *getShipHandle(MobID mobid) {
+        return getShip(mobid);
+    }
+
 private:
     IntMap myMap;
     MBVector<ShipAI *> myAIData;

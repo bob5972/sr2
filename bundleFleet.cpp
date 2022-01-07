@@ -2364,7 +2364,8 @@ public:
     float getMobJitter(Mob *m, float *value) {
         RandomState *rs = &myRandomState;
 
-        BundleShipAI *ship = (BundleShipAI *)getShip(m->mobid);
+        BundleShipAI *ship = (BundleShipAI *)m->aiMobHandle;
+        ASSERT(ship == (BundleShipAI *)getShip(m->mobid));
         ASSERT(ship != NULL);
 
         if (*value <= 0.0f) {
@@ -2643,14 +2644,16 @@ public:
         FPoint *randomPoint = NULL;
         uint tick = myFleetAI->tick;
         BundleLocusPointParams pp;
-        BundleShipAI *ship = (BundleShipAI *)getShip(mob->mobid);
         float randomPeriod = getBundleAtom(mob, &myConfig.mobLocus.randomPeriod);
         float randomWeight = getBundleValue(mob, &myConfig.mobLocus.randomWeight);
         LiveLocusState *live;
         float width = myFleetAI->bp.width;
         float height = myFleetAI->bp.height;
 
+        BundleShipAI *ship = (BundleShipAI *)mob->aiMobHandle;
+        ASSERT(ship == (BundleShipAI *)getShip(mob->mobid));
         ASSERT(ship != NULL);
+
         live = &ship->myShipLive.mobLocus;
 
         if (randomPeriod > 0.0f && randomWeight != 0.0f) {
@@ -2889,10 +2892,13 @@ public:
         FleetAI *ai = myFleetAI;
         RandomState *rs = &myRandomState;
         SensorGrid *sg = mySensorGrid;
-        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
         Mob *base = sg->friendBase();
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         bool nearBase;
+
+        BundleShipAI *ship = (BundleShipAI *)mob->aiMobHandle;
+        ASSERT(ship == (BundleShipAI *)getShip(mob->mobid));
+        ASSERT(ship != NULL);
 
         ASSERT(ship != NULL);
 
@@ -2991,7 +2997,9 @@ public:
             Mob *target = (t < tv.size()) ? tv[t++] : NULL;
 
             while (target != NULL && fighter != NULL) {
-                BasicShipAI *ship = (BasicShipAI *)getShip(fighter->mobid);
+                BundleShipAI *ship = (BundleShipAI *)fighter->aiMobHandle;
+                ASSERT(ship == (BundleShipAI *)getShip(fighter->mobid));
+                ASSERT(ship != NULL);
 
                 ship->attack(target);
 
@@ -3483,7 +3491,7 @@ static void *BundleFleetMobSpawned(void *aiHandle, Mob *m)
     ASSERT(m != NULL);
 
     sf->gov.addMobid(m->mobid);
-    return NULL;
+    return sf->gov.getShipHandle(m->mobid);
 }
 
 /*
