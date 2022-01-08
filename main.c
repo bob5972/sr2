@@ -885,8 +885,11 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             numTargetFleets++;
         }
 
-        mainPlayers[*mpIndex].aiType =
-            Fleet_GetTypeFromName(MBRegistry_GetCStr(fleetReg, "fleetName"));
+        const char *fleetName = MBRegistry_GetCStr(fleetReg, "fleetName");
+        mainPlayers[*mpIndex].aiType = Fleet_GetTypeFromName(fleetName);
+        if (mainPlayers[*mpIndex].aiType == FLEET_AI_INVALID) {
+            PANIC("Unknown Fleet Name: %s\n", fleetName);
+        }
         (*mpIndex)++;
     }
 
