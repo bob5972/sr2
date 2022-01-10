@@ -54,7 +54,8 @@ PlayerType_ToString(PlayerType type)
 static INLINE PlayerType
 PlayerType_FromString(const char *str)
 {
-    if (strcmp(str, "PlayerTypeInvalid") == 0) {
+    if (str == NULL ||
+        strcmp(str, "PlayerTypeInvalid") == 0) {
         return PLAYER_TYPE_INVALID;
     } else if (strcmp(str, "Neutral") == 0) {
         return PLAYER_TYPE_NEUTRAL;
