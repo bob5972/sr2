@@ -119,6 +119,7 @@ typedef struct BundleSpec {
     bool nearBaseRandomIdle;
     bool randomizeStoppedVelocity;
     bool simpleAttack;
+    bool flockDuringAttack;
 
     BundleForce align;
     BundleForce cohere;
@@ -2798,6 +2799,8 @@ public:
         this->myConfig.randomizeStoppedVelocity =
             MBRegistry_GetBool(mreg, "randomizeStoppedVelocity");
         this->myConfig.simpleAttack = MBRegistry_GetBool(mreg, "simpleAttack");
+        this->myConfig.flockDuringAttack =
+            MBRegistry_GetBool(mreg, "flockDuringAtttack");
 
         loadBundleForce(mreg, &this->myConfig.align, "align");
         loadBundleForce(mreg, &this->myConfig.cohere, "cohere");
@@ -3509,18 +3512,20 @@ public:
 
         BasicAIGovernor::doAttack(mob, enemyTarget);
 
-        if (myConfig.simpleAttack) {
-            return;
+        if (!myConfig.simpleAttack) {
+            float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+            FRPoint rPos;
+            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+
+            flockSeparate(mob, &rPos, &myConfig.attackSeparate);
+
+            rPos.radius = speed;
+            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
         }
 
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-        FRPoint rPos;
-        FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-
-        flockSeparate(mob, &rPos, &myConfig.attackSeparate);
-
-        rPos.radius = speed;
-        FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+        if (myConfig.flockDuringAttack) {
+            doIdle(mob, FALSE);
+        }
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
@@ -4065,6 +4070,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "nearBaseRandomIdle",       0.005f},
         { "randomizeStoppedVelocity", 0.05f },
         { "simpleAttack",             0.05f },
+        { "flockDuringAttack",        0.05f },
     };
 
     MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "FALSE");
