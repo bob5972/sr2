@@ -885,6 +885,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_YELLOW2);
         case FLEET_AI_BUNDLE5:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_RED2);
+        case FLEET_AI_BUNDLE6:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_RED);
 
         case FLEET_AI_BOB:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
