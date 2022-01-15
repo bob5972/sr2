@@ -244,6 +244,7 @@ void MainConstructScenario(void)
          *    HoldFleet
          *    BundleFleet4
          *    BundleFleet5
+         *    BundleFleet6
          *    FlockFleet3
          *    FlockFleet4
          *    FlockFleet5
