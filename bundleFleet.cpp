@@ -62,7 +62,6 @@ typedef struct BundlePeriodicParams {
 typedef struct BundleValue {
     BundleValueFlags flags;
     BundleAtom value;
-
     BundlePeriodicParams periodic;
 } BundleValue;
 
@@ -83,10 +82,11 @@ typedef struct BundleForce {
     BundleCrowd crowd;
 } BundleForce;
 
-// typedef struct BundleBool {
-//     BundleCrowd crowd;
-//     BundleValue value;
-// } BundleBool;
+typedef struct BundleBool {
+    BundleCrowd crowd;
+    BundleRange range;
+    BundleValue value;
+} BundleBool;
 
 typedef struct LiveLocusState {
     FPoint randomPoint;
@@ -125,6 +125,8 @@ typedef struct BundleMobLocus {
 
 typedef struct BundleSpec {
     bool randomIdle;
+    BundleBool bbRandomIdle;
+
     bool nearBaseRandomIdle;
     bool randomizeStoppedVelocity;
     bool simpleAttack;
@@ -3999,6 +4001,29 @@ public:
         MBString_Destroy(&s);
     }
 
+    void loadBundleBool(MBRegistry *mreg, BundleBool *b,
+                         const char *prefix) {
+        CMBString s;
+        MBString_Create(&s);
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".range");
+        loadBundleRange(mreg, &b->range, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".value");
+        loadBundleValue(mreg, &b->value, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".crowd");
+        loadBundleCrowd(mreg, &b->crowd, MBString_GetCStr(&s));
+
+        MBString_Destroy(&s);
+    }
+
     void loadBundleCrowd(MBRegistry *mreg, BundleCrowd *bc,
                          const char *prefix) {
         CMBString s;
@@ -4142,6 +4167,8 @@ public:
 
     virtual void loadRegistry(MBRegistry *mreg) {
         this->myConfig.randomIdle = MBRegistry_GetBool(mreg, "randomIdle");
+        loadBundleBool(mreg, &this->myConfig.bbRandomIdle, "randomIdle.bb");
+
         this->myConfig.nearBaseRandomIdle =
             MBRegistry_GetBool(mreg, "nearBaseRandomIdle");
         this->myConfig.randomizeStoppedVelocity =
@@ -4557,18 +4584,39 @@ public:
                            weight);
     }
 
-    // /*
-    //  * getBundleBool --
-    //  *    Is this per-mob BundleBool TRUE or FALSE right now?
-    //  */
-    // bool getBundleBool(Mob *mob, BundleBool *bb) {
-    //     if (!crowdCheck(mob, bundle, &cweight)) {
-    //         return FALSE;
-    //     }
+    /*
+     * getBundleBool --
+     *    Is this per-mob BundleBool TRUE or FALSE right now?
+     */
+    bool getBundleBool(Mob *mob, BundleBool *bb) {
+        float radius = 0.0f;
+        float distance = 0.0f;
+        float deadWeight;
 
-    //     float value = getBundleValue(mob, &bb->value);
-    //     return value > 0.0f;
-    // }
+        if (!crowdCheck(mob, &bb->crowd, &deadWeight)) {
+            return FALSE;
+        }
+
+        if (!isConstantBundleCheck(bb->range.check)) {
+            SensorGrid *sg = mySensorGrid;
+            Mob *base = sg->friendBase();
+
+            /*
+             * The range check might do weird things once the base is destroyed.
+             */
+            if (base != NULL) {
+                distance = FPoint_Distance(&mob->pos, &base->pos);
+                radius = getBundleValue(mob, &bb->range.radius);
+            }
+        }
+
+        if (!bundleCheck(bb->range.check, distance, radius, &deadWeight)) {
+            return FALSE;
+        }
+
+        float value = getBundleValue(mob, &bb->value);
+        return value > 0.0f;
+    }
 
     /*
      * applyBundle --
@@ -4910,9 +4958,12 @@ public:
             return;
         }
 
-        if (newlyIdle && myConfig.randomIdle) {
-            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+        if (newlyIdle) {
+            if (myConfig.randomIdle ||
+                getBundleBool(mob, &myConfig.bbRandomIdle)) {
+                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            }
         }
 
         nearBase = FALSE;
@@ -5291,6 +5342,32 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
 }
 
 
+static void MutateBundleBool(FleetAIType aiType, MBRegistry *mreg,
+                              const char *prefix)
+{
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".crowd");
+    MutateBundleCrowd(aiType, mreg, MBString_GetCStr(&s));
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".range");
+    MutateBundleRange(aiType, mreg, MBString_GetCStr(&s));
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".value");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      MUTATION_TYPE_BOOL);
+
+    MBString_Destroy(&s);
+}
+
+
 static void MutateBundleFleetLocus(FleetAIType aiType, MBRegistry *mreg,
                                    const char *prefix)
 {
@@ -5486,6 +5563,8 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     Mutate_Float(mreg, vf, ARRAYSIZE(vf));
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
+
+    MutateBundleBool(aiType, mreg, "randomIdle.bb");
 
     MutateBundleForce(aiType, mreg, "align");
     MutateBundleForce(aiType, mreg, "cohere");

@@ -32,6 +32,7 @@ typedef enum MutationType {
     MUTATION_TYPE_COUNT,
     MUTATION_TYPE_AMPLITUDE,
     MUTATION_TYPE_MOB_JITTER_SCALE,
+    MUTATION_TYPE_BOOL,
 } MutationType;
 
 typedef struct MutationFloatParams {

@@ -120,6 +120,7 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.15f;
     } else if (type == MUTATION_TYPE_AMPLITUDE ||
+               type == MUTATION_TYPE_BOOL ||
                type == MUTATION_TYPE_MOB_JITTER_SCALE) {
         vf->minValue = -1.0f;
         vf->maxValue = 1.0f;
