@@ -67,13 +67,13 @@ typedef struct BundleValue {
 } BundleValue;
 
 typedef struct BundleCrowd {
+    BundleCheckType check;
     BundleValue size;
     BundleValue radius;
 } BundleCrowd;
 
 typedef struct BundleForce {
     BundleCheckType rangeCheck;
-    BundleCheckType crowdCheck;
     BundleValue weight;
     BundleValue radius;
     BundleCrowd crowd;
@@ -247,7 +247,7 @@ public:
             { "align.crowd.size.value.mobJitterScale", "0.888799" },
             { "align.crowd.size.value.value", "4.721555" },
             { "align.crowd.size.valueType", "constant" },
-            { "align.crowdType", "quadraticUp" },
+            { "align.crowd.type", "quadraticUp" },
             { "align.radius.periodic.amplitude.mobJitterScale", "0.285279" },
             { "align.radius.periodic.amplitude.value", "-0.499126" },
             { "align.radius.periodic.period.mobJitterScale", "-0.595802" },
@@ -287,7 +287,7 @@ public:
             { "attackSeparate.crowd.size.value.mobJitterScale", "-1.000000" },
             { "attackSeparate.crowd.size.value.value", "-0.956097" },
             { "attackSeparate.crowd.size.valueType", "periodic" },
-            { "attackSeparate.crowdType", "strictOn" },
+            { "attackSeparate.crowd.type", "strictOn" },
             { "attackSeparate.radius.periodic.amplitude.mobJitterScale", "-0.395586" },
             { "attackSeparate.radius.periodic.amplitude.value", "0.083737" },
             { "attackSeparate.radius.periodic.period.mobJitterScale", "0.394375" },
@@ -325,7 +325,7 @@ public:
             { "base.crowd.size.value.mobJitterScale", "-0.447069" },
             { "base.crowd.size.value.value", "2.891666" },
             { "base.crowd.size.valueType", "constant" },
-            { "base.crowdType", "strictOn" },
+            { "base.crowd.type", "strictOn" },
             { "base.radius.periodic.amplitude.mobJitterScale", "-0.572601" },
             { "base.radius.periodic.amplitude.value", "-1.000000" },
             { "base.radius.periodic.period.mobJitterScale", "-0.316050" },
@@ -363,7 +363,7 @@ public:
             { "baseDefense.crowd.size.value.mobJitterScale", "-0.125935" },
             { "baseDefense.crowd.size.value.value", "3.461880" },
             { "baseDefense.crowd.size.valueType", "periodic" },
-            { "baseDefense.crowdType", "linearDown" },
+            { "baseDefense.crowd.type", "linearDown" },
             { "baseDefense.radius.periodic.amplitude.mobJitterScale", "0.101941" },
             { "baseDefense.radius.periodic.amplitude.value", "-0.104982" },
             { "baseDefense.radius.periodic.period.mobJitterScale", "-0.348962" },
@@ -402,7 +402,7 @@ public:
             { "center.crowd.size.value.mobJitterScale", "-1.000000" },
             { "center.crowd.size.value.value", "10.836775" },
             { "center.crowd.size.valueType", "constant" },
-            { "center.crowdType", "linearUp" },
+            { "center.crowd.type", "linearUp" },
             { "center.radius.periodic.amplitude.mobJitterScale", "-0.042662" },
             { "center.radius.periodic.amplitude.value", "0.475815" },
             { "center.radius.periodic.period.mobJitterScale", "0.597518" },
@@ -440,7 +440,7 @@ public:
             { "cohere.crowd.size.value.mobJitterScale", "0.559478" },
             { "cohere.crowd.size.value.value", "4.463946" },
             { "cohere.crowd.size.valueType", "periodic" },
-            { "cohere.crowdType", "linearUp" },
+            { "cohere.crowd.type", "linearUp" },
             { "cohere.radius.periodic.amplitude.mobJitterScale", "0.309307" },
             { "cohere.radius.periodic.amplitude.value", "0.562855" },
             { "cohere.radius.periodic.period.mobJitterScale", "-0.082082" },
@@ -478,7 +478,7 @@ public:
             { "cores.crowd.size.value.mobJitterScale", "0.836118" },
             { "cores.crowd.size.value.value", "-1.000000" },
             { "cores.crowd.size.valueType", "constant" },
-            { "cores.crowdType", "linearDown" },
+            { "cores.crowd.type", "linearDown" },
             { "cores.radius.periodic.amplitude.mobJitterScale", "-0.406865" },
             { "cores.radius.periodic.amplitude.value", "-0.698872" },
             { "cores.radius.periodic.period.mobJitterScale", "-0.990000" },
@@ -516,7 +516,7 @@ public:
             { "corners.crowd.size.value.mobJitterScale", "-0.792347" },
             { "corners.crowd.size.value.value", "11.848875" },
             { "corners.crowd.size.valueType", "constant" },
-            { "corners.crowdType", "quadraticUp" },
+            { "corners.crowd.type", "quadraticUp" },
             { "corners.radius.periodic.amplitude.mobJitterScale", "-0.746028" },
             { "corners.radius.periodic.amplitude.value", "0.372991" },
             { "corners.radius.periodic.period.mobJitterScale", "-0.328457" },
@@ -564,7 +564,7 @@ public:
             { "edges.crowd.size.value.mobJitterScale", "0.160453" },
             { "edges.crowd.size.value.value", "4.934954" },
             { "edges.crowd.size.valueType", "constant" },
-            { "edges.crowdType", "linearDown" },
+            { "edges.crowd.type", "linearDown" },
             { "edges.radius.periodic.amplitude.mobJitterScale", "-0.076425" },
             { "edges.radius.periodic.amplitude.value", "-0.767398" },
             { "edges.radius.periodic.period.mobJitterScale", "0.846003" },
@@ -602,7 +602,7 @@ public:
             { "enemy.crowd.size.value.mobJitterScale", "0.739930" },
             { "enemy.crowd.size.value.value", "20.000000" },
             { "enemy.crowd.size.valueType", "periodic" },
-            { "enemy.crowdType", "quadraticDown" },
+            { "enemy.crowd.type", "quadraticDown" },
             { "enemy.radius.periodic.amplitude.mobJitterScale", "0.643513" },
             { "enemy.radius.periodic.amplitude.value", "0.239239" },
             { "enemy.radius.periodic.period.mobJitterScale", "0.433568" },
@@ -640,7 +640,7 @@ public:
             { "enemyBase.crowd.size.value.mobJitterScale", "0.890448" },
             { "enemyBase.crowd.size.value.value", "3.767771" },
             { "enemyBase.crowd.size.valueType", "constant" },
-            { "enemyBase.crowdType", "never" },
+            { "enemyBase.crowd.type", "never" },
             { "enemyBase.radius.periodic.amplitude.mobJitterScale", "-0.335143" },
             { "enemyBase.radius.periodic.amplitude.value", "-0.099600" },
             { "enemyBase.radius.periodic.period.mobJitterScale", "-0.667080" },
@@ -684,7 +684,7 @@ public:
             { "fleetLocus.force.crowd.size.value.mobJitterScale", "-1.000000" },
             { "fleetLocus.force.crowd.size.value.value", "7.021504" },
             { "fleetLocus.force.crowd.size.valueType", "periodic" },
-            { "fleetLocus.force.crowdType", "linearUp" },
+            { "fleetLocus.force.crowd.type", "linearUp" },
             { "fleetLocus.force.radius.periodic.amplitude.mobJitterScale", "-0.744871" },
             { "fleetLocus.force.radius.periodic.amplitude.value", "-0.330467" },
             { "fleetLocus.force.radius.periodic.period.mobJitterScale", "0.550250" },
@@ -743,7 +743,7 @@ public:
             { "mobLocus.force.crowd.size.value.mobJitterScale", "-0.819740" },
             { "mobLocus.force.crowd.size.value.value", "10.828095" },
             { "mobLocus.force.crowd.size.valueType", "periodic" },
-            { "mobLocus.force.crowdType", "quadraticUp" },
+            { "mobLocus.force.crowd.type", "quadraticUp" },
             { "mobLocus.force.radius.periodic.amplitude.mobJitterScale", "0.264388" },
             { "mobLocus.force.radius.periodic.amplitude.value", "0.996327" },
             { "mobLocus.force.radius.periodic.period.mobJitterScale", "-0.135688" },
@@ -822,7 +822,7 @@ public:
             { "separate.crowd.size.value.mobJitterScale", "0.285721" },
             { "separate.crowd.size.value.value", "4.006861" },
             { "separate.crowd.size.valueType", "constant" },
-            { "separate.crowdType", "always" },
+            { "separate.crowd.type", "always" },
             { "separate.radius.periodic.amplitude.mobJitterScale", "0.682200" },
             { "separate.radius.periodic.amplitude.value", "-1.000000" },
             { "separate.radius.periodic.period.mobJitterScale", "-0.788658" },
@@ -857,7 +857,7 @@ public:
             { "align.crowd.size.periodic.amplitude.mobJitterScale", "0.439141" },
             { "align.crowd.size.periodic.amplitude.value", "-0.681810" },
             { "align.crowd.size.periodic.period.mobJitterScale", "0.126401" },
-            { "align.crowdType", "quadraticDown" },
+            { "align.crowd.type", "quadraticDown" },
             { "align.radius.periodic.amplitude.mobJitterScale", "-0.160314" },
             { "align.radius.periodic.period.mobJitterScale", "-0.399551" },
             { "align.radius.periodic.period.value", "6872.918945" },
@@ -879,7 +879,7 @@ public:
             { "attackSeparate.crowd.size.periodic.period.value", "4507.496582" },
             { "attackSeparate.crowd.size.periodic.tickShift.mobJitterScale", "0.945825" },
             { "attackSeparate.crowd.size.value.value", "3.265365" },
-            { "attackSeparate.crowdType", "never" },
+            { "attackSeparate.crowd.type", "never" },
             { "attackSeparate.radius.periodic.amplitude.mobJitterScale", "-0.203000" },
             { "attackSeparate.radius.periodic.amplitude.value", "0.035319" },
             { "attackSeparate.radius.periodic.period.mobJitterScale", "0.081711" },
@@ -1062,7 +1062,7 @@ public:
             { "enemy.crowd.size.periodic.tickShift.mobJitterScale", "0.459140" },
             { "enemy.crowd.size.value.mobJitterScale", "0.190205" },
             { "enemy.crowd.size.value.value", "3.786107" },
-            { "enemy.crowdType", "always" },
+            { "enemy.crowd.type", "always" },
             { "enemy.radius.periodic.amplitude.mobJitterScale", "0.442836" },
             { "enemy.radius.periodic.amplitude.value", "0.971019" },
             { "enemy.radius.periodic.period.mobJitterScale", "-0.162324" },
@@ -1085,7 +1085,7 @@ public:
             { "enemyBase.crowd.size.periodic.period.mobJitterScale", "0.632945" },
             { "enemyBase.crowd.size.value.mobJitterScale", "-0.629738" },
             { "enemyBase.crowd.size.value.value", "2.778095" },
-            { "enemyBase.crowdType", "quadraticDown" },
+            { "enemyBase.crowd.type", "quadraticDown" },
             { "enemyBase.radius.periodic.amplitude.value", "-0.146693" },
             { "enemyBase.radius.periodic.period.value", "1956.951904" },
             { "enemyBase.radius.value.value", "435.686005" },
@@ -1144,7 +1144,7 @@ public:
             { "mobLocus.force.crowd.size.periodic.tickShift.value", "5586.841309" },
             { "mobLocus.force.crowd.size.value.mobJitterScale", "-0.307383" },
             { "mobLocus.force.crowd.size.valueType", "constant" },
-            { "mobLocus.force.crowdType", "always" },
+            { "mobLocus.force.crowd.type", "always" },
             { "mobLocus.force.radius.periodic.amplitude.value", "0.746614" },
             { "mobLocus.force.radius.periodic.tickShift.mobJitterScale", "-0.557284" },
             { "mobLocus.force.radius.value.mobJitterScale", "-0.595792" },
@@ -1221,7 +1221,7 @@ public:
             { "align.crowd.size.value.mobJitterScale", "0.261138" },
             { "align.crowd.size.value.value", "14.545824" },
             { "align.crowd.size.valueType", "constant" },
-            { "align.crowdType", "strictOn" },
+            { "align.crowd.type", "strictOn" },
             { "align.radius.periodic.amplitude.mobJitterScale", "1.000000" },
             { "align.radius.periodic.amplitude.value", "-1.000000" },
             { "align.radius.periodic.period.mobJitterScale", "-0.663143" },
@@ -1260,7 +1260,7 @@ public:
             { "attackSeparate.crowd.size.value.mobJitterScale", "-1.000000" },
             { "attackSeparate.crowd.size.value.value", "9.217925" },
             { "attackSeparate.crowd.size.valueType", "periodic" },
-            { "attackSeparate.crowdType", "quadraticDown" },
+            { "attackSeparate.crowd.type", "quadraticDown" },
             { "attackSeparate.radius.periodic.amplitude.mobJitterScale", "0.815203" },
             { "attackSeparate.radius.periodic.amplitude.value", "-0.235451" },
             { "attackSeparate.radius.periodic.period.mobJitterScale", "0.461347" },
@@ -1298,7 +1298,7 @@ public:
             { "base.crowd.size.value.mobJitterScale", "0.567610" },
             { "base.crowd.size.value.value", "10.136998" },
             { "base.crowd.size.valueType", "periodic" },
-            { "base.crowdType", "never" },
+            { "base.crowd.type", "never" },
             { "base.radius.periodic.amplitude.mobJitterScale", "0.503678" },
             { "base.radius.periodic.amplitude.value", "0.357514" },
             { "base.radius.periodic.period.mobJitterScale", "-0.303256" },
@@ -1336,7 +1336,7 @@ public:
             { "baseDefense.crowd.size.value.mobJitterScale", "-0.313322" },
             { "baseDefense.crowd.size.value.value", "6.976077" },
             { "baseDefense.crowd.size.valueType", "periodic" },
-            { "baseDefense.crowdType", "never" },
+            { "baseDefense.crowd.type", "never" },
             { "baseDefense.radius.periodic.amplitude.mobJitterScale", "-0.900000" },
             { "baseDefense.radius.periodic.amplitude.value", "0.015727" },
             { "baseDefense.radius.periodic.period.mobJitterScale", "-0.568743" },
@@ -1375,7 +1375,7 @@ public:
             { "center.crowd.size.value.mobJitterScale", "-0.254054" },
             { "center.crowd.size.value.value", "-1.000000" },
             { "center.crowd.size.valueType", "constant" },
-            { "center.crowdType", "linearDown" },
+            { "center.crowd.type", "linearDown" },
             { "center.radius.periodic.amplitude.mobJitterScale", "-0.257824" },
             { "center.radius.periodic.amplitude.value", "-0.778535" },
             { "center.radius.periodic.period.mobJitterScale", "-0.261245" },
@@ -1413,7 +1413,7 @@ public:
             { "cohere.crowd.size.value.mobJitterScale", "0.900000" },
             { "cohere.crowd.size.value.value", "7.042645" },
             { "cohere.crowd.size.valueType", "periodic" },
-            { "cohere.crowdType", "always" },
+            { "cohere.crowd.type", "always" },
             { "cohere.radius.periodic.amplitude.mobJitterScale", "0.510163" },
             { "cohere.radius.periodic.amplitude.value", "-0.344642" },
             { "cohere.radius.periodic.period.mobJitterScale", "-0.903820" },
@@ -1451,7 +1451,7 @@ public:
             { "cores.crowd.size.value.mobJitterScale", "-0.103645" },
             { "cores.crowd.size.value.value", "-0.990000" },
             { "cores.crowd.size.valueType", "periodic" },
-            { "cores.crowdType", "quadraticUp" },
+            { "cores.crowd.type", "quadraticUp" },
             { "cores.radius.periodic.amplitude.mobJitterScale", "0.396617" },
             { "cores.radius.periodic.amplitude.value", "0.017514" },
             { "cores.radius.periodic.period.mobJitterScale", "0.659562" },
@@ -1489,7 +1489,7 @@ public:
             { "corners.crowd.size.value.mobJitterScale", "-0.335554" },
             { "corners.crowd.size.value.value", "5.440167" },
             { "corners.crowd.size.valueType", "constant" },
-            { "corners.crowdType", "linearDown" },
+            { "corners.crowd.type", "linearDown" },
             { "corners.radius.periodic.amplitude.mobJitterScale", "-0.377146" },
             { "corners.radius.periodic.amplitude.value", "0.307509" },
             { "corners.radius.periodic.period.mobJitterScale", "-0.790672" },
@@ -1537,7 +1537,7 @@ public:
             { "edges.crowd.size.value.mobJitterScale", "0.303231" },
             { "edges.crowd.size.value.value", "20.000000" },
             { "edges.crowd.size.valueType", "periodic" },
-            { "edges.crowdType", "linearUp" },
+            { "edges.crowd.type", "linearUp" },
             { "edges.radius.periodic.amplitude.mobJitterScale", "0.095815" },
             { "edges.radius.periodic.amplitude.value", "-0.524913" },
             { "edges.radius.periodic.period.mobJitterScale", "1.000000" },
@@ -1575,7 +1575,7 @@ public:
             { "enemy.crowd.size.value.mobJitterScale", "0.244159" },
             { "enemy.crowd.size.value.value", "20.000000" },
             { "enemy.crowd.size.valueType", "constant" },
-            { "enemy.crowdType", "strictOff" },
+            { "enemy.crowd.type", "strictOff" },
             { "enemy.radius.periodic.amplitude.mobJitterScale", "0.363027" },
             { "enemy.radius.periodic.amplitude.value", "-0.849631" },
             { "enemy.radius.periodic.period.mobJitterScale", "0.151267" },
@@ -1613,7 +1613,7 @@ public:
             { "enemyBase.crowd.size.value.mobJitterScale", "-0.603297" },
             { "enemyBase.crowd.size.value.value", "14.142944" },
             { "enemyBase.crowd.size.valueType", "periodic" },
-            { "enemyBase.crowdType", "quadraticDown" },
+            { "enemyBase.crowd.type", "quadraticDown" },
             { "enemyBase.radius.periodic.amplitude.mobJitterScale", "0.734564" },
             { "enemyBase.radius.periodic.amplitude.value", "0.641733" },
             { "enemyBase.radius.periodic.period.mobJitterScale", "0.491955" },
@@ -1657,7 +1657,7 @@ public:
             { "fleetLocus.force.crowd.size.value.mobJitterScale", "-0.105208" },
             { "fleetLocus.force.crowd.size.value.value", "7.386487" },
             { "fleetLocus.force.crowd.size.valueType", "constant" },
-            { "fleetLocus.force.crowdType", "linearUp" },
+            { "fleetLocus.force.crowd.type", "linearUp" },
             { "fleetLocus.force.radius.periodic.amplitude.mobJitterScale", "-0.737166" },
             { "fleetLocus.force.radius.periodic.amplitude.value", "-0.517972" },
             { "fleetLocus.force.radius.periodic.period.mobJitterScale", "-0.032016" },
@@ -1715,7 +1715,7 @@ public:
             { "mobLocus.force.crowd.size.value.mobJitterScale", "-0.733576" },
             { "mobLocus.force.crowd.size.value.value", "14.643238" },
             { "mobLocus.force.crowd.size.valueType", "periodic" },
-            { "mobLocus.force.crowdType", "strictOff" },
+            { "mobLocus.force.crowd.type", "strictOff" },
             { "mobLocus.force.radius.periodic.amplitude.mobJitterScale", "0.795150" },
             { "mobLocus.force.radius.periodic.amplitude.value", "0.817033" },
             { "mobLocus.force.radius.periodic.period.mobJitterScale", "0.898221" },
@@ -1790,7 +1790,7 @@ public:
             { "nearestFriend.crowd.size.value.mobJitterScale", "-0.938299" },
             { "nearestFriend.crowd.size.value.value", "15.717419" },
             { "nearestFriend.crowd.size.valueType", "periodic" },
-            { "nearestFriend.crowdType", "strictOn" },
+            { "nearestFriend.crowd.type", "strictOn" },
             { "nearestFriend.radius.periodic.amplitude.mobJitterScale", "0.510415" },
             { "nearestFriend.radius.periodic.amplitude.value", "0.701764" },
             { "nearestFriend.radius.periodic.period.mobJitterScale", "0.578944" },
@@ -1833,7 +1833,7 @@ public:
             { "separate.crowd.size.value.mobJitterScale", "-0.003657" },
             { "separate.crowd.size.value.value", "9.810118" },
             { "separate.crowd.size.valueType", "constant" },
-            { "separate.crowdType", "never" },
+            { "separate.crowd.type", "never" },
             { "separate.radius.periodic.amplitude.mobJitterScale", "0.875430" },
             { "separate.radius.periodic.amplitude.value", "0.112632" },
             { "separate.radius.periodic.period.mobJitterScale", "-0.289590" },
@@ -1876,7 +1876,7 @@ public:
             { "align.crowd.size.value.mobJitterScale", "0.474505" },
             { "align.crowd.size.value.value", "0.326203" },
             { "align.crowd.size.valueType", "periodic" },
-            { "align.crowdType", "strictOff" },
+            { "align.crowd.type", "strictOff" },
             { "align.radius.periodic.amplitude.mobJitterScale", "-0.103650" },
             { "align.radius.periodic.amplitude.value", "-0.215587" },
             { "align.radius.periodic.period.mobJitterScale", "-0.504149" },
@@ -1916,7 +1916,7 @@ public:
             { "attackSeparate.crowd.size.value.mobJitterScale", "-0.999978" },
             { "attackSeparate.crowd.size.value.value", "16.245770" },
             { "attackSeparate.crowd.size.valueType", "constant" },
-            { "attackSeparate.crowdType", "never" },
+            { "attackSeparate.crowd.type", "never" },
             { "attackSeparate.radius.periodic.amplitude.mobJitterScale", "0.371149" },
             { "attackSeparate.radius.periodic.amplitude.value", "-0.435201" },
             { "attackSeparate.radius.periodic.period.mobJitterScale", "0.730247" },
@@ -1990,7 +1990,7 @@ public:
             { "baseDefense.crowd.size.value.mobJitterScale", "-0.349934" },
             { "baseDefense.crowd.size.value.value", "2.904340" },
             { "baseDefense.crowd.size.valueType", "constant" },
-            { "baseDefense.crowdType", "quadraticDown" },
+            { "baseDefense.crowd.type", "quadraticDown" },
             { "baseDefense.radius.periodic.amplitude.mobJitterScale", "-0.898434" },
             { "baseDefense.radius.periodic.amplitude.value", "0.503716" },
             { "baseDefense.radius.periodic.period.mobJitterScale", "0.158888" },
@@ -2028,7 +2028,7 @@ public:
             { "center.crowd.size.value.mobJitterScale", "0.608883" },
             { "center.crowd.size.value.value", "12.643256" },
             { "center.crowd.size.valueType", "constant" },
-            { "center.crowdType", "strictOn" },
+            { "center.crowd.type", "strictOn" },
             { "center.radius.periodic.amplitude.mobJitterScale", "0.789043" },
             { "center.radius.periodic.amplitude.value", "0.451824" },
             { "center.radius.periodic.period.mobJitterScale", "0.122213" },
@@ -2064,7 +2064,7 @@ public:
             { "cohere.crowd.size.periodic.tickShift.value", "1402.559692" },
             { "cohere.crowd.size.value.mobJitterScale", "-0.160711" },
             { "cohere.crowd.size.value.value", "15.596762" },
-            { "cohere.crowdType", "strictOn" },
+            { "cohere.crowd.type", "strictOn" },
             { "cohere.radius.periodic.amplitude.mobJitterScale", "0.810000" },
             { "cohere.radius.periodic.amplitude.value", "0.129742" },
             { "cohere.radius.periodic.period.mobJitterScale", "0.404731" },
@@ -2101,7 +2101,7 @@ public:
             { "cores.crowd.size.value.mobJitterScale", "-0.076045" },
             { "cores.crowd.size.value.value", "2.463980" },
             { "cores.crowd.size.valueType", "constant" },
-            { "cores.crowdType", "always" },
+            { "cores.crowd.type", "always" },
             { "cores.radius.periodic.amplitude.mobJitterScale", "1.000000" },
             { "cores.radius.periodic.amplitude.value", "1.000000" },
             { "cores.radius.periodic.period.mobJitterScale", "0.562891" },
@@ -2216,7 +2216,7 @@ public:
             { "enemy.crowd.size.value.mobJitterScale", "0.187990" },
             { "enemy.crowd.size.value.value", "12.986944" },
             { "enemy.crowd.size.valueType", "constant" },
-            { "enemy.crowdType", "never" },
+            { "enemy.crowd.type", "never" },
             { "enemy.radius.periodic.amplitude.mobJitterScale", "-0.124516" },
             { "enemy.radius.periodic.amplitude.value", "-0.279534" },
             { "enemy.radius.periodic.period.mobJitterScale", "-0.485041" },
@@ -2252,7 +2252,7 @@ public:
             { "enemyBase.crowd.size.periodic.tickShift.value", "3573.961914" },
             { "enemyBase.crowd.size.value.mobJitterScale", "-0.678228" },
             { "enemyBase.crowd.size.value.value", "13.380767" },
-            { "enemyBase.crowdType", "linearUp" },
+            { "enemyBase.crowd.type", "linearUp" },
             { "enemyBase.radius.periodic.amplitude.mobJitterScale", "-1.000000" },
             { "enemyBase.radius.periodic.amplitude.value", "0.892146" },
             { "enemyBase.radius.periodic.period.mobJitterScale", "-0.762241" },
@@ -2295,7 +2295,7 @@ public:
             { "fleetLocus.force.crowd.size.value.mobJitterScale", "-0.302817" },
             { "fleetLocus.force.crowd.size.value.value", "13.779195" },
             { "fleetLocus.force.crowd.size.valueType", "periodic" },
-            { "fleetLocus.force.crowdType", "strictOn" },
+            { "fleetLocus.force.crowd.type", "strictOn" },
             { "fleetLocus.force.radius.periodic.amplitude.mobJitterScale", "-0.194120" },
             { "fleetLocus.force.radius.periodic.amplitude.value", "0.386690" },
             { "fleetLocus.force.radius.periodic.period.mobJitterScale", "1.000000" },
@@ -2353,7 +2353,7 @@ public:
             { "mobLocus.force.crowd.size.value.mobJitterScale", "0.173263" },
             { "mobLocus.force.crowd.size.value.value", "10.225864" },
             { "mobLocus.force.crowd.size.valueType", "periodic" },
-            { "mobLocus.force.crowdType", "linearUp" },
+            { "mobLocus.force.crowd.type", "linearUp" },
             { "mobLocus.force.radius.periodic.amplitude.mobJitterScale", "0.286870" },
             { "mobLocus.force.radius.periodic.amplitude.value", "0.794056" },
             { "mobLocus.force.radius.periodic.period.mobJitterScale", "0.996017" },
@@ -2467,7 +2467,7 @@ public:
             { "separate.crowd.size.periodic.tickShift.value", "7793.289062" },
             { "separate.crowd.size.value.mobJitterScale", "0.671655" },
             { "separate.crowd.size.value.value", "11.438020" },
-            { "separate.crowdType", "strictOff" },
+            { "separate.crowd.type", "strictOff" },
             { "separate.radius.periodic.amplitude.mobJitterScale", "0.237986" },
             { "separate.radius.periodic.amplitude.value", "-0.203410" },
             { "separate.radius.periodic.period.mobJitterScale", "-0.078867" },
@@ -2511,7 +2511,7 @@ public:
             { "align.crowd.size.value.mobJitterScale", "0.409335" },
             { "align.crowd.size.value.value", "0.287741" },
             { "align.crowd.size.valueType", "periodic" },
-            { "align.crowdType", "strictOff" },
+            { "align.crowd.type", "strictOff" },
             { "align.radius.periodic.amplitude.mobJitterScale", "-0.590458" },
             { "align.radius.periodic.amplitude.value", "0.265961" },
             { "align.radius.periodic.period.mobJitterScale", "-0.620556" },
@@ -2551,7 +2551,7 @@ public:
             { "attackSeparate.crowd.size.value.mobJitterScale", "-0.253843" },
             { "attackSeparate.crowd.size.value.value", "11.676046" },
             { "attackSeparate.crowd.size.valueType", "constant" },
-            { "attackSeparate.crowdType", "never" },
+            { "attackSeparate.crowd.type", "never" },
             { "attackSeparate.radius.periodic.amplitude.mobJitterScale", "0.785959" },
             { "attackSeparate.radius.periodic.amplitude.value", "-0.650087" },
             { "attackSeparate.radius.periodic.period.mobJitterScale", "0.748814" },
@@ -2588,7 +2588,7 @@ public:
             { "base.crowd.size.value.mobJitterScale", "0.684186" },
             { "base.crowd.size.value.value", "1.382313" },
             { "base.crowd.size.valueType", "constant" },
-            { "base.crowdType", "always" },
+            { "base.crowd.type", "always" },
             { "base.radius.periodic.amplitude.mobJitterScale", "-0.733963" },
             { "base.radius.periodic.amplitude.value", "-0.918238" },
             { "base.radius.periodic.period.mobJitterScale", "-0.743692" },
@@ -2626,7 +2626,7 @@ public:
             { "baseDefense.crowd.size.value.mobJitterScale", "0.550619" },
             { "baseDefense.crowd.size.value.value", "9.474373" },
             { "baseDefense.crowd.size.valueType", "constant" },
-            { "baseDefense.crowdType", "quadraticDown" },
+            { "baseDefense.crowd.type", "quadraticDown" },
             { "baseDefense.radius.periodic.amplitude.mobJitterScale", "0.355040" },
             { "baseDefense.radius.periodic.amplitude.value", "-0.809205" },
             { "baseDefense.radius.periodic.period.mobJitterScale", "-0.054079" },
@@ -2665,7 +2665,7 @@ public:
             { "center.crowd.size.value.mobJitterScale", "-0.401140" },
             { "center.crowd.size.value.value", "-0.547282" },
             { "center.crowd.size.valueType", "constant" },
-            { "center.crowdType", "strictOff" },
+            { "center.crowd.type", "strictOff" },
             { "center.radius.periodic.amplitude.mobJitterScale", "-0.470269" },
             { "center.radius.periodic.amplitude.value", "0.406305" },
             { "center.radius.periodic.period.mobJitterScale", "-0.630931" },
@@ -2702,7 +2702,7 @@ public:
             { "cohere.crowd.size.periodic.tickShift.value", "1388.534058" },
             { "cohere.crowd.size.value.mobJitterScale", "-0.200903" },
             { "cohere.crowd.size.value.value", "9.918414" },
-            { "cohere.crowdType", "quadraticUp" },
+            { "cohere.crowd.type", "quadraticUp" },
             { "cohere.radius.periodic.amplitude.mobJitterScale", "-0.206370" },
             { "cohere.radius.periodic.amplitude.value", "0.805316" },
             { "cohere.radius.periodic.period.mobJitterScale", "-0.983127" },
@@ -2740,7 +2740,7 @@ public:
             { "cores.crowd.size.value.mobJitterScale", "0.116836" },
             { "cores.crowd.size.value.value", "10.824501" },
             { "cores.crowd.size.valueType", "constant" },
-            { "cores.crowdType", "strictOn" },
+            { "cores.crowd.type", "strictOn" },
             { "cores.radius.periodic.amplitude.mobJitterScale", "0.900000" },
             { "cores.radius.periodic.amplitude.value", "0.649809" },
             { "cores.radius.periodic.period.mobJitterScale", "0.596434" },
@@ -2778,7 +2778,7 @@ public:
             { "corners.crowd.size.value.mobJitterScale", "-0.881677" },
             { "corners.crowd.size.value.value", "-1.000000" },
             { "corners.crowd.size.valueType", "constant" },
-            { "corners.crowdType", "never" },
+            { "corners.crowd.type", "never" },
             { "corners.radius.periodic.amplitude.mobJitterScale", "0.825848" },
             { "corners.radius.periodic.amplitude.value", "0.226270" },
             { "corners.radius.periodic.period.mobJitterScale", "0.267180" },
@@ -2824,7 +2824,7 @@ public:
             { "edges.crowd.size.value.mobJitterScale", "-0.110585" },
             { "edges.crowd.size.value.value", "12.660626" },
             { "edges.crowd.size.valueType", "periodic" },
-            { "edges.crowdType", "strictOff" },
+            { "edges.crowd.type", "strictOff" },
             { "edges.radius.periodic.amplitude.mobJitterScale", "0.352999" },
             { "edges.radius.periodic.amplitude.value", "0.709915" },
             { "edges.radius.periodic.period.mobJitterScale", "0.670024" },
@@ -2862,7 +2862,7 @@ public:
             { "enemy.crowd.size.value.mobJitterScale", "-0.013048" },
             { "enemy.crowd.size.value.value", "16.547121" },
             { "enemy.crowd.size.valueType", "constant" },
-            { "enemy.crowdType", "never" },
+            { "enemy.crowd.type", "never" },
             { "enemy.radius.periodic.amplitude.mobJitterScale", "-0.441839" },
             { "enemy.radius.periodic.amplitude.value", "-0.886941" },
             { "enemy.radius.periodic.period.mobJitterScale", "-0.475719" },
@@ -2900,7 +2900,7 @@ public:
             { "enemyBase.crowd.size.value.mobJitterScale", "-0.044494" },
             { "enemyBase.crowd.size.value.value", "3.257570" },
             { "enemyBase.crowd.size.valueType", "periodic" },
-            { "enemyBase.crowdType", "quadraticDown" },
+            { "enemyBase.crowd.type", "quadraticDown" },
             { "enemyBase.radius.periodic.amplitude.mobJitterScale", "-0.800307" },
             { "enemyBase.radius.periodic.amplitude.value", "0.122007" },
             { "enemyBase.radius.periodic.period.mobJitterScale", "0.843012" },
@@ -2944,7 +2944,7 @@ public:
             { "fleetLocus.force.crowd.size.value.mobJitterScale", "-0.109607" },
             { "fleetLocus.force.crowd.size.value.value", "9.762760" },
             { "fleetLocus.force.crowd.size.valueType", "periodic" },
-            { "fleetLocus.force.crowdType", "always" },
+            { "fleetLocus.force.crowd.type", "always" },
             { "fleetLocus.force.radius.periodic.amplitude.mobJitterScale", "-0.282212" },
             { "fleetLocus.force.radius.periodic.amplitude.value", "-0.508336" },
             { "fleetLocus.force.radius.periodic.period.mobJitterScale", "-0.216779" },
@@ -3003,7 +3003,7 @@ public:
             { "mobLocus.force.crowd.size.value.mobJitterScale", "0.742196" },
             { "mobLocus.force.crowd.size.value.value", "13.149846" },
             { "mobLocus.force.crowd.size.valueType", "constant" },
-            { "mobLocus.force.crowdType", "quadraticDown" },
+            { "mobLocus.force.crowd.type", "quadraticDown" },
             { "mobLocus.force.radius.periodic.amplitude.mobJitterScale", "-0.783651" },
             { "mobLocus.force.radius.periodic.amplitude.value", "-0.128708" },
             { "mobLocus.force.radius.periodic.period.mobJitterScale", "-0.439087" },
@@ -3120,7 +3120,7 @@ public:
             { "separate.crowd.size.value.mobJitterScale", "0.683274" },
             { "separate.crowd.size.value.value", "14.971319" },
             { "separate.crowd.size.valueType", "constant" },
-            { "separate.crowdType", "linearDown" },
+            { "separate.crowd.type", "linearDown" },
             { "separate.radius.periodic.amplitude.mobJitterScale", "0.261785" },
             { "separate.radius.periodic.amplitude.value", "-0.675898" },
             { "separate.radius.periodic.period.mobJitterScale", "-0.024811" },
@@ -3164,7 +3164,7 @@ public:
             { "align.crowd.size.value.mobJitterScale", "-0.703907" },
             { "align.crowd.size.value.value", "6.262674" },
             { "align.crowd.size.valueType", "constant" },
-            { "align.crowdType", "never" },
+            { "align.crowd.type", "never" },
             { "align.radius.periodic.amplitude.mobJitterScale", "-0.375990" },
             { "align.radius.periodic.amplitude.value", "-0.390739" },
             { "align.radius.periodic.period.mobJitterScale", "0.130139" },
@@ -3204,7 +3204,7 @@ public:
             { "attackSeparate.crowd.size.value.mobJitterScale", "0.817303" },
             { "attackSeparate.crowd.size.value.value", "20.000000" },
             { "attackSeparate.crowd.size.valueType", "periodic" },
-            { "attackSeparate.crowdType", "linearDown" },
+            { "attackSeparate.crowd.type", "linearDown" },
             { "attackSeparate.radius.periodic.amplitude.mobJitterScale", "-0.615626" },
             { "attackSeparate.radius.periodic.amplitude.value", "0.900000" },
             { "attackSeparate.radius.periodic.period.mobJitterScale", "0.093444" },
@@ -3242,7 +3242,7 @@ public:
             { "base.crowd.size.value.mobJitterScale", "-0.022306" },
             { "base.crowd.size.value.value", "6.174621" },
             { "base.crowd.size.valueType", "constant" },
-            { "base.crowdType", "quadraticDown" },
+            { "base.crowd.type", "quadraticDown" },
             { "base.radius.periodic.amplitude.mobJitterScale", "0.510039" },
             { "base.radius.periodic.amplitude.value", "0.746824" },
             { "base.radius.periodic.period.mobJitterScale", "-0.767744" },
@@ -3280,7 +3280,7 @@ public:
             { "baseDefense.crowd.size.value.mobJitterScale", "-0.438710" },
             { "baseDefense.crowd.size.value.value", "14.477304" },
             { "baseDefense.crowd.size.valueType", "constant" },
-            { "baseDefense.crowdType", "strictOn" },
+            { "baseDefense.crowd.type", "strictOn" },
             { "baseDefense.radius.periodic.amplitude.mobJitterScale", "0.365004" },
             { "baseDefense.radius.periodic.amplitude.value", "0.256863" },
             { "baseDefense.radius.periodic.period.mobJitterScale", "0.087917" },
@@ -3319,7 +3319,7 @@ public:
             { "center.crowd.size.value.mobJitterScale", "0.651465" },
             { "center.crowd.size.value.value", "3.384829" },
             { "center.crowd.size.valueType", "constant" },
-            { "center.crowdType", "quadraticDown" },
+            { "center.crowd.type", "quadraticDown" },
             { "center.radius.periodic.amplitude.mobJitterScale", "0.445817" },
             { "center.radius.periodic.amplitude.value", "-0.529666" },
             { "center.radius.periodic.period.mobJitterScale", "0.649338" },
@@ -3357,7 +3357,7 @@ public:
             { "cohere.crowd.size.value.mobJitterScale", "0.498172" },
             { "cohere.crowd.size.value.value", "-0.900000" },
             { "cohere.crowd.size.valueType", "constant" },
-            { "cohere.crowdType", "quadraticUp" },
+            { "cohere.crowd.type", "quadraticUp" },
             { "cohere.radius.periodic.amplitude.mobJitterScale", "0.773034" },
             { "cohere.radius.periodic.amplitude.value", "-0.473515" },
             { "cohere.radius.periodic.period.mobJitterScale", "0.618839" },
@@ -3395,7 +3395,7 @@ public:
             { "cores.crowd.size.value.mobJitterScale", "-1.000000" },
             { "cores.crowd.size.value.value", "20.000000" },
             { "cores.crowd.size.valueType", "constant" },
-            { "cores.crowdType", "strictOff" },
+            { "cores.crowd.type", "strictOff" },
             { "cores.radius.periodic.amplitude.mobJitterScale", "0.561953" },
             { "cores.radius.periodic.amplitude.value", "-0.459170" },
             { "cores.radius.periodic.period.mobJitterScale", "0.120379" },
@@ -3433,7 +3433,7 @@ public:
             { "corners.crowd.size.value.mobJitterScale", "0.145480" },
             { "corners.crowd.size.value.value", "1.631990" },
             { "corners.crowd.size.valueType", "periodic" },
-            { "corners.crowdType", "always" },
+            { "corners.crowd.type", "always" },
             { "corners.radius.periodic.amplitude.mobJitterScale", "-0.292849" },
             { "corners.radius.periodic.amplitude.value", "0.575863" },
             { "corners.radius.periodic.period.mobJitterScale", "-0.237989" },
@@ -3481,7 +3481,7 @@ public:
             { "edges.crowd.size.value.mobJitterScale", "0.433648" },
             { "edges.crowd.size.value.value", "4.759602" },
             { "edges.crowd.size.valueType", "periodic" },
-            { "edges.crowdType", "strictOn" },
+            { "edges.crowd.type", "strictOn" },
             { "edges.radius.periodic.amplitude.mobJitterScale", "0.179700" },
             { "edges.radius.periodic.amplitude.value", "0.426636" },
             { "edges.radius.periodic.period.mobJitterScale", "-0.398081" },
@@ -3519,7 +3519,7 @@ public:
             { "enemy.crowd.size.value.mobJitterScale", "-0.221733" },
             { "enemy.crowd.size.value.value", "12.785927" },
             { "enemy.crowd.size.valueType", "periodic" },
-            { "enemy.crowdType", "strictOff" },
+            { "enemy.crowd.type", "strictOff" },
             { "enemy.radius.periodic.amplitude.mobJitterScale", "1.000000" },
             { "enemy.radius.periodic.amplitude.value", "-0.015732" },
             { "enemy.radius.periodic.period.mobJitterScale", "0.643457" },
@@ -3557,7 +3557,7 @@ public:
             { "enemyBase.crowd.size.value.mobJitterScale", "-0.005402" },
             { "enemyBase.crowd.size.value.value", "5.717134" },
             { "enemyBase.crowd.size.valueType", "constant" },
-            { "enemyBase.crowdType", "linearUp" },
+            { "enemyBase.crowd.type", "linearUp" },
             { "enemyBase.radius.periodic.amplitude.mobJitterScale", "-0.503440" },
             { "enemyBase.radius.periodic.amplitude.value", "0.540863" },
             { "enemyBase.radius.periodic.period.mobJitterScale", "-0.289706" },
@@ -3601,7 +3601,7 @@ public:
             { "fleetLocus.force.crowd.size.value.mobJitterScale", "-0.993288" },
             { "fleetLocus.force.crowd.size.value.value", "2.672786" },
             { "fleetLocus.force.crowd.size.valueType", "constant" },
-            { "fleetLocus.force.crowdType", "linearDown" },
+            { "fleetLocus.force.crowd.type", "linearDown" },
             { "fleetLocus.force.radius.periodic.amplitude.mobJitterScale", "-0.804319" },
             { "fleetLocus.force.radius.periodic.amplitude.value", "0.060413" },
             { "fleetLocus.force.radius.periodic.period.mobJitterScale", "-0.618225" },
@@ -3660,7 +3660,7 @@ public:
             { "mobLocus.force.crowd.size.value.mobJitterScale", "-0.479161" },
             { "mobLocus.force.crowd.size.value.value", "15.933333" },
             { "mobLocus.force.crowd.size.valueType", "constant" },
-            { "mobLocus.force.crowdType", "linearDown" },
+            { "mobLocus.force.crowd.type", "linearDown" },
             { "mobLocus.force.radius.periodic.amplitude.mobJitterScale", "-0.158173" },
             { "mobLocus.force.radius.periodic.amplitude.value", "-0.791974" },
             { "mobLocus.force.radius.periodic.period.mobJitterScale", "0.183857" },
@@ -3735,7 +3735,7 @@ public:
             { "nearestFriend.crowd.size.value.mobJitterScale", "0.444308" },
             { "nearestFriend.crowd.size.value.value", "4.566016" },
             { "nearestFriend.crowd.size.valueType", "periodic" },
-            { "nearestFriend.crowdType", "linearDown" },
+            { "nearestFriend.crowd.type", "linearDown" },
             { "nearestFriend.radius.periodic.amplitude.mobJitterScale", "1.000000" },
             { "nearestFriend.radius.periodic.amplitude.value", "-0.501191" },
             { "nearestFriend.radius.periodic.period.mobJitterScale", "0.465727" },
@@ -3778,7 +3778,7 @@ public:
             { "separate.crowd.size.value.mobJitterScale", "0.658728" },
             { "separate.crowd.size.value.value", "5.539504" },
             { "separate.crowd.size.valueType", "periodic" },
-            { "separate.crowdType", "quadraticDown" },
+            { "separate.crowd.type", "quadraticDown" },
             { "separate.radius.periodic.amplitude.mobJitterScale", "-1.000000" },
             { "separate.radius.periodic.amplitude.value", "0.936464" },
             { "separate.radius.periodic.period.mobJitterScale", "0.174253" },
@@ -3971,18 +3971,31 @@ public:
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".crowd.size");
-        loadBundleValue(mreg, &b->crowd.size, MBString_GetCStr(&s));
+        MBString_AppendCStr(&s, ".crowd");
+        loadBundleCrowd(mreg, &b->crowd, MBString_GetCStr(&s));
+
+        MBString_Destroy(&s);
+    }
+
+    void loadBundleCrowd(MBRegistry *mreg, BundleCrowd *bc,
+                         const char *prefix) {
+        CMBString s;
+        MBString_Create(&s);
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".crowd.radius");
-        loadBundleValue(mreg, &b->crowd.radius, MBString_GetCStr(&s));
+        MBString_AppendCStr(&s, ".size");
+        loadBundleValue(mreg, &bc->size, MBString_GetCStr(&s));
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
-        MBString_AppendCStr(&s, ".crowdType");
-        loadBundleCheck(mreg, &b->crowdCheck, MBString_GetCStr(&s));
+        MBString_AppendCStr(&s, ".radius");
+        loadBundleValue(mreg, &bc->radius, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".type");
+        loadBundleCheck(mreg, &bc->check, MBString_GetCStr(&s));
 
         MBString_Destroy(&s);
     }
@@ -4512,13 +4525,13 @@ public:
         /*
          * Skip the complicated calculations if the bundle-check was constant.
          */
-        if (!isConstantBundleCheck(bundle->crowdCheck)) {
+        if (!isConstantBundleCheck(bundle->crowd.check)) {
             crowdTrigger = getBundleValue(mob, &bundle->crowd.size);
             crowdRadius = getBundleValue(mob, &bundle->crowd.radius);
             getCrowdCount(mob, crowdRadius);
         }
 
-        return bundleCheck(bundle->crowdCheck, crowdValue, crowdTrigger,
+        return bundleCheck(bundle->crowd.check, crowdValue, crowdTrigger,
                            weight);
     }
 
@@ -5157,8 +5170,8 @@ static void MutateBundleValue(FleetAIType aiType, MBRegistry *mreg,
     MBString_Destroy(&s);
 }
 
-static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
-                              const char *prefix)
+static void MutateBundleCheck(FleetAIType aiType, MBRegistry *mreg,
+                              const char *str)
 {
     MutationStrParams svf;
 
@@ -5167,20 +5180,51 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
         "quadraticUp", "quadraticDown"
     };
 
+    GetMutationStrParams(&svf, str, mreg);
+    Mutate_Str(mreg, &svf, 1, checkOptions, ARRAYSIZE(checkOptions));
+}
+
+static void MutateBundleCrowd(FleetAIType aiType, MBRegistry *mreg,
+                              const char *prefix)
+{
     CMBString s;
     MBString_Create(&s);
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".crowdType");
-    GetMutationStrParams(&svf, MBString_GetCStr(&s), mreg);
-    Mutate_Str(mreg, &svf, 1, checkOptions, ARRAYSIZE(checkOptions));
+    MBString_AppendCStr(&s, ".type");
+    MutateBundleCheck(aiType, mreg, MBString_GetCStr(&s));
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".size");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      MUTATION_TYPE_COUNT);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".radius");
+    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
+                      MUTATION_TYPE_RADIUS);
+
+    MBString_Destroy(&s);
+}
+
+static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
+                              const char *prefix)
+{
+    CMBString s;
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".crowd");
+    MutateBundleCrowd(aiType, mreg, MBString_GetCStr(&s));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".rangeType");
-    GetMutationStrParams(&svf, MBString_GetCStr(&s), mreg);
-    Mutate_Str(mreg, &svf, 1, checkOptions, ARRAYSIZE(checkOptions));
+    MutateBundleCheck(aiType, mreg, MBString_GetCStr(&s));
 
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
@@ -5191,18 +5235,6 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".radius");
-    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
-                      MUTATION_TYPE_RADIUS);
-
-    MBString_MakeEmpty(&s);
-    MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".crowd.size");
-    MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
-                      MUTATION_TYPE_COUNT);
-
-    MBString_MakeEmpty(&s);
-    MBString_AppendCStr(&s, prefix);
-    MBString_AppendCStr(&s, ".crowd.radius");
     MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
                       MUTATION_TYPE_RADIUS);
 
