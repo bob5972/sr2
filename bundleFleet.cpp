@@ -79,6 +79,11 @@ typedef struct BundleForce {
     BundleCrowd crowd;
 } BundleForce;
 
+// typedef struct BundleBool {
+//     BundleCrowd crowd;
+//     BundleValue value;
+// } BundleBool;
+
 typedef struct LiveLocusState {
     FPoint randomPoint;
     uint randomTick;
@@ -4181,7 +4186,7 @@ public:
         SensorGrid *sg = mySensorGrid;
         float cweight;
 
-        if (!crowdCheck(mob, bundle, &cweight)) {
+        if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
             /* No force. */
             return;
         }
@@ -4204,7 +4209,7 @@ public:
         int n = 0;
         float cweight;
 
-        if (!crowdCheck(mob, &myConfig.nearestFriend, &cweight)) {
+        if (!crowdCheck(mob, &myConfig.nearestFriend.crowd, &cweight)) {
             /* No force. */
             return;
         }
@@ -4250,7 +4255,7 @@ public:
         FPoint edgePoint;
         float cweight;
 
-        if (!crowdCheck(mob, bundle, &cweight)) {
+        if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
             /* No force. */
             return;
         }
@@ -4291,7 +4296,7 @@ public:
         FPoint cornerPoint;
         float cweight;
 
-        if (!crowdCheck(mob, bundle, &cweight)) {
+        if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
             /* No force. */
             return;
         }
@@ -4517,7 +4522,7 @@ public:
      * Should this force operate given the current crowd size?
      * Returns TRUE iff the force should operate.
      */
-    bool crowdCheck(Mob *mob, BundleForce *bundle, float *weight) {
+    bool crowdCheck(Mob *mob, BundleCrowd *crowd, float *weight) {
         float crowdTrigger = 0.0f;
         float crowdRadius = 0.0f;
         float crowdValue = 0.0f;
@@ -4525,15 +4530,26 @@ public:
         /*
          * Skip the complicated calculations if the bundle-check was constant.
          */
-        if (!isConstantBundleCheck(bundle->crowd.check)) {
-            crowdTrigger = getBundleValue(mob, &bundle->crowd.size);
-            crowdRadius = getBundleValue(mob, &bundle->crowd.radius);
+        if (!isConstantBundleCheck(crowd->check)) {
+            crowdTrigger = getBundleValue(mob, &crowd->size);
+            crowdRadius = getBundleValue(mob, &crowd->radius);
             getCrowdCount(mob, crowdRadius);
         }
 
-        return bundleCheck(bundle->crowd.check, crowdValue, crowdTrigger,
+        return bundleCheck(crowd->check, crowdValue, crowdTrigger,
                            weight);
     }
+
+    // /*
+    //  * getBundleBool --
+    //  *    Is this per-mob BundleBool TRUE or FALSE right now?
+    //  */
+    // bool getBundleBool(Mob *mob, BundleBool *bb) {
+    //     if (!crowdCheck(mob, bundle, &cweight)) {
+    //         /* No force. */
+    //         return FALSE;
+    //     }
+    // }
 
     /*
      * applyBundle --
@@ -4542,7 +4558,7 @@ public:
     void applyBundle(Mob *mob, FRPoint *rForce, BundleForce *bundle,
                      FPoint *focusPos) {
         float cweight;
-        if (!crowdCheck(mob, bundle, &cweight)) {
+        if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
             /* No force. */
             return;
         }
