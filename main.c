@@ -788,27 +788,27 @@ static void MainDumpPopulation(void)
         }
 
         MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "fleetName");
+        MBString_AppendCStr(&key, "abattle.fleetName");
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key), fleetName);
 
         MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "playerName");
+        MBString_AppendCStr(&key, "abattle.playerName");
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            mainData.players[i].playerName);
 
         MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "playerType");
+        MBString_AppendCStr(&key, "abattle.playerType");
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            PlayerType_ToString(mainData.players[i].playerType));
 
         MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numBattles", wd->battles);
+                         &prefix, "abattle.numBattles", wd->battles);
         MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numWins", wd->wins);
+                         &prefix, "abattle.numWins", wd->wins);
         MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numLosses", wd->losses);
+                         &prefix, "abattle.numLosses", wd->losses);
         MainDumpAddToKey(mainData.players[i].mreg, popReg,
-                         &prefix, "numDraws", wd->draws);
+                         &prefix, "abattle.numDraws", wd->draws);
     }
 
     MBString_IntToString(&tmp, numFleets);
@@ -861,29 +861,29 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
 
         ASSERT(*mpIndex < mpSize);
 
-        if (MBRegistry_GetCStr(fleetReg, "fleetName") == NULL) {
+        if (MBRegistry_GetCStr(fleetReg, "abattle.fleetName") == NULL) {
             MBRegistry_DebugDump(fleetReg);
             PANIC("Missing key: fleetName, i=%d\n", i);
         }
-        if (MBRegistry_ContainsKey(fleetReg, "playerName")) {
+        if (MBRegistry_ContainsKey(fleetReg, "abattle.playerName")) {
             mainPlayers[*mpIndex].playerName =
-                strdup(MBRegistry_GetCStr(fleetReg, "playerName"));
+                strdup(MBRegistry_GetCStr(fleetReg, "abattle.playerName"));
         } else {
             mainPlayers[*mpIndex].playerName =
-                strdup(MBRegistry_GetCStr(fleetReg, "fleetName"));
+                strdup(MBRegistry_GetCStr(fleetReg, "abattle.fleetName"));
         }
 
-        if (MBRegistry_ContainsKey(fleetReg, "age")) {
-            uint age = MBRegistry_GetUint(fleetReg, "age");
+        if (MBRegistry_ContainsKey(fleetReg, "abattle.age")) {
+            uint age = MBRegistry_GetUint(fleetReg, "abattle.age");
             MBString_IntToString(&tmp, age + 1);
-            MBRegistry_PutCopy(fleetReg, "age", MBString_GetCStr(&tmp));
+            MBRegistry_PutCopy(fleetReg, "abattle.age", MBString_GetCStr(&tmp));
         } else {
-            MBRegistry_PutCopy(fleetReg, "age", "0");
+            MBRegistry_PutCopy(fleetReg, "abattle.age", "0");
         }
 
         mainPlayers[*mpIndex].mreg = MBRegistry_AllocCopy(fleetReg);
         mainPlayers[*mpIndex].playerType =
-            PlayerType_FromString(MBRegistry_GetCStr(fleetReg, "playerType"));
+            PlayerType_FromString(MBRegistry_GetCStr(fleetReg, "abattle.playerType"));
         VERIFY(mainPlayers[*mpIndex].playerType != PLAYER_TYPE_INVALID);
         VERIFY(mainPlayers[*mpIndex].playerType < PLAYER_TYPE_MAX);
 
@@ -891,7 +891,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
             numTargetFleets++;
         }
 
-        const char *fleetName = MBRegistry_GetCStr(fleetReg, "fleetName");
+        const char *fleetName = MBRegistry_GetCStr(fleetReg, "abattle.fleetName");
         mainPlayers[*mpIndex].aiType = Fleet_GetTypeFromName(fleetName);
         if (mainPlayers[*mpIndex].aiType == FLEET_AI_INVALID) {
             PANIC("Unknown Fleet Name: %s\n", fleetName);
@@ -1019,14 +1019,14 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         uint32 fi = i + startingMPIndex;
         MBRegistry *fleetReg = mainPlayers[fi].mreg;
         float sProb;
-        uint32 numBattles = MBRegistry_GetUint(fleetReg, "numBattles");
+        uint32 numBattles = MBRegistry_GetUint(fleetReg, "abattle.numBattles");
         uint32 weight;
 
         if (useWinRatio) {
-            weight = MBRegistry_GetUint(fleetReg, "numWins");
+            weight = MBRegistry_GetUint(fleetReg, "abattle.numWins");
         } else {
-            weight = MBRegistry_GetUint(fleetReg, "numLosses") +
-                     MBRegistry_GetUint(fleetReg, "numDraws");
+            weight = MBRegistry_GetUint(fleetReg, "abattle.numLosses") +
+                     MBRegistry_GetUint(fleetReg, "abattle.numDraws");
         }
 
         sProb = numBattles > 0 ? weight / (float)numBattles : 0.0f;
@@ -1059,7 +1059,7 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 static bool MainIsFleetDefective(BattlePlayer *player)
 {
     MBRegistry *fleetReg = player->mreg;
-    uint numBattles = MBRegistry_GetUint(fleetReg, "numBattles");
+    uint numBattles = MBRegistry_GetUint(fleetReg, "abattle.numBattles");
 
     if (numBattles == 0) {
         /*
@@ -1068,7 +1068,7 @@ static bool MainIsFleetDefective(BattlePlayer *player)
         return FALSE;
     }
 
-    uint numWins = MBRegistry_GetUint(fleetReg, "numWins");
+    uint numWins = MBRegistry_GetUint(fleetReg, "abattle.numWins");
     float winRatio = (float)numWins / (float)numBattles;
 
     if (winRatio < 0.0f) {
@@ -1154,19 +1154,19 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
             }
         }
 
-        MainDumpAddToKey(breeder->mreg, breeder->mreg, NULL, "numSpawn", 1);
+        MainDumpAddToKey(breeder->mreg, breeder->mreg, NULL, "abattle.numSpawn", 1);
     }
 
-    MainDumpAddToKey(src->mreg, src->mreg, NULL, "numSpawn", 1);
+    MainDumpAddToKey(src->mreg, src->mreg, NULL, "abattle.numSpawn", 1);
 
     Fleet_Mutate(src->aiType, dest->mreg);
 
-    MBRegistry_Remove(dest->mreg, "numBattles");
-    MBRegistry_Remove(dest->mreg, "numWins");
-    MBRegistry_Remove(dest->mreg, "numLosses");
-    MBRegistry_Remove(dest->mreg, "numDraws");
-    MBRegistry_Remove(dest->mreg, "numSpawn");
-    MBRegistry_PutConst(dest->mreg, "age", "0");
+    MBRegistry_Remove(dest->mreg, "abattle.numBattles");
+    MBRegistry_Remove(dest->mreg, "abattle.numWins");
+    MBRegistry_Remove(dest->mreg, "abattle.numLosses");
+    MBRegistry_Remove(dest->mreg, "abattle.numDraws");
+    MBRegistry_Remove(dest->mreg, "abattle.numSpawn");
+    MBRegistry_PutConst(dest->mreg, "abattle.age", "0");
 }
 
 static int MainEngineThreadMain(void *data)
