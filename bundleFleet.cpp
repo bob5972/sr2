@@ -83,6 +83,7 @@ typedef struct BundleForce {
 } BundleForce;
 
 typedef struct BundleBool {
+    bool forceOn;
     BundleCrowd crowd;
     BundleRange range;
     BundleValue value;
@@ -124,8 +125,7 @@ typedef struct BundleMobLocus {
 } BundleMobLocus;
 
 typedef struct BundleSpec {
-    bool randomIdle;
-    BundleBool bbRandomIdle;
+    BundleBool randomIdle;
 
     bool nearBaseRandomIdle;
     bool randomizeStoppedVelocity;
@@ -219,7 +219,7 @@ public:
             { "guardRange",                  "0"         },
 
             { "nearBaseRandomIdle",          "TRUE"      },
-            { "randomIdle",                  "TRUE"      },
+            { "randomIdle.forceOn",                  "TRUE"      },
             { "randomizeStoppedVelocity",    "TRUE"      },
             { "rotateStartingAngle",         "TRUE",     },
             { "simpleAttack",                "TRUE"      },
@@ -811,7 +811,7 @@ public:
             { "mobLocus.useScaled", "FALSE" },
             { "mobLocus.useScaledLocus", "TRUE" },
             { "nearBaseRadius", "344.840485" },
-            { "randomIdle", "TRUE" },
+            { "randomIdle.forceOn", "TRUE" },
             { "rotateStartingAngle", "TRUE" },
             { "sensorGrid.staleCoreTime", "28.837776" },
             { "sensorGrid.staleFighterTime", "11.049438" },
@@ -1821,7 +1821,7 @@ public:
             { "nearestFriend.weight.value.mobJitterScale", "0.783617" },
             { "nearestFriend.weight.value.value", "0.058244" },
             { "nearestFriend.weight.valueType", "periodic" },
-            { "randomIdle", "TRUE" },
+            { "randomIdle.forceOn", "TRUE" },
             { "randomizeStoppedVelocity", "TRUE" },
             { "rotateStartingAngle", "FALSE" },
             { "sensorGrid.staleCoreTime", "41.629436" },
@@ -2456,7 +2456,7 @@ public:
             { "nearestFriend.weight.periodic.tickShift.value", "1093.079102" },
             { "nearestFriend.weight.value.mobJitterScale", "-0.601265" },
             { "nearestFriend.weight.value.value", "-2.827474" },
-            { "randomIdle", "TRUE" },
+            { "randomIdle.forceOn", "TRUE" },
             { "randomizeStoppedVelocity", "TRUE" },
             { "rotateStartingAngle", "TRUE" },
             { "sensorGrid.staleCoreTime", "15.258034" },
@@ -3108,7 +3108,7 @@ public:
             { "nearestFriend.weight.value.mobJitterScale", "-0.104346" },
             { "nearestFriend.weight.value.value", "-8.210824" },
             { "nearestFriend.weight.valueType", "constant" },
-            { "randomIdle", "FALSE" },
+            { "randomIdle.forceOn", "FALSE" },
             { "randomizeStoppedVelocity", "TRUE" },
             { "rotateStartingAngle", "TRUE" },
             { "sensorGrid.staleCoreTime", "16.061089" },
@@ -3766,7 +3766,7 @@ public:
             { "nearestFriend.weight.value.mobJitterScale", "0.095431" },
             { "nearestFriend.weight.value.value", "0.470555" },
             { "nearestFriend.weight.valueType", "periodic" },
-            { "randomIdle", "FALSE" },
+            { "randomIdle.forceOn", "FALSE" },
             { "randomizeStoppedVelocity", "TRUE" },
             { "rotateStartingAngle", "TRUE" },
             { "sensorGrid.staleCoreTime", "40.025291" },
@@ -4008,6 +4008,11 @@ public:
 
         MBString_MakeEmpty(&s);
         MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".forceOn");
+        b->forceOn = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".range");
         loadBundleRange(mreg, &b->range, MBString_GetCStr(&s));
 
@@ -4166,8 +4171,7 @@ public:
 
 
     virtual void loadRegistry(MBRegistry *mreg) {
-        this->myConfig.randomIdle = MBRegistry_GetBool(mreg, "randomIdle");
-        loadBundleBool(mreg, &this->myConfig.bbRandomIdle, "randomIdle.bb");
+        loadBundleBool(mreg, &this->myConfig.randomIdle, "randomIdle");
 
         this->myConfig.nearBaseRandomIdle =
             MBRegistry_GetBool(mreg, "nearBaseRandomIdle");
@@ -4593,6 +4597,10 @@ public:
         float distance = 0.0f;
         float deadWeight;
 
+        if (bb->forceOn) {
+            return TRUE;
+        }
+
         if (!crowdCheck(mob, &bb->crowd, &deadWeight)) {
             return FALSE;
         }
@@ -4959,8 +4967,7 @@ public:
         }
 
         if (newlyIdle) {
-            if (myConfig.randomIdle ||
-                getBundleBool(mob, &myConfig.bbRandomIdle)) {
+            if (getBundleBool(mob, &myConfig.randomIdle)) {
                 mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
                 mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
             }
@@ -5348,6 +5355,19 @@ static void MutateBundleBool(FleetAIType aiType, MBRegistry *mreg,
     CMBString s;
     MBString_Create(&s);
 
+    MutationBoolParams vb;
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".forceOn");
+    MBUtil_Zero(&vb, sizeof(vb));
+    vb.key = MBString_GetCStr(&s);
+    vb.flipRate = 0.05f;
+    if (MBRegistry_GetBool(mreg, BUNDLE_SCRAMBLE_KEY)) {
+        vb.flipRate = 0.5f;
+    }
+    Mutate_Bool(mreg, &vb, 1);
+
     MBString_MakeEmpty(&s);
     MBString_AppendCStr(&s, prefix);
     MBString_AppendCStr(&s, ".crowd");
@@ -5541,7 +5561,6 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "attackExtendedRange",      0.05f },
         { "rotateStartingAngle",      0.05f },
         { "gatherAbandonStale",       0.05f },
-        { "randomIdle",               0.05f },
         { "nearBaseRandomIdle",       0.005f},
         { "randomizeStoppedVelocity", 0.05f },
         { "simpleAttack",             0.05f },
@@ -5564,7 +5583,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     Mutate_Float(mreg, vf, ARRAYSIZE(vf));
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
 
-    MutateBundleBool(aiType, mreg, "randomIdle.bb");
+    MutateBundleBool(aiType, mreg, "randomIdle");
 
     MutateBundleForce(aiType, mreg, "align");
     MutateBundleForce(aiType, mreg, "cohere");
