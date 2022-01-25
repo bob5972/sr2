@@ -155,6 +155,9 @@ typedef struct BundleSpec {
 
     BundleFleetLocus fleetLocus;
     BundleMobLocus mobLocus;
+
+    BundleValue holdProbability;
+    BundleValue holdTicks;
 } BundleSpec;
 
 #define NUM_MOB_JITTERS (sizeof(BundleSpec) / sizeof(float))
@@ -4203,6 +4206,9 @@ public:
         loadBundleFleetLocus(mreg, &this->myConfig.fleetLocus, "fleetLocus");
         loadBundleMobLocus(mreg, &this->myConfig.mobLocus, "mobLocus");
 
+        loadBundleValue(mreg, &this->myConfig.holdProbability, "hold.probability");
+        loadBundleValue(mreg, &this->myConfig.holdTicks, "hold.ticks");
+
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
@@ -5022,6 +5028,16 @@ public:
             }
         }
 
+        {
+            float hProb = getBundleValue(mob, &myConfig.holdProbability);
+            if (hProb > 0.0f && RandomState_Flip(rs, hProb)) {
+                float tickLength = getBundleValue(mob, &myConfig.holdTicks);
+                if (tickLength >= 1.0f) {
+                    ship->hold(&mob->pos, (uint)tickLength);
+                }
+            }
+        }
+
         ASSERT(!isnanf(mob->cmd.target.x));
         ASSERT(!isnanf(mob->cmd.target.y));
     }
@@ -5600,6 +5616,9 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutateBundleFleetLocus(aiType, mreg, "fleetLocus");
     MutateBundleMobLocus(aiType, mreg, "mobLocus");
+
+    MutateBundleValue(aiType, mreg, "hold.probability", MUTATION_TYPE_PROBABILITY);
+    MutateBundleValue(aiType, mreg, "hold.ticks", MUTATION_TYPE_TICKS);
 
     MBRegistry_Remove(mreg, BUNDLE_SCRAMBLE_KEY);
 }
