@@ -255,7 +255,9 @@ sub DisplaySummary() {
         }
 
         $f = sprintf("%1.2f%%", ($f*100));
-        Console("Leader: $fPrefix, age=$a, numWins=$mw, numSpawn=$ms, fitness=$f\n");
+        my $fleet = $maxWinsP;
+        $fleet =~ s/\.abattle$//;
+        Console("Leader: $fleet, age=$a, numWins=$mw, numSpawn=$ms, fitness=$f\n");
     }
 
     Console("\n");
