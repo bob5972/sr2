@@ -2980,7 +2980,7 @@ public:
             { "fleetLocus.randomPeriod", "1665.636719" },
             { "fleetLocus.randomWeight", "1.909164" },
             { "fleetLocus.useScaled", "TRUE" },
-            { "flockDuringAttack.forceOn", "TRUE" },
+            { "flockDuringAttack.forceOn", "FALSE" },
             { "gatherAbandonStale", "FALSE" },
             { "gatherRange", "50.508949" },
             { "guardRange", "114.359146" },
