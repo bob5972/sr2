@@ -126,11 +126,10 @@ typedef struct BundleMobLocus {
 
 typedef struct BundleSpec {
     BundleBool randomIdle;
-
-    bool nearBaseRandomIdle;
-    bool randomizeStoppedVelocity;
-    bool simpleAttack;
-    bool flockDuringAttack;
+    BundleBool nearBaseRandomIdle;
+    BundleBool randomizeStoppedVelocity;
+    BundleBool simpleAttack;
+    BundleBool flockDuringAttack;
 
     BundleForce align;
     BundleForce cohere;
@@ -218,11 +217,11 @@ public:
             { "gatherRange",                 "50"        },
             { "guardRange",                  "0"         },
 
-            { "nearBaseRandomIdle",          "TRUE"      },
-            { "randomIdle.forceOn",                  "TRUE"      },
-            { "randomizeStoppedVelocity",    "TRUE"      },
+            { "nearBaseRandomIdle.forceOn",  "TRUE"      },
+            { "randomIdle.forceOn",          "TRUE"      },
+            { "randomizeStoppedVelocity.forceOn", "TRUE" },
             { "rotateStartingAngle",         "TRUE",     },
-            { "simpleAttack",                "TRUE"      },
+            { "simpleAttack.forceOn",        "TRUE"      },
 
             { "nearBaseRadius",              "100.0"     },
             { "baseDefenseRadius",           "250.0"     },
@@ -1782,7 +1781,7 @@ public:
             { "mobLocus.resetOnProximity", "TRUE" },
             { "mobLocus.useScaled", "TRUE" },
             { "nearBaseRadius", "91.025482" },
-            { "nearBaseRandomIdle", "FALSE" },
+            { "nearBaseRandomIdle.forceOn", "FALSE" },
             { "nearestFriend.range.radius.periodic.amplitude.mobJitterScale", "0.656393" },
             { "nearestFriend.range.radius.periodic.amplitude.value", "0.213289" },
             { "nearestFriend.range.radius.periodic.period.mobJitterScale", "0.877674" },
@@ -1822,7 +1821,7 @@ public:
             { "nearestFriend.weight.value.value", "0.058244" },
             { "nearestFriend.weight.valueType", "periodic" },
             { "randomIdle.forceOn", "TRUE" },
-            { "randomizeStoppedVelocity", "TRUE" },
+            { "randomizeStoppedVelocity.forceOn", "TRUE" },
             { "rotateStartingAngle", "FALSE" },
             { "sensorGrid.staleCoreTime", "41.629436" },
             { "sensorGrid.staleFighterTime", "0.950000" },
@@ -1864,7 +1863,7 @@ public:
             { "separate.weight.value.mobJitterScale", "0.277628" },
             { "separate.weight.value.value", "-1.060454" },
             { "separate.weight.valueType", "constant" },
-            { "simpleAttack", "TRUE" },
+            { "simpleAttack.forceOn", "TRUE" },
             { "startingMaxRadius", "1994.999878" },
             { "startingMinRadius", "358.747559" },
         };
@@ -2420,7 +2419,7 @@ public:
             { "mobLocus.resetOnProximity", "FALSE" },
             { "mobLocus.useScaled", "FALSE" },
             { "nearBaseRadius", "466.211639" },
-            { "nearBaseRandomIdle", "TRUE" },
+            { "nearBaseRandomIdle.forceOn", "TRUE" },
             { "nearestFriend.range.radius.periodic.amplitude.mobJitterScale", "1.000000" },
             { "nearestFriend.range.radius.periodic.amplitude.value", "-0.079872" },
             { "nearestFriend.range.radius.periodic.period.mobJitterScale", "-0.011918" },
@@ -2457,7 +2456,7 @@ public:
             { "nearestFriend.weight.value.mobJitterScale", "-0.601265" },
             { "nearestFriend.weight.value.value", "-2.827474" },
             { "randomIdle.forceOn", "TRUE" },
-            { "randomizeStoppedVelocity", "TRUE" },
+            { "randomizeStoppedVelocity.forceOn", "TRUE" },
             { "rotateStartingAngle", "TRUE" },
             { "sensorGrid.staleCoreTime", "15.258034" },
             { "sensorGrid.staleFighterTime", "1.707165" },
@@ -2498,7 +2497,7 @@ public:
             { "separate.weight.value.mobJitterScale", "0.296379" },
             { "separate.weight.value.value", "10.000000" },
             { "separate.weight.valueType", "constant" },
-            { "simpleAttack", "TRUE" },
+            { "simpleAttack.forceOn", "TRUE" },
             { "startingMaxRadius", "1131.782349" },
             { "startingMinRadius", "566.272705" },
         };
@@ -2981,7 +2980,7 @@ public:
             { "fleetLocus.randomPeriod", "1665.636719" },
             { "fleetLocus.randomWeight", "1.909164" },
             { "fleetLocus.useScaled", "TRUE" },
-            { "flockDuringAttack", "TRUE" },
+            { "flockDuringAttack.forceOn", "TRUE" },
             { "gatherAbandonStale", "FALSE" },
             { "gatherRange", "50.508949" },
             { "guardRange", "114.359146" },
@@ -3070,7 +3069,7 @@ public:
             { "mobLocus.resetOnProximity", "FALSE" },
             { "mobLocus.useScaled", "FALSE" },
             { "nearBaseRadius", "419.229462" },
-            { "nearBaseRandomIdle", "TRUE" },
+            { "nearBaseRandomIdle.forceOn", "TRUE" },
             { "nearestFriend.range.radius.periodic.amplitude.mobJitterScale", "0.894288" },
             { "nearestFriend.range.radius.periodic.amplitude.value", "-0.900000" },
             { "nearestFriend.range.radius.periodic.period.mobJitterScale", "-0.193002" },
@@ -3109,7 +3108,7 @@ public:
             { "nearestFriend.weight.value.value", "-8.210824" },
             { "nearestFriend.weight.valueType", "constant" },
             { "randomIdle.forceOn", "FALSE" },
-            { "randomizeStoppedVelocity", "TRUE" },
+            { "randomizeStoppedVelocity.forceOn", "TRUE" },
             { "rotateStartingAngle", "TRUE" },
             { "sensorGrid.staleCoreTime", "16.061089" },
             { "sensorGrid.staleFighterTime", "1.707165" },
@@ -3151,7 +3150,7 @@ public:
             { "separate.weight.value.mobJitterScale", "-0.116910" },
             { "separate.weight.value.value", "1.235031" },
             { "separate.weight.valueType", "constant" },
-            { "simpleAttack", "TRUE" },
+            { "simpleAttack.forceOn", "TRUE" },
             { "startingMaxRadius", "1551.391479" },
             { "startingMinRadius", "416.119781" },
         };
@@ -3638,7 +3637,7 @@ public:
             { "fleetLocus.randomPeriod", "483.338409" },
             { "fleetLocus.randomWeight", "2.000000" },
             { "fleetLocus.useScaled", "FALSE" },
-            { "flockDuringAttack", "FALSE" },
+            { "flockDuringAttack.forceOn", "FALSE" },
             { "gatherAbandonStale", "TRUE" },
             { "gatherRange", "51.465023" },
             { "guardRange", "93.715591" },
@@ -3727,7 +3726,7 @@ public:
             { "mobLocus.resetOnProximity", "FALSE" },
             { "mobLocus.useScaled", "FALSE" },
             { "nearBaseRadius", "300.801270" },
-            { "nearBaseRandomIdle", "FALSE" },
+            { "nearBaseRandomIdle.forceOn", "FALSE" },
             { "nearestFriend.range.radius.periodic.amplitude.mobJitterScale", "0.475914" },
             { "nearestFriend.range.radius.periodic.amplitude.value", "0.263599" },
             { "nearestFriend.range.radius.periodic.period.mobJitterScale", "0.377700" },
@@ -3767,7 +3766,7 @@ public:
             { "nearestFriend.weight.value.value", "0.470555" },
             { "nearestFriend.weight.valueType", "periodic" },
             { "randomIdle.forceOn", "FALSE" },
-            { "randomizeStoppedVelocity", "TRUE" },
+            { "randomizeStoppedVelocity.forceOn", "TRUE" },
             { "rotateStartingAngle", "TRUE" },
             { "sensorGrid.staleCoreTime", "40.025291" },
             { "sensorGrid.staleFighterTime", "0.668698" },
@@ -3809,7 +3808,7 @@ public:
             { "separate.weight.value.mobJitterScale", "0.563146" },
             { "separate.weight.value.value", "9.006775" },
             { "separate.weight.valueType", "constant" },
-            { "simpleAttack", "TRUE" },
+            { "simpleAttack.forceOn", "TRUE" },
             { "startingMaxRadius", "1717.478638" },
             { "startingMinRadius", "353.757050" },
         };
@@ -4172,14 +4171,10 @@ public:
 
     virtual void loadRegistry(MBRegistry *mreg) {
         loadBundleBool(mreg, &this->myConfig.randomIdle, "randomIdle");
-
-        this->myConfig.nearBaseRandomIdle =
-            MBRegistry_GetBool(mreg, "nearBaseRandomIdle");
-        this->myConfig.randomizeStoppedVelocity =
-            MBRegistry_GetBool(mreg, "randomizeStoppedVelocity");
-        this->myConfig.simpleAttack = MBRegistry_GetBool(mreg, "simpleAttack");
-        this->myConfig.flockDuringAttack =
-            MBRegistry_GetBool(mreg, "flockDuringAtttack");
+        loadBundleBool(mreg, &this->myConfig.nearBaseRandomIdle, "nearBaseRandomIdle");
+        loadBundleBool(mreg, &this->myConfig.randomizeStoppedVelocity, "randomizeStoppedVelocity");
+        loadBundleBool(mreg, &this->myConfig.simpleAttack, "simpleAttack");
+        loadBundleBool(mreg, &this->myConfig.flockDuringAttack, "flockDuringAttack");
 
         loadBundleForce(mreg, &this->myConfig.align, "align");
         loadBundleForce(mreg, &this->myConfig.cohere, "cohere");
@@ -4929,7 +4924,7 @@ public:
 
         BasicAIGovernor::doAttack(mob, enemyTarget);
 
-        if (!myConfig.simpleAttack) {
+        if (!getBundleBool(mob, &myConfig.simpleAttack)) {
             float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
             FRPoint rPos;
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
@@ -4940,7 +4935,7 @@ public:
             FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
         }
 
-        if (myConfig.flockDuringAttack) {
+        if (getBundleBool(mob, &myConfig.flockDuringAttack)) {
             doIdle(mob, FALSE);
         }
     }
@@ -4986,7 +4981,7 @@ public:
             FRPoint_Zero(&rForce);
             FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-            if (myConfig.randomizeStoppedVelocity &&
+            if (getBundleBool(mob, &myConfig.randomizeStoppedVelocity) &&
                 rPos.radius < MICRON) {
                 rPos.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
             }
@@ -5010,7 +5005,7 @@ public:
             flockFleetLocus(mob, &rForce);
             flockMobLocus(mob, &rForce);
 
-            if (myConfig.randomizeStoppedVelocity &&
+            if (getBundleBool(mob, &myConfig.randomizeStoppedVelocity) &&
                 rForce.radius < MICRON) {
                 rForce.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
             }
@@ -5021,7 +5016,7 @@ public:
             ASSERT(!isnanf(mob->cmd.target.x));
             ASSERT(!isnanf(mob->cmd.target.y));
         } else if (newlyIdle) {
-            if (myConfig.nearBaseRandomIdle) {
+            if (getBundleBool(mob, &myConfig.nearBaseRandomIdle)) {
                 mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
                 mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
             }
@@ -5561,10 +5556,6 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "attackExtendedRange",      0.05f },
         { "rotateStartingAngle",      0.05f },
         { "gatherAbandonStale",       0.05f },
-        { "nearBaseRandomIdle",       0.005f},
-        { "randomizeStoppedVelocity", 0.05f },
-        { "simpleAttack",             0.05f },
-        { "flockDuringAttack",        0.05f },
     };
 
     MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "FALSE");
@@ -5584,6 +5575,10 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
 
     MutateBundleBool(aiType, mreg, "randomIdle");
+    MutateBundleBool(aiType, mreg, "nearBaseRandomIdle");
+    MutateBundleBool(aiType, mreg, "randomizeStoppedVelocity");
+    MutateBundleBool(aiType, mreg, "simpleAttack");
+    MutateBundleBool(aiType, mreg, "flockDuringAttack");
 
     MutateBundleForce(aiType, mreg, "align");
     MutateBundleForce(aiType, mreg, "cohere");
