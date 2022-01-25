@@ -82,7 +82,7 @@ sub ComputeDiversity() {
 
     for (my $i = 1; $i <= $numFleets; $i++) {
         my $prefix = "fleet$i";
-        if ($gPop->{"$prefix.playerType"} eq "Target") {
+        if ($gPop->{"$prefix.abattle.playerType"} eq "Target") {
             $targetHash->{$prefix} = 1;
         }
     }
@@ -93,9 +93,9 @@ sub ComputeDiversity() {
         } elsif ($k =~ /^(fleet\d+)\./) {
             my $prefix = $1;
             if ($targetHash->{$prefix} &&
-                $k !~ /^fleet\d+\.age$/ &&
-                $k !~ /^fleet\d+\.num(Battles|Wins|Losses|Draws|Spawn)$/ &&
-                $k !~ /^fleet\d+\.(fleetName|playerName|playerType)$/) {
+                $k !~ /^fleet\d+\.abattle\.age$/ &&
+                $k !~ /^fleet\d+\.abattle\.num(Battles|Wins|Losses|Draws|Spawn)$/ &&
+                $k !~ /^fleet\d+\.abattle\.(fleetName|playerName|playerType)$/) {
                 # Target fleet entry.
                 $totalEntries++;
 
@@ -153,16 +153,17 @@ sub DisplaySummary() {
 
     for (my $i = 1; $i <= $numFleets; $i++) {
         my $prefix = "fleet$i";
-        if ($gPop->{"$prefix.playerType"} eq "Target") {
-            if (defined($gPop->{"$prefix.numBattles"})) {
-                my $numBattles = $gPop->{"$prefix.numBattles"};
-                my $numWins = $gPop->{"$prefix.numWins"};
+        my $fPrefix = "$prefix.abattle";
+        if ($gPop->{"$fPrefix.playerType"} eq "Target") {
+            if (defined($gPop->{"$fPrefix.numBattles"})) {
+                my $numBattles = $gPop->{"$fPrefix.numBattles"};
+                my $numWins = $gPop->{"$fPrefix.numWins"};
                 $totalWins += $numWins;
                 $totalBattles += $numBattles;
 
                 my $f = 0.0;
                 if (defined($numBattles) && $numBattles > 0) {
-                    $f = $gPop->{"$prefix.numWins"} / $numBattles;
+                    $f = $gPop->{"$fPrefix.numWins"} / $numBattles;
                 }
                 for (my $fi = 0.1; $fi <= 1.0; $fi += 0.1) {
                     # This has rounding problems at 100% ?
@@ -173,7 +174,7 @@ sub DisplaySummary() {
                 }
             }
 
-            my $a = $gPop->{"$prefix.age"};
+            my $a = $gPop->{"$fPrefix.age"};
             if (defined($a)) {
                 if (!defined($ages->{$a})) {
                     $ages->{$a} = 0;
@@ -185,11 +186,11 @@ sub DisplaySummary() {
                 }
             }
 
-            my $nw = $gPop->{"$prefix.numWins"};
+            my $nw = $gPop->{"$fPrefix.numWins"};
             if (defined($nw)) {
                 if (!defined($maxWinsP) ||
                     $nw > $gPop->{"$maxWinsP.numWins"}) {
-                    $maxWinsP = $prefix;
+                    $maxWinsP = $fPrefix;
                 }
             }
         }
@@ -241,19 +242,20 @@ sub DisplaySummary() {
     }
 
     if (defined($maxWinsP)) {
+        my $fPrefix = "$maxWinsP.abattle";
         Console("\n");
-        my $nb = $gPop->{"$maxWinsP.numBattles"};
-        my $mw = $gPop->{"$maxWinsP.numWins"};
-        my $ms = $gPop->{"$maxWinsP.numSpawn"};
-        my $f = $mw / $gPop->{"$maxWinsP.numBattles"};
-        my $a = $gPop->{"$maxWinsP.age"};
+        my $nb = $gPop->{"$fPrefix.numBattles"};
+        my $mw = $gPop->{"$fPrefix.numWins"};
+        my $ms = $gPop->{"$fPrefix.numSpawn"};
+        my $f = $mw / $gPop->{"$fPrefix.numBattles"};
+        my $a = $gPop->{"$fPrefix.age"};
 
         if (!defined($ms)) {
             $ms = 0;
         }
 
         $f = sprintf("%1.2f%%", ($f*100));
-        Console("Leader: $maxWinsP, age=$a, numWins=$mw, numSpawn=$ms, fitness=$f\n");
+        Console("Leader: $fPrefix, age=$a, numWins=$mw, numSpawn=$ms, fitness=$f\n");
     }
 
     Console("\n");
@@ -272,10 +274,11 @@ sub ResetHistory() {
 
     for (my $i = 1; $i <= $numFleets; $i++) {
         my $prefix = "fleet$i";
-        delete $gPop->{"$prefix.numBattles"};
-        delete $gPop->{"$prefix.numWins"};
-        delete $gPop->{"$prefix.numLosses"};
-        delete $gPop->{"$prefix.numDraws"};
+        my $fPrefix = "$prefix.abattle";
+        delete $gPop->{"$fPrefix.numBattles"};
+        delete $gPop->{"$fPrefix.numWins"};
+        delete $gPop->{"$fPrefix.numLosses"};
+        delete $gPop->{"$fPrefix.numDraws"};
 
         # Keep age and numSpawn because they're just
         # used for statistics.
