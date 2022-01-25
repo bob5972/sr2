@@ -242,7 +242,7 @@ sub DisplaySummary() {
     }
 
     if (defined($maxWinsP)) {
-        my $fPrefix = "$maxWinsP.abattle";
+        my $fPrefix = $maxWinsP;
         Console("\n");
         my $nb = $gPop->{"$fPrefix.numBattles"};
         my $mw = $gPop->{"$fPrefix.numWins"};
