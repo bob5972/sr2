@@ -156,7 +156,7 @@ typedef struct BundleSpec {
     BundleFleetLocus fleetLocus;
     BundleMobLocus mobLocus;
 
-    BundleValue holdProbability;
+    BundleValue holdInvProbability;
     BundleValue holdTicks;
 } BundleSpec;
 
@@ -4206,7 +4206,8 @@ public:
         loadBundleFleetLocus(mreg, &this->myConfig.fleetLocus, "fleetLocus");
         loadBundleMobLocus(mreg, &this->myConfig.mobLocus, "mobLocus");
 
-        loadBundleValue(mreg, &this->myConfig.holdProbability, "hold.probability");
+        loadBundleValue(mreg, &this->myConfig.holdInvProbability,
+                        "hold.invProbability");
         loadBundleValue(mreg, &this->myConfig.holdTicks, "hold.ticks");
 
         this->BasicAIGovernor::loadRegistry(mreg);
@@ -5029,11 +5030,14 @@ public:
         }
 
         {
-            float hProb = getBundleValue(mob, &myConfig.holdProbability);
-            if (hProb > 0.0f && RandomState_Flip(rs, hProb)) {
-                float tickLength = getBundleValue(mob, &myConfig.holdTicks);
-                if (tickLength >= 1.0f) {
-                    ship->hold(&mob->pos, (uint)tickLength);
+            float hProbInv = getBundleValue(mob, &myConfig.holdInvProbability);
+            if (hProbInv >= 1.0f) {
+                float hProb = 1.0f / hProbInv;
+                if (RandomState_Flip(rs, hProb)) {
+                    float tickLength = getBundleValue(mob, &myConfig.holdTicks);
+                    if (tickLength >= 1.0f) {
+                        ship->hold(&mob->pos, (uint)tickLength);
+                    }
                 }
             }
         }
@@ -5617,7 +5621,8 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     MutateBundleFleetLocus(aiType, mreg, "fleetLocus");
     MutateBundleMobLocus(aiType, mreg, "mobLocus");
 
-    MutateBundleValue(aiType, mreg, "hold.probability", MUTATION_TYPE_PROBABILITY);
+    MutateBundleValue(aiType, mreg, "hold.invProbability",
+                      MUTATION_TYPE_INVERSE_PROBABILITY);
     MutateBundleValue(aiType, mreg, "hold.ticks", MUTATION_TYPE_TICKS);
 
     MBRegistry_Remove(mreg, BUNDLE_SCRAMBLE_KEY);

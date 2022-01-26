@@ -128,6 +128,12 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
         vf->magnitude = 0.1f;
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.05f;
+    } else if (type == MUTATION_TYPE_INVERSE_PROBABILITY) {
+        vf->minValue = -1.0f;
+        vf->maxValue = 10000.0f;
+        vf->magnitude = 0.1f;
+        vf->jumpRate = 0.20f;
+        vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_RADIUS) {
         vf->minValue = -1.0f;
         vf->maxValue = 2000.0f;
