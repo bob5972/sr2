@@ -182,19 +182,18 @@ void MainConstructScenario(void)
     BattlePlayer targetPlayers[MAX_PLAYERS];
     uint tp = 0;
 
-    for (uint i = FLEET_AI_MIN; i < FLEET_AI_MAX; i++) {
-        if (i != FLEET_AI_DUMMY) {
+    for (int i = 0; i < FLEET_AI_MAX; i++) {
+        FleetAIType aiType = Fleet_GetTypeFromRanking(i);
+        if (aiType != FLEET_AI_INVALID) {
+            ASSERT(Fleet_GetRanking(aiType) == i);
             ASSERT(cp < ARRAYSIZE(controlPlayers));
-            controlPlayers[cp].aiType = i;
+            controlPlayers[cp].aiType = aiType;
             controlPlayers[cp].playerType = PLAYER_TYPE_CONTROL;
             cp++;
         }
     }
-
-    //XXX: Needs a better way to manage --optimize
-    // controlPlayers[cp].aiType = FLEET_AI_HOLD;
-    // controlPlayers[cp].playerType = PLAYER_TYPE_CONTROL;
-    // cp++;
+    ASSERT(Fleet_GetTypeFromRanking(-1) == FLEET_AI_INVALID);
+    ASSERT(Fleet_GetTypeFromRanking(FLEET_AI_MAX) == FLEET_AI_INVALID);
 
     /*
      * The NEUTRAL fleet always needs to be there.
@@ -226,64 +225,8 @@ void MainConstructScenario(void)
         }
     } else {
         /*
-         * Rough order of difficulty:
-         *    DummyFleet
-         *    SimpleFleet
-         *    GatherFleet
-         *    CloudFleet
-         *    MapperFleet
-         *    RunAwayFleet
-         *    CircleFleet
-         *    CowardFleet
-         *    FlockFleet1
-         *    BasicFleet
-         *    BundleFleet1
-         *    BundleFleet2
-         *    FlockFleet2
-         *    BundleFleet3
-         *    HoldFleet
-         *    BundleFleet4
-         *    BundleFleet5
-         *    BundleFleet6
-         *    BundleFleet7
-         *    FlockFleet3
-         *    FlockFleet4
-         *    FlockFleet5
-         *    FlockFleet6
-         *    FlockFleet7
-         *    FlockFleet8
-         *    FlockFleet9
-         *
-         *    -- unrated --
-         *    BobFleet (prototype, varies)
+         * See fleet.c::gRankings for a rough order of fleet strength.
          */
-
-//        mainData.players[p].aiType = FLEET_AI_DUMMY;
-//        p++;
-
-    //    mainData.players[p].aiType = FLEET_AI_SIMPLE;
-    //    p++;
-
-//        mainData.players[p].aiType = FLEET_AI_GATHER;
-//        p++;
-
-//        mainData.players[p].aiType = FLEET_AI_CLOUD;
-//        p++;
-
-//        mainData.players[p].aiType = FLEET_AI_MAPPER;
-//        p++;
-
-//        mainData.players[p].aiType = FLEET_AI_RUNAWAY;
-//        p++;
-
-//        mainData.players[p].aiType = FLEET_AI_CIRCLE;
-//        p++;
-
-//        mainData.players[p].aiType = FLEET_AI_FLOCK1;
-//        p++;
-
-//        mainData.players[p].aiType = FLEET_AI_COWARD;
-//        p++;
 
         // mainData.players[p].aiType = FLEET_AI_BASIC;
         // p++;
@@ -297,37 +240,7 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_FLOCK3;
         p++;
 
-        // mainData.players[p].aiType = FLEET_AI_FLOCK4;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_FLOCK5;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_FLOCK6;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_FLOCK7;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_FLOCK8;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_FLOCK9;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_BUNDLE1;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_BUNDLE2;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_BUNDLE3;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_BUNDLE4;
-        // p++;
-
-        mainData.players[p].aiType = FLEET_AI_BUNDLE5;
+        mainData.players[p].aiType = FLEET_AI_BUNDLE7;
         p++;
 
         // mainData.players[p].aiType = FLEET_AI_BOB;

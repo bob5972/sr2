@@ -33,6 +33,35 @@ typedef struct Fleet {
     RandomState rs;
 } Fleet;
 
+static const FleetAIType gRankings[] = {
+    FLEET_AI_SIMPLE,  // 0%
+    FLEET_AI_GATHER,  // 4%
+    FLEET_AI_CLOUD,   // 4%
+    FLEET_AI_MAPPER,  // 4%
+    FLEET_AI_RUNAWAY, // 16%
+    FLEET_AI_COWARD,  // 19%
+    FLEET_AI_CIRCLE,  // 29%
+    FLEET_AI_FLOCK1,  // 31%
+    FLEET_AI_BUNDLE1, // 33%
+    FLEET_AI_BASIC,   // 36%
+    FLEET_AI_FLOCK2,  // 44%
+    FLEET_AI_BUNDLE2, // 47%
+    FLEET_AI_BUNDLE7, // 54%
+    FLEET_AI_BUNDLE3, // 55%
+    FLEET_AI_HOLD,    // 57%
+    FLEET_AI_BUNDLE5, // 59%
+    FLEET_AI_BOB,     // 63%
+    FLEET_AI_BUNDLE4, // 63%
+    FLEET_AI_BUNDLE6, // 63%
+    FLEET_AI_FLOCK4,  // 68%
+    FLEET_AI_FLOCK5,  // 73%
+    FLEET_AI_FLOCK3,  // 75%
+    FLEET_AI_FLOCK6,  // 83%
+    FLEET_AI_FLOCK7,  // 86%
+    FLEET_AI_FLOCK8,  // 88%
+    FLEET_AI_FLOCK9,  // 97%
+};
+
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
 
 Fleet *Fleet_Create(const BattleScenario *bsc,
@@ -262,4 +291,107 @@ static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai)
             }
         }
     }
+}
+
+
+FleetAIType Fleet_GetTypeFromName(const char *name)
+{
+    uint32 i;
+
+    ASSERT(FLEET_AI_NEUTRAL == 1);
+    for (i = FLEET_AI_NEUTRAL; i < FLEET_AI_MAX; i++) {
+        const char *fleetName = Fleet_GetName((FleetAIType)i);
+        if (fleetName != NULL && strcmp(fleetName, name) == 0) {
+            return (FleetAIType)i;
+        }
+    }
+
+    return FLEET_AI_INVALID;
+}
+
+
+bool Fleet_IsFlockFleet(FleetAIType aiType)
+{
+    if (aiType >= FLEET_AI_FLOCK1 && aiType <= FLEET_AI_FLOCK9) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+bool Fleet_IsBundleFleet(FleetAIType aiType)
+{
+    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE7) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
+{
+    struct {
+        FleetAIType aiType;
+        void (*getOps)(FleetAIType aiType, FleetAIOps *ops);
+    } fleets[] = {
+        { FLEET_AI_NEUTRAL,     NeutralFleet_GetOps     },
+        { FLEET_AI_DUMMY,       DummyFleet_GetOps       },
+        { FLEET_AI_SIMPLE,      SimpleFleet_GetOps      },
+        { FLEET_AI_BOB,         BobFleet_GetOps         },
+        { FLEET_AI_MAPPER,      MapperFleet_GetOps      },
+        { FLEET_AI_CLOUD,       CloudFleet_GetOps       },
+        { FLEET_AI_GATHER,      GatherFleet_GetOps      },
+        { FLEET_AI_COWARD,      CowardFleet_GetOps      },
+        { FLEET_AI_RUNAWAY,     RunAwayFleet_GetOps     },
+        { FLEET_AI_BASIC,       BasicFleet_GetOps       },
+        { FLEET_AI_HOLD,        HoldFleet_GetOps        },
+        { FLEET_AI_CIRCLE,      CircleFleet_GetOps      },
+    };
+
+    ASSERT(aiType != FLEET_AI_INVALID);
+    ASSERT(aiType < FLEET_AI_MAX);
+    MBUtil_Zero(ops, sizeof(*ops));
+
+    if (Fleet_IsFlockFleet(aiType)) {
+        FlockFleet_GetOps(aiType, ops);
+        ops->aiType = aiType;
+        return;
+    }
+
+    if (Fleet_IsBundleFleet(aiType)) {
+        BundleFleet_GetOps(aiType, ops);
+        ops->aiType = aiType;
+        return;
+    }
+
+    for (uint i = 0; i < ARRAYSIZE(fleets); i++ ) {
+        if (fleets[i].aiType == aiType) {
+            fleets[i].getOps(aiType, ops);
+            ops->aiType = aiType;
+            return;
+        }
+    }
+
+    PANIC("Unknown AI type=%d\n", aiType);
+}
+
+/*
+ * Get the approximate ranking of the fleet.
+ * (ie increasing rank means the fleet wins more often)
+ */
+int Fleet_GetRanking(FleetAIType aiType) {
+    for (int i = 0; i < ARRAYSIZE(gRankings); i++) {
+        if (aiType == gRankings[i]) {
+            return i;
+        }
+    }
+
+    return ARRAYSIZE(gRankings);
+}
+
+FleetAIType Fleet_GetTypeFromRanking(int rank)
+{
+    if (rank < 0 || rank >= ARRAYSIZE(gRankings)) {
+        return FLEET_AI_INVALID;
+    }
+
+    return gRankings[rank];
 }
