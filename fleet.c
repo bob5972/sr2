@@ -378,6 +378,11 @@ void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
  * (ie increasing rank means the fleet wins more often)
  */
 int Fleet_GetRanking(FleetAIType aiType) {
+    ASSERT(FLEET_AI_INVALID == 0);
+    ASSERT(FLEET_AI_NEUTRAL == 1);
+    ASSERT(FLEET_AI_DUMMY == 2);
+    ASSERT(ARRAYSIZE(gRankings) + 3 == FLEET_AI_MAX);
+
     for (int i = 0; i < ARRAYSIZE(gRankings); i++) {
         if (aiType == gRankings[i]) {
             return i;
