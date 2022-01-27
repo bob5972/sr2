@@ -24,7 +24,7 @@
 typedef uint8 MapTileFlags;
 #define MAP_TILE_EMPTY       (0)
 #define MAP_TILE_SCANNED     (1 << 0)
-#define MAP_TILE_POWER_CORE        (1 << 0)
+#define MAP_TILE_POWER_CORE  (1 << 0)
 #define MAP_TILE_ENEMY       (1 << 1)
 #define MAP_TILE_ENEMY_BASE  (1 << 2)
 

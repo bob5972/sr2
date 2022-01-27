@@ -125,3 +125,89 @@ void SensorGrid::updateTick(FleetAI *ai)
     }
 }
 
+
+void MappingSensorGrid::updateTick(FleetAI *ai)
+{
+    /*
+     * Do the base-class processing.
+     */
+    SensorGrid::updateTick(ai);
+
+    /*
+     * Load the new sensor updates.
+     */
+    CMobIt mit;
+    CMobIt_Start(&ai->mobs, &mit);
+    while (CMobIt_HasNext(&mit)) {
+        Mob *mob = CMobIt_Next(&mit);
+
+        /*
+         * XXX: We ignore missiles scanning because they don't scan a full
+         * fighter radius.  We similarly ignore bases because they'll spawn
+         * fighters all the time anyway.
+         */
+        if (mob->type == MOB_TYPE_FIGHTER) {
+            uint32 i = GetTileIndex(&mob->pos);
+            myData.scannedBV.set(i);
+        }
+    }
+
+    /*
+     * Calculate the enemy base guess.
+     */
+    generateGuess();
+}
+
+void MappingSensorGrid::generateGuess()
+{
+    Mob *eBase = enemyBase();
+    if (eBase != NULL) {
+        /*
+         * Use the current enemy base as the guess.
+         */
+        myData.enemyBaseGuessPos = eBase->pos;
+        myData.enemyBaseGuessIndex = GetTileIndex(&myData.enemyBaseGuessPos);
+        myData.hasEnemyBaseGuess = TRUE;
+        return;
+    } else if (myData.hasEnemyBaseGuess &&
+               myData.scannedBV.get(myData.enemyBaseGuessIndex)) {
+        /*
+         * We already have a valid one... don't change it.
+         */
+        return;
+    } else if (myData.noMoreEnemyBaseGuess) {
+        /*
+         * We ran out of places to look.
+         */
+        ASSERT(!myData.hasEnemyBaseGuess);
+        return;
+     } else if (!myData.hasEnemyBaseGuess ||
+                myData.enemyBaseGuessIndex == -1 ||
+                myData.scannedBV.get(myData.enemyBaseGuessIndex)) {
+        /*
+         * XXX: Generate guess randomly?
+         */
+        for (int x = 0; x < myData.bvWidth; x++) {
+            for (int y = 0; y < myData.bvHeight; y++) {
+                int i = x + y * myData.bvHeight;
+                if (!myData.scannedBV.get(i)) {
+                    myData.enemyBaseGuessIndex = i;
+                    myData.enemyBaseGuessPos.x = (x + 0.5f) * TILE_SIZE;
+                    myData.enemyBaseGuessPos.y = (y + 0.5f) * TILE_SIZE;
+                    myData.hasEnemyBaseGuess = TRUE;
+                    return;
+                }
+            }
+        }
+    }
+
+    /*
+     * No more guesses.
+     */
+    myData.noMoreEnemyBaseGuess = TRUE;
+    myData.hasEnemyBaseGuess = FALSE;
+    myData.enemyBaseGuessIndex = -1;
+    myData.enemyBaseGuessPos.x = 0.0f;
+    myData.enemyBaseGuessPos.y = 0.0f;
+}
+

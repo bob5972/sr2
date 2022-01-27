@@ -27,6 +27,7 @@ extern "C" {
 
 #include "mobSet.hpp"
 #include "IntMap.hpp"
+#include "BitVector.hpp"
 
 #define SG_STALE_CORE_DEFAULT   40
 #define SG_STALE_FIGHTER_DEFAULT 2
@@ -77,7 +78,7 @@ public:
      * This invalidates any Mob pointers previously obtained from this
      * SensorGrid.
      */
-    void updateTick(FleetAI *ai);
+    virtual void updateTick(FleetAI *ai);
 
     /**
      * How many friends do we have?
@@ -317,6 +318,92 @@ private:
 
     uint myStaleFighterTime;
     uint myStaleCoreTime;
+};
+
+class MappingSensorGrid : public SensorGrid
+{
+public:
+    MappingSensorGrid(uint width, uint height) {
+        myData.bvWidth = (width / TILE_SIZE) + 1;
+        myData.bvHeight = (height / TILE_SIZE) + 1;
+        myData.scannedBV.resize(myData.bvWidth * myData.bvHeight);
+        ASSERT(myData.scannedBV.getFillValue() == FALSE);
+
+        myData.enemyBaseGuessIndex = -1;
+        myData.enemyBaseGuessPos.x = 0.0f;
+        myData.enemyBaseGuessPos.y = 0.0f;
+        myData.hasEnemyBaseGuess = FALSE;
+        myData.noMoreEnemyBaseGuess = FALSE;
+    }
+
+    virtual void updateTick(FleetAI *ai);
+
+    bool hasBeenScanned(const FPoint *pos) {
+        int i = GetTileIndex(pos);
+        return myData.scannedBV.get(i);
+    }
+
+    bool hasEnemyBaseGuess() {
+        return myData.hasEnemyBaseGuess;
+    }
+
+    FPoint getEnemyBaseGuess() {
+        return myData.enemyBaseGuessPos;
+    }
+
+private:
+    /*
+     * Use the size of the square that can be inscribed in the fighter
+     * sensor radius to ensure we scanned the entire square.
+     */
+    const uint TILE_SIZE = ceilf(sqrtf(2) * MOB_FIGHTER_SENSOR_RADIUS);
+
+    struct {
+        uint bvWidth, bvHeight;
+        CPBitVector scannedBV;
+        FPoint enemyBaseGuessPos;
+        int enemyBaseGuessIndex;
+        bool hasEnemyBaseGuess;
+        bool noMoreEnemyBaseGuess;
+    } myData;
+
+    void generateGuess();
+
+    inline void GetTileCoord(const FPoint *pos,
+                             uint32 *x,
+                             uint32 *y)
+    {
+        ASSERT(pos != NULL);
+        ASSERT(x != NULL);
+        ASSERT(y != NULL);
+
+        if (pos->x <= 0.0f) {
+            *x = 0;
+        } else {
+            *x = pos->x / TILE_SIZE;
+        }
+
+        if (pos->y <= 0.0f) {
+            *y = 0;
+        } else {
+            *y = pos->y / TILE_SIZE;
+        }
+
+        if (*x >= myData.bvWidth) {
+            *x = myData.bvWidth - 1;
+        }
+        if (*y >= myData.bvHeight) {
+            *y = myData.bvHeight - 1;
+        }
+    }
+
+    inline int GetTileIndex(const FPoint *pos)
+    {
+        uint32 x, y;
+        ASSERT(pos != NULL);
+        GetTileCoord(pos, &x, &y);
+        return x + y * myData.bvWidth;
+    }
 };
 
 
