@@ -23,6 +23,7 @@ extern "C" {
 #include "battleTypes.h"
 #include "mob.h"
 #include "MBRegistry.h"
+#include "Random.h"
 }
 
 #include "mobSet.hpp"
@@ -194,6 +195,10 @@ public:
         return myTargets.getBase();
     }
 
+    bool hasEnemyBase() {
+        return enemyBase() != NULL;
+    }
+
     /**
      * How many enemyBases can we confirm were destroyed?
      */
@@ -323,7 +328,7 @@ private:
 class MappingSensorGrid : public SensorGrid
 {
 public:
-    MappingSensorGrid(uint width, uint height) {
+    MappingSensorGrid(uint width, uint height, uint64 seed) {
         myData.bvWidth = (width / TILE_SIZE) + 1;
         myData.bvHeight = (height / TILE_SIZE) + 1;
         myData.scannedBV.resize(myData.bvWidth * myData.bvHeight);
@@ -334,6 +339,8 @@ public:
         myData.enemyBaseGuessPos.y = 0.0f;
         myData.hasEnemyBaseGuess = FALSE;
         myData.noMoreEnemyBaseGuess = FALSE;
+
+        RandomState_CreateWithSeed(&myData.rs, seed);
     }
 
     virtual void updateTick(FleetAI *ai);
@@ -351,12 +358,20 @@ public:
         return myData.enemyBaseGuessPos;
     }
 
+    void setSeed(uint64 seed) {
+        RandomState_SetSeed(&myData.rs, seed);
+    }
+
 private:
     /*
-     * Use the size of the square that can be inscribed in the fighter
-     * sensor radius to ensure we scanned the entire square.
+     * Inscribe a tile-square inside the fighter sensor radius,
+     * then quarter it to ensure that the full tile is always inside the sensor
+     * circle even if the circle is centered on a corner.
+     * Then, quarter the square again, to ensure that we can always safely take
+     * 4 tiles centered on the mob and avoid having a fighter bouncing around
+     * a target and just missing scanning that particular tile.
      */
-    const uint TILE_SIZE = ceilf(sqrtf(2) * MOB_FIGHTER_SENSOR_RADIUS);
+    const float TILE_SIZE = MOB_FIGHTER_SENSOR_RADIUS * sqrtf(0.5f) * 0.5f;
 
     struct {
         uint bvWidth, bvHeight;
@@ -365,6 +380,7 @@ private:
         int enemyBaseGuessIndex;
         bool hasEnemyBaseGuess;
         bool noMoreEnemyBaseGuess;
+        RandomState rs;
     } myData;
 
     void generateGuess();
@@ -402,7 +418,8 @@ private:
         uint32 x, y;
         ASSERT(pos != NULL);
         GetTileCoord(pos, &x, &y);
-        return x + y * myData.bvWidth;
+        int i = x + y * myData.bvWidth;
+        return i;
     }
 };
 

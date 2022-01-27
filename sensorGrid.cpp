@@ -145,9 +145,61 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
          * XXX: We ignore missiles scanning because they don't scan a full
          * fighter radius.  We similarly ignore bases because they'll spawn
          * fighters all the time anyway.
+         *
+         * XXX: The TILE_SIZE is also way under-estimating the actual scanned
+         * area, and we might be scanning up to 16 tiles on a given tick.
+         * This should hopefully wash out as the fighters move over several
+         * ticks though.
+         *
+         * But there has to be a better way to do this...
          */
         if (mob->type == MOB_TYPE_FIGHTER) {
-            uint32 i = GetTileIndex(&mob->pos);
+            FPoint pos;
+            uint32 i;
+
+            pos.x = mob->pos.x;
+            pos.y = mob->pos.y;
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x - (TILE_SIZE / 2.0f);;
+            pos.y = mob->pos.y;
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x + (TILE_SIZE / 2.0f);;
+            pos.y = mob->pos.y;
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x;
+            pos.y = mob->pos.y - (TILE_SIZE / 2.0f);
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x;
+            pos.y = mob->pos.y + (TILE_SIZE / 2.0f);
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x - (TILE_SIZE / 2.0f);
+            pos.y = mob->pos.y - (TILE_SIZE / 2.0f);
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x + (TILE_SIZE / 2.0f);
+            pos.y = mob->pos.y - (TILE_SIZE / 2.0f);
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x - (TILE_SIZE / 2.0f);
+            pos.y = mob->pos.y + (TILE_SIZE / 2.0f);
+            i = GetTileIndex(&pos);
+            myData.scannedBV.set(i);
+
+            pos.x = mob->pos.x + (TILE_SIZE / 2.0f);
+            pos.y = mob->pos.y + (TILE_SIZE / 2.0f);
+            i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
         }
     }
@@ -156,6 +208,11 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
      * Calculate the enemy base guess.
      */
     generateGuess();
+
+    // Warning("%s:%d enemyBaseGuess has=%d, noMore=%d, i=%d, xy(%f, %f)\n", __FUNCTION__, __LINE__,
+    //         myData.hasEnemyBaseGuess, myData.noMoreEnemyBaseGuess,
+    //         myData.enemyBaseGuessIndex,
+    //         myData.enemyBaseGuessPos.x, myData.enemyBaseGuessPos.y);
 }
 
 void MappingSensorGrid::generateGuess()
@@ -170,10 +227,11 @@ void MappingSensorGrid::generateGuess()
         myData.hasEnemyBaseGuess = TRUE;
         return;
     } else if (myData.hasEnemyBaseGuess &&
-               myData.scannedBV.get(myData.enemyBaseGuessIndex)) {
+               !myData.scannedBV.get(myData.enemyBaseGuessIndex)) {
         /*
          * We already have a valid one... don't change it.
          */
+        ASSERT(myData.enemyBaseGuessIndex != -1);
         return;
     } else if (myData.noMoreEnemyBaseGuess) {
         /*
@@ -182,22 +240,30 @@ void MappingSensorGrid::generateGuess()
         ASSERT(!myData.hasEnemyBaseGuess);
         return;
      } else if (!myData.hasEnemyBaseGuess ||
-                myData.enemyBaseGuessIndex == -1 ||
                 myData.scannedBV.get(myData.enemyBaseGuessIndex)) {
-        /*
-         * XXX: Generate guess randomly?
-         */
-        for (int x = 0; x < myData.bvWidth; x++) {
-            for (int y = 0; y < myData.bvHeight; y++) {
-                int i = x + y * myData.bvHeight;
+        int ys = RandomState_Int(&myData.rs, 0, myData.bvHeight - 1);
+        int xs = RandomState_Int(&myData.rs, 0, myData.bvWidth - 1);
+        int yc = 0;
+
+        while (yc < myData.bvHeight) {
+            int y = (yc + ys) % myData.bvHeight;
+            int xc = 0;
+
+            while (xc < myData.bvWidth) {
+                int x = (xc + xs) % myData.bvWidth;
+                int i = x + y * myData.bvWidth;
                 if (!myData.scannedBV.get(i)) {
                     myData.enemyBaseGuessIndex = i;
-                    myData.enemyBaseGuessPos.x = (x + 0.5f) * TILE_SIZE;
-                    myData.enemyBaseGuessPos.y = (y + 0.5f) * TILE_SIZE;
+                    myData.enemyBaseGuessPos.x = x * TILE_SIZE;
+                    myData.enemyBaseGuessPos.y = y * TILE_SIZE;
                     myData.hasEnemyBaseGuess = TRUE;
                     return;
                 }
+
+                xc++;
             }
+
+            yc++;
         }
     }
 
@@ -207,7 +273,5 @@ void MappingSensorGrid::generateGuess()
     myData.noMoreEnemyBaseGuess = TRUE;
     myData.hasEnemyBaseGuess = FALSE;
     myData.enemyBaseGuessIndex = -1;
-    myData.enemyBaseGuessPos.x = 0.0f;
-    myData.enemyBaseGuessPos.y = 0.0f;
 }
 
