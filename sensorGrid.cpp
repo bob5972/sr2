@@ -162,12 +162,12 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
 
-            pos.x = mob->pos.x - (TILE_SIZE / 2.0f);;
+            pos.x = mob->pos.x - (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y;
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
 
-            pos.x = mob->pos.x + (TILE_SIZE / 2.0f);;
+            pos.x = mob->pos.x + (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y;
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
