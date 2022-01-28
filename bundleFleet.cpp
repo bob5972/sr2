@@ -4449,6 +4449,17 @@ public:
     }
 
     /*
+     * Is this BundleCheck a constant weight value after the trigger
+     * is exceeded?  If TRUE, then we don't necessarily need to know the
+     * exact value if we know the trigger is met.
+     */
+    bool isInvariantBundleCheck(BundleCheckType bc) {
+        return isConstantBundleCheck(bc) ||
+               bc == BUNDLE_CHECK_STRICT_ON ||
+               bc == BUNDLE_CHECK_STRICT_OFF;
+    }
+
+    /*
      * Should this force operate given the current conditions?
      * Returns TRUE iff the force should operate.
      */
@@ -4548,18 +4559,26 @@ public:
         return retVal;
     }
 
-    float getCrowdCount(Mob *mob, float crowdRadius) {
+    float getCrowdCount(Mob *mob, float crowdRadius, BundleCheckType bc,
+                        float crowdTrigger) {
         FleetAI *ai = myFleetAI;
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
         uint tick = ai->tick;
 
         /*
-         * Reuse the last value if this is a repeat call.
+         * Reuse the last value, if safe.
          */
         if (myCache.crowdCache.mobid == mob->mobid &&
-            myCache.crowdCache.tick == tick &&
-            myCache.crowdCache.radius == crowdRadius) {
-            return myCache.crowdCache.count;
+            myCache.crowdCache.tick == tick) {
+            if (myCache.crowdCache.radius == crowdRadius) {
+                return myCache.crowdCache.count;
+            }
+            if (isInvariantBundleCheck(bc)) {
+                if (myCache.crowdCache.radius <= crowdRadius &&
+                    myCache.crowdCache.count >= crowdTrigger) {
+                    return myCache.crowdCache.count;
+                }
+            }
         }
 
         myCache.crowdCache.mobid = mob->mobid;
@@ -4587,7 +4606,7 @@ public:
         if (!isConstantBundleCheck(crowd->check)) {
             crowdTrigger = getBundleValue(mob, &crowd->size);
             crowdRadius = getBundleValue(mob, &crowd->radius);
-            getCrowdCount(mob, crowdRadius);
+            getCrowdCount(mob, crowdRadius, crowd->check, crowdTrigger);
         }
 
         return bundleCheck(crowd->check, crowdValue, crowdTrigger,

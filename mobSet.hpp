@@ -101,12 +101,18 @@ public:
     int numMobsInRange(MobTypeFlags filter, const FPoint *pos, float range) {
         int mobs = 0;
 
+        if (range <= 0.0f) {
+            return 0;
+        }
+
+        float rs = range * range;
+
         MobIt mit = iterator();
         while (mit.hasNext()) {
             Mob *m = mit.next();
 
             if (((1 << m->type) & filter) != 0) {
-                if (FPoint_Distance(&m->pos, pos) <= range) {
+                if (FPoint_DistanceSquared(&m->pos, pos) <= rs) {
                     mobs++;
                 }
             }
