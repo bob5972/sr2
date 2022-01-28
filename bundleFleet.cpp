@@ -147,6 +147,7 @@ typedef struct BundleSpec {
 
     float nearBaseRadius;
     float baseDefenseRadius;
+    bool fighterBaseDefenseUseRadius;
 
     BundleForce enemy;
     BundleForce enemyBase;
@@ -4203,6 +4204,8 @@ public:
             MBRegistry_GetFloat(mreg, "nearBaseRadius");
         this->myConfig.baseDefenseRadius =
             MBRegistry_GetFloat(mreg, "baseDefenseRadius");
+        this->myConfig.fighterBaseDefenseUseRadius =
+            MBRegistry_GetBool(mreg, "fighterBaseDefenseUseRadius");
 
         loadBundleValue(mreg, &this->myConfig.curHeadingWeight,
                         "curHeadingWeight");
@@ -5086,19 +5089,24 @@ public:
 
         Mob *base = sg->friendBase();
 
-        if (base != NULL) {
+        if (base != NULL && myConfig.baseDefenseRadius > 0.0f) {
             MBVector<Mob *> fv;
             MBVector<Mob *> tv;
             int f = 0;
             int t = 0;
 
-            sg->pushFriends(fv, MOB_FLAG_FIGHTER);
             sg->pushClosestTargetsInRange(tv, MOB_FLAG_SHIP, &base->pos,
                                           myConfig.baseDefenseRadius);
 
-            CMBComparator comp;
-            MobP_InitDistanceComparator(&comp, &base->pos);
-            fv.sort(MBComparator<Mob *>(&comp));
+            if (myConfig.fighterBaseDefenseUseRadius) {
+                sg->pushClosestFriendsInRange(fv, MOB_FLAG_FIGHTER, &base->pos,
+                                              myConfig.baseDefenseRadius);
+            } else {
+                CMBComparator comp;
+                MobP_InitDistanceComparator(&comp, &base->pos);
+                sg->pushFriends(fv, MOB_FLAG_FIGHTER);
+                fv.sort(MBComparator<Mob *>(&comp));
+            }
 
             Mob *fighter = (f < fv.size()) ? fv[f++] : NULL;
             Mob *target = (t < tv.size()) ? tv[t++] : NULL;
@@ -5602,7 +5610,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "startingMinRadius",    300.0f,  800.0f,  0.05f, 0.10f, 0.20f},
 
         { "nearBaseRadius",        1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
-        { "baseDefenseRadius",     1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
+        { "baseDefenseRadius",    -1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
 
         { "sensorGrid.staleCoreTime",
                                    0.0f,   50.0f,   0.05f, 0.2f, 0.005f},
@@ -5612,12 +5620,13 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     };
 
     MutationBoolParams vb[] = {
-        // key                       mutation
-        { "evadeFighters",            0.05f },
-        { "evadeUseStrictDistance",   0.05f },
-        { "attackExtendedRange",      0.05f },
-        { "rotateStartingAngle",      0.05f },
-        { "gatherAbandonStale",       0.05f },
+        // key                          mutation
+        { "evadeFighters",               0.05f },
+        { "evadeUseStrictDistance",      0.05f },
+        { "attackExtendedRange",         0.05f },
+        { "rotateStartingAngle",         0.05f },
+        { "gatherAbandonStale",          0.05f },
+        { "fighterBaseDefenseUseRadius", 0.05f },
     };
 
     MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "FALSE");

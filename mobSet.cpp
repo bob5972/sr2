@@ -120,6 +120,7 @@ void MobSet::pushMobs(MBVector<Mob *> &v, MobTypeFlags filter) {
 
 void MobSet::pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
                                     const FPoint *pos, float range) {
+    ASSERT(range >= 0.0f);
     v.ensureCapacity(v.size() + myMobs.size());
 
     for (uint i = 0; i < myMobs.size(); i++) {
