@@ -13,6 +13,8 @@ use MBBasic;
 my $gScriptOptions = {
     "dumpFleet|d=i" => { desc => "Dump the specified fleet",
                          default => undef, },
+    "cFormat|c" => { desc => "Print fleets with C formatting",
+                         default => undef, },
     "resetHistory|r!" => { desc => "Reset fleet history",
                            default => FALSE },
 };
@@ -65,7 +67,12 @@ sub DumpFleet($) {
     foreach my $k (sort keys %{$gPop}) {
         if ($k =~ /^$prefix\./) {
             my $v = $gPop->{$k};
-            Console("$k = $v\n");
+            if (!$OPTIONS->{'cFormat'}) {
+                Console("$k = $v\n");
+            } else {
+                $k =~ s/^$prefix\.//;
+                Console("{ \"$k\", \"$v\" },\n");
+            }
         }
     }
 }
