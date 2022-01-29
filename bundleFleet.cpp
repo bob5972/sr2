@@ -6077,6 +6077,8 @@ void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "BundleFleet6";
     } else if (aiType == FLEET_AI_BUNDLE7) {
         ops->aiName = "BundleFleet7";
+    } else if (aiType == FLEET_AI_BUNDLE8) {
+        ops->aiName = "BundleFleet8";
     } else {
         NOT_IMPLEMENTED();
     }

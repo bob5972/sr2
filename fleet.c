@@ -321,7 +321,7 @@ bool Fleet_IsFlockFleet(FleetAIType aiType)
 
 bool Fleet_IsBundleFleet(FleetAIType aiType)
 {
-    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE7) {
+    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE8) {
         return TRUE;
     }
     return FALSE;
