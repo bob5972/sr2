@@ -5494,7 +5494,8 @@ public:
 
             if (crowdTrigger > 0.0f) {
                 crowdRadius = getBundleValue(mob, &crowd->radius);
-                getCrowdCount(mob, crowdRadius, crowd->check, crowdTrigger);
+                crowdValue = getCrowdCount(mob, crowdRadius, crowd->check,
+                                           crowdTrigger);
             }
         }
 
