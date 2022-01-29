@@ -3818,7 +3818,7 @@ public:
             { "startingMinRadius", "353.757050" },
          };
 
-         BundleConfigValue configs8[] = {
+        BundleConfigValue configs8[] = {
             { "align.crowd.radius.periodic.amplitude.mobJitterScale", "-0.723838" },
             { "align.crowd.radius.periodic.amplitude.value", "-1.000000" },
             { "align.crowd.radius.periodic.period.mobJitterScale", "-0.357471" },
@@ -5344,8 +5344,9 @@ public:
     }
 
     /*
-     * Should this force operate given the current conditions?
-     * Returns TRUE iff the force should operate.
+     * bundleCheck --
+     *    Should this force operate given the current conditions?
+     *    Returns TRUE iff the force should operate.
      */
     bool bundleCheck(BundleCheckType bc, float value, float trigger,
                      float *weight) {
@@ -5485,12 +5486,16 @@ public:
         float crowdValue = 0.0f;
 
         /*
-         * Skip the complicated calculations if the bundle-check was constant.
+         * Skip the complicated calculations if the bundle-check was constant,
+         * or we're otherwise in a simple case.
          */
         if (!isConstantBundleCheck(crowd->check)) {
             crowdTrigger = getBundleValue(mob, &crowd->size);
-            crowdRadius = getBundleValue(mob, &crowd->radius);
-            getCrowdCount(mob, crowdRadius, crowd->check, crowdTrigger);
+
+            if (crowdTrigger > 0.0f) {
+                crowdRadius = getBundleValue(mob, &crowd->radius);
+                getCrowdCount(mob, crowdRadius, crowd->check, crowdTrigger);
+            }
         }
 
         return bundleCheck(crowd->check, crowdValue, crowdTrigger,
