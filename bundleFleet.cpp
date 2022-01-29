@@ -148,6 +148,7 @@ typedef struct BundleSpec {
     float nearBaseRadius;
     float baseDefenseRadius;
     bool fighterBaseDefenseUseRadius;
+    bool brokenCrowdChecks;
 
     BundleForce enemy;
     BundleForce enemyBase;
@@ -3968,6 +3969,7 @@ public:
             { "baseDefense.weight.value.mobJitterScale", "0.118065" },
             { "baseDefense.weight.value.value", "-5.985843" },
             { "baseDefense.weight.valueType", "constant" },
+            { "brokenCrowdChecks", "TRUE" },
             { "center.crowd.radius.periodic.amplitude.mobJitterScale", "-0.613740" },
             { "center.crowd.radius.periodic.amplitude.value", "-0.710882" },
             { "center.crowd.radius.periodic.period.mobJitterScale", "-0.046714" },
@@ -4697,6 +4699,9 @@ public:
             { "startingMaxRadius", "1355.716675" },
             { "startingMinRadius", "374.166687" },
         };
+        BundleConfigValue configs9[] = {
+            { "brokenCrowdChecks", "FALSE" },
+        };
 
         struct {
             BundleConfigValue *values;
@@ -4711,11 +4716,12 @@ public:
             { configs6, ARRAYSIZE(configs6), },
             { configs7, ARRAYSIZE(configs7), },
             { configs8, ARRAYSIZE(configs8), },
+            { configs9, ARRAYSIZE(configs9), },
         };
 
         int bundleIndex = aiType - FLEET_AI_BUNDLE1 + 1;
         VERIFY(aiType >= FLEET_AI_BUNDLE1);
-        VERIFY(aiType <= FLEET_AI_BUNDLE8);
+        VERIFY(aiType <= FLEET_AI_BUNDLE9);
         VERIFY(bundleIndex >= 1 && bundleIndex < ARRAYSIZE(configs));
 
         for (int i = bundleIndex; i >= 0; i--) {
@@ -5087,6 +5093,8 @@ public:
             MBRegistry_GetFloat(mreg, "baseDefenseRadius");
         this->myConfig.fighterBaseDefenseUseRadius =
             MBRegistry_GetBool(mreg, "fighterBaseDefenseUseRadius");
+        this->myConfig.brokenCrowdChecks =
+            MBRegistry_GetBool(mreg, "brokenCrowdChecks");
 
         loadBundleValue(mreg, &this->myConfig.curHeadingWeight,
                         "curHeadingWeight");
@@ -5482,7 +5490,6 @@ public:
      */
     bool crowdCheck(Mob *mob, BundleCrowd *crowd, float *weight) {
         float crowdTrigger = 0.0f;
-        float crowdRadius = 0.0f;
         float crowdValue = 0.0f;
 
         /*
@@ -5493,9 +5500,11 @@ public:
             crowdTrigger = getBundleValue(mob, &crowd->size);
 
             if (crowdTrigger > 0.0f) {
-                crowdRadius = getBundleValue(mob, &crowd->radius);
-                crowdValue = getCrowdCount(mob, crowdRadius, crowd->check,
-                                           crowdTrigger);
+                if (!myConfig.brokenCrowdChecks) {
+                    float crowdRadius = getBundleValue(mob, &crowd->radius);
+                    crowdValue = getCrowdCount(mob, crowdRadius, crowd->check,
+                                               crowdTrigger);
+                }
             }
         }
 
@@ -6085,6 +6094,8 @@ void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "BundleFleet7";
     } else if (aiType == FLEET_AI_BUNDLE8) {
         ops->aiName = "BundleFleet8";
+    } else if (aiType == FLEET_AI_BUNDLE9) {
+        ops->aiName = "BundleFleet9";
     } else {
         NOT_IMPLEMENTED();
     }
@@ -6516,6 +6527,7 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "rotateStartingAngle",         0.05f },
         { "gatherAbandonStale",          0.05f },
         { "fighterBaseDefenseUseRadius", 0.05f },
+        //{ "brokenCrowdChecks",           0.05f },
     };
 
     MBRegistry_PutCopy(mreg, BUNDLE_SCRAMBLE_KEY, "FALSE");
