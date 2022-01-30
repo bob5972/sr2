@@ -6027,6 +6027,11 @@ public:
             return;
         }
 
+        if (bundle->range.check == BUNDLE_CHECK_NEVER) {
+            /* No force. */
+            return;
+        }
+
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
 
         while (mit.hasNext()) {
