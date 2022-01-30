@@ -149,6 +149,7 @@ typedef struct BundleSpec {
     float baseDefenseRadius;
     bool fighterBaseDefenseUseRadius;
     bool brokenCrowdChecks;
+    float maxWeight;
 
     BundleForce enemy;
     BundleForce enemyBase;
@@ -222,6 +223,8 @@ public:
             { "gatherAbandonStale",          "FALSE"     },
             { "gatherRange",                 "50"        },
             { "guardRange",                  "0"         },
+
+            { "maxWeight",                   "100.0",    },
 
             { "nearBaseRandomIdle.forceOn",  "TRUE"      },
             { "randomIdle.forceOn",          "TRUE"      },
@@ -5980,6 +5983,8 @@ public:
             MBRegistry_GetBool(mreg, "fighterBaseDefenseUseRadius");
         this->myConfig.brokenCrowdChecks =
             MBRegistry_GetBool(mreg, "brokenCrowdChecks");
+        this->myConfig.maxWeight =
+            MBRegistry_GetFloat(mreg, "maxWeight");
 
         loadBundleValue(mreg, &this->myConfig.curHeadingWeight,
                         "curHeadingWeight");
@@ -6275,7 +6280,7 @@ public:
 
 
         float localWeight;
-        float maxWeight = 100.0f;
+        float maxWeight = myConfig.maxWeight;
         if (trigger <= 0.0f) {
             if (bc == BUNDLE_CHECK_LINEAR_DOWN ||
                 bc == BUNDLE_CHECK_QUADRATIC_DOWN) {
@@ -7396,6 +7401,8 @@ static void BundleFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
         { "nearBaseRadius",        1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
         { "baseDefenseRadius",    -1.0f,   500.0f,  0.05f, 0.15f, 0.01f},
+
+        { "maxWeight",             1.0f, 10000.0f,  0.01f, 0.10f, 0.01f},
 
         { "sensorGrid.staleCoreTime",
                                    0.0f,   50.0f,   0.05f, 0.2f, 0.005f},
