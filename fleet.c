@@ -50,7 +50,7 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE3, // 55%
     FLEET_AI_HOLD,    // 57%
     FLEET_AI_BUNDLE5, // 59%
-    FLEET_AI_BOB,     // 63%
+    FLEET_AI_META,    // 63%
     FLEET_AI_BUNDLE4, // 63%
     FLEET_AI_BUNDLE6, // 63%
     FLEET_AI_FLOCK4,  // 68%
@@ -337,7 +337,7 @@ void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         { FLEET_AI_NEUTRAL,     NeutralFleet_GetOps     },
         { FLEET_AI_DUMMY,       DummyFleet_GetOps       },
         { FLEET_AI_SIMPLE,      SimpleFleet_GetOps      },
-        { FLEET_AI_BOB,         BobFleet_GetOps         },
+        { FLEET_AI_META,        MetaFleet_GetOps        },
         { FLEET_AI_MAPPER,      MapperFleet_GetOps      },
         { FLEET_AI_CLOUD,       CloudFleet_GetOps       },
         { FLEET_AI_GATHER,      GatherFleet_GetOps      },

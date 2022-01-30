@@ -1,5 +1,5 @@
 /*
- * bobFleet.cpp -- part of SpaceRobots2
+ * metaFleet.cpp -- part of SpaceRobots2
  * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,12 +29,12 @@ extern "C" {
 #include "sensorGrid.hpp"
 #include "shipAI.hpp"
 
-static void *BobFleetMobSpawned(void *aiHandle, Mob *m);
-static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
+static void *MetaFleetMobSpawned(void *aiHandle, Mob *m);
+static void MetaFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 
-class BobFleet {
+class MetaFleet {
 public:
-    BobFleet(FleetAI *ai)
+    MetaFleet(FleetAI *ai)
     :sg()
     {
         this->myAI = ai;
@@ -59,7 +59,7 @@ public:
         }
     }
 
-    ~BobFleet() {
+    ~MetaFleet() {
         for (uint i = 0; i <ARRAYSIZE(this->squadAI); i++) {
             Fleet_DestroyAI(&this->squadAI[i]);
         }
@@ -73,7 +73,7 @@ public:
             const char *key;
             const char *value;
         } configs[] = {
-            // BobFleet-specific options
+            // MetaFleet-specific options
             { "holdFleetSpawnRate",  "0.25", },
         };
 
@@ -96,28 +96,28 @@ public:
     MBRegistry *mreg;
 };
 
-static void *BobFleetCreate(FleetAI *ai);
-static void BobFleetDestroy(void *aiHandle);
-static void BobFleetRunAITick(void *aiHandle);
-static void BobFleetMutate(FleetAIType aiType, MBRegistry *mreg);
+static void *MetaFleetCreate(FleetAI *ai);
+static void MetaFleetDestroy(void *aiHandle);
+static void MetaFleetRunAITick(void *aiHandle);
+static void MetaFleetMutate(FleetAIType aiType, MBRegistry *mreg);
 
-void BobFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
+void MetaFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     ASSERT(ops != NULL);
     MBUtil_Zero(ops, sizeof(*ops));
 
-    ops->aiName = "BobFleet";
+    ops->aiName = "MetaFleet";
     ops->aiAuthor = "Michael Banack";
 
-    ops->createFleet = &BobFleetCreate;
-    ops->destroyFleet = &BobFleetDestroy;
-    ops->runAITick = &BobFleetRunAITick;
-    ops->mobSpawned = &BobFleetMobSpawned;
-    ops->mobDestroyed = &BobFleetMobDestroyed;
-    ops->mutateParams = &BobFleetMutate;
+    ops->createFleet = &MetaFleetCreate;
+    ops->destroyFleet = &MetaFleetDestroy;
+    ops->runAITick = &MetaFleetRunAITick;
+    ops->mobSpawned = &MetaFleetMobSpawned;
+    ops->mobDestroyed = &MetaFleetMobDestroyed;
+    ops->mutateParams = &MetaFleetMutate;
 }
 
-static void BobFleetMutate(FleetAIType aiType, MBRegistry *mreg)
+static void MetaFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 {
     MutationFloatParams bvf[] = {
         // key                     min    max      mag   jump   mutation
@@ -131,22 +131,22 @@ static void BobFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     Fleet_Mutate(FLEET_AI_HOLD, mreg);
 }
 
-static void *BobFleetCreate(FleetAI *ai)
+static void *MetaFleetCreate(FleetAI *ai)
 {
     ASSERT(ai != NULL);
-    return new BobFleet(ai);
+    return new MetaFleet(ai);
 }
 
-static void BobFleetDestroy(void *handle)
+static void MetaFleetDestroy(void *handle)
 {
-    BobFleet *sf = (BobFleet *)handle;
+    MetaFleet *sf = (MetaFleet *)handle;
     ASSERT(sf != NULL);
     delete(sf);
 }
 
-static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
+static void *MetaFleetMobSpawned(void *aiHandle, Mob *m)
 {
-    BobFleet *sf = (BobFleet *)aiHandle;
+    MetaFleet *sf = (MetaFleet *)aiHandle;
     uint i;
     FleetAI *squadAI;
 
@@ -180,9 +180,9 @@ static void *BobFleetMobSpawned(void *aiHandle, Mob *m)
 /*
  * Potentially invalidates any outstanding ship references.
  */
-static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
+static void MetaFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
 {
-    BobFleet *sf = (BobFleet *)aiHandle;
+    MetaFleet *sf = (MetaFleet *)aiHandle;
 
     ASSERT(sf->mobMap.containsKey(m->mobid));
 
@@ -194,12 +194,12 @@ static void BobFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle)
     sf->mobMap.remove(m->mobid);
 }
 
-static void BobFleetRunAITick(void *aiHandle)
+static void MetaFleetRunAITick(void *aiHandle)
 {
-    BobFleet *sf = (BobFleet *)aiHandle;
+    MetaFleet *sf = (MetaFleet *)aiHandle;
     CMobIt mit;
 
-    ASSERT(sf->myAI->player.aiType == FLEET_AI_BOB);
+    ASSERT(sf->myAI->player.aiType == FLEET_AI_META);
 
     for (uint i = 0; i < ARRAYSIZE(sf->squadAI); i++) {
         FleetAI *squadAI = &sf->squadAI[i];

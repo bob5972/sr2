@@ -59,12 +59,12 @@ C_SOURCES = main.c \
             sprite.c \
             workQueue.c
 CPP_SOURCES = basicFleet.cpp \
-              bobFleet.cpp \
               bundleFleet.cpp \
               circleFleet.cpp \
               cowardFleet.cpp \
               flockFleet.cpp \
               holdFleet.cpp \
+              metaFleet.cpp \
               mobSet.cpp \
               sensorGrid.cpp \
               basicShipAI.cpp

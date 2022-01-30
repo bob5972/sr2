@@ -894,7 +894,7 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
         case FLEET_AI_BUNDLE9:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_GREEN2);
 
-        case FLEET_AI_BOB:
+        case FLEET_AI_META:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
 
         default:
@@ -1215,7 +1215,7 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_COWARD,      0x008080, }, // TEAL
         { FLEET_AI_BASIC,       0x808080, }, // DARK GRAY
         { FLEET_AI_HOLD,        0xF00080, }, // PURPLE
-        { FLEET_AI_BOB,         0x80F080, }, // GREENISH-YELLOW
+        { FLEET_AI_META,        0x80F080, }, // GREENISH-YELLOW
         { FLEET_AI_FLOCK1,      0xFF3322, }, // YELLOWISH-GRAY?
         { FLEET_AI_FLOCK2,      0xFF3388, }, // BLUEISH-GRAY?
         { FLEET_AI_FLOCK3,      0xFF3366, }, // GRAYISH?
@@ -1225,14 +1225,23 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_FLOCK7,      0x00FF66, }, // BLUEISH-GRAY?
         { FLEET_AI_FLOCK8,      0x101FFF, }, // GRAYISH?
         { FLEET_AI_FLOCK9,      0x123FFF, }, // GRAYISH?
+        { FLEET_AI_BUNDLE1,     0x883333, },
+        { FLEET_AI_BUNDLE2,     0x448333, },
+        { FLEET_AI_BUNDLE3,     0x443383, },
+        { FLEET_AI_BUNDLE4,     0x228383, },
+        { FLEET_AI_BUNDLE5,     0x189333, },
+        { FLEET_AI_BUNDLE6,     0x1833A3, },
+        { FLEET_AI_BUNDLE7,     0xA83333, },
+        { FLEET_AI_BUNDLE8,     0xA8F3F3, },
+        { FLEET_AI_BUNDLE9,     0xC80303, }, // DARK PURPLE
     };
 
     ASSERT(repeatCount > 0);
 
     /*
-     * Use WHITE for any missing fleets.
+     * Use a random color for any missing fleets.
      */
-    uint32 color = 0xFFFFFF; // WHITE
+    uint32 color = Random_Uint32();
     uint i = 0;
     while (i < ARRAYSIZE(colors)) {
         if (colors[i].aiType == aiType) {
