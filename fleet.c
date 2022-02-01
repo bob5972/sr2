@@ -34,34 +34,35 @@ typedef struct Fleet {
 } Fleet;
 
 static const FleetAIType gRankings[] = {
-    FLEET_AI_SIMPLE,  // 0%
-    FLEET_AI_GATHER,  // 4%
-    FLEET_AI_CLOUD,   // 4%
-    FLEET_AI_MAPPER,  // 4%
-    FLEET_AI_RUNAWAY, // 16%
-    FLEET_AI_COWARD,  // 19%
-    FLEET_AI_CIRCLE,  // 29%
-    FLEET_AI_FLOCK1,  // 31%
-    FLEET_AI_BUNDLE1, // 33%
-    FLEET_AI_BASIC,   // 36%
-    FLEET_AI_FLOCK2,  // 44%
-    FLEET_AI_BUNDLE2, // 47%
-    FLEET_AI_BUNDLE7, // 54%
-    FLEET_AI_BUNDLE3, // 55%
-    FLEET_AI_HOLD,    // 57%
-    FLEET_AI_BUNDLE5, // 59%
-    FLEET_AI_META,    // 63%
-    FLEET_AI_BUNDLE4, // 63%
-    FLEET_AI_BUNDLE6, // 63%
-    FLEET_AI_FLOCK4,  // 68%
+    FLEET_AI_SIMPLE,   // 0%
+    FLEET_AI_GATHER,   // 4%
+    FLEET_AI_CLOUD,    // 4%
+    FLEET_AI_MAPPER,   // 4%
+    FLEET_AI_RUNAWAY,  // 16%
+    FLEET_AI_COWARD,   // 19%
+    FLEET_AI_CIRCLE,   // 29%
+    FLEET_AI_FLOCK1,   // 31%
+    FLEET_AI_BUNDLE1,  // 33%
+    FLEET_AI_BASIC,    // 36%
+    FLEET_AI_FLOCK2,   // 44%
+    FLEET_AI_BUNDLE2,  // 47%
+    FLEET_AI_BUNDLE7,  // 54%
+    FLEET_AI_BUNDLE3,  // 55%
+    FLEET_AI_HOLD,     // 57%
+    FLEET_AI_BUNDLE5,  // 59%
+    FLEET_AI_META,     // 63%
+    FLEET_AI_BUNDLE4,  // 63%
+    FLEET_AI_BUNDLE6,  // 63%
+    FLEET_AI_FLOCK4,   // 68%
     FLEET_AI_BUNDLE8,
-    FLEET_AI_BUNDLE9, // ????????
-    FLEET_AI_FLOCK5,  // 73%
-    FLEET_AI_FLOCK3,  // 75%
-    FLEET_AI_FLOCK6,  // 83%
-    FLEET_AI_FLOCK7,  // 86%
-    FLEET_AI_FLOCK8,  // 88%
-    FLEET_AI_FLOCK9,  // 97%
+    FLEET_AI_BUNDLE9,
+    FLEET_AI_BUNDLE10,
+    FLEET_AI_FLOCK5,   // 73%
+    FLEET_AI_FLOCK3,   // 75%
+    FLEET_AI_FLOCK6,   // 83%
+    FLEET_AI_FLOCK7,   // 86%
+    FLEET_AI_FLOCK8,   // 88%
+    FLEET_AI_FLOCK9,   // 97%
 };
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
@@ -322,7 +323,7 @@ bool Fleet_IsFlockFleet(FleetAIType aiType)
 
 bool Fleet_IsBundleFleet(FleetAIType aiType)
 {
-    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE9) {
+    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE10) {
         return TRUE;
     }
     return FALSE;
