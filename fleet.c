@@ -61,6 +61,7 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_FLOCK3,   // 75%
     FLEET_AI_FLOCK6,   // 83%
     FLEET_AI_FLOCK7,   // 86%
+    FLEET_AI_BUNDLE11,
     FLEET_AI_FLOCK8,   // 88%
     FLEET_AI_FLOCK9,   // 97%
 };
@@ -323,7 +324,7 @@ bool Fleet_IsFlockFleet(FleetAIType aiType)
 
 bool Fleet_IsBundleFleet(FleetAIType aiType)
 {
-    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE10) {
+    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE11) {
         return TRUE;
     }
     return FALSE;
