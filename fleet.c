@@ -62,8 +62,8 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_FLOCK6,   // 83%
     FLEET_AI_FLOCK7,   // 86%
     FLEET_AI_BUNDLE11,
-    FLEET_AI_BUNDLE12,
     FLEET_AI_FLOCK8,   // 88%
+    FLEET_AI_BUNDLE12,
     FLEET_AI_FLOCK9,   // 97%
 };
 
