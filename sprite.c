@@ -1242,6 +1242,7 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_BUNDLE9,     0xC80303, }, // DARK PURPLE
         { FLEET_AI_BUNDLE10,    0xA803B3, },
         { FLEET_AI_BUNDLE11,    0x48B303, },
+        { FLEET_AI_BUNDLE12,    0xF000F0, }, // DARK PURPLE
     };
 
     ASSERT(repeatCount > 0);
