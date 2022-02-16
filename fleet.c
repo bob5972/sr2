@@ -34,37 +34,37 @@ typedef struct Fleet {
 } Fleet;
 
 static const FleetAIType gRankings[] = {
-    FLEET_AI_SIMPLE,   // 0%
-    FLEET_AI_GATHER,   // 4%
-    FLEET_AI_CLOUD,    // 4%
-    FLEET_AI_MAPPER,   // 4%
-    FLEET_AI_RUNAWAY,  // 16%
-    FLEET_AI_COWARD,   // 19%
-    FLEET_AI_CIRCLE,   // 29%
-    FLEET_AI_FLOCK1,   // 31%
-    FLEET_AI_BUNDLE1,  // 33%
-    FLEET_AI_BASIC,    // 36%
-    FLEET_AI_FLOCK2,   // 44%
-    FLEET_AI_BUNDLE2,  // 47%
-    FLEET_AI_BUNDLE7,  // 54%
-    FLEET_AI_BUNDLE3,  // 55%
-    FLEET_AI_HOLD,     // 57%
-    FLEET_AI_BUNDLE5,  // 59%
-    FLEET_AI_META,     // 63%
-    FLEET_AI_BUNDLE4,  // 63%
-    FLEET_AI_BUNDLE6,  // 63%
-    FLEET_AI_FLOCK4,   // 68%
-    FLEET_AI_BUNDLE8,
-    FLEET_AI_BUNDLE9,
-    FLEET_AI_BUNDLE10,
-    FLEET_AI_FLOCK5,   // 73%
-    FLEET_AI_FLOCK3,   // 75%
-    FLEET_AI_FLOCK6,   // 83%
-    FLEET_AI_FLOCK7,   // 86%
-    FLEET_AI_BUNDLE11,
-    FLEET_AI_FLOCK8,   // 88%
-    FLEET_AI_BUNDLE12,
-    FLEET_AI_FLOCK9,   // 97%
+    FLEET_AI_SIMPLE,   //  0.0%
+    FLEET_AI_GATHER,   //  3.4%
+    FLEET_AI_CLOUD,    //  3.4%
+    FLEET_AI_MAPPER,   //  3.6%
+    FLEET_AI_RUNAWAY,  // 12.9%
+    FLEET_AI_COWARD,   // 16.2%
+    FLEET_AI_CIRCLE,   // 24.5%
+    FLEET_AI_FLOCK1,   // 25.6%
+    FLEET_AI_BUNDLE1,  // 29.6%
+    FLEET_AI_BASIC,    // 30.3%
+    FLEET_AI_FLOCK2,   // 39.1%
+    FLEET_AI_BUNDLE2,  // 43.1%
+    FLEET_AI_BUNDLE7,  // 47.3%
+    FLEET_AI_BUNDLE8,  // 49.3%
+    FLEET_AI_HOLD,     // 49.4%
+    FLEET_AI_BUNDLE3,  // 50.1%
+    FLEET_AI_BUNDLE5,  // 51.5%
+    FLEET_AI_BUNDLE6,  // 54.4%
+    FLEET_AI_BUNDLE4,  // 55.2%
+    FLEET_AI_META,     // 56.1%
+    FLEET_AI_BUNDLE9,  // 59.6%
+    FLEET_AI_FLOCK4,   // 62.0%
+    FLEET_AI_FLOCK5,   // 69.6%
+    FLEET_AI_FLOCK3,   // 70.1%
+    FLEET_AI_BUNDLE10, // 73.9%
+    FLEET_AI_BUNDLE11, // 74.8%
+    FLEET_AI_FLOCK6,   // 78.2%
+    FLEET_AI_FLOCK7,   // 82.1%
+    FLEET_AI_FLOCK8,   // 85.1%
+    FLEET_AI_BUNDLE12, // 85.2%
+    FLEET_AI_FLOCK9,   // 95.8%
 };
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
