@@ -51,6 +51,7 @@ typedef uint32 BundleValueFlags;
 typedef struct BundleAtom {
     float value;
     float mobJitterScale;
+    float mobJitterScalePow;
 } BundleAtom;
 
 typedef struct BundlePeriodicParams {
@@ -8350,6 +8351,12 @@ public:
         ba->mobJitterScale = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
         ASSERT(!isnanf(ba->mobJitterScale));
 
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".mobJitterScalePow");
+        ba->mobJitterScalePow = MBRegistry_GetFloat(mreg, MBString_GetCStr(&s));
+        ASSERT(!isnanf(ba->mobJitterScalePow));
+
         MBString_Destroy(&s);
     }
 
@@ -8879,7 +8886,7 @@ public:
         return index;
     }
 
-    float getMobJitter(Mob *m, float *value) {
+    float getMobJitter(Mob *m, float *value, float pow) {
         RandomState *rs = &myRandomState;
 
         BundleShipAI *ship = (BundleShipAI *)m->aiMobHandle;
@@ -8892,8 +8899,12 @@ public:
 
         int index = getMobJitterIndex(value);
         if (!ship->myShipLive.mobJitters[index].initialized) {
-            ship->myShipLive.mobJitters[index].value =
-                RandomState_Float(rs, -*value, *value);
+            float mv = RandomState_Float(rs, -*value, *value);
+            if (pow >= 2.0f) {
+                pow = truncf(pow);
+                mv = powf(mv, 1.0f / pow);
+            }
+            ship->myShipLive.mobJitters[index].value = mv;
         }
 
         return ship->myShipLive.mobJitters[index].value;
@@ -8904,7 +8915,8 @@ public:
      *     Compute a bundle atom.
      */
     float getBundleAtom(Mob *m, BundleAtom *ba) {
-        float jitter = getMobJitter(m, &ba->mobJitterScale);
+        float jitter = getMobJitter(m, &ba->mobJitterScale,
+                                    ba->mobJitterScalePow);
 
         if (jitter == 0.0f) {
             return ba->value;
@@ -8930,7 +8942,8 @@ public:
                  * Shift the wave by a constant factor of the period.
                  */
                 t += bv->periodic.tickShift.value;
-                t += p * getMobJitter(m, &bv->periodic.tickShift.mobJitterScale);
+                t += p * getMobJitter(m, &bv->periodic.tickShift.mobJitterScale,
+                                      1.0f);
                 value *= 1.0f + a * sinf(t / p);
             }
         }
@@ -9767,6 +9780,13 @@ static void MutateBundleAtom(FleetAIType aiType, MBRegistry *mreg,
     MBString_AppendCStr(&s, ".mobJitterScale");
     GetMutationFloatParams(&vf, MBString_GetCStr(&s),
                            MUTATION_TYPE_MOB_JITTER_SCALE, mreg);
+    Mutate_Float(mreg, &vf, 1);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".mobJitterScalePow");
+    GetMutationFloatParams(&vf, MBString_GetCStr(&s),
+                           MUTATION_TYPE_SCALE_POW, mreg);
     Mutate_Float(mreg, &vf, 1);
 
     MBString_Destroy(&s);
