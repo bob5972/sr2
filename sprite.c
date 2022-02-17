@@ -1261,6 +1261,12 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
     }
 
     uint32 shipAlpha = 0x88;
-    color /= (1 + (repeatCount - 1));
+
+    ASSERT(repeatCount >= 1);
+    if (repeatCount > 1) {
+        color = (color << (24 - repeatCount)) |
+                (color / (1 + (repeatCount - 1)));
+    }
+    color &= 0xFFFFFF;
     return color | ((shipAlpha & 0xFF) << 24);
 }
