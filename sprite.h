@@ -25,7 +25,7 @@
 
 typedef enum SpriteSet {
     SPRITE_SET_INVALID,
-    SPRITE_SET_SPACE_BLUE,          // Bob
+    SPRITE_SET_SPACE_BLUE,          // Meta
     SPRITE_SET_SPACE_PURPLE,        // Flock4
     SPRITE_SET_SPACE_GREEN,         // Flock7
     SPRITE_SET_SPACE_GREEN2,        // Flock8
