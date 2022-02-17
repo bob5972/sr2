@@ -8899,10 +8899,12 @@ public:
 
         int index = getMobJitterIndex(value);
         if (!ship->myShipLive.mobJitters[index].initialized) {
-            float mv = RandomState_Float(rs, -*value, *value);
-            if (pow >= 2.0f) {
-                pow = truncf(pow);
+            float mv = RandomState_Float(rs, 0.0f, *value);
+            if (pow > 1.0f) {
                 mv = powf(mv, 1.0f / pow);
+            }
+            if (RandomState_Bit(rs)) {
+                mv = -mv;
             }
             ship->myShipLive.mobJitters[index].value = mv;
         }
