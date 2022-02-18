@@ -95,6 +95,8 @@ struct MainData {
 
     uint numBSCs;
     BattleScenario *bscs;
+    uint maxBscs;
+
     uint totalBattles;
     bool doneQueueing;
 
@@ -272,8 +274,16 @@ void MainConstructScenario(void)
     if (mainData.optimize ||
         (MBOpt_IsPresent("usePopulation") &&
          MBOpt_IsPresent("mutatePopulation"))) {
-        uint maxBscs = p * p;
-        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
+        uint maxItCount = 1;
+
+        maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationNewIterations"));
+        maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationStaleIterations"));
+        mainData.maxBscs = p * p * maxItCount;
+        ASSERT(mainData.maxBscs > p);
+        ASSERT(mainData.maxBscs > p * p);
+        ASSERT(mainData.maxBscs > maxItCount);
+        ASSERT(mainData.maxBscs * sizeof(mainData.bscs[0]) > mainData.maxBscs);
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * mainData.maxBscs);
 
         mainData.numBSCs = 0;
         ASSERT(mainData.numPlayers > 0);
@@ -292,6 +302,7 @@ void MainConstructScenario(void)
             } else {
                 itCount = MBOpt_GetUint("mutationStaleIterations");
             }
+            ASSERT(itCount <= maxItCount);
 
             for (uint ii = 0; ii < itCount; ii++) {
                 for (uint ci = 0; ci < p; ci++) {
@@ -300,7 +311,7 @@ void MainConstructScenario(void)
                     }
 
                     uint b = mainData.numBSCs++;
-                    ASSERT(b < maxBscs);
+                    ASSERT(b < mainData.maxBscs);
                     mainData.bscs[b].bp = bsc.bp;
                     mainData.bscs[b].bp.numPlayers = 3;
                     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
@@ -313,11 +324,11 @@ void MainConstructScenario(void)
             }
         }
 
-        ASSERT(mainData.numBSCs <= maxBscs);
+        ASSERT(mainData.numBSCs <= mainData.maxBscs);
     } else if (mainData.tournament) {
         // This is too big, but it works.
-        uint maxBscs = mainData.numPlayers * mainData.numPlayers;
-        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * maxBscs);
+        mainData.maxBscs = mainData.numPlayers * mainData.numPlayers;
+        mainData.bscs = malloc(sizeof(mainData.bscs[0]) * mainData.maxBscs);
 
         mainData.numBSCs = 0;
         ASSERT(mainData.numPlayers > 0);
@@ -340,7 +351,7 @@ void MainConstructScenario(void)
             }
         }
 
-        ASSERT(mainData.numBSCs <= maxBscs);
+        ASSERT(mainData.numBSCs <= mainData.maxBscs);
     } else {
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
