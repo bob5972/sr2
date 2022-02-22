@@ -899,6 +899,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_BLUE);
         case FLEET_AI_BUNDLE12:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_BLUE2);
+        case FLEET_AI_BUNDLE13:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_MAGENTA);
 
         case FLEET_AI_META:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
@@ -1243,6 +1245,7 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_BUNDLE10,    0xA803B3, },
         { FLEET_AI_BUNDLE11,    0x48B303, },
         { FLEET_AI_BUNDLE12,    0xF000F0, }, // DARK PURPLE
+        { FLEET_AI_BUNDLE13,    0xF0F020, },
     };
 
     ASSERT(repeatCount > 0);
