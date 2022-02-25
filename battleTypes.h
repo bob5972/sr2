@@ -160,6 +160,7 @@ typedef enum FleetAIType {
     FLEET_AI_BUNDLE11    = 32,
     FLEET_AI_BUNDLE12    = 33,
     FLEET_AI_BUNDLE13    = 34,
+    FLEET_AI_BUNDLE14    = 35,
     FLEET_AI_MAX,
 } FleetAIType;
 
