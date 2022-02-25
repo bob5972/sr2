@@ -130,8 +130,8 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
         vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_SCALE_POW) {
         vf->minValue = 0.0f;
-        vf->maxValue = 5.0f;
-        vf->magnitude = 0.1f;
+        vf->maxValue = 10.0f;
+        vf->magnitude = 0.05f;
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_INVERSE_PROBABILITY) {
@@ -142,26 +142,26 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
         vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_RADIUS) {
         vf->minValue = -1.0f;
-        vf->maxValue = 2000.0f;
-        vf->magnitude = 0.1f;
+        vf->maxValue = 3000.0f;
+        vf->magnitude = 0.05f;
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.15f;
     } else if (type == MUTATION_TYPE_PERIOD) {
         vf->minValue = -1.0f;
-        vf->maxValue = 10000.0f;
-        vf->magnitude = 0.1f;
+        vf->maxValue = 20000.0f;
+        vf->magnitude = 0.05f;
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_TICKS) {
         vf->minValue = -1.0f;
-        vf->maxValue = 1000.0f;
-        vf->magnitude = 0.1f;
+        vf->maxValue = 5000.0f;
+        vf->magnitude = 0.05f;
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_COUNT) {
         vf->minValue = -1.0f;
-        vf->maxValue = 20.0f;
-        vf->magnitude = 0.1f;
+        vf->maxValue = 30.0f;
+        vf->magnitude = 0.05f;
         vf->jumpRate = 0.20f;
         vf->mutationRate = 0.05f;
     } else {
