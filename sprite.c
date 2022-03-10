@@ -495,7 +495,7 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 32);
+    ASSERT(SPRITE_SOURCE_MAX == 48);
     gSprite.sources[SPRITE_SOURCE_SPACE15] = Sprite_LoadPNG("art/space15.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE16] = Sprite_LoadPNG("art/space16.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE17] = Sprite_LoadPNG("art/space17.png", 129, 103);
@@ -511,7 +511,9 @@ void Sprite_Init()
     gSprite.sources[SPRITE_SOURCE_SPACE27] = Sprite_LoadPNG("art/space27.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE28] = Sprite_LoadPNG("art/space28.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE29] = Sprite_LoadPNG("art/space29.png", 129, 103);
+
     gSprite.sources[SPRITE_SOURCE_SHEET2]  = Sprite_LoadPNG("art/sheet2.png",  656, 720);
+
     gSprite.sources[SPRITE_SOURCE_ALTAIR1] = Sprite_LoadPNG("art/altair1.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_ALTAIR2] = Sprite_LoadPNG("art/altair2.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_ALTAIR3] = Sprite_LoadPNG("art/altair3.png", 129, 103);
@@ -528,6 +530,23 @@ void Sprite_Init()
     gSprite.sources[SPRITE_SOURCE_ALTAIR14] = Sprite_LoadPNG("art/altair14.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_ALTAIR15] = Sprite_LoadPNG("art/altair15.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_ALTAIR16] = Sprite_LoadPNG("art/altair16.png", 129, 103);
+
+    gSprite.sources[SPRITE_SOURCE_URSA1] = Sprite_LoadPNG("art/ursa1.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA2] = Sprite_LoadPNG("art/ursa2.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA3] = Sprite_LoadPNG("art/ursa3.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA4] = Sprite_LoadPNG("art/ursa4.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA5] = Sprite_LoadPNG("art/ursa5.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA6] = Sprite_LoadPNG("art/ursa6.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA7] = Sprite_LoadPNG("art/ursa7.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA8] = Sprite_LoadPNG("art/ursa8.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA9] = Sprite_LoadPNG("art/ursa9.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA10] = Sprite_LoadPNG("art/ursa10.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA11] = Sprite_LoadPNG("art/ursa11.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA12] = Sprite_LoadPNG("art/ursa12.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA13] = Sprite_LoadPNG("art/ursa13.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA14] = Sprite_LoadPNG("art/ursa14.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA15] = Sprite_LoadPNG("art/ursa15.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_URSA16] = Sprite_LoadPNG("art/ursa16.png", 129, 103);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
         uint32 backingID;
@@ -1073,7 +1092,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
         case FLEET_AI_BUNDLE13:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_MAGENTA);
         case FLEET_AI_BUNDLE14:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_ORANGE);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_ORANGE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE);
 
         case FLEET_AI_META:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
