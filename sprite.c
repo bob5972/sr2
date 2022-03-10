@@ -58,6 +58,23 @@ typedef enum SpriteSource {
     SPRITE_SOURCE_ALTAIR15,
     SPRITE_SOURCE_ALTAIR16,
 
+    SPRITE_SOURCE_URSA1,
+    SPRITE_SOURCE_URSA2,
+    SPRITE_SOURCE_URSA3,
+    SPRITE_SOURCE_URSA4,
+    SPRITE_SOURCE_URSA5,
+    SPRITE_SOURCE_URSA6,
+    SPRITE_SOURCE_URSA7,
+    SPRITE_SOURCE_URSA8,
+    SPRITE_SOURCE_URSA9,
+    SPRITE_SOURCE_URSA10,
+    SPRITE_SOURCE_URSA11,
+    SPRITE_SOURCE_URSA12,
+    SPRITE_SOURCE_URSA13,
+    SPRITE_SOURCE_URSA14,
+    SPRITE_SOURCE_URSA15,
+    SPRITE_SOURCE_URSA16,
+
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
 } SpriteSource;
@@ -353,6 +370,86 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_ALTAIR_BLUE3_FIGHTER,    SPRITE_SOURCE_ALTAIR16,    103,   3,  11,  11, },
     { SPRITE_ALTAIR_BLUE3_MISSILE,    SPRITE_SOURCE_ALTAIR16,    115,   5,   7,   7, },
     { SPRITE_ALTAIR_BLUE3_POWER_CORE, SPRITE_SOURCE_ALTAIR16,    123,   6,   5,   5, },
+
+    { SPRITE_URSA_BLUE_BASE,          SPRITE_SOURCE_URSA1,        1,   1, 101, 101, },
+    { SPRITE_URSA_BLUE_FIGHTER,       SPRITE_SOURCE_URSA1,        103, 3,  11, 11, },
+    { SPRITE_URSA_BLUE_MISSILE,       SPRITE_SOURCE_URSA1,        115, 5,  7, 7, },
+    { SPRITE_URSA_BLUE_POWER_CORE,    SPRITE_SOURCE_URSA1,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_BLUE2_BASE,         SPRITE_SOURCE_URSA2,        1,   1, 101, 101, },
+    { SPRITE_URSA_BLUE2_FIGHTER,      SPRITE_SOURCE_URSA2,        103, 3,  11, 11, },
+    { SPRITE_URSA_BLUE2_MISSILE,      SPRITE_SOURCE_URSA2,        115, 5,  7, 7, },
+    { SPRITE_URSA_BLUE2_POWER_CORE,   SPRITE_SOURCE_URSA2,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_PURPLE_BASE,        SPRITE_SOURCE_URSA3,        1,   1, 101, 101, },
+    { SPRITE_URSA_PURPLE_FIGHTER,     SPRITE_SOURCE_URSA3,        103, 3,  11, 11, },
+    { SPRITE_URSA_PURPLE_MISSILE,     SPRITE_SOURCE_URSA3,        115, 5,  7, 7, },
+    { SPRITE_URSA_PURPLE_POWER_CORE,  SPRITE_SOURCE_URSA3,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_PURPLE2_BASE,       SPRITE_SOURCE_URSA4,        1,   1, 101, 101, },
+    { SPRITE_URSA_PURPLE2_FIGHTER,    SPRITE_SOURCE_URSA4,        103, 3,  11, 11, },
+    { SPRITE_URSA_PURPLE2_MISSILE,    SPRITE_SOURCE_URSA4,        115, 5,  7, 7, },
+    { SPRITE_URSA_PURPLE2_POWER_CORE, SPRITE_SOURCE_URSA4,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_PINK_BASE,          SPRITE_SOURCE_URSA5,        1,   1, 101, 101, },
+    { SPRITE_URSA_PINK_FIGHTER,       SPRITE_SOURCE_URSA5,        103, 3,  11, 11, },
+    { SPRITE_URSA_PINK_MISSILE,       SPRITE_SOURCE_URSA5,        115, 5,  7, 7, },
+    { SPRITE_URSA_PINK_POWER_CORE,    SPRITE_SOURCE_URSA5,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_PINK2_BASE,         SPRITE_SOURCE_URSA6,        1,   1, 101, 101, },
+    { SPRITE_URSA_PINK2_FIGHTER,      SPRITE_SOURCE_URSA6,        103, 3,  11, 11, },
+    { SPRITE_URSA_PINK2_MISSILE,      SPRITE_SOURCE_URSA6,        115, 5,  7, 7, },
+    { SPRITE_URSA_PINK2_POWER_CORE,   SPRITE_SOURCE_URSA6,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_ORANGE_BASE,        SPRITE_SOURCE_URSA7,        1,   1, 101, 101, },
+    { SPRITE_URSA_ORANGE_FIGHTER,     SPRITE_SOURCE_URSA7,        103, 3,  11, 11, },
+    { SPRITE_URSA_ORANGE_MISSILE,     SPRITE_SOURCE_URSA7,        115, 5,  7, 7, },
+    { SPRITE_URSA_ORANGE_POWER_CORE,  SPRITE_SOURCE_URSA7,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_GREEN_BASE,         SPRITE_SOURCE_URSA8,        1,   1, 101, 101, },
+    { SPRITE_URSA_GREEN_FIGHTER,      SPRITE_SOURCE_URSA8,        103, 3,  11, 11, },
+    { SPRITE_URSA_GREEN_MISSILE,      SPRITE_SOURCE_URSA8,        115, 5,  7, 7, },
+    { SPRITE_URSA_GREEN_POWER_CORE,   SPRITE_SOURCE_URSA8,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_GREEN2_BASE,        SPRITE_SOURCE_URSA9,        1,   1, 101, 101, },
+    { SPRITE_URSA_GREEN2_FIGHTER,     SPRITE_SOURCE_URSA9,        103, 3,  11, 11, },
+    { SPRITE_URSA_GREEN2_MISSILE,     SPRITE_SOURCE_URSA9,        115, 5,  7, 7, },
+    { SPRITE_URSA_GREEN2_POWER_CORE,  SPRITE_SOURCE_URSA9,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_GREEN3_BASE,        SPRITE_SOURCE_URSA10,        1,   1, 101, 101, },
+    { SPRITE_URSA_GREEN3_FIGHTER,     SPRITE_SOURCE_URSA10,        103, 3,  11, 11, },
+    { SPRITE_URSA_GREEN3_MISSILE,     SPRITE_SOURCE_URSA10,        115, 5,  7, 7, },
+    { SPRITE_URSA_GREEN3_POWER_CORE,  SPRITE_SOURCE_URSA10,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_BLUE3_BASE,        SPRITE_SOURCE_URSA11,        1,   1, 101, 101, },
+    { SPRITE_URSA_BLUE3_FIGHTER,     SPRITE_SOURCE_URSA11,        103, 3,  11, 11, },
+    { SPRITE_URSA_BLUE3_MISSILE,     SPRITE_SOURCE_URSA11,        115, 5,  7, 7, },
+    { SPRITE_URSA_BLUE3_POWER_CORE,  SPRITE_SOURCE_URSA11,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_MAGENTA_BASE,       SPRITE_SOURCE_URSA12,        1,   1, 101, 101, },
+    { SPRITE_URSA_MAGENTA_FIGHTER,    SPRITE_SOURCE_URSA12,        103, 3,  11, 11, },
+    { SPRITE_URSA_MAGENTA_MISSILE,    SPRITE_SOURCE_URSA12,        115, 5,  7, 7, },
+    { SPRITE_URSA_MAGENTA_POWER_CORE, SPRITE_SOURCE_URSA12,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_RED_BASE,           SPRITE_SOURCE_URSA13,        1,   1, 101, 101, },
+    { SPRITE_URSA_RED_FIGHTER,        SPRITE_SOURCE_URSA13,        103, 3,  11, 11, },
+    { SPRITE_URSA_RED_MISSILE,        SPRITE_SOURCE_URSA13,        115, 5,  7, 7, },
+    { SPRITE_URSA_RED_POWER_CORE,     SPRITE_SOURCE_URSA13,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_ORANGE2_BASE,        SPRITE_SOURCE_URSA14,        1,   1, 101, 101, },
+    { SPRITE_URSA_ORANGE2_FIGHTER,     SPRITE_SOURCE_URSA14,        103, 3,  11, 11, },
+    { SPRITE_URSA_ORANGE2_MISSILE,     SPRITE_SOURCE_URSA14,        115, 5,  7, 7, },
+    { SPRITE_URSA_ORANGE2_POWER_CORE,  SPRITE_SOURCE_URSA14,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_GREEN4_BASE,         SPRITE_SOURCE_URSA15,        1,   1, 101, 101, },
+    { SPRITE_URSA_GREEN4_FIGHTER,      SPRITE_SOURCE_URSA15,        103, 3,  11, 11, },
+    { SPRITE_URSA_GREEN4_MISSILE,      SPRITE_SOURCE_URSA15,        115, 5,  7, 7, },
+    { SPRITE_URSA_GREEN4_POWER_CORE,   SPRITE_SOURCE_URSA15,        123, 6,  5, 5, },
+
+    { SPRITE_URSA_ORANGE3_BASE,        SPRITE_SOURCE_URSA16,        1,   1, 101, 101, },
+    { SPRITE_URSA_ORANGE3_FIGHTER,     SPRITE_SOURCE_URSA16,        103, 3,  11, 11, },
+    { SPRITE_URSA_ORANGE3_MISSILE,     SPRITE_SOURCE_URSA16,        115, 5,  7, 7, },
+    { SPRITE_URSA_ORANGE3_POWER_CORE,  SPRITE_SOURCE_URSA16,        123, 6,  5, 5, },
 
 };
 
@@ -777,6 +874,70 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
             st = SPRITE_ALTAIR_BLUE3_BASE;
             break;
 
+        case SPRITE_SET_URSA_BLUE:
+            st = SPRITE_URSA_BLUE_BASE;
+            break;
+
+        case SPRITE_SET_URSA_BLUE2:
+            st = SPRITE_URSA_BLUE2_BASE;
+            break;
+
+        case SPRITE_SET_URSA_PURPLE:
+            st = SPRITE_URSA_PURPLE_BASE;
+            break;
+
+        case SPRITE_SET_URSA_PURPLE2:
+            st = SPRITE_URSA_PURPLE2_BASE;
+            break;
+
+        case SPRITE_SET_URSA_PINK:
+            st = SPRITE_URSA_PINK_BASE;
+            break;
+
+        case SPRITE_SET_URSA_PINK2:
+            st = SPRITE_URSA_PINK2_BASE;
+            break;
+
+        case SPRITE_SET_URSA_ORANGE:
+            st = SPRITE_URSA_ORANGE_BASE;
+            break;
+
+        case SPRITE_SET_URSA_GREEN:
+            st = SPRITE_URSA_GREEN_BASE;
+            break;
+
+        case SPRITE_SET_URSA_GREEN2:
+            st = SPRITE_URSA_GREEN2_BASE;
+            break;
+
+        case SPRITE_SET_URSA_GREEN3:
+            st = SPRITE_URSA_GREEN3_BASE;
+            break;
+
+        case SPRITE_SET_URSA_BLUE3:
+            st = SPRITE_URSA_BLUE3_BASE;
+            break;
+
+        case SPRITE_SET_URSA_MAGENTA:
+            st = SPRITE_URSA_MAGENTA_BASE;
+            break;
+
+        case SPRITE_SET_URSA_RED:
+            st = SPRITE_URSA_RED_BASE;
+            break;
+
+        case SPRITE_SET_URSA_ORANGE2:
+            st = SPRITE_URSA_ORANGE2_BASE;
+            break;
+
+        case SPRITE_SET_URSA_GREEN4:
+            st = SPRITE_URSA_GREEN4_BASE;
+            break;
+
+        case SPRITE_SET_URSA_ORANGE3:
+            st = SPRITE_URSA_ORANGE3_BASE;
+            break;
+
         default:
             NOT_IMPLEMENTED();
     }
@@ -810,6 +971,16 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
 
     if (ss >= SPRITE_SET_ALTAIR_PURPLE &&
         ss <= SPRITE_SET_ALTAIR_BLUE3) {
+        ASSERT(MOB_TYPE_BASE == 1);
+        ASSERT(MOB_TYPE_FIGHTER == 2);
+        ASSERT(MOB_TYPE_MISSILE == 3);
+        ASSERT(MOB_TYPE_POWER_CORE == 4);
+        ASSERT(t >= 1 && t <= 4);
+        return st + (t - 1);
+    }
+
+    if (ss >= SPRITE_SET_URSA_BLUE &&
+        ss <= SPRITE_SET_URSA_ORANGE3) {
         ASSERT(MOB_TYPE_BASE == 1);
         ASSERT(MOB_TYPE_FIGHTER == 2);
         ASSERT(MOB_TYPE_MISSILE == 3);
