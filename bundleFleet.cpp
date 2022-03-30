@@ -77,10 +77,16 @@ typedef struct BundleRange {
     BundleValue radius;
 } BundleRange;
 
-typedef struct BundleForce {
+typedef struct BundleLinearForce {
     BundleValue weight;
     BundleRange range;
     BundleCrowd crowd;
+} BundleLinearForce;
+
+typedef struct BundleForce {
+    BundleLinearForce push;
+    bool useTangent;
+    BundleLinearForce tangent;
 } BundleForce;
 
 typedef struct BundleBool {
@@ -11023,8 +11029,8 @@ public:
         MBString_Destroy(&s);
     }
 
-    void loadBundleForce(MBRegistry *mreg, BundleForce *b,
-                         const char *prefix) {
+    void loadBundleLinearForce(MBRegistry *mreg, BundleLinearForce *b,
+                               const char *prefix) {
         CMBString s;
         MBString_Create(&s);
 
@@ -11042,6 +11048,29 @@ public:
         MBString_AppendCStr(&s, prefix);
         MBString_AppendCStr(&s, ".crowd");
         loadBundleCrowd(mreg, &b->crowd, MBString_GetCStr(&s));
+
+        MBString_Destroy(&s);
+    }
+
+    void loadBundleForce(MBRegistry *mreg, BundleForce *b,
+                         const char *prefix) {
+        CMBString s;
+        MBString_Create(&s);
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ""); // push force
+        loadBundleLinearForce(mreg, &b->push, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".useTangent");
+        b->useTangent = MBRegistry_GetBool(mreg, MBString_GetCStr(&s));
+
+        MBString_MakeEmpty(&s);
+        MBString_AppendCStr(&s, prefix);
+        MBString_AppendCStr(&s, ".tangent");
+        loadBundleLinearForce(mreg, &b->tangent, MBString_GetCStr(&s));
 
         MBString_Destroy(&s);
     }
@@ -11265,33 +11294,56 @@ public:
 
     void flockAlign(Mob *mob, FRPoint *rForce) {
         FPoint avgVel;
-        float radius = getBundleValue(mob, &myConfig.align.range.radius);
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-        sg->friendAvgVelocity(&avgVel, &mob->pos, radius, MOB_FLAG_FIGHTER);
-        avgVel.x += mob->pos.x;
-        avgVel.y += mob->pos.y;
-        applyBundle(mob, rForce, &myConfig.align, &avgVel);
+
+        float pRadius = getBundleValue(mob, &myConfig.align.push.range.radius);
+        sg->friendAvgVelocity(&avgVel, &mob->pos, pRadius, MOB_FLAG_FIGHTER);
+        FPoint force = avgVel;
+        force.x += mob->pos.x;
+        force.y += mob->pos.y;
+        applyBundleLinearForce(mob, rForce, &myConfig.align.push, &force, FALSE);
+
+        if (myConfig.align.useTangent) {
+            float tRadius = getBundleValue(mob, &myConfig.align.tangent.range.radius);
+            if (tRadius != pRadius) {
+                sg->friendAvgVelocity(&avgVel, &mob->pos, tRadius, MOB_FLAG_FIGHTER);
+            }
+            FPoint force = avgVel;
+            force.x += mob->pos.x;
+            force.y += mob->pos.y;
+            applyBundleLinearForce(mob, rForce, &myConfig.align.tangent, &force, TRUE);
+        }
     }
 
     void flockCohere(Mob *mob, FRPoint *rForce) {
         FPoint avgPos;
-        float radius = getBundleValue(mob, &myConfig.cohere.range.radius);
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-        sg->friendAvgPos(&avgPos, &mob->pos, radius, MOB_FLAG_FIGHTER);
-        applyBundle(mob, rForce, &myConfig.cohere, &avgPos);
+
+        float pRadius = getBundleValue(mob, &myConfig.cohere.push.range.radius);
+        sg->friendAvgPos(&avgPos, &mob->pos, pRadius, MOB_FLAG_FIGHTER);
+        applyBundleLinearForce(mob, rForce, &myConfig.cohere.push,
+                               &avgPos, FALSE);
+
+        if (myConfig.cohere.useTangent) {
+            float tRadius = getBundleValue(mob, &myConfig.cohere.tangent.range.radius);
+            if (tRadius != pRadius) {
+                sg->friendAvgPos(&avgPos, &mob->pos, tRadius, MOB_FLAG_FIGHTER);
+            }
+            applyBundleLinearForce(mob, rForce, &myConfig.cohere.tangent,
+                                   &avgPos, TRUE);
+        }
     }
 
     void flockSeparate(Mob *mob, FRPoint *rForce, BundleForce *bundle) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-        float cweight;
 
-        if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
+        if (!fastCrowdCheck(mob, bundle)) {
             /* No force. */
             return;
         }
 
-        if (bundle->range.check == BUNDLE_CHECK_NEVER) {
+        if (!fastRangeCheck(bundle)) {
             /* No force. */
             return;
         }
@@ -11303,7 +11355,7 @@ public:
             ASSERT(f != NULL);
 
             if (f->mobid != mob->mobid) {
-                applyBundle(mob, rForce, bundle, &f->pos);
+                applyBundleForce(mob, rForce, bundle, &f->pos);
             }
         }
     }
@@ -11312,9 +11364,8 @@ public:
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
         Mob *m;
         int n = 0;
-        float cweight;
 
-        if (!crowdCheck(mob, &myConfig.nearestFriend.crowd, &cweight)) {
+        if (!fastCrowdCheck(mob, &myConfig.nearestFriend)) {
             /* No force. */
             return;
         }
@@ -11323,7 +11374,7 @@ public:
             m = sg->findNthClosestFriend(&mob->pos, MOB_FLAG_FIGHTER, n++);
 
             if (m != NULL && m->mobid != mob->mobid) {
-                applyBundle(mob, rForce, &myConfig.nearestFriend, &m->pos);
+                applyBundleForce(mob, rForce, &myConfig.nearestFriend, &m->pos);
                 return;
             }
         } while (m != NULL);
@@ -11358,9 +11409,8 @@ public:
         FleetAI *ai = myFleetAI;
         BundleForce *bundle = &myConfig.edges;
         FPoint edgePoint;
-        float cweight;
 
-        if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
+        if (!fastCrowdCheck(mob, bundle)) {
             /* No force. */
             return;
         }
@@ -11370,28 +11420,28 @@ public:
          */
         edgePoint = mob->pos;
         edgePoint.x = 0.0f;
-        applyBundle(mob, rForce, bundle, &edgePoint);
+        applyBundleForce(mob, rForce, bundle, &edgePoint);
 
         /*
          * Right Edge
          */
         edgePoint = mob->pos;
         edgePoint.x = ai->bp.width;
-        applyBundle(mob, rForce, bundle, &edgePoint);
+        applyBundleForce(mob, rForce, bundle, &edgePoint);
 
         /*
          * Top Edge
          */
         edgePoint = mob->pos;
         edgePoint.y = 0.0f;
-        applyBundle(mob, rForce, bundle, &edgePoint);
+        applyBundleForce(mob, rForce, bundle, &edgePoint);
 
         /*
          * Bottom edge
          */
         edgePoint = mob->pos;
         edgePoint.y = ai->bp.height;
-        applyBundle(mob, rForce, bundle, &edgePoint);
+        applyBundleForce(mob, rForce, bundle, &edgePoint);
     }
 
     void flockCorners(Mob *mob, FRPoint *rForce) {
@@ -11399,28 +11449,27 @@ public:
         FleetAI *ai = myFleetAI;
         BundleForce *bundle = &myConfig.edges;
         FPoint cornerPoint;
-        float cweight;
 
-        if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
+        if (!fastCrowdCheck(mob, bundle)) {
             /* No force. */
             return;
         }
 
         cornerPoint.x = 0.0f;
         cornerPoint.y = 0.0f;
-        applyBundle(mob, rForce, bundle, &cornerPoint);
+        applyBundleForce(mob, rForce, bundle, &cornerPoint);
 
         cornerPoint.x = ai->bp.width;
         cornerPoint.y = 0.0f;
-        applyBundle(mob, rForce, bundle, &cornerPoint);
+        applyBundleForce(mob, rForce, bundle, &cornerPoint);
 
         cornerPoint.x = 0.0f;
         cornerPoint.y = ai->bp.height;
-        applyBundle(mob, rForce, bundle, &cornerPoint);
+        applyBundleForce(mob, rForce, bundle, &cornerPoint);
 
         cornerPoint.x = ai->bp.width;
         cornerPoint.y = ai->bp.height;
-        applyBundle(mob, rForce, bundle, &cornerPoint);
+        applyBundleForce(mob, rForce, bundle, &cornerPoint);
     }
 
     int getMobJitterIndex(float *valuePtr) {
@@ -11679,6 +11728,29 @@ public:
                            weight);
     }
 
+    bool fastCrowdCheck(Mob *mob, BundleForce *bundle) {
+        float cweight;
+        if (!crowdCheck(mob, &bundle->push.crowd, &cweight) &&
+            (!bundle->useTangent ||
+             !crowdCheck(mob, &bundle->tangent.crowd, &cweight))) {
+            /* No force. */
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
+    bool fastRangeCheck(BundleForce *bundle) {
+        if (bundle->push.range.check == BUNDLE_CHECK_NEVER &&
+            (!bundle->useTangent ||
+             bundle->tangent.range.check == BUNDLE_CHECK_NEVER)) {
+            /* No force. */
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
     /*
      * getBundleBool --
      *    Is this per-mob BundleBool TRUE or FALSE right now?
@@ -11718,11 +11790,13 @@ public:
     }
 
     /*
-     * applyBundle --
+     * applyBundleLinearForce --
      *      Apply a bundle to a given mob to calculate the force.
      */
-    void applyBundle(Mob *mob, FRPoint *rForce, BundleForce *bundle,
-                     FPoint *focusPos) {
+    void applyBundleLinearForce(Mob *mob, FRPoint *rForce,
+                                BundleLinearForce *bundle,
+                                FPoint *focusPos,
+                                bool tangent) {
         float cweight;
         if (!crowdCheck(mob, &bundle->crowd, &cweight)) {
             /* No force. */
@@ -11753,8 +11827,26 @@ public:
         FRPoint reVec;
         FPoint_Subtract(focusPos, &mob->pos, &eVec);
         FPoint_ToFRPoint(&eVec, NULL, &reVec);
+
         reVec.radius = vweight;
+        if (tangent) {
+            reVec.theta += (float)M_PI/2;
+        }
+
         FRPoint_Add(rForce, &reVec, rForce);
+    }
+
+    /*
+     * applyBundleForce --
+     *      Apply a bundle to a given mob to calculate the force.
+     */
+    void applyBundleForce(Mob *mob, FRPoint *rForce,
+                          BundleForce *bundle,
+                          FPoint *focusPos) {
+        applyBundleLinearForce(mob, rForce, &bundle->push, focusPos, FALSE);
+        if (bundle->useTangent) {
+            applyBundleLinearForce(mob, rForce, &bundle->tangent, focusPos, TRUE);
+        }
     }
 
     void flockCores(Mob *mob, FRPoint *rForce) {
@@ -11763,7 +11855,7 @@ public:
         Mob *core = sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
 
         if (core != NULL) {
-            applyBundle(mob, rForce, &myConfig.cores, &core->pos);
+            applyBundleForce(mob, rForce, &myConfig.cores, &core->pos);
         }
     }
 
@@ -11773,7 +11865,7 @@ public:
         Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
 
         if (enemy != NULL) {
-            applyBundle(mob, rForce, &myConfig.enemy, &enemy->pos);
+            applyBundleForce(mob, rForce, &myConfig.enemy, &enemy->pos);
         }
     }
 
@@ -11782,7 +11874,7 @@ public:
         FPoint center;
         center.x = myFleetAI->bp.width / 2;
         center.y = myFleetAI->bp.height / 2;
-        applyBundle(mob, rForce, &myConfig.center, &center);
+        applyBundleForce(mob, rForce, &myConfig.center, &center);
     }
 
     void flockMobLocus(Mob *mob, FRPoint *rForce) {
@@ -11823,7 +11915,7 @@ public:
         pp.useScaled = myConfig.mobLocus.useScaled;
 
         if (getLocusPoint(mob, &pp, randomPoint, &mobLocus)) {
-            applyBundle(mob, rForce, &myConfig.mobLocus.force, &mobLocus);
+            applyBundleForce(mob, rForce, &myConfig.mobLocus.force, &mobLocus);
 
             float proximityRadius =
                 getBundleValue(mob, &myConfig.mobLocus.proximityRadius);
@@ -11868,7 +11960,8 @@ public:
 
         if (getLocusPoint(mob, &myConfig.fleetLocus.params, randomPoint,
                           &fleetLocus)) {
-            applyBundle(mob, rForce, &myConfig.fleetLocus.force, &fleetLocus);
+            applyBundleForce(mob, rForce, &myConfig.fleetLocus.force,
+                             &fleetLocus);
         }
     }
 
@@ -11988,7 +12081,7 @@ public:
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
         Mob *base = sg->friendBase();
         if (base != NULL) {
-            applyBundle(mob, rForce, &myConfig.base, &base->pos);
+            applyBundleForce(mob, rForce, &myConfig.base, &base->pos);
         }
     }
 
@@ -12001,7 +12094,7 @@ public:
             Mob *enemy = sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
 
             if (enemy != NULL) {
-                applyBundle(mob, rForce, &myConfig.baseDefense, &enemy->pos);
+                applyBundleForce(mob, rForce, &myConfig.baseDefense, &enemy->pos);
             }
         }
     }
@@ -12012,7 +12105,7 @@ public:
         Mob *base = sg->enemyBase();
 
         if (base != NULL) {
-            applyBundle(mob, rForce, &myConfig.enemyBase, &base->pos);
+            applyBundleForce(mob, rForce, &myConfig.enemyBase, &base->pos);
         }
     }
 
@@ -12021,7 +12114,7 @@ public:
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
         if (!sg->hasEnemyBase() && sg->hasEnemyBaseGuess()) {
             FPoint pos = sg->getEnemyBaseGuess();
-            applyBundle(mob, rForce, &myConfig.enemyBaseGuess, &pos);
+            applyBundleForce(mob, rForce, &myConfig.enemyBaseGuess, &pos);
         }
     }
 
@@ -12472,8 +12565,8 @@ static void MutateBundleRange(FleetAIType aiType, MBRegistry *mreg,
     MBString_Destroy(&s);
 }
 
-static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
-                              const char *prefix)
+static void MutateBundleLinearForce(FleetAIType aiType, MBRegistry *mreg,
+                                    const char *prefix)
 {
     CMBString s;
     MBString_Create(&s);
@@ -12493,6 +12586,41 @@ static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
     MBString_AppendCStr(&s, ".weight");
     MutateBundleValue(aiType, mreg, MBString_GetCStr(&s),
                       MUTATION_TYPE_WEIGHT);
+
+    MBString_Destroy(&s);
+}
+
+
+static void MutateBundleForce(FleetAIType aiType, MBRegistry *mreg,
+                              const char *prefix)
+{
+    CMBString s;
+    MutationBoolParams vb;
+
+    MBString_Create(&s);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ""); // push force
+    MutateBundleLinearForce(aiType, mreg, MBString_GetCStr(&s));
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".useTangent");
+    MBUtil_Zero(&vb, sizeof(vb));
+    vb.key = MBString_GetCStr(&s);
+    vb.flipRate = 0.05f;
+    if (MBRegistry_GetBool(mreg, BUNDLE_SCRAMBLE_KEY)) {
+        vb.flipRate = 0.5f;
+    }
+    Mutate_Bool(mreg, &vb, 1);
+
+    MBString_MakeEmpty(&s);
+    MBString_AppendCStr(&s, prefix);
+    MBString_AppendCStr(&s, ".tangent");
+    MutateBundleLinearForce(aiType, mreg, MBString_GetCStr(&s));
+
+    //XXX: Randomly copy in exact values from push force?
 
     MBString_Destroy(&s);
 }
