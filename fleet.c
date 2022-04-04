@@ -67,6 +67,7 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE13,
     FLEET_AI_BUNDLE14,
     FLEET_AI_FLOCK9,   // 95.8%
+    FLEET_AI_BUNDLE15,
 };
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
@@ -327,7 +328,7 @@ bool Fleet_IsFlockFleet(FleetAIType aiType)
 
 bool Fleet_IsBundleFleet(FleetAIType aiType)
 {
-    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE14) {
+    if (aiType >= FLEET_AI_BUNDLE1 && aiType <= FLEET_AI_BUNDLE15) {
         return TRUE;
     }
     return FALSE;

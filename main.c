@@ -242,7 +242,7 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_FLOCK9;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BUNDLE14;
+        mainData.players[p].aiType = FLEET_AI_BUNDLE15;
         p++;
 
         // mainData.players[p].aiType = FLEET_AI_BOB;
