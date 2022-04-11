@@ -77,6 +77,26 @@ sub DumpFleet($) {
     }
 }
 
+sub GetFleetSummary($) {
+        my $fPrefix = shift;
+
+        my $nb = $gPop->{"$fPrefix.numBattles"};
+        my $mw = $gPop->{"$fPrefix.numWins"};
+        my $ms = $gPop->{"$fPrefix.numSpawn"};
+        my $f = $mw / $gPop->{"$fPrefix.numBattles"};
+        my $a = $gPop->{"$fPrefix.age"};
+
+        if (!defined($ms)) {
+            $ms = 0;
+        }
+
+        $f = sprintf("%1.2f%%", ($f*100));
+
+        my $fleet = $fPrefix;
+        $fleet =~ s/\.abattle//;
+        return "$fleet, age=$a, numWins=$mw, numSpawn=$ms, fitness=$f";
+}
+
 sub ComputeDiversity() {
     my $numFleets = $gPop->{'numFleets'};
     VERIFY(defined($numFleets) && $numFleets > 0);
@@ -153,6 +173,8 @@ sub DisplaySummary() {
     my $maxAge = 0;
     my $fitnessRange = {};
     my $maxWinsP;
+    my $maxFP;
+    my $maxFV;
 
     for (my $i = 0.1; $i <= 1.0; $i+=0.1) {
         $fitnessRange->{$i} = 0;
@@ -162,16 +184,18 @@ sub DisplaySummary() {
         my $prefix = "fleet$i";
         my $fPrefix = "$prefix.abattle";
         if ($gPop->{"$fPrefix.playerType"} eq "Target") {
-            if (defined($gPop->{"$fPrefix.numBattles"})) {
-                my $numBattles = $gPop->{"$fPrefix.numBattles"};
-                my $numWins = $gPop->{"$fPrefix.numWins"};
+            my $numWins = $gPop->{"$fPrefix.numWins"};
+            my $numBattles = $gPop->{"$fPrefix.numBattles"};
+            my $f = 0.0;
+
+            if (defined($numBattles) && $numBattles > 0) {
+                $f = $gPop->{"$fPrefix.numWins"} / $numBattles;
+            }
+
+            if (defined($numBattles)) {
                 $totalWins += $numWins;
                 $totalBattles += $numBattles;
 
-                my $f = 0.0;
-                if (defined($numBattles) && $numBattles > 0) {
-                    $f = $gPop->{"$fPrefix.numWins"} / $numBattles;
-                }
                 for (my $fi = 0.1; $fi <= 1.0; $fi += 0.1) {
                     # This has rounding problems at 100% ?
                     if ($f <= $fi || $fi > 0.9) {
@@ -193,11 +217,14 @@ sub DisplaySummary() {
                 }
             }
 
-            my $nw = $gPop->{"$fPrefix.numWins"};
-            if (defined($nw)) {
+            if (defined($numWins)) {
                 if (!defined($maxWinsP) ||
-                    $nw > $gPop->{"$maxWinsP.numWins"}) {
+                    $numWins > $gPop->{"$maxWinsP.numWins"}) {
                     $maxWinsP = $fPrefix;
+                }
+                if (!defined($maxFP) || $f > $maxFV) {
+                    $maxFP = $fPrefix;
+                    $maxFV = $f;
                 }
             }
         }
@@ -251,20 +278,11 @@ sub DisplaySummary() {
     if (defined($maxWinsP)) {
         my $fPrefix = $maxWinsP;
         Console("\n");
-        my $nb = $gPop->{"$fPrefix.numBattles"};
-        my $mw = $gPop->{"$fPrefix.numWins"};
-        my $ms = $gPop->{"$fPrefix.numSpawn"};
-        my $f = $mw / $gPop->{"$fPrefix.numBattles"};
-        my $a = $gPop->{"$fPrefix.age"};
-
-        if (!defined($ms)) {
-            $ms = 0;
-        }
-
-        $f = sprintf("%1.2f%%", ($f*100));
-        my $fleet = $maxWinsP;
-        $fleet =~ s/\.abattle$//;
-        Console("Leader: $fleet, age=$a, numWins=$mw, numSpawn=$ms, fitness=$f\n");
+        Console(" Leader: " . GetFleetSummary($fPrefix) . "\n");
+    }
+    if (defined($maxFP)) {
+        my $fPrefix = $maxFP;
+        Console("Upstart: " . GetFleetSummary($fPrefix) . "\n");
     }
 
     Console("\n");
