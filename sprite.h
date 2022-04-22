@@ -73,7 +73,7 @@ typedef enum SpriteSet {
     SPRITE_SET_ALTAIR_ORANGE,       // Bundle14
     SPRITE_SET_ALTAIR_ORANGE2,      // Bundle15
     SPRITE_SET_ALTAIR_YELLOW2,      // Bundle4
-    SPRITE_SET_ALTAIR_BLUE3,
+    SPRITE_SET_ALTAIR_BLUE3,        // Bundle16
 
     SPRITE_SET_URSA_BLUE,
     SPRITE_SET_URSA_BLUE2,
