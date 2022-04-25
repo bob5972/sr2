@@ -35,40 +35,40 @@ typedef struct Fleet {
 
 static const FleetAIType gRankings[] = {
     FLEET_AI_SIMPLE,   //  0.0%
-    FLEET_AI_GATHER,   //  3.4%
-    FLEET_AI_CLOUD,    //  3.4%
-    FLEET_AI_MAPPER,   //  3.6%
-    FLEET_AI_RUNAWAY,  // 12.9%
-    FLEET_AI_COWARD,   // 16.2%
-    FLEET_AI_CIRCLE,   // 24.5%
-    FLEET_AI_FLOCK1,   // 25.6%
-    FLEET_AI_BUNDLE1,  // 29.6%
-    FLEET_AI_BASIC,    // 30.3%
-    FLEET_AI_FLOCK2,   // 39.1%
-    FLEET_AI_BUNDLE2,  // 43.1%
-    FLEET_AI_BUNDLE7,  // 47.3%
-    FLEET_AI_BUNDLE8,  // 49.3%
-    FLEET_AI_HOLD,     // 49.4%
-    FLEET_AI_BUNDLE3,  // 50.1%
-    FLEET_AI_BUNDLE5,  // 51.5%
-    FLEET_AI_BUNDLE6,  // 54.4%
-    FLEET_AI_BUNDLE4,  // 55.2%
-    FLEET_AI_META,     // 56.1%
-    FLEET_AI_BUNDLE9,  // 59.6%
-    FLEET_AI_FLOCK4,   // 62.0%
-    FLEET_AI_FLOCK5,   // 69.6%
-    FLEET_AI_FLOCK3,   // 70.1%
-    FLEET_AI_BUNDLE10, // 73.9%
-    FLEET_AI_BUNDLE11, // 74.8%
-    FLEET_AI_FLOCK6,   // 78.2%
-    FLEET_AI_FLOCK7,   // 82.1%
-    FLEET_AI_FLOCK8,   // 85.1%
-    FLEET_AI_BUNDLE12, // 85.2%
-    FLEET_AI_BUNDLE13,
-    FLEET_AI_BUNDLE14,
-    FLEET_AI_FLOCK9,   // 95.8%
-    FLEET_AI_BUNDLE15,
-    FLEET_AI_BUNDLE16,
+    FLEET_AI_GATHER,   //  3.0%
+    FLEET_AI_CLOUD,    //  3.0%
+    FLEET_AI_MAPPER,   //  3.2%
+    FLEET_AI_RUNAWAY,  // 11.4%
+    FLEET_AI_COWARD,   // 14.4%
+    FLEET_AI_CIRCLE,   // 21.7%
+    FLEET_AI_FLOCK1,   // 22.7%
+    FLEET_AI_BUNDLE1,  // 26.3%
+    FLEET_AI_BASIC,    // 26.8%
+    FLEET_AI_FLOCK2,   // 34.9%
+    FLEET_AI_BUNDLE2,  // 38.4%
+    FLEET_AI_BUNDLE7,  // 42.7%
+    FLEET_AI_BUNDLE8,  // 44.0%
+    FLEET_AI_HOLD,     // 44.2%
+    FLEET_AI_BUNDLE3,  // 44.6%
+    FLEET_AI_BUNDLE5,  // 45.5%
+    FLEET_AI_BUNDLE6,  // 48.3%
+    FLEET_AI_BUNDLE4,  // 49.5%
+    FLEET_AI_META,     // 50.8%
+    FLEET_AI_BUNDLE9,  // 53.0%
+    FLEET_AI_FLOCK4,   // 57.2%
+    FLEET_AI_FLOCK5,   // 66.0%
+    FLEET_AI_FLOCK3,   // 64.6%
+    FLEET_AI_BUNDLE10, // 66.0%
+    FLEET_AI_BUNDLE11, // 67.4%
+    FLEET_AI_FLOCK6,   // 73.9%
+    FLEET_AI_FLOCK7,   // 75.3%
+    FLEET_AI_BUNDLE12, // 78.8%
+    FLEET_AI_FLOCK8,   // 79.4%
+    FLEET_AI_BUNDLE13, // 79.2%
+    FLEET_AI_BUNDLE16, // 81.5%
+    FLEET_AI_BUNDLE15, // 81.7%
+    FLEET_AI_BUNDLE14, // 83.5%
+    FLEET_AI_FLOCK9,   // 91.1%
 };
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
