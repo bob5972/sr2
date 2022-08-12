@@ -63,6 +63,7 @@ CPP_SOURCES = basicFleet.cpp \
               circleFleet.cpp \
               cowardFleet.cpp \
               flockFleet.cpp \
+	      floatNet.cpp \
               holdFleet.cpp \
               metaFleet.cpp \
               mobSet.cpp \
