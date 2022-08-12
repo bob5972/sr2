@@ -68,7 +68,8 @@ CPP_SOURCES = basicFleet.cpp \
               metaFleet.cpp \
               mobSet.cpp \
               sensorGrid.cpp \
-              basicShipAI.cpp
+              basicShipAI.cpp \
+	      textDump.cpp
 
 ifeq ($(SR2_GUI), 1)
 	C_SOURCES += display.c

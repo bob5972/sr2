@@ -19,6 +19,9 @@
 #include "floatNet.hpp"
 #include "MBAssert.h"
 #include "MBDebug.h"
+#include "MBRegistry.h"
+#include "MBString.hpp"
+#include "textDump.hpp"
 
 FloatNet::FloatNet(uint numInputs, uint numOutputs, uint numNodes)
 {
@@ -31,8 +34,81 @@ FloatNet::FloatNet(uint numInputs, uint numOutputs, uint numNodes)
     myNumOutputs = numOutputs;
 
     myNodes.resize(numNodes);
-    myValues.resize(numInputs + numNodes);
+    myValues.resize(myNumInputs + numNodes);
+
+    for (uint i = 0; i < myNodes.size(); i++) {
+        myNodes[i].myIndex = i + numInputs;
+    }
 }
+
+void FloatNet::load(MBRegistry *mreg, const char *prefix)
+{
+    MBString p;
+
+    p = prefix;
+    p += ".numInputs";
+    myNumInputs = MBRegistry_GetUint(mreg, p.CStr());
+
+    p = prefix;
+    p += ".numOutputs";
+    myNumOutputs = MBRegistry_GetUint(mreg, p.CStr());
+
+    p = prefix;
+    p += ".numNodes";
+    uint numNodes = MBRegistry_GetUint(mreg, p.CStr());
+
+    VERIFY(myNumInputs > 0);
+    VERIFY(myNumOutputs > 0);
+    VERIFY(myNumOutputs <= numNodes);
+
+    myNodes.resize(numNodes);
+
+    for (uint i = 0; i < myNodes.size(); i++) {
+        char *strp;
+
+        p = prefix;
+        asprintf(&strp, ".node[%d]", i);
+        p += strp;
+        free(strp);
+
+        myNodes[i].load(mreg, p.CStr());
+    }
+
+    myValues.resize(myNumInputs + numNodes);
+}
+
+void FloatNet::Node::load(MBRegistry *mreg, const char *prefix)
+{
+    MBString p;
+    MBString str;
+
+    p = prefix;
+    p += ".op";
+    myOp = (FloatNetOp) MBRegistry_GetUint(mreg, p.CStr());
+    VERIFY(myOp != FLOATNET_OP_INVALID);
+    VERIFY(myOp < FLOATNET_OP_MAX);
+
+    p = prefix;
+    p += ".numInputs";
+    uint numInputs = MBRegistry_GetUint(mreg, p.CStr());
+    myInputs.resize(numInputs);
+
+    p = prefix;
+    p += ".inputs";
+    str = MBRegistry_GetCStr(mreg, p.CStr());
+    TextDump_Convert(str, myInputs);
+
+    p = prefix;
+    p += ".numParams";
+    uint numParams = MBRegistry_GetUint(mreg, p.CStr());
+    myParams.resize(numParams);
+
+    p = prefix;
+    p += ".params";
+    str = MBRegistry_GetCStr(mreg, p.CStr());
+    TextDump_Convert(str, myParams);
+}
+
 
 void FloatNet::compute(const float *inputs, uint numInputs,
                        float *outputs, uint numOutputs)
@@ -100,6 +176,52 @@ float FloatNet::Node::compute(MBVector<float> &values)
 
             for (uint i = 0; i < myInputs.size(); i++) {
                 f += getParam(i) * getInput(i, values);
+            }
+            return f;
+        }
+
+        case FLOATNET_OP_TAKE_MIN: {
+            float f = getInput(0, values);
+
+            for (uint i = 1; i < myInputs.size(); i++) {
+                float nf = getInput(i, values);
+                if (nf < f) {
+                    f = nf;
+                }
+            }
+            return f;
+        }
+        case FLOATNET_OP_TAKE_MAX: {
+            float f = getInput(0, values);
+
+            for (uint i = 1; i < myInputs.size(); i++) {
+                float nf = getInput(i, values);
+                if (nf > f) {
+                    f = nf;
+                }
+            }
+            return f;
+        }
+
+        case FLOATNET_OP_TAKE_SCALED_MIN: {
+            float f = getInput(0, values) * getParam(0);
+
+            for (uint i = 1; i < myInputs.size(); i++) {
+                float nf = getInput(i, values) * getParam(i);
+                if (nf < f) {
+                    f = nf;
+                }
+            }
+            return f;
+        }
+        case FLOATNET_OP_TAKE_SCALED_MAX: {
+            float f = getInput(0, values) * getParam(0);
+
+            for (uint i = 1; i < myInputs.size(); i++) {
+                float nf = getInput(i, values) * getParam(i);
+                if (nf > f) {
+                    f = nf;
+                }
             }
             return f;
         }

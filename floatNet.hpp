@@ -21,6 +21,7 @@
 
 #include "MBTypes.h"
 #include "MBVector.hpp"
+#include "MBRegistry.h"
 
 typedef enum FloatNetOp {
     FLOATNET_OP_INVALID = 0,
@@ -35,6 +36,12 @@ typedef enum FloatNetOp {
 
     FLOATNET_OP_LINEAR_COMBINATION,
 
+    FLOATNET_OP_TAKE_MIN,
+    FLOATNET_OP_TAKE_MAX,
+
+    FLOATNET_OP_TAKE_SCALED_MIN,
+    FLOATNET_OP_TAKE_SCALED_MAX,
+
     FLOATNET_OP_MAX,
 } FloatNetOp;
 
@@ -46,6 +53,8 @@ class FloatNet
         void compute(const float *inputs, uint numInputs,
                      float *outputs, uint numOutputs);
 
+        void load(MBRegistry *mreg, const char *prefix);
+
     public: class Node
     {
         public:
@@ -55,10 +64,12 @@ class FloatNet
 
             float compute(MBVector<float> &values);
 
+            void load(MBRegistry *mreg, const char *prefix);
+
             float getInput(uint i, MBVector<float> &values) {
                 ASSERT(i < myInputs.size());
-                ASSERT(myInputs[i] < myIndex);
                 ASSERT(myIndex < values.size());
+                ASSERT(myInputs[i] < myIndex);
                 return values[myInputs[i]];
             }
 
