@@ -24,5 +24,7 @@
 
 void TextDump_Convert(const MBString &str, MBVector<uint> &v);
 void TextDump_Convert(const MBString &str, MBVector<float> &v);
+void TextDump_Convert(const MBVector<uint> &v, MBString &str);
+void TextDump_Convert(const MBVector<float> &v, MBString &str);
 
 #endif // _TEXTDUMP_H_202208121346

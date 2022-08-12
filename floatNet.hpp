@@ -54,6 +54,7 @@ class FloatNet
                      float *outputs, uint numOutputs);
 
         void load(MBRegistry *mreg, const char *prefix);
+        void save(MBRegistry *mreg, const char *prefix);
 
     public: class Node
     {
@@ -65,6 +66,7 @@ class FloatNet
             float compute(MBVector<float> &values);
 
             void load(MBRegistry *mreg, const char *prefix);
+            void save(MBRegistry *mreg, const char *prefix);
 
             float getInput(uint i, MBVector<float> &values) {
                 ASSERT(i < myInputs.size());

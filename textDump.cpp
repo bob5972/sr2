@@ -22,8 +22,9 @@
 void TextDump_Convert(const MBString &str, MBVector<uint> &v)
 {
     uint i = 0;
-    uint ni = 0;
     MBString s;
+
+    v.makeEmpty();
 
     while (i < str.length()) {
         s.makeEmpty();
@@ -38,7 +39,7 @@ void TextDump_Convert(const MBString &str, MBVector<uint> &v)
         }
 
         if (s.length() > 0) {
-            v[ni++] = atoi(s.CStr());
+            v.push(atoi(s.CStr()));
         }
     }
 }
@@ -46,24 +47,67 @@ void TextDump_Convert(const MBString &str, MBVector<uint> &v)
 void TextDump_Convert(const MBString &str, MBVector<float> &v)
 {
     uint i = 0;
-    uint ni = 0;
     MBString s;
+
+    // XXX: This is not robust.
+
+    v.makeEmpty();
 
     while (i < str.length()) {
         s.makeEmpty();
 
-        while (i < str.length() && !isdigit(str.getChar(i))) {
+        while (i < str.length() &&
+              !isdigit(str.getChar(i)) &&
+              str.getChar(i) != '.') {
             i++;
         }
 
-        while (i < str.length() && isdigit(str.getChar(i))) {
+        while (i < str.length() &&
+               (isdigit(str.getChar(i)) || str.getChar(i) == '.')) {
             s += str.getChar(i);
             i++;
         }
 
         if (s.length() > 0) {
-            v[ni++] = atof(s.CStr());
+            v.push(atof(s.CStr()));
         }
     }
+}
+
+void TextDump_Convert(const MBVector<uint> &v, MBString &str)
+{
+    uint i = 0;
+
+    str.makeEmpty();
+
+    str += "{";
+
+    for (i = 0; i < v.size(); i++) {
+        char *v;
+        asprintf(&v, "%d, ", v[i]);
+        str += v;
+        free(v);
+    }
+
+    str += "}";
+}
+
+
+void TextDump_Convert(const MBVector<float> &v, MBString &str)
+{
+    uint i = 0;
+
+    str.makeEmpty();
+
+    str += "{";
+
+    for (i = 0; i < v.size(); i++) {
+        char *v;
+        asprintf(&v, "%f, ", (float)v[i]);
+        str += v;
+        free(v);
+    }
+
+    str += "}";
 }
 

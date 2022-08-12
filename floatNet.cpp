@@ -77,6 +77,42 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     myValues.resize(myNumInputs + numNodes);
 }
 
+void FloatNet::save(MBRegistry *mreg, const char *prefix)
+{
+    MBString p;
+    char *v;
+
+    p = prefix;
+    p += ".numInputs";
+    asprintf(&v, "%d", myNumInputs);
+    MBRegistry_PutCopy(mreg, p.CStr(), v);
+    free(v);
+
+    p = prefix;
+    p += ".numOutputs";
+    asprintf(&v, "%d", myNumOutputs);
+    MBRegistry_PutCopy(mreg, p.CStr(), v);
+    free(v);
+
+    p = prefix;
+    p += ".numNodes";
+    asprintf(&v, "%d", myNodes.size());
+    MBRegistry_PutCopy(mreg, p.CStr(), v);
+    free(v);
+
+    for (uint i = 0; i < myNodes.size(); i++) {
+        char *strp;
+
+        p = prefix;
+        asprintf(&strp, ".node[%d]", i);
+        p += strp;
+        free(strp);
+
+        myNodes[i].save(mreg, p.CStr());
+    }
+}
+
+
 void FloatNet::Node::load(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
@@ -91,22 +127,59 @@ void FloatNet::Node::load(MBRegistry *mreg, const char *prefix)
     p = prefix;
     p += ".numInputs";
     uint numInputs = MBRegistry_GetUint(mreg, p.CStr());
-    myInputs.resize(numInputs);
 
     p = prefix;
     p += ".inputs";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, myInputs);
+    VERIFY(myInputs.size() == numInputs);
 
     p = prefix;
     p += ".numParams";
     uint numParams = MBRegistry_GetUint(mreg, p.CStr());
-    myParams.resize(numParams);
 
     p = prefix;
     p += ".params";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, myParams);
+    VERIFY(myInputs.size() == numParams);
+}
+
+
+void FloatNet::Node::save(MBRegistry *mreg, const char *prefix)
+{
+    MBString p;
+    MBString str;
+    char *v;
+
+    p = prefix;
+    p += ".op";
+    asprintf(&v, "%d", (uint)myOp);
+    MBRegistry_PutCopy(mreg, p.CStr(), v);
+    free(v);
+
+    p = prefix;
+    p += ".numInputs";
+    asprintf(&v, "%d", myInputs.size());
+    MBRegistry_PutCopy(mreg, p.CStr(), v);
+    free(v);
+
+    p = prefix;
+    p += ".inputs";
+    TextDump_Convert(myInputs, str);
+    MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
+
+    p = prefix;
+    p += ".numParams";
+    asprintf(&v, "%d", myParams.size());
+    MBRegistry_PutCopy(mreg, p.CStr(), v);
+    free(v);
+
+    p = prefix;
+    p += ".params";
+    str = MBRegistry_GetCStr(mreg, p.CStr());
+    TextDump_Convert(myParams, str);
+    MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
 }
 
 
@@ -137,12 +210,6 @@ void FloatNet::compute(const float *inputs, uint numInputs,
 
 float FloatNet::Node::compute(MBVector<float> &values)
 {
-    if (mb_debug) {
-        for (uint i = 0; i < myInputs.size(); i++) {
-            ASSERT(myInputs[i] < myIndex);
-        }
-    }
-
     switch (myOp) {
         case FLOATNET_OP_ZERO:
             return 0.0;
