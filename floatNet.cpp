@@ -22,6 +22,7 @@
 #include "MBRegistry.h"
 #include "MBString.hpp"
 #include "textDump.hpp"
+#include "Random.h"
 
 FloatNet::FloatNet(uint numInputs, uint numOutputs, uint numNodes)
 {
@@ -182,6 +183,55 @@ void FloatNet::Node::save(MBRegistry *mreg, const char *prefix)
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
 }
 
+void FloatNet::mutate()
+{
+    for (uint i = 0; i < myNodes.size(); i++) {
+        myNodes[i].mutate();
+    }
+}
+
+void FloatNet::Node::mutate()
+{
+    float rate = 0.1;
+
+    if (!Random_Flip(rate)) {
+        return;
+    }
+
+    // XXX: This uses static sizing for now.
+    if (myInputs.size() != FLOATNET_NODE_DEGREE) {
+        myInputs.resize(FLOATNET_NODE_DEGREE);
+
+        for (uint i = 0; i < myInputs.size(); i++) {
+            myInputs[i] = 0;
+        }
+    }
+    if (myParams.size() != FLOATNET_NODE_DEGREE) {
+        myParams.resize(FLOATNET_NODE_DEGREE);
+
+        for (uint i = 0; i < myParams.size(); i++) {
+            myParams[i] = 0.0f;
+        }
+    }
+
+    if (Random_Flip(rate)) {
+        myOp = (FloatNetOp)Random_Int(FLOATNET_OP_MIN, FLOATNET_OP_MAX - 1);
+    }
+
+    for (uint i = 0; i < myInputs.size(); i++) {
+        if (Random_Flip(rate)) {
+            myInputs[i] = Random_Int(0, myIndex - 1);
+        }
+    }
+
+    // XXX: Better mutations?
+    for (uint i = 0; i < myParams.size(); i++) {
+        if (Random_Flip(rate)) {
+            myParams[i] = Random_Float(-1.0f, 1.0f);
+        }
+    }
+}
+
 
 void FloatNet::compute(const float *inputs, uint numInputs,
                        float *outputs, uint numOutputs)
@@ -210,6 +260,8 @@ void FloatNet::compute(const float *inputs, uint numInputs,
 
 float FloatNet::Node::compute(MBVector<float> &values)
 {
+    ASSERT(FLOATNET_OP_MAX == 12);
+
     switch (myOp) {
         case FLOATNET_OP_ZERO:
             return 0.0;
@@ -220,6 +272,15 @@ float FloatNet::Node::compute(MBVector<float> &values)
             return getParam(0);
         case FLOATNET_OP_IDENTITY:
             return getInput(0, values);
+
+        case FLOATNET_OP_CLAMP: {
+            float f = getInput(0, values);
+            float min = getParam(0);
+            float max = getParam(1);
+            f = MAX(f, max);
+            f = MIN(f, min);
+            return f;
+        }
 
         case FLOATNET_OP_SUM: {
             float f = 0.0;

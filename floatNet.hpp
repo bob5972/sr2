@@ -25,11 +25,14 @@
 
 typedef enum FloatNetOp {
     FLOATNET_OP_INVALID = 0,
-    FLOATNET_OP_ZERO,
+    FLOATNET_OP_MIN = 1,
+    FLOATNET_OP_ZERO = 1,
     FLOATNET_OP_ONE,
 
     FLOATNET_OP_CONSTANT,
     FLOATNET_OP_IDENTITY,
+
+    FLOATNET_OP_CLAMP,
 
     FLOATNET_OP_SUM,
     FLOATNET_OP_PRODUCT,
@@ -45,6 +48,8 @@ typedef enum FloatNetOp {
     FLOATNET_OP_MAX,
 } FloatNetOp;
 
+#define FLOATNET_NODE_DEGREE 8
+
 class FloatNet
 {
     public:
@@ -54,6 +59,7 @@ class FloatNet
                      float *outputs, uint numOutputs);
 
         void load(MBRegistry *mreg, const char *prefix);
+        void mutate();
         void save(MBRegistry *mreg, const char *prefix);
 
     public: class Node
@@ -66,6 +72,7 @@ class FloatNet
             float compute(MBVector<float> &values);
 
             void load(MBRegistry *mreg, const char *prefix);
+            void mutate();
             void save(MBRegistry *mreg, const char *prefix);
 
             float getInput(uint i, MBVector<float> &values) {
