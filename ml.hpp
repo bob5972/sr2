@@ -44,6 +44,7 @@ typedef enum MLFloatOp {
     ML_FOP_1x1_QUADRATIC_DOWN,
 
     ML_FOP_1x2_CLAMP,
+    ML_FOP_1x2_SINE,
 
     ML_FOP_Nx0_SUM,
     ML_FOP_Nx0_PRODUCT,
@@ -95,6 +96,9 @@ class MLFloatNode {
             return params[i];
         }
 };
+
+const char * ML_FloatOpToString(MLFloatOp op);
+MLFloatOp ML_StringToFloatOp(const char *opstr);
 
 bool ML_IsFloatOp0x0(MLFloatOp op);
 bool ML_IsFloatOp1x1(MLFloatOp op);

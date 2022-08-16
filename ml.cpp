@@ -22,6 +22,35 @@
 #include "textDump.hpp"
 #include "Random.h"
 
+typedef struct MLFloatOpDesc {
+    MLFloatOp op;
+    const char *name;
+} MLFloatOpDesc;
+
+#define FLOP(_op) _op, #_op
+static MLFloatOpDesc mlFloatOpDescs[] = {
+    { FLOP(ML_FOP_0x0_ZERO), },
+    { FLOP(ML_FOP_0x0_ONE), },
+    { FLOP(ML_FOP_0x1_CONSTANT), },
+    { FLOP(ML_FOP_1x0_IDENTITY), },
+    { FLOP(ML_FOP_1x1_STRICT_ON), },
+    { FLOP(ML_FOP_1x1_STRICT_OFF), },
+    { FLOP(ML_FOP_1x1_LINEAR_UP), },
+    { FLOP(ML_FOP_1x1_LINEAR_DOWN), },
+    { FLOP(ML_FOP_1x1_QUADRATIC_UP), },
+    { FLOP(ML_FOP_1x1_QUADRATIC_DOWN), },
+    { FLOP(ML_FOP_1x2_CLAMP), },
+    { FLOP(ML_FOP_1x2_SINE), },
+    { FLOP(ML_FOP_Nx0_SUM), },
+    { FLOP(ML_FOP_Nx0_PRODUCT), },
+    { FLOP(ML_FOP_Nx0_MIN), },
+    { FLOP(ML_FOP_Nx0_MAX), },
+    { FLOP(ML_FOP_NxN_LINEAR_COMBINATION), },
+    { FLOP(ML_FOP_NxN_SCALED_MIN), },
+    { FLOP(ML_FOP_NxN_SCALED_MAX), },
+};
+#undef FLOP
+
 float ML_TransformFloat1x1(MLFloatOp op, float input,
                            float param) {
     if (op == ML_FOP_0x0_ZERO) {
@@ -144,6 +173,13 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             f = MAX(f, max);
             f = MIN(f, min);
             return f;
+        }
+
+        case ML_FOP_1x2_SINE: {
+            float p = getParam(0);
+            float s = getParam(1);
+            float t = getInput(0);
+            return sinf(t/p + s);
         }
 
         case ML_FOP_Nx0_SUM: {
@@ -275,7 +311,7 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
 
     p = prefix;
     p += ".op";
-    op = (MLFloatOp) MBRegistry_GetUint(mreg, p.CStr());
+    op = ML_StringToFloatOp(MBRegistry_GetCStr(mreg, p.CStr()));
     VERIFY(op != ML_FOP_INVALID);
     VERIFY(op < ML_FOP_MAX);
 
@@ -309,9 +345,7 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
 
     p = prefix;
     p += ".op";
-    asprintf(&v, "%d", (uint)op);
-    MBRegistry_PutCopy(mreg, p.CStr(), v);
-    free(v);
+    MBRegistry_PutCopy(mreg, ML_FloatOpToString(op), v);
 
     p = prefix;
     p += ".numInputs";
@@ -335,4 +369,26 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(params, str);
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
+}
+
+const char *ML_FloatOpToString(MLFloatOp op)
+{
+    for (uint i = 0; i < ARRAYSIZE(mlFloatOpDescs); i++) {
+        if (op == mlFloatOpDescs[i].op) {
+            return mlFloatOpDescs[i].name;
+        }
+    }
+
+    PANIC("Unknown MLFloatOp: %d\n", op);
+}
+
+MLFloatOp ML_StringToFloatOp(const char *opstr)
+{
+    for (uint i = 0; i < ARRAYSIZE(mlFloatOpDescs); i++) {
+        if (strcmp(opstr, mlFloatOpDescs[i].name) == 0) {
+            return mlFloatOpDescs[i].op;
+        }
+    }
+
+    PANIC("Unknown MLFloatOp string: %s\n", opstr);
 }
