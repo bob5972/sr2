@@ -22,6 +22,7 @@
 #include "MBTypes.h"
 #include "MBVector.hpp"
 #include "MBRegistry.h"
+#include "ml.hpp"
 
 typedef enum FloatNetOp {
     FLOATNET_OP_INVALID = 0,
@@ -48,8 +49,6 @@ typedef enum FloatNetOp {
     FLOATNET_OP_MAX,
 } FloatNetOp;
 
-#define FLOATNET_NODE_DEGREE 8
-
 class FloatNet
 {
     public:
@@ -62,42 +61,11 @@ class FloatNet
         void mutate();
         void save(MBRegistry *mreg, const char *prefix);
 
-    public: class Node
-    {
-        public:
-            Node()
-            : myIndex(-1), myOp(FLOATNET_OP_INVALID)
-            {}
-
-            float compute(MBVector<float> &values);
-
-            void load(MBRegistry *mreg, const char *prefix);
-            void mutate();
-            void save(MBRegistry *mreg, const char *prefix);
-
-            float getInput(uint i, MBVector<float> &values) {
-                ASSERT(i < myInputs.size());
-                ASSERT(myIndex < values.size());
-                ASSERT(myInputs[i] < myIndex);
-                return values[myInputs[i]];
-            }
-
-            float getParam(uint i) {
-                ASSERT(i < myParams.size());
-                return myParams[i];
-            }
-
-            uint myIndex;
-            FloatNetOp myOp;
-            MBVector<uint> myInputs;
-            MBVector<float> myParams;
-    };
-
     private:
         uint myNumInputs;
         uint myNumOutputs;
 
-        MBVector<Node> myNodes;
+        MBVector<MLFloatNode> myNodes;
         MBVector<float> myValues;
 };
 

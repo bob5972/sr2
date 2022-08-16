@@ -66,6 +66,7 @@ CPP_SOURCES = basicFleet.cpp \
 	      floatNet.cpp \
               holdFleet.cpp \
               metaFleet.cpp \
+	      ml.cpp \
               mobSet.cpp \
               sensorGrid.cpp \
               basicShipAI.cpp \
