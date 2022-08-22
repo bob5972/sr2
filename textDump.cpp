@@ -112,3 +112,24 @@ void TextDump_Convert(const MBVector<float> &v, MBString &str)
     str += "}";
 }
 
+
+const char *TextMap_ToString(int value, TextMapEntry *tms, uint numTMs)
+{
+    for (uint i = 0; i < numTMs; i++) {
+        if (tms[i].value == value) {
+            return tms[i].str;
+        }
+    }
+    PANIC("%s: value=%d not in table\n", __FUNCTION__, value);
+}
+
+int TextMap_FromString(const char *str, TextMapEntry *tms, uint numTMs)
+{
+    for (uint i = 0; i < numTMs; i++) {
+        if (strcmp(str, tms[i].str) == 0) {
+            return tms[i].value;
+        }
+    }
+    PANIC("%s: string=%s not in table\n", __FUNCTION__, str);
+}
+

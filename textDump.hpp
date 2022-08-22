@@ -22,9 +22,19 @@
 #include "MBString.hpp"
 #include "MBVector.hpp"
 
+typedef struct TextMapEntry {
+    int value;
+    const char *str;
+} TextMapEntry;
+
+#define TMENTRY(_op) _op, #_op
+
 void TextDump_Convert(const MBString &str, MBVector<uint> &v);
 void TextDump_Convert(const MBString &str, MBVector<float> &v);
 void TextDump_Convert(const MBVector<uint> &v, MBString &str);
 void TextDump_Convert(const MBVector<float> &v, MBString &str);
+
+const char *TextMap_ToString(int value, TextMapEntry *tms, uint numTMs);
+int TextMap_FromString(const char *str, TextMapEntry *tms, uint numTMs);
 
 #endif // _TEXTDUMP_H_202208121346

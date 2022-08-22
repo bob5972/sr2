@@ -22,34 +22,28 @@
 #include "textDump.hpp"
 #include "Random.h"
 
-typedef struct MLFloatOpDesc {
-    MLFloatOp op;
-    const char *name;
-} MLFloatOpDesc;
-
-#define FLOP(_op) _op, #_op
-static MLFloatOpDesc mlFloatOpDescs[] = {
-    { FLOP(ML_FOP_0x0_ZERO), },
-    { FLOP(ML_FOP_0x0_ONE), },
-    { FLOP(ML_FOP_0x1_CONSTANT), },
-    { FLOP(ML_FOP_1x0_IDENTITY), },
-    { FLOP(ML_FOP_1x1_STRICT_ON), },
-    { FLOP(ML_FOP_1x1_STRICT_OFF), },
-    { FLOP(ML_FOP_1x1_LINEAR_UP), },
-    { FLOP(ML_FOP_1x1_LINEAR_DOWN), },
-    { FLOP(ML_FOP_1x1_QUADRATIC_UP), },
-    { FLOP(ML_FOP_1x1_QUADRATIC_DOWN), },
-    { FLOP(ML_FOP_1x2_CLAMP), },
-    { FLOP(ML_FOP_1x2_SINE), },
-    { FLOP(ML_FOP_Nx0_SUM), },
-    { FLOP(ML_FOP_Nx0_PRODUCT), },
-    { FLOP(ML_FOP_Nx0_MIN), },
-    { FLOP(ML_FOP_Nx0_MAX), },
-    { FLOP(ML_FOP_NxN_LINEAR_COMBINATION), },
-    { FLOP(ML_FOP_NxN_SCALED_MIN), },
-    { FLOP(ML_FOP_NxN_SCALED_MAX), },
+static TextMapEntry tmMLFloatOps[] = {
+    { TMENTRY(ML_FOP_INVALID), },
+    { TMENTRY(ML_FOP_0x0_ZERO), },
+    { TMENTRY(ML_FOP_0x0_ONE), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT), },
+    { TMENTRY(ML_FOP_1x0_IDENTITY), },
+    { TMENTRY(ML_FOP_1x1_STRICT_ON), },
+    { TMENTRY(ML_FOP_1x1_STRICT_OFF), },
+    { TMENTRY(ML_FOP_1x1_LINEAR_UP), },
+    { TMENTRY(ML_FOP_1x1_LINEAR_DOWN), },
+    { TMENTRY(ML_FOP_1x1_QUADRATIC_UP), },
+    { TMENTRY(ML_FOP_1x1_QUADRATIC_DOWN), },
+    { TMENTRY(ML_FOP_1x2_CLAMP), },
+    { TMENTRY(ML_FOP_1x2_SINE), },
+    { TMENTRY(ML_FOP_Nx0_SUM), },
+    { TMENTRY(ML_FOP_Nx0_PRODUCT), },
+    { TMENTRY(ML_FOP_Nx0_MIN), },
+    { TMENTRY(ML_FOP_Nx0_MAX), },
+    { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
+    { TMENTRY(ML_FOP_NxN_SCALED_MIN), },
+    { TMENTRY(ML_FOP_NxN_SCALED_MAX), },
 };
-#undef FLOP
 
 float ML_TransformFloat1x1(MLFloatOp op, float input,
                            float param) {
@@ -318,7 +312,9 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     p = prefix;
     p += ".op";
     op = ML_StringToFloatOp(MBRegistry_GetCStr(mreg, p.CStr()));
-    VERIFY(op != ML_FOP_INVALID);
+    if (op == ML_FOP_INVALID) {
+        op = ML_FOP_0x0_ZERO;
+    }
     VERIFY(op < ML_FOP_MAX);
 
     p = prefix;
@@ -348,6 +344,7 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
     MBString p;
     MBString str;
     char *v;
+    int ret;
 
     p = prefix;
     p += "op";
@@ -355,7 +352,8 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
 
     p = prefix;
     p += "numInputs";
-    asprintf(&v, "%d", inputs.size());
+    ret = asprintf(&v, "%d", inputs.size());
+    VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
@@ -366,7 +364,8 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
 
     p = prefix;
     p += "numParams";
-    asprintf(&v, "%d", params.size());
+    ret = asprintf(&v, "%d", params.size());
+    VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
@@ -378,22 +377,16 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
 
 const char *ML_FloatOpToString(MLFloatOp op)
 {
-    for (uint i = 0; i < ARRAYSIZE(mlFloatOpDescs); i++) {
-        if (op == mlFloatOpDescs[i].op) {
-            return mlFloatOpDescs[i].name;
-        }
-    }
-
-    PANIC("Unknown MLFloatOp: %d\n", op);
+    return TextMap_ToString(op, tmMLFloatOps, ARRAYSIZE(tmMLFloatOps));
 }
 
 MLFloatOp ML_StringToFloatOp(const char *opstr)
 {
-    for (uint i = 0; i < ARRAYSIZE(mlFloatOpDescs); i++) {
-        if (strcmp(opstr, mlFloatOpDescs[i].name) == 0) {
-            return mlFloatOpDescs[i].op;
-        }
+    if (opstr == NULL) {
+        return ML_FOP_INVALID;
     }
 
-    PANIC("Unknown MLFloatOp string: %s\n", opstr);
+    return (MLFloatOp)TextMap_FromString(opstr, tmMLFloatOps, ARRAYSIZE(tmMLFloatOps));
 }
+
+

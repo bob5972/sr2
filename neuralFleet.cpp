@@ -31,6 +31,7 @@ extern "C" {
 #include "MBString.hpp"
 #include "ml.hpp"
 #include "floatNet.hpp"
+#include "textDump.hpp"
 
 #define NEURAL_SCRAMBLE_KEY "neuralFleet.scrambleMutation"
 
@@ -54,6 +55,24 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_MAX,
 } NeuralForceType;
 
+static TextMapEntry tmForces[] = {
+    { TMENTRY(NEURAL_FORCE_ZERO),             },
+    { TMENTRY(NEURAL_FORCE_HEADING),          },
+    { TMENTRY(NEURAL_FORCE_ALIGN),            },
+    { TMENTRY(NEURAL_FORCE_COHERE),           },
+    { TMENTRY(NEURAL_FORCE_SEPARATE),         },
+    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),   },
+    { TMENTRY(NEURAL_FORCE_EDGES),            },
+    { TMENTRY(NEURAL_FORCE_CORNERS),          },
+    { TMENTRY(NEURAL_FORCE_CENTER),           },
+    { TMENTRY(NEURAL_FORCE_BASE),             },
+    { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),     },
+    { TMENTRY(NEURAL_FORCE_ENEMY),            },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE),       },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS), },
+    { TMENTRY(NEURAL_FORCE_CORES),            },
+};
+
 typedef struct NeuralForceDesc {
     NeuralForceType forceType;
     bool useTangent;
@@ -74,6 +93,15 @@ typedef enum NeuralValueType {
     NEURAL_VALUE_MAX,
 } NeuralValueType;
 
+static TextMapEntry tmValues[] = {
+    { TMENTRY(NEURAL_VALUE_ZERO),  },
+    { TMENTRY(NEURAL_VALUE_FORCE), },
+    { TMENTRY(NEURAL_VALUE_RANGE), },
+    { TMENTRY(NEURAL_VALUE_CROWD), },
+    { TMENTRY(NEURAL_VALUE_TICK),  },
+    { TMENTRY(NEURAL_VALUE_MOBID), },
+};
+
 typedef struct NeuralValueDesc {
     NeuralValueType valueType;
     union {
@@ -87,6 +115,16 @@ typedef struct NeuralConfigValue {
     const char *key;
     const char *value;
 } NeuralConfigValue;
+
+static void LoadNeuralValueDesc(MBRegistry *mreg,
+                                NeuralValueDesc *desc, const char *prefix);
+static void LoadNeuralForceDesc(MBRegistry *mreg,
+                                NeuralForceDesc *desc, const char *prefix);
+static void LoadNeuralCrowdDesc(MBRegistry *mreg,
+                                NeuralCrowdDesc *desc, const char *prefix);
+static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
+                                  bool isOutput, float rate,
+                                  const char *prefix);
 
 class NeuralAIGovernor : public BasicAIGovernor
 {
@@ -154,8 +192,8 @@ public:
         };
 
         NeuralConfigValue configs1[] = {
-            { "curHeadingWeight.value.value", "1"        },
-            { "curHeadingWeight.valueType",   "constant" },
+            { "curHeadingWeight.value.value", "1"        },//XXX
+            { "curHeadingWeight.valueType",   "constant" },//XXX
         };
 
         struct {
@@ -185,11 +223,7 @@ public:
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
-        MBString s;
-
-        //XXX initialization?
-        s = "initialized";
-        if (MBRegistry_GetBool(mreg, s.CStr())) {
+        if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs")) {
             myNeuralNet.load(mreg, "floatNet.");
         } else {
             myNeuralNet.initialize(1, 1, 1);
@@ -210,7 +244,7 @@ public:
             char *str = NULL;
             int ret = asprintf(&str, "input[%d].", i);
             VERIFY(ret > 0);
-            loadNeuralValueDesc(mreg, &myInputDescs[i], str);
+            LoadNeuralValueDesc(mreg, &myInputDescs[i], str);
             free(str);
         }
 
@@ -218,10 +252,10 @@ public:
             char *str = NULL;
             int ret = asprintf(&str, "output[%d].", i);
             VERIFY(ret > 0);
-            loadNeuralValueDesc(mreg, &myOutputDescs[i], str);
+            LoadNeuralValueDesc(mreg, &myOutputDescs[i], str);
             free(str);
 
-            if (myOutputDescs[i].valueType == NEURAL_VALUE_ZERO) {
+            if (myOutputDescs[i].valueType != NEURAL_VALUE_FORCE) {
                 myOutputDescs[i].valueType = NEURAL_VALUE_FORCE;
                 myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_ZERO;
                 myOutputDescs[i].forceDesc.useTangent = FALSE;
@@ -230,76 +264,6 @@ public:
         }
 
         this->BasicAIGovernor::loadRegistry(mreg);
-    }
-
-    void loadNeuralValueDesc(MBRegistry *mreg,
-                             NeuralValueDesc *desc, const char *prefix) {
-        MBString s;
-        const char *cstr;
-
-#define NV(_op) _op, #_op
-        struct {
-            NeuralValueType t;
-            const char *str;
-        } texts[] = {
-            { NV(NEURAL_VALUE_ZERO),  },
-            { NV(NEURAL_VALUE_FORCE), },
-            { NV(NEURAL_VALUE_RANGE), },
-            { NV(NEURAL_VALUE_CROWD), },
-            { NV(NEURAL_VALUE_TICK),  },
-            { NV(NEURAL_VALUE_MOBID), },
-        };
-#undef NV
-
-        s = prefix;
-        s += "valueType";
-        cstr = MBRegistry_GetCStr(mreg, s.CStr());
-        desc->valueType = NEURAL_VALUE_MAX;
-
-        if (cstr == NULL) {
-            ASSERT(texts[0].t == NEURAL_VALUE_ZERO);
-            cstr = texts[0].str;
-        }
-
-        for (uint i = 0; i < ARRAYSIZE(texts); i++) {
-            if (cstr != NULL && strcmp(cstr, texts[i].str) == 0) {
-                desc->valueType = texts[i].t;
-                break;
-            }
-        }
-        VERIFY(desc->valueType < NEURAL_VALUE_MAX);
-
-        s = prefix;
-        switch (desc->valueType) {
-            case NEURAL_VALUE_FORCE:
-            case NEURAL_VALUE_RANGE:
-                ASSERT(&desc->forceDesc == &desc->rangeDesc);
-                ASSERT(sizeof(desc->forceDesc) == sizeof(desc->rangeDesc));
-                loadNeuralForceDesc(mreg, &desc->forceDesc, s.CStr());
-                break;
-
-            case NEURAL_VALUE_CROWD:
-                loadNeuralCrowdDesc(mreg, &desc->crowdDesc, s.CStr());
-                break;
-
-            case NEURAL_VALUE_ZERO:
-            case NEURAL_VALUE_TICK:
-            case NEURAL_VALUE_MOBID:
-                break;
-
-            default:
-                NOT_IMPLEMENTED();
-        }
-    }
-
-    void loadNeuralForceDesc(MBRegistry *mreg,
-                             NeuralForceDesc *desc, const char *prefix) {
-        NOT_IMPLEMENTED();
-    }
-
-    void loadNeuralCrowdDesc(MBRegistry *mreg,
-                             NeuralCrowdDesc *desc, const char *prefix) {
-        NOT_IMPLEMENTED();
     }
 
     float getNeuralValue(Mob *mob, NeuralValueDesc *desc) {
@@ -318,6 +282,10 @@ public:
                 return getRangeValue(mob, &desc->rangeDesc);
             case NEURAL_VALUE_CROWD:
                 return getCrowdValue(mob, &desc->crowdDesc);
+            case NEURAL_VALUE_TICK:
+                return myFleetAI->tick;
+            case NEURAL_VALUE_MOBID:
+                return (float)mob->mobid;
             default:
                 NOT_IMPLEMENTED();
         }
@@ -370,6 +338,7 @@ public:
                         NeuralForceDesc *desc,
                         FPoint *focusPoint) {
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
+        RandomState *rs = &myRandomState;
 
         switch(desc->forceType) {
             case NEURAL_FORCE_ZERO:
@@ -378,6 +347,10 @@ public:
             case NEURAL_FORCE_HEADING: {
                 FRPoint rPos;
                 FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+
+                if (rPos.radius < MICRON) {
+                    rPos.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+                }
                 FRPoint_ToFPoint(&rPos, &mob->pos, focusPoint);
                 return TRUE;
             }
@@ -734,20 +707,168 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     }
 
     FloatNet fn;
-    if (MBRegistry_GetBool(mreg, "initialized")) {
+    if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs")) {
         fn.load(mreg, "floatNet.");
     } else {
-        fn.initialize(20, 20, 100);
+        fn.initialize(20, 20, 20);
         fn.loadZeroNet();
     }
 
-    fn.mutate(0.8f);
+    //XXX resize better?
+
+    float rate = 0.5f;
+    fn.mutate(rate);
     fn.save(mreg, "floatNet.");
+
+    for (uint i = 0; i < fn.getNumInputs(); i++) {
+        NeuralValueDesc desc;
+        char *str = NULL;
+        int ret = asprintf(&str, "input[%d].", i);
+        VERIFY(ret > 0);
+        LoadNeuralValueDesc(mreg, &desc, str);
+        MutateNeuralValueDesc(mreg, &desc, FALSE, rate, str);
+        free(str);
+    }
+
+    for (uint i = 0; i < fn.getNumOutputs(); i++) {
+        NeuralValueDesc desc;
+        char *str = NULL;
+        int ret = asprintf(&str, "output[%d].", i);
+        VERIFY(ret > 0);
+        LoadNeuralValueDesc(mreg, &desc, str);
+        MutateNeuralValueDesc(mreg, &desc, TRUE, rate, str);
+        free(str);
+    }
 
     Mutate_Float(mreg, vf, ARRAYSIZE(vf));
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));
 
     MBRegistry_Remove(mreg, NEURAL_SCRAMBLE_KEY);
+}
+
+static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
+                                  bool isOutput, float rate,
+                                  const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    s += "valueType";
+    if (Random_Flip(rate)) {
+        uint i = Random_Int(0, ARRAYSIZE(tmValues) - 1);
+        const char *v = tmValues[i].str;
+        MBRegistry_PutCopy(mreg, s.CStr(), v);
+        desc->valueType = (NeuralValueType) tmValues[i].value;
+    }
+
+    if (desc->valueType == NEURAL_VALUE_FORCE ||
+        desc->valueType == NEURAL_VALUE_RANGE ||
+        desc->valueType == NEURAL_VALUE_CROWD) {
+        MutationFloatParams vf;
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_RADIUS);
+        s = prefix;
+        s += "radius";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+    }
+
+    if (desc->valueType == NEURAL_VALUE_FORCE) {
+        s = prefix;
+        s += "forceType";
+        if (Random_Flip(rate)) {
+            uint i = Random_Int(0, ARRAYSIZE(tmForces) - 1);
+            const char *v = tmForces[i].str;
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            desc->forceDesc.forceType = (NeuralForceType) tmForces[i].value;
+        }
+
+        MutationBoolParams bf;
+        s = prefix;
+        s += "useTangent";
+        bf.key = s.CStr();
+        bf.flipRate = rate;
+        Mutate_Bool(mreg, &bf, 1);
+    }
+}
+
+
+static void LoadNeuralValueDesc(MBRegistry *mreg,
+                                NeuralValueDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *cstr;
+
+    s = prefix;
+    s += "valueType";
+    cstr = MBRegistry_GetCStr(mreg, s.CStr());
+    desc->valueType = NEURAL_VALUE_MAX;
+
+    if (cstr == NULL) {
+        ASSERT(tmValues[0].value == NEURAL_VALUE_ZERO);
+        cstr = tmValues[0].str;
+    }
+
+    desc->valueType = (NeuralValueType)
+        TextMap_FromString(cstr, tmValues, ARRAYSIZE(tmValues));
+    VERIFY(desc->valueType < NEURAL_VALUE_MAX);
+
+    s = prefix;
+    switch (desc->valueType) {
+        case NEURAL_VALUE_FORCE:
+        case NEURAL_VALUE_RANGE:
+            ASSERT(&desc->forceDesc == &desc->rangeDesc);
+            ASSERT(sizeof(desc->forceDesc) == sizeof(desc->rangeDesc));
+            LoadNeuralForceDesc(mreg, &desc->forceDesc, s.CStr());
+            break;
+
+        case NEURAL_VALUE_CROWD:
+            LoadNeuralCrowdDesc(mreg, &desc->crowdDesc, s.CStr());
+            break;
+
+        case NEURAL_VALUE_ZERO:
+        case NEURAL_VALUE_TICK:
+        case NEURAL_VALUE_MOBID:
+            break;
+
+        default:
+            NOT_IMPLEMENTED();
+    }
+}
+
+static void LoadNeuralForceDesc(MBRegistry *mreg,
+                                NeuralForceDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *v;
+
+    s = prefix;
+    s += "forceType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        ASSERT(tmForces[0].value == NEURAL_FORCE_ZERO);
+        v = tmForces[0].str;
+    }
+    desc->forceType = (NeuralForceType)
+        TextMap_FromString(v, tmForces, ARRAYSIZE(tmForces));
+
+    s = prefix;
+    s += "useTangent";
+    desc->useTangent = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
+    s += "radius";
+    desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
+}
+
+static void LoadNeuralCrowdDesc(MBRegistry *mreg,
+                                NeuralCrowdDesc *desc, const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    s += "radius";
+    desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
 }
 
 static void *NeuralFleetCreate(FleetAI *ai)
