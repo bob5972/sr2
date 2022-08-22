@@ -35,6 +35,8 @@ typedef enum MLFloatOp {
     ML_FOP_0x1_CONSTANT,
 
     ML_FOP_1x0_IDENTITY,
+    ML_FOP_1x0_INVERSE,
+    ML_FOP_1x0_NEGATE,
 
     ML_FOP_1x1_STRICT_ON,
     ML_FOP_1x1_STRICT_OFF,

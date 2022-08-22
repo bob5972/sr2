@@ -28,6 +28,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_0x0_ONE), },
     { TMENTRY(ML_FOP_0x1_CONSTANT), },
     { TMENTRY(ML_FOP_1x0_IDENTITY), },
+    { TMENTRY(ML_FOP_1x0_INVERSE), },
+    { TMENTRY(ML_FOP_1x0_NEGATE), },
     { TMENTRY(ML_FOP_1x1_STRICT_ON), },
     { TMENTRY(ML_FOP_1x1_STRICT_OFF), },
     { TMENTRY(ML_FOP_1x1_LINEAR_UP), },
@@ -138,7 +140,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 20);
+    ASSERT(ML_FOP_MAX == 22);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -151,6 +153,12 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
         case ML_FOP_1x0_IDENTITY:
             return getInput(0);
+
+        case ML_FOP_1x0_INVERSE:
+            return 1.0f / getInput(0);
+
+        case ML_FOP_1x0_NEGATE:
+            return -1.0f * getInput(0);
 
         case ML_FOP_1x1_STRICT_ON:
         case ML_FOP_1x1_STRICT_OFF:

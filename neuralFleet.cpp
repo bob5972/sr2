@@ -302,10 +302,7 @@ public:
         FPoint focusPoint;
 
         if (getNeuralFocus(mob, desc, &focusPoint)) {
-            FPoint eVec;
-            FPoint_Subtract(&focusPoint, &mob->pos, &eVec);
-            FPoint_ToFRPoint(&eVec, NULL, rForce);
-
+            FPoint_ToFRPoint(&focusPoint, &mob->pos, rForce);
             rForce->radius = 1.0f;
 
             if (desc->useTangent) {
@@ -349,6 +346,7 @@ public:
                 FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
                 if (rPos.radius < MICRON) {
+                    rPos.radius = 1.0f;
                     rPos.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
                 }
                 FRPoint_ToFPoint(&rPos, &mob->pos, focusPoint);
@@ -588,7 +586,7 @@ public:
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
-        RandomState *rs = &myRandomState;
+        //RandomState *rs = &myRandomState;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
         NeuralShipAI *ship = (NeuralShipAI *)mob->aiMobHandle;
@@ -607,8 +605,17 @@ public:
         FRPoint rForce;
         doForces(mob, &rForce);
         if (rForce.radius < MICRON) {
-            rForce.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+            /*
+             * Continue on the current heading if we didn't get a strong-enough
+             * force.
+             */
+            NeuralForceDesc desc;
+            desc.forceType = NEURAL_FORCE_HEADING;
+            desc.useTangent = FALSE;
+            desc.radius = speed;
+            getNeuralForce(mob, &desc, &rForce);
         }
+
         rForce.radius = speed;
         FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
 
