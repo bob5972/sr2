@@ -78,7 +78,7 @@ static inline bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
     ASSERT(xMin <= xMax);
     ASSERT(yMin <= yMax);
 
-    if (p->x < xMin) {
+    if (isnan(p->x) || p->x < xMin) {
         p->x = xMin;
         clamped = TRUE;
     } else if (p->x > xMax) {
@@ -86,7 +86,7 @@ static inline bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
         clamped = TRUE;
     }
 
-    if (p->y < yMin) {
+    if (isnan(p->y) || p->y < yMin) {
         p->y = yMin;
         clamped = TRUE;
     } else if (p->y > yMax) {

@@ -42,10 +42,14 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
     { TMENTRY(ML_FOP_1x2_SINE), },
+
     { TMENTRY(ML_FOP_Nx0_SUM), },
     { TMENTRY(ML_FOP_Nx0_PRODUCT), },
     { TMENTRY(ML_FOP_Nx0_MIN), },
     { TMENTRY(ML_FOP_Nx0_MAX), },
+    { TMENTRY(ML_FOP_Nx0_ARITHMETIC_MEAN), },
+    { TMENTRY(ML_FOP_Nx0_GEOMETRIC_MEAN), },
+
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_SCALED_MIN), },
     { TMENTRY(ML_FOP_NxN_SCALED_MAX), },
@@ -144,7 +148,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 25);
+    ASSERT(ML_FOP_MAX == 27);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -253,6 +257,31 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
                     f = nf;
                 }
             }
+            return f;
+        }
+
+        case ML_FOP_Nx0_ARITHMETIC_MEAN: {
+            float f = 0.0;
+
+            if (inputs.size() > 0) {
+                for (uint i = 0; i < inputs.size(); i++) {
+                    f += getInput(i);
+                }
+                f /= inputs.size();
+            }
+
+            return f;
+        }
+        case ML_FOP_Nx0_GEOMETRIC_MEAN: {
+            float f = 1.0;
+
+            if (inputs.size() > 0) {
+                for (uint i = 0; i < inputs.size(); i++) {
+                    f *= getInput(i);
+                }
+                f = powf(f, 1.0f / inputs.size());
+            }
+
             return f;
         }
 
