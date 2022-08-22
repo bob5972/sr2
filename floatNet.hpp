@@ -24,44 +24,34 @@
 #include "MBRegistry.h"
 #include "ml.hpp"
 
-typedef enum FloatNetOp {
-    FLOATNET_OP_INVALID = 0,
-    FLOATNET_OP_MIN = 1,
-    FLOATNET_OP_ZERO = 1,
-    FLOATNET_OP_ONE,
-
-    FLOATNET_OP_CONSTANT,
-    FLOATNET_OP_IDENTITY,
-
-    FLOATNET_OP_CLAMP,
-
-    FLOATNET_OP_SUM,
-    FLOATNET_OP_PRODUCT,
-
-    FLOATNET_OP_LINEAR_COMBINATION,
-
-    FLOATNET_OP_TAKE_MIN,
-    FLOATNET_OP_TAKE_MAX,
-
-    FLOATNET_OP_TAKE_SCALED_MIN,
-    FLOATNET_OP_TAKE_SCALED_MAX,
-
-    FLOATNET_OP_MAX,
-} FloatNetOp;
-
 class FloatNet
 {
     public:
-        FloatNet(uint numInputs, uint numOutputs, uint numNodes);
+        FloatNet()
+        :myInitialized(FALSE)
+        {}
 
-        void compute(const float *inputs, uint numInputs,
-                     float *outputs, uint numOutputs);
+        FloatNet(uint numInputs, uint numOutputs, uint numNodes)
+        :myInitialized(FALSE)
+        {
+            initialize(numInputs, numOutputs, numNodes);
+        }
+
+        void initialize(uint numInputs, uint numOutputs, uint numNodes);
+
+        void compute(const MBVector<float> &inputs, MBVector<float> &outputs);
 
         void load(MBRegistry *mreg, const char *prefix);
+        void loadZeroNet();
         void mutate();
         void save(MBRegistry *mreg, const char *prefix);
 
+        uint getNumInputs() { return myNumInputs; }
+        uint getNumOutputs() { return myNumOutputs; }
+        uint getNumNodes() { return myNodes.size(); }
+
     private:
+        bool myInitialized;
         uint myNumInputs;
         uint myNumOutputs;
 

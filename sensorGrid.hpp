@@ -118,6 +118,18 @@ public:
     }
 
     /**
+     * Find the friendly mob closest to the specified point, that's
+     * not the provided mob.
+     */
+    Mob *findClosestFriend(const Mob *self, MobTypeFlags filter) {
+        Mob *m = findNthClosestFriend(&self->pos, filter, 0);
+        if (m != NULL && m->mobid == self->mobid) {
+            m = findNthClosestFriend(&m->pos, filter, 1);
+        }
+        return m;
+    }
+
+    /**
      * Find the Nth closest friendly mob to the specified point.
      * This is 0-based, so the closest mob is found when n=0.
      */

@@ -230,14 +230,11 @@ void MainConstructScenario(void)
          * See fleet.c::gRankings for a rough order of fleet strength.
          */
 
-        // mainData.players[p].aiType = FLEET_AI_BASIC;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_BASIC;
+        p++;
 
-        // mainData.players[p].aiType = FLEET_AI_FLOCK2;
-        // p++;
-
-        // mainData.players[p].aiType = FLEET_AI_HOLD;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_HOLD;
+        p++;
 
         mainData.players[p].aiType = FLEET_AI_FLOCK9;
         p++;
@@ -245,8 +242,8 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_BUNDLE15;
         p++;
 
-        // mainData.players[p].aiType = FLEET_AI_BOB;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_NEURAL1;
+        p++;
 
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;

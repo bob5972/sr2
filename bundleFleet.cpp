@@ -15683,30 +15683,6 @@ public:
         } while (m != NULL);
     }
 
-    float edgeDistance(FPoint *pos) {
-        FleetAI *ai = myFleetAI;
-        float edgeDistance;
-        FPoint edgePoint;
-
-        edgePoint = *pos;
-        edgePoint.x = 0.0f;
-        edgeDistance = FPoint_Distance(pos, &edgePoint);
-
-        edgePoint = *pos;
-        edgePoint.x = ai->bp.width;
-        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
-
-        edgePoint = *pos;
-        edgePoint.y = 0.0f;
-        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
-
-        edgePoint = *pos;
-        edgePoint.y = ai->bp.height;
-        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
-
-        return edgeDistance;
-    }
-
     void flockEdges(Mob *mob, FRPoint *rForce) {
         ASSERT(mob->type == MOB_TYPE_FIGHTER);
         FleetAI *ai = myFleetAI;

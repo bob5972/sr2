@@ -144,7 +144,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 10);
+    ASSERT(ML_FOP_MAX == 20);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -222,7 +222,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         }
 
         case ML_FOP_NxN_LINEAR_COMBINATION: {
-            float f = 0.0;
+        float f = 0.0;
 
             for (uint i = 0; i < inputs.size(); i++) {
                 f += getParam(i) * getInput(i);
@@ -252,6 +252,9 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             }
             return f;
         }
+
+        case ML_FOP_INVALID:
+            PANIC("Unhandled MLFloatOp: ML_FOP_INVALID\n");
 
         default:
             PANIC("Unknown MLFloatOp: %d\n", op);

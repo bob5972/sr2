@@ -58,9 +58,11 @@ void RunAwayFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void CircleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void FlockFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
+void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 
 bool Fleet_IsFlockFleet(FleetAIType aiType);
 bool Fleet_IsBundleFleet(FleetAIType aiType);
+bool Fleet_IsNeuralFleet(FleetAIType aiType);
 
 void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 int Fleet_GetRanking(FleetAIType aiType);

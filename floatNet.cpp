@@ -24,8 +24,9 @@
 #include "textDump.hpp"
 #include "Random.h"
 
-FloatNet::FloatNet(uint numInputs, uint numOutputs, uint numNodes)
+void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
 {
+    ASSERT(!myInitialized);
     ASSERT(numInputs > 0);
     ASSERT(numOutputs > 0);
     ASSERT(numNodes > 0);
@@ -39,6 +40,24 @@ FloatNet::FloatNet(uint numInputs, uint numOutputs, uint numNodes)
 
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].index = i + numInputs;
+    }
+}
+
+void FloatNet::loadZeroNet()
+{
+    for (uint i = 0; i < myNodes.size(); i++) {
+        myNodes[i].op = ML_FOP_0x0_ZERO;
+
+        for (uint k = 0; k < myNodes[i].params.size(); k++) {
+            myNodes[i].params[k] = 0.0f;
+        }
+        for (uint k = 0; k < myNodes[i].inputs.size(); k++) {
+            myNodes[i].inputs[k] = 0;
+        }
+    }
+
+    for (uint i = 0; i < myValues.size(); i++) {
+        myValues[i] = 0.0f;
     }
 }
 
@@ -121,26 +140,25 @@ void FloatNet::mutate()
 }
 
 
-void FloatNet::compute(const float *inputs, uint numInputs,
-                       float *outputs, uint numOutputs)
+void FloatNet::compute(const MBVector<float> &inputs,
+                       MBVector<float> &outputs)
 {
-    ASSERT(numInputs == myNumInputs);
-    ASSERT(numInputs > 0);
-    ASSERT(numOutputs == myNumOutputs);
-    ASSERT(numOutputs > 0);
+    ASSERT(inputs.size() == myNumInputs);
+    ASSERT(outputs.size() == myNumOutputs);
+    ASSERT(myValues.size() >= myNumInputs);
 
-    for (uint i = 0; i < numInputs; i++) {
+    for (uint i = 0; i < myNumInputs; i++) {
         myValues[i] = inputs[i];
     }
 
     for (uint i = 0; i < myNodes.size(); i++) {
-        uint vi = i + numInputs;
+        uint vi = i + myNumInputs;
         myValues[vi] = myNodes[i].compute(myValues);
     }
 
-    ASSERT(myNodes.size() >= numOutputs);
+    ASSERT(myNodes.size() >= myNumOutputs);
 
-    for (uint i = 0; i < numInputs; i++) {
+    for (uint i = 0; i < myNumInputs; i++) {
         uint vi = i + myValues.size() - myNumOutputs;
         outputs[i] = myValues[vi];
     }

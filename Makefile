@@ -68,6 +68,7 @@ CPP_SOURCES = basicFleet.cpp \
               metaFleet.cpp \
 	      ml.cpp \
               mobSet.cpp \
+	      neuralFleet.cpp \
               sensorGrid.cpp \
               basicShipAI.cpp \
 	      textDump.cpp

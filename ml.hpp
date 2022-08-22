@@ -97,11 +97,8 @@ class MLFloatNode {
         }
 };
 
-const char * ML_FloatOpToString(MLFloatOp op);
+const char *ML_FloatOpToString(MLFloatOp op);
 MLFloatOp ML_StringToFloatOp(const char *opstr);
-
-bool ML_IsFloatOp0x0(MLFloatOp op);
-bool ML_IsFloatOp1x1(MLFloatOp op);
 
 float ML_TransformFloat1x1(MLFloatOp op, float input, float param);
 
