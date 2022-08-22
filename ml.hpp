@@ -75,7 +75,13 @@ class MLFloatNode {
         float compute(const MBVector<float> &values);
 
         void load(MBRegistry *mreg, const char *prefix);
-        void mutate();
+        void mutate(float rate, uint maxInputs, uint maxParams);
+        void mutate(float rate) {
+            mutate(rate, ML_NODE_DEGREE, ML_NODE_DEGREE);
+        }
+        void mutate() {
+            mutate(0.1f, ML_NODE_DEGREE, ML_NODE_DEGREE);
+        }
         void save(MBRegistry *mreg, const char *prefix);
 
     private:

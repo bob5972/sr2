@@ -261,28 +261,31 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
     }
 }
 
-void MLFloatNode::mutate()
+void MLFloatNode::mutate(float rate,
+                         uint maxInputs, uint maxParams)
 {
-    float rate = 0.1;
-
     if (!Random_Flip(rate)) {
         return;
     }
 
-    // XXX: This uses static sizing for now.
-    NOT_IMPLEMENTED();
+    if (inputs.size() < maxInputs) {
+        uint oldSize = inputs.size();
+        if (Random_Flip(rate)) {
+            inputs.resize(oldSize + 1);
+        }
 
-    if (inputs.size() != ML_NODE_DEGREE) {
-        inputs.resize(ML_NODE_DEGREE);
-
-        for (uint i = 0; i < inputs.size(); i++) {
+        for (uint i = oldSize; i < inputs.size(); i++) {
             inputs[i] = 0;
         }
     }
-    if (params.size() != ML_NODE_DEGREE) {
-        params.resize(ML_NODE_DEGREE);
 
-        for (uint i = 0; i < params.size(); i++) {
+    if (params.size() < maxParams) {
+        uint oldSize = params.size();
+        if (Random_Flip(rate)) {
+            params.resize(oldSize + 1);
+        }
+
+        for (uint i = oldSize; i < params.size(); i++) {
             params[i] = 0.0f;
         }
     }
@@ -347,29 +350,28 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
     char *v;
 
     p = prefix;
-    p += ".op";
-    MBRegistry_PutCopy(mreg, ML_FloatOpToString(op), v);
+    p += "op";
+    MBRegistry_PutCopy(mreg, p.CStr(), ML_FloatOpToString(op));
 
     p = prefix;
-    p += ".numInputs";
+    p += "numInputs";
     asprintf(&v, "%d", inputs.size());
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
     p = prefix;
-    p += ".inputs";
+    p += "inputs";
     TextDump_Convert(inputs, str);
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
 
     p = prefix;
-    p += ".numParams";
+    p += "numParams";
     asprintf(&v, "%d", params.size());
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
     p = prefix;
-    p += ".params";
-    str = MBRegistry_GetCStr(mreg, p.CStr());
+    p += "params";
     TextDump_Convert(params, str);
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
 }

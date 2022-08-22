@@ -192,7 +192,7 @@ public:
         if (MBRegistry_GetBool(mreg, s.CStr())) {
             myNeuralNet.load(mreg, "floatNet.");
         } else {
-            myNeuralNet.initialize(20, 20, 100);
+            myNeuralNet.initialize(1, 1, 1);
             myNeuralNet.loadZeroNet();
         }
 
@@ -208,7 +208,7 @@ public:
 
         for (uint i = 0; i < myInputDescs.size(); i++) {
             char *str = NULL;
-            int ret = asprintf(&str, "input%d.", i);
+            int ret = asprintf(&str, "input[%d].", i);
             VERIFY(ret > 0);
             loadNeuralValueDesc(mreg, &myInputDescs[i], str);
             free(str);
@@ -216,7 +216,7 @@ public:
 
         for (uint i = 0; i < myOutputDescs.size(); i++) {
             char *str = NULL;
-            int ret = asprintf(&str, "output%d.", i);
+            int ret = asprintf(&str, "output[%d].", i);
             VERIFY(ret > 0);
             loadNeuralValueDesc(mreg, &myOutputDescs[i], str);
             free(str);
@@ -733,8 +733,16 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         }
     }
 
-    //XXX floatnet
-    NOT_IMPLEMENTED();
+    FloatNet fn;
+    if (MBRegistry_GetBool(mreg, "initialized")) {
+        fn.load(mreg, "floatNet.");
+    } else {
+        fn.initialize(20, 20, 100);
+        fn.loadZeroNet();
+    }
+
+    fn.mutate(0.8f);
+    fn.save(mreg, "floatNet.");
 
     Mutate_Float(mreg, vf, ARRAYSIZE(vf));
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));

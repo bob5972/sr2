@@ -43,7 +43,7 @@ class FloatNet
 
         void load(MBRegistry *mreg, const char *prefix);
         void loadZeroNet();
-        void mutate();
+        void mutate(float rate);
         void save(MBRegistry *mreg, const char *prefix);
 
         uint getNumInputs() { return myNumInputs; }

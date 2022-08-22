@@ -982,6 +982,13 @@ static bool MainIsFleetDefective(BattlePlayer *player)
     MBRegistry *fleetReg = player->mreg;
     uint numBattles = MBRegistry_GetUint(fleetReg, "abattle.numBattles");
 
+    if (player->playerType != PLAYER_TYPE_TARGET) {
+        /*
+         * Keep anything that's not targeted.
+         */
+        return FALSE;
+    }
+
     if (numBattles == 0) {
         /*
          * Keep brand-new fleets.
@@ -1023,7 +1030,7 @@ static void MainKillFleet(BattlePlayer *mainPlayers,
                           uint32 fi)
 {
     uint lastI = startingMPIndex + *numFleets - 1;
-    ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
+    VERIFY(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
     mainPlayers[fi] = mainPlayers[lastI];
     MBUtil_Zero(&mainPlayers[lastI], sizeof(mainPlayers[lastI]));
     mainPlayers[lastI].playerType = PLAYER_TYPE_INVALID;

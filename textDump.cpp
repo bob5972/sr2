@@ -83,10 +83,10 @@ void TextDump_Convert(const MBVector<uint> &v, MBString &str)
     str += "{";
 
     for (i = 0; i < v.size(); i++) {
-        char *v;
-        asprintf(&v, "%d, ", v[i]);
-        str += v;
-        free(v);
+        char *cs;
+        asprintf(&cs, "%d, ", v[i]);
+        str += cs;
+        free(cs);
     }
 
     str += "}";
@@ -102,10 +102,11 @@ void TextDump_Convert(const MBVector<float> &v, MBString &str)
     str += "{";
 
     for (i = 0; i < v.size(); i++) {
-        char *v;
-        asprintf(&v, "%f, ", (float)v[i]);
-        str += v;
-        free(v);
+        char *cs;
+        int ret = asprintf(&cs, "%f, ", (float)(v[i]));
+        VERIFY(ret > 0);
+        str += cs;
+        free(cs);
     }
 
     str += "}";

@@ -66,15 +66,15 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     MBString p;
 
     p = prefix;
-    p += ".numInputs";
+    p += "numInputs";
     myNumInputs = MBRegistry_GetUint(mreg, p.CStr());
 
     p = prefix;
-    p += ".numOutputs";
+    p += "numOutputs";
     myNumOutputs = MBRegistry_GetUint(mreg, p.CStr());
 
     p = prefix;
-    p += ".numNodes";
+    p += "numNodes";
     uint numNodes = MBRegistry_GetUint(mreg, p.CStr());
 
     VERIFY(myNumInputs > 0);
@@ -87,7 +87,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         char *strp;
 
         p = prefix;
-        asprintf(&strp, ".node[%d]", i);
+        asprintf(&strp, "node[%d].", i);
         p += strp;
         free(strp);
 
@@ -103,19 +103,19 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     char *v;
 
     p = prefix;
-    p += ".numInputs";
+    p += "numInputs";
     asprintf(&v, "%d", myNumInputs);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
     p = prefix;
-    p += ".numOutputs";
+    p += "numOutputs";
     asprintf(&v, "%d", myNumOutputs);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
     p = prefix;
-    p += ".numNodes";
+    p += "numNodes";
     asprintf(&v, "%d", myNodes.size());
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
@@ -124,7 +124,8 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
         char *strp;
 
         p = prefix;
-        asprintf(&strp, ".node[%d]", i);
+        int ret = asprintf(&strp, "node[%d].", i);
+        VERIFY(ret > 0);
         p += strp;
         free(strp);
 
@@ -132,10 +133,10 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     }
 }
 
-void FloatNet::mutate()
+void FloatNet::mutate(float rate)
 {
     for (uint i = 0; i < myNodes.size(); i++) {
-        myNodes[i].mutate();
+        myNodes[i].mutate(rate);
     }
 }
 
