@@ -275,7 +275,9 @@ void MainConstructScenario(void)
 
         maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationNewIterations"));
         maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationStaleIterations"));
-        mainData.maxBscs = p * p * maxItCount;
+        mainData.maxBscs = p * p * maxItCount + 1;
+        Warning("%s:%d p=%d, maxItCount=%d, maxBscs=%d\n", __FUNCTION__, __LINE__,
+                p, maxItCount, mainData.maxBscs);//XXX bob5972
         ASSERT(mainData.maxBscs > p);
         ASSERT(mainData.maxBscs > p * p);
         ASSERT(mainData.maxBscs > maxItCount);

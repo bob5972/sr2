@@ -8,6 +8,7 @@ NEW_IT=5
 TICK_LIMIT=40000
 SCENARIO=fast
 THREADS=14
+BUILDTYPE="release";
 
 if [ -f evolve.local ]; then
     source evolve.local ;
@@ -30,7 +31,6 @@ OPTS="${OPTS} -t $THREADS"
 
 cp -f $POPFILE $POPFILE.old
 
-BUILDTYPE="release";
 ./compile.sh $BUILDTYPE && echo && \
     echo build/sr2 $OPTS "$@" && \
     build/sr2 $OPTS "$@"

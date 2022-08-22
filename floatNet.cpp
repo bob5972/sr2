@@ -81,13 +81,15 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     VERIFY(myNumOutputs > 0);
     VERIFY(myNumOutputs <= numNodes);
 
-    myNodes.resize(numNodes);
+    initialize(myNumInputs, myNumOutputs, numNodes);
+    ASSERT(myNodes.size() == numNodes);
 
     for (uint i = 0; i < myNodes.size(); i++) {
         char *strp;
 
         p = prefix;
-        asprintf(&strp, "node[%d].", i);
+        int ret = asprintf(&strp, "node[%d].", i);
+        VERIFY(ret > 0);
         p += strp;
         free(strp);
 
@@ -101,22 +103,26 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
     char *v;
+    int ret;
 
     p = prefix;
     p += "numInputs";
-    asprintf(&v, "%d", myNumInputs);
+    ret = asprintf(&v, "%d", myNumInputs);
+    VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
     p = prefix;
     p += "numOutputs";
-    asprintf(&v, "%d", myNumOutputs);
+    ret = asprintf(&v, "%d", myNumOutputs);
+    VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
     p = prefix;
     p += "numNodes";
-    asprintf(&v, "%d", myNodes.size());
+    ret = asprintf(&v, "%d", myNodes.size());
+    VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
 
@@ -124,7 +130,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
         char *strp;
 
         p = prefix;
-        int ret = asprintf(&strp, "node[%d].", i);
+        ret = asprintf(&strp, "node[%d].", i);
         VERIFY(ret > 0);
         p += strp;
         free(strp);

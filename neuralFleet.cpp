@@ -461,7 +461,19 @@ public:
 
     void repulseFocus(const FPoint *selfPos, const FPoint *pos, FRPoint *force) {
         FRPoint f;
+        RandomState *rs = &myRandomState;
+
         FPoint_ToFRPoint(pos, selfPos, &f);
+
+        /*
+         * Avoid 1/0 => NAN, and then randomize the direction when
+         * the point is more or less directly on top of us.
+         */
+        if (f.radius < MICRON) {
+            f.radius = MICRON;
+            f.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+        }
+
         f.radius = 1.0f / (f.radius * f.radius);
         FRPoint_Add(force, &f, force);
     }
@@ -576,6 +588,7 @@ public:
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
+        RandomState *rs = &myRandomState;
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
         NeuralShipAI *ship = (NeuralShipAI *)mob->aiMobHandle;
@@ -593,6 +606,9 @@ public:
 
         FRPoint rForce;
         doForces(mob, &rForce);
+        if (rForce.radius < MICRON) {
+            rForce.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+        }
         rForce.radius = speed;
         FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
 
@@ -716,7 +732,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     //XXX resize better?
 
-    float rate = 0.5f;
+    float rate = 0.25f;
     fn.mutate(rate);
     fn.save(mreg, "floatNet.");
 
@@ -754,12 +770,15 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
 
     s = prefix;
     s += "valueType";
-    if (Random_Flip(rate)) {
+
+    if (isOutput) {
+        desc->valueType = NEURAL_VALUE_FORCE;
+    } else if (Random_Flip(rate)) {
         uint i = Random_Int(0, ARRAYSIZE(tmValues) - 1);
-        const char *v = tmValues[i].str;
-        MBRegistry_PutCopy(mreg, s.CStr(), v);
         desc->valueType = (NeuralValueType) tmValues[i].value;
     }
+    const char *v = TextMap_ToString(desc->valueType, tmValues, ARRAYSIZE(tmValues));
+    MBRegistry_PutCopy(mreg, s.CStr(), v);
 
     if (desc->valueType == NEURAL_VALUE_FORCE ||
         desc->valueType == NEURAL_VALUE_RANGE ||

@@ -290,7 +290,7 @@ void MLFloatNode::mutate(float rate,
 
     for (uint i = 0; i < inputs.size(); i++) {
         if (Random_Flip(rate)) {
-            inputs[i] = Random_Int(0, index - 1);
+            inputs[i] = index > 0 ? Random_Int(0, index - 1) : 0;
         }
     }
 
