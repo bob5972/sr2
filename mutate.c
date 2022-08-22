@@ -23,6 +23,48 @@
 #include "MBAssert.h"
 #include "Random.h"
 
+float Mutate_FloatRaw(float value, MutationFloatParams *mp)
+{
+    ASSERT(mp != NULL);
+
+    if (Random_Flip(mp->mutationRate)) {
+        if (Random_Flip(mp->jumpRate)) {
+            /*
+                * Bias jumps slightly towards interesting values.
+                */
+            if (Random_Flip(0.01)) {
+                float f[] = {
+                    -1.0f, 0.0f, 1.0f, mp->minValue, mp->maxValue,
+                };
+                uint32 r = Random_Uint32() % ARRAYSIZE(f);
+                value = f[r];
+            } else {
+                value = Random_Float(mp->minValue, mp->maxValue);
+            }
+        } else if (Random_Bit()) {
+            if (Random_Bit()) {
+                value *= 1.0f - mp->magnitude;
+            } else {
+                value *= 1.0f + mp->magnitude;
+            }
+        } else {
+            float range = fabsf(mp->maxValue - mp->minValue);
+            range = Random_Float(range * (1.0f - mp->magnitude),
+                                range * (1.0f + mp->magnitude));
+            if (Random_Bit()) {
+                value += mp->magnitude * range;
+            } else {
+                value -= mp->magnitude * range;
+            }
+        }
+
+        value = MAX(mp->minValue, value);
+        value = MIN(mp->maxValue, value);
+    }
+
+    return value;
+}
+
 void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mpa, uint32 numParams)
 {
     ASSERT(mpa != NULL);
@@ -31,43 +73,11 @@ void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mpa, uint32 numParams)
         MutationFloatParams *mp = &mpa[i];
         if (Random_Flip(mp->mutationRate)) {
             float value = MBRegistry_GetFloat(mreg, mp->key);
-
-            if (!MBRegistry_ContainsKey(mreg, mp->key) ||
-                Random_Flip(mp->jumpRate)) {
-                /*
-                 * Bias jumps slightly towards interesting values.
-                 */
-                if (Random_Flip(0.01)) {
-                    float f[] = {
-                        -1.0f, 0.0f, 1.0f, mp->minValue, mp->maxValue,
-                    };
-                    uint32 r = Random_Uint32() % ARRAYSIZE(f);
-                    value = f[r];
-                } else {
-                    value = Random_Float(mp->minValue, mp->maxValue);
-                }
-            } else if (Random_Bit()) {
-                if (Random_Bit()) {
-                    value *= 1.0f - mp->magnitude;
-                } else {
-                    value *= 1.0f + mp->magnitude;
-                }
-            } else {
-                float range = fabsf(mp->maxValue - mp->minValue);
-                range = Random_Float(range * (1.0f - mp->magnitude),
-                                    range * (1.0f + mp->magnitude));
-                if (Random_Bit()) {
-                    value += mp->magnitude * range;
-                } else {
-                    value -= mp->magnitude * range;
-                }
-            }
-
-            value = MAX(mp->minValue, value);
-            value = MIN(mp->maxValue, value);
+            value = Mutate_FloatRaw(value, mp);
 
             char *vStr = NULL;
-            asprintf(&vStr, "%f", value);
+            int ret = asprintf(&vStr, "%f", value);
+            VERIFY(ret > 0);
             ASSERT(vStr != NULL);
             MBRegistry_PutCopy(mreg, mp->key, vStr);
             free(vStr);

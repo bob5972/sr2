@@ -37,6 +37,7 @@ typedef enum MutationType {
     MUTATION_TYPE_PROBABILITY,
     MUTATION_TYPE_INVERSE_PROBABILITY,
     MUTATION_TYPE_TICKS,
+    MUTATION_TYPE_MAX,
 } MutationType;
 
 typedef struct MutationFloatParams {
@@ -61,6 +62,7 @@ typedef struct MutationStrParams {
 void Mutate_DefaultFloatParams(MutationFloatParams *mp, MutationType type);
 
 void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mp, uint32 numParams);
+float Mutate_FloatRaw(float value, MutationFloatParams *mp);
 void Mutate_Bool(MBRegistry *mreg, MutationBoolParams *mp, uint32 numParams);
 void Mutate_Str(MBRegistry *mreg, MutationStrParams *mp, uint32 numParams,
                 const char **options, uint32 numOptions);

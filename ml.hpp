@@ -44,8 +44,11 @@ typedef enum MLFloatOp {
     ML_FOP_1x1_LINEAR_DOWN,
     ML_FOP_1x1_QUADRATIC_UP,
     ML_FOP_1x1_QUADRATIC_DOWN,
+    ML_FOP_1x1_FMOD,
 
     ML_FOP_1x2_CLAMP,
+    ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT,
+    ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT,
     ML_FOP_1x2_SINE,
 
     ML_FOP_Nx0_SUM,
@@ -107,7 +110,5 @@ class MLFloatNode {
 
 const char *ML_FloatOpToString(MLFloatOp op);
 MLFloatOp ML_StringToFloatOp(const char *opstr);
-
-float ML_TransformFloat1x1(MLFloatOp op, float input, float param);
 
 #endif // _ML_H_202208151722

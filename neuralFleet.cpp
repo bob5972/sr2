@@ -559,6 +559,7 @@ public:
 
     void doForces(Mob *mob, FRPoint *outputForce) {
         uint x;
+        float maxV = (1.0f / MICRON);
 
         ASSERT(myInputs.size() == myInputDescs.size());
 
@@ -568,6 +569,16 @@ public:
 
         ASSERT(myOutputs.size() == myOutputDescs.size());
         myNeuralNet.compute(myInputs, myOutputs);
+
+        for (uint i = 0; i < myOutputs.size(); i++) {
+            if (isnan(myOutputs[i])) {
+                myOutputs[i] = 0.0f;
+            } else if (myOutputs[i] > maxV) {
+                myOutputs[i] = maxV;
+            } else if (myOutputs[i] < -maxV) {
+                myOutputs[i] = -maxV;
+            }
+        }
 
         x = 0;
         FRPoint_Zero(outputForce);
@@ -739,7 +750,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     //XXX resize better?
 
-    float rate = 0.25f;
+    float rate = 0.75f;
     fn.mutate(rate);
     fn.save(mreg, "floatNet.");
 

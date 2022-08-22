@@ -21,6 +21,7 @@
 #include "ml.hpp"
 #include "textDump.hpp"
 #include "Random.h"
+#include "mutate.h"
 
 static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_INVALID), },
@@ -36,7 +37,10 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x1_LINEAR_DOWN), },
     { TMENTRY(ML_FOP_1x1_QUADRATIC_UP), },
     { TMENTRY(ML_FOP_1x1_QUADRATIC_DOWN), },
+    { TMENTRY(ML_FOP_1x1_FMOD), },
     { TMENTRY(ML_FOP_1x2_CLAMP), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
     { TMENTRY(ML_FOP_1x2_SINE), },
     { TMENTRY(ML_FOP_Nx0_SUM), },
     { TMENTRY(ML_FOP_Nx0_PRODUCT), },
@@ -47,8 +51,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_SCALED_MAX), },
 };
 
-float ML_TransformFloat1x1(MLFloatOp op, float input,
-                           float param) {
+float MLFloatCheck1x1(MLFloatOp op, float input,
+                      float param) {
     if (op == ML_FOP_0x0_ZERO) {
         return 0.0f;
     } else if (op == ML_FOP_0x0_ONE) {
@@ -140,7 +144,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 22);
+    ASSERT(ML_FOP_MAX == 25);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -166,7 +170,10 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         case ML_FOP_1x1_LINEAR_DOWN:
         case ML_FOP_1x1_QUADRATIC_UP:
         case ML_FOP_1x1_QUADRATIC_DOWN:
-            return ML_TransformFloat1x1(op, getInput(0), getParam(0));
+            return MLFloatCheck1x1(op, getInput(0), getParam(0));
+
+        case ML_FOP_1x1_FMOD:
+            return fmodf(getInput(0), getParam(0));
 
         case ML_FOP_1x2_CLAMP: {
             float f = getInput(0);
@@ -174,6 +181,32 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float max = getParam(1);
             f = MAX(f, max);
             f = MIN(f, min);
+            return f;
+        }
+
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            f = MAX(f, max);
+            f = MIN(f, min);
+
+            f = (f - min) / (max - min);
+            return f;
+        }
+
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            f = MAX(f, 1.0f);
+            f = MIN(f, 0.0f);
+
+            f = f * (max - min);
             return f;
         }
 
@@ -302,11 +335,12 @@ void MLFloatNode::mutate(float rate,
         }
     }
 
-    // XXX: Better mutations?
     for (uint i = 0; i < params.size(); i++) {
-        if (Random_Flip(rate)) {
-            params[i] = Random_Float(-1.0f, 1.0f);
-        }
+        MutationFloatParams mp;
+        int r = Random_Int(0, MUTATION_TYPE_MAX - 1);
+        Mutate_DefaultFloatParams(&mp, (MutationType)r);
+
+        params[i] = Mutate_FloatRaw(params[i], &mp);
     }
 }
 
