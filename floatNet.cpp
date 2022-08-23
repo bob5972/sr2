@@ -139,10 +139,11 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     }
 }
 
-void FloatNet::mutate(float rate)
+void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
 {
+    //XXX use maxNodes to add/remove nodes
     for (uint i = 0; i < myNodes.size(); i++) {
-        myNodes[i].mutate(rate);
+        myNodes[i].mutate(rate, maxNodeDegree, maxNodeDegree);
     }
 }
 

@@ -68,9 +68,6 @@ typedef enum MLFloatOp {
     ML_FOP_MAX,
 } MLFloatOp;
 
-//XXX: Temporary static size.
-#define ML_NODE_DEGREE 8
-
 class MLFloatNode {
     public:
         MLFloatNode()
@@ -86,12 +83,6 @@ class MLFloatNode {
 
         void load(MBRegistry *mreg, const char *prefix);
         void mutate(float rate, uint maxInputs, uint maxParams);
-        void mutate(float rate) {
-            mutate(rate, ML_NODE_DEGREE, ML_NODE_DEGREE);
-        }
-        void mutate() {
-            mutate(0.1f, ML_NODE_DEGREE, ML_NODE_DEGREE);
-        }
         void save(MBRegistry *mreg, const char *prefix);
 
         void minimize();

@@ -33,6 +33,11 @@ extern "C" {
 #include "floatNet.hpp"
 #include "textDump.hpp"
 
+#define NEURAL_MAX_NODE_DEGREE  8
+#define NEURAL_MAX_INPUTS      20
+#define NEURAL_MAX_OUTPUTS     20
+#define NEURAL_MAX_NODES       20
+
 #define NEURAL_SCRAMBLE_KEY "neuralFleet.scrambleMutation"
 
 typedef enum NeuralForceType {
@@ -596,7 +601,8 @@ public:
         for (uint i = 0; i < myOutputDescs.size(); i++) {
             FRPoint force;
             ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
-            if (getNeuralForce(mob, &myOutputDescs[i].forceDesc,
+            if (myOutputs[x] != 0.0f &&
+                getNeuralForce(mob, &myOutputDescs[i].forceDesc,
                                &force)) {
                 force.radius = myOutputs[x];
                 FRPoint_Add(outputForce, outputForce, &force);
@@ -738,6 +744,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "gatherAbandonStale",          0.05f },
     };
 
+    float rate = 0.75;
     MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "FALSE");
     if (Random_Flip(0.01)) {
         MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "TRUE");
@@ -749,22 +756,23 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         for (uint i = 0; i < ARRAYSIZE(vb); i++) {
             vb[i].flipRate = 0.5f;
         }
+        rate = 1.0f;
     }
 
     FloatNet fn;
     if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs")) {
         fn.load(mreg, "floatNet.");
     } else {
-        fn.initialize(20, 20, 20);
+        uint numNodes = NEURAL_MAX_OUTPUTS;
+        ASSERT(numNodes <= NEURAL_MAX_NODES);
+        fn.initialize(NEURAL_MAX_INPUTS, NEURAL_MAX_OUTPUTS, numNodes);
         fn.loadZeroNet();
     }
 
-    //XXX resize better?
-
-    float rate = 0.75f;
-    fn.mutate(rate);
+    fn.mutate(rate, NEURAL_MAX_NODE_DEGREE, NEURAL_MAX_NODES);
     fn.save(mreg, "floatNet.");
 
+    // XXX: resize inputs/outputs
     for (uint i = 0; i < fn.getNumInputs(); i++) {
         NeuralValueDesc desc;
         char *str = NULL;

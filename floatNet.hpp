@@ -43,14 +43,14 @@ class FloatNet
 
         void load(MBRegistry *mreg, const char *prefix);
         void loadZeroNet();
-        void mutate(float rate);
+        void mutate(float rate, uint maxNodeDegree, uint maxNodes);
         void save(MBRegistry *mreg, const char *prefix);
 
         void minimize();
 
-        uint getNumInputs() { return myNumInputs; }
-        uint getNumOutputs() { return myNumOutputs; }
-        uint getNumNodes() { return myNodes.size(); }
+        uint getNumInputs()  { return myNumInputs;    }
+        uint getNumOutputs() { return myNumOutputs;   }
+        uint getNumNodes()   { return myNodes.size(); }
 
     private:
         bool myInitialized;
