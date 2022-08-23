@@ -46,6 +46,8 @@ class FloatNet
         void mutate(float rate);
         void save(MBRegistry *mreg, const char *prefix);
 
+        void minimize();
+
         uint getNumInputs() { return myNumInputs; }
         uint getNumOutputs() { return myNumOutputs; }
         uint getNumNodes() { return myNodes.size(); }

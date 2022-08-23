@@ -31,6 +31,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_IDENTITY), },
     { TMENTRY(ML_FOP_1x0_INVERSE), },
     { TMENTRY(ML_FOP_1x0_NEGATE), },
+    { TMENTRY(ML_FOP_1x0_SEEDED_RANDOM_UNIT), },
+    { TMENTRY(ML_FOP_1x0_SQUARE), },
     { TMENTRY(ML_FOP_1x1_STRICT_ON), },
     { TMENTRY(ML_FOP_1x1_STRICT_OFF), },
     { TMENTRY(ML_FOP_1x1_LINEAR_UP), },
@@ -42,6 +44,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
     { TMENTRY(ML_FOP_1x2_SINE), },
+    { TMENTRY(ML_FOP_1x2_COSINE), },
 
     { TMENTRY(ML_FOP_Nx0_SUM), },
     { TMENTRY(ML_FOP_Nx0_PRODUCT), },
@@ -148,7 +151,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 27);
+    ASSERT(ML_FOP_MAX == 30);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -167,6 +170,22 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
         case ML_FOP_1x0_NEGATE:
             return -1.0f * getInput(0);
+
+        case ML_FOP_1x0_SEEDED_RANDOM_UNIT: {
+            RandomState lr;
+            union {
+                float f;
+                uint32 u;
+            } value;
+            value.f = getInput(0);
+            RandomState_CreateWithSeed(&lr, value.u);
+            return RandomState_UnitFloat(&lr);
+        }
+
+        case ML_FOP_1x0_SQUARE: {
+            float f = getInput(0);
+            return f * f;
+        }
 
         case ML_FOP_1x1_STRICT_ON:
         case ML_FOP_1x1_STRICT_OFF:
@@ -219,6 +238,12 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float s = getParam(1);
             float t = getInput(0);
             return sinf(t/p + s);
+        }
+        case ML_FOP_1x2_COSINE: {
+            float p = getParam(0);
+            float s = getParam(1);
+            float t = getInput(0);
+            return cosf(t/p + s);
         }
 
         case ML_FOP_Nx0_SUM: {
@@ -446,6 +471,94 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
 }
 
+void MLFloatNode::minimize()
+{
+    uint numInputs = 0;
+    uint numParams = 0;
+
+    ASSERT(ML_FOP_MAX == 30);
+
+    switch (op) {
+        case ML_FOP_0x0_ZERO:
+        case ML_FOP_0x0_ONE:
+            numInputs = 0;
+            numParams = 0;
+            break;
+
+        case ML_FOP_0x1_CONSTANT:
+            numInputs = 0;
+            numParams = 1;
+            break;
+
+        case ML_FOP_1x0_IDENTITY:
+        case ML_FOP_1x0_INVERSE:
+        case ML_FOP_1x0_NEGATE:
+        case ML_FOP_1x0_SEEDED_RANDOM_UNIT:
+        case ML_FOP_1x0_SQUARE:
+            numInputs = 1;
+            numParams = 0;
+            break;
+
+        case ML_FOP_1x1_STRICT_ON:
+        case ML_FOP_1x1_STRICT_OFF:
+        case ML_FOP_1x1_LINEAR_UP:
+        case ML_FOP_1x1_LINEAR_DOWN:
+        case ML_FOP_1x1_QUADRATIC_UP:
+        case ML_FOP_1x1_QUADRATIC_DOWN:
+        case ML_FOP_1x1_FMOD:
+            numInputs = 1;
+            numParams = 1;
+            break;
+
+        case ML_FOP_1x2_CLAMP:
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT:
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT:
+        case ML_FOP_1x2_SINE:
+        case ML_FOP_1x2_COSINE:
+            numInputs = 1;
+            numParams = 2;
+            break;
+
+        case ML_FOP_Nx0_SUM:
+        case ML_FOP_Nx0_PRODUCT:
+        case ML_FOP_Nx0_MIN:
+        case ML_FOP_Nx0_MAX:
+        case ML_FOP_Nx0_ARITHMETIC_MEAN:
+        case ML_FOP_Nx0_GEOMETRIC_MEAN:
+            numInputs = inputs.size();
+            numParams = 0;
+            break;
+
+        case ML_FOP_NxN_LINEAR_COMBINATION:
+        case ML_FOP_NxN_SCALED_MIN:
+        case ML_FOP_NxN_SCALED_MAX:
+            numInputs = MIN(inputs.size(), params.size());
+            numParams = numInputs;
+            break;
+
+        default:
+            NOT_IMPLEMENTED();
+    }
+
+    if (numInputs > inputs.size() ||
+        numParams > params.size()) {
+        /*
+         * If we don't have enough parameters,
+         * treat this as a ZERO op.
+         */
+        op = ML_FOP_0x0_ZERO;
+        numInputs = 0;
+        numParams = 0;
+    }
+
+    if (numInputs < inputs.size()) {
+        inputs.resize(numInputs);
+    }
+    if (numParams < params.size()) {
+        params.resize(numParams);
+    }
+}
+
 const char *ML_FloatOpToString(MLFloatOp op)
 {
     return TextMap_ToString(op, tmMLFloatOps, ARRAYSIZE(tmMLFloatOps));
@@ -459,5 +572,3 @@ MLFloatOp ML_StringToFloatOp(const char *opstr)
 
     return (MLFloatOp)TextMap_FromString(opstr, tmMLFloatOps, ARRAYSIZE(tmMLFloatOps));
 }
-
-

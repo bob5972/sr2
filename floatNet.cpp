@@ -171,3 +171,11 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 }
 
+void FloatNet::minimize()
+{
+    for (uint i = 0; i < myNodes.size(); i++) {
+        myNodes[i].minimize();
+    }
+
+    //XXX: Remove unreferenced nodes.
+}

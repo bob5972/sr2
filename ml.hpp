@@ -37,6 +37,8 @@ typedef enum MLFloatOp {
     ML_FOP_1x0_IDENTITY,
     ML_FOP_1x0_INVERSE,
     ML_FOP_1x0_NEGATE,
+    ML_FOP_1x0_SEEDED_RANDOM_UNIT,
+    ML_FOP_1x0_SQUARE,
 
     ML_FOP_1x1_STRICT_ON,
     ML_FOP_1x1_STRICT_OFF,
@@ -50,6 +52,7 @@ typedef enum MLFloatOp {
     ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT,
     ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT,
     ML_FOP_1x2_SINE,
+    ML_FOP_1x2_COSINE,
 
     ML_FOP_Nx0_SUM,
     ML_FOP_Nx0_PRODUCT,
@@ -90,6 +93,8 @@ class MLFloatNode {
             mutate(0.1f, ML_NODE_DEGREE, ML_NODE_DEGREE);
         }
         void save(MBRegistry *mreg, const char *prefix);
+
+        void minimize();
 
     private:
         const MBVector<float> *myValues;

@@ -90,6 +90,7 @@ typedef enum NeuralValueType {
     NEURAL_VALUE_CROWD,
     NEURAL_VALUE_TICK,
     NEURAL_VALUE_MOBID,
+    NEURAL_VALUE_RANDOM_UNIT,
     NEURAL_VALUE_MAX,
 } NeuralValueType;
 
@@ -100,6 +101,7 @@ static TextMapEntry tmValues[] = {
     { TMENTRY(NEURAL_VALUE_CROWD), },
     { TMENTRY(NEURAL_VALUE_TICK),  },
     { TMENTRY(NEURAL_VALUE_MOBID), },
+    { TMENTRY(NEURAL_VALUE_RANDOM_UNIT), },
 };
 
 typedef struct NeuralValueDesc {
@@ -230,6 +232,9 @@ public:
             myNeuralNet.loadZeroNet();
         }
 
+        //XXX: Reduce inputs/outputs?
+        myNeuralNet.minimize();
+
         uint numInputs = myNeuralNet.getNumInputs();
         uint numOutputs = myNeuralNet.getNumOutputs();
         myNumNodes = myNeuralNet.getNumNodes();
@@ -268,6 +273,7 @@ public:
 
     float getNeuralValue(Mob *mob, NeuralValueDesc *desc) {
         FRPoint force;
+        RandomState *rs = &myRandomState;
 
         FRPoint_Zero(&force);
 
@@ -284,8 +290,13 @@ public:
                 return getCrowdValue(mob, &desc->crowdDesc);
             case NEURAL_VALUE_TICK:
                 return myFleetAI->tick;
-            case NEURAL_VALUE_MOBID:
-                return (float)mob->mobid;
+            case NEURAL_VALUE_MOBID: {
+                RandomState lr;
+                RandomState_CreateWithSeed(&lr, mob->mobid);
+                return RandomState_UnitFloat(&lr);
+            }
+            case NEURAL_VALUE_RANDOM_UNIT:
+                return RandomState_UnitFloat(rs);
             default:
                 NOT_IMPLEMENTED();
         }
@@ -866,6 +877,7 @@ static void LoadNeuralValueDesc(MBRegistry *mreg,
         case NEURAL_VALUE_ZERO:
         case NEURAL_VALUE_TICK:
         case NEURAL_VALUE_MOBID:
+        case NEURAL_VALUE_RANDOM_UNIT:
             break;
 
         default:
