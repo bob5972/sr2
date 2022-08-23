@@ -223,6 +223,6 @@ void FloatNet::minimize(CPBitVector *inputBV)
 
     /*
      * XXX TODO:
-     *    Collapse zero nodes.
+     *    Collapse zero nodes?
      */
 }

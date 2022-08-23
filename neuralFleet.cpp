@@ -247,6 +247,25 @@ public:
         myInputDescs.resize(numInputs);
         myOutputDescs.resize(numOutputs);
 
+        for (uint i = 0; i < myOutputDescs.size(); i++) {
+            char *str = NULL;
+            int ret = asprintf(&str, "output[%d].", i);
+            VERIFY(ret > 0);
+            LoadNeuralValueDesc(mreg, &myOutputDescs[i], str);
+            free(str);
+
+            if (myOutputDescs[i].valueType != NEURAL_VALUE_FORCE) {
+                myOutputDescs[i].valueType = NEURAL_VALUE_FORCE;
+                myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_ZERO;
+                myOutputDescs[i].forceDesc.useTangent = FALSE;
+                myOutputDescs[i].forceDesc.radius = 0.0f;
+            }
+
+            if (myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO) {
+                myNeuralNet.zeroOutputNode(i);
+            }
+        }
+
         CPBitVector inputBV;
         inputBV.resize(numInputs);
         myNeuralNet.minimize(&inputBV);
@@ -260,21 +279,6 @@ public:
                 free(str);
             } else {
                 myInputDescs[i].valueType = NEURAL_VALUE_ZERO;
-            }
-        }
-
-        for (uint i = 0; i < myOutputDescs.size(); i++) {
-            char *str = NULL;
-            int ret = asprintf(&str, "output[%d].", i);
-            VERIFY(ret > 0);
-            LoadNeuralValueDesc(mreg, &myOutputDescs[i], str);
-            free(str);
-
-            if (myOutputDescs[i].valueType != NEURAL_VALUE_FORCE) {
-                myOutputDescs[i].valueType = NEURAL_VALUE_FORCE;
-                myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_ZERO;
-                myOutputDescs[i].forceDesc.useTangent = FALSE;
-                myOutputDescs[i].forceDesc.radius = 0.0f;
             }
         }
 
