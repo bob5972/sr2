@@ -353,7 +353,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 void MLFloatNode::mutate(float rate,
                          uint maxInputs, uint maxParams)
 {
-    if (!Random_Flip(rate)) {
+    if (!Random_Flip((1.0f + rate) / 2.0f)) {
         return;
     }
 
@@ -393,7 +393,7 @@ void MLFloatNode::mutate(float rate,
         MutationFloatParams mp;
         int r = Random_Int(0, MUTATION_TYPE_MAX - 1);
         Mutate_DefaultFloatParams(&mp, (MutationType)r);
-
+        mp.mutationRate = (mp.mutationRate + rate) / 2.0f;
         params[i] = Mutate_FloatRaw(params[i], &mp);
     }
 }
