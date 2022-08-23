@@ -421,7 +421,9 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     p += "inputs";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, inputs);
-    VERIFY(inputs.size() == numInputs);
+    if (inputs.size() != numInputs) {
+        PANIC("Bad inputs size: got=%d, expected=%d\n", inputs.size(), numInputs);
+    }
 
     p = prefix;
     p += "numParams";
@@ -432,6 +434,9 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, params);
     VERIFY(params.size() == numParams);
+    if (params.size() != numParams) {
+        PANIC("Bad params size: got=%d, expected=%d\n", params.size(), numParams);
+    }
 }
 
 
