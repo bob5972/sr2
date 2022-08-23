@@ -406,7 +406,7 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     MBString str;
 
     p = prefix;
-    p += ".op";
+    p += "op";
     op = ML_StringToFloatOp(MBRegistry_GetCStr(mreg, p.CStr()));
     if (op == ML_FOP_INVALID) {
         op = ML_FOP_0x0_ZERO;
@@ -414,21 +414,21 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     VERIFY(op < ML_FOP_MAX);
 
     p = prefix;
-    p += ".numInputs";
+    p += "numInputs";
     uint numInputs = MBRegistry_GetUint(mreg, p.CStr());
 
     p = prefix;
-    p += ".inputs";
+    p += "inputs";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, inputs);
     VERIFY(inputs.size() == numInputs);
 
     p = prefix;
-    p += ".numParams";
+    p += "numParams";
     uint numParams = MBRegistry_GetUint(mreg, p.CStr());
 
     p = prefix;
-    p += ".params";
+    p += "params";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, params);
     VERIFY(inputs.size() == numParams);

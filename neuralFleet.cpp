@@ -615,7 +615,7 @@ public:
                 getNeuralForce(mob, &myOutputDescs[i].forceDesc,
                                &force)) {
                 force.radius = myOutputs[x];
-                FRPoint_Add(outputForce, outputForce, &force);
+                FRPoint_Add(&force, outputForce, outputForce);
             }
             x++;
         }
