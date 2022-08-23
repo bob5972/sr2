@@ -412,31 +412,15 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
         op = ML_FOP_0x0_ZERO;
     }
     VERIFY(op < ML_FOP_MAX);
-
-    p = prefix;
-    p += "numInputs";
-    uint numInputs = MBRegistry_GetUint(mreg, p.CStr());
-
     p = prefix;
     p += "inputs";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, inputs);
-    if (inputs.size() != numInputs) {
-        PANIC("Bad inputs size: got=%d, expected=%d\n", inputs.size(), numInputs);
-    }
-
-    p = prefix;
-    p += "numParams";
-    uint numParams = MBRegistry_GetUint(mreg, p.CStr());
 
     p = prefix;
     p += "params";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, params);
-    VERIFY(params.size() == numParams);
-    if (params.size() != numParams) {
-        PANIC("Bad params size: got=%d, expected=%d\n", params.size(), numParams);
-    }
 }
 
 
@@ -444,31 +428,15 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
     MBString str;
-    char *v;
-    int ret;
 
     p = prefix;
     p += "op";
     MBRegistry_PutCopy(mreg, p.CStr(), ML_FloatOpToString(op));
 
     p = prefix;
-    p += "numInputs";
-    ret = asprintf(&v, "%d", inputs.size());
-    VERIFY(ret > 0);
-    MBRegistry_PutCopy(mreg, p.CStr(), v);
-    free(v);
-
-    p = prefix;
     p += "inputs";
     TextDump_Convert(inputs, str);
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
-
-    p = prefix;
-    p += "numParams";
-    ret = asprintf(&v, "%d", params.size());
-    VERIFY(ret > 0);
-    MBRegistry_PutCopy(mreg, p.CStr(), v);
-    free(v);
 
     p = prefix;
     p += "params";
