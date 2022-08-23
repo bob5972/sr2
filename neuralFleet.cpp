@@ -237,9 +237,6 @@ public:
             myNeuralNet.loadZeroNet();
         }
 
-        //XXX: Reduce inputs/outputs?
-        myNeuralNet.minimize();
-
         uint numInputs = myNeuralNet.getNumInputs();
         uint numOutputs = myNeuralNet.getNumOutputs();
         myNumNodes = myNeuralNet.getNumNodes();
@@ -250,12 +247,20 @@ public:
         myInputDescs.resize(numInputs);
         myOutputDescs.resize(numOutputs);
 
+        CPBitVector inputBV;
+        inputBV.resize(numInputs);
+        myNeuralNet.minimize(&inputBV);
+
         for (uint i = 0; i < myInputDescs.size(); i++) {
-            char *str = NULL;
-            int ret = asprintf(&str, "input[%d].", i);
-            VERIFY(ret > 0);
-            LoadNeuralValueDesc(mreg, &myInputDescs[i], str);
-            free(str);
+            if (inputBV.get(i)) {
+                char *str = NULL;
+                int ret = asprintf(&str, "input[%d].", i);
+                VERIFY(ret > 0);
+                LoadNeuralValueDesc(mreg, &myInputDescs[i], str);
+                free(str);
+            } else {
+                myInputDescs[i].valueType = NEURAL_VALUE_ZERO;
+            }
         }
 
         for (uint i = 0; i < myOutputDescs.size(); i++) {

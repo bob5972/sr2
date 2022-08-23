@@ -547,17 +547,22 @@ void MLFloatNode::minimize()
          * If we don't have enough parameters,
          * treat this as a ZERO op.
          */
-        op = ML_FOP_0x0_ZERO;
-        numInputs = 0;
-        numParams = 0;
+        makeZero();
+    } else {
+        if (numInputs < inputs.size()) {
+            inputs.resize(numInputs);
+        }
+        if (numParams < params.size()) {
+            params.resize(numParams);
+        }
     }
+}
 
-    if (numInputs < inputs.size()) {
-        inputs.resize(numInputs);
-    }
-    if (numParams < params.size()) {
-        params.resize(numParams);
-    }
+void MLFloatNode::makeZero()
+{
+    op = ML_FOP_0x0_ZERO;
+    params.resize(0);
+    inputs.resize(0);
 }
 
 const char *ML_FloatOpToString(MLFloatOp op)

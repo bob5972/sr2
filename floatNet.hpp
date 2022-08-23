@@ -23,6 +23,7 @@
 #include "MBVector.hpp"
 #include "MBRegistry.h"
 #include "ml.hpp"
+#include "BitVector.hpp"
 
 class FloatNet
 {
@@ -46,7 +47,7 @@ class FloatNet
         void mutate(float rate, uint maxNodeDegree, uint maxNodes);
         void save(MBRegistry *mreg, const char *prefix);
 
-        void minimize();
+        void minimize(CPBitVector *inputBV);
 
         uint getNumInputs()  { return myNumInputs;    }
         uint getNumOutputs() { return myNumOutputs;   }
@@ -57,6 +58,10 @@ class FloatNet
         uint myNumInputs;
         uint myNumOutputs;
 
+        /*
+         * Inputs have values but not nodes.
+         * Inner nodes and Outputs have both.
+         */
         MBVector<MLFloatNode> myNodes;
         MBVector<float> myValues;
 };

@@ -86,6 +86,8 @@ class MLFloatNode {
         void save(MBRegistry *mreg, const char *prefix);
 
         void minimize();
+        void makeZero();
+        bool isZero() { return op == ML_FOP_0x0_ZERO; }
 
     private:
         const MBVector<float> *myValues;

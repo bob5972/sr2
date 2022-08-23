@@ -172,11 +172,57 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 }
 
-void FloatNet::minimize()
+void FloatNet::minimize(CPBitVector *inputBV)
 {
+    CPBitVector bv;
+    bool keepGoing = TRUE;
+
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].minimize();
     }
 
-    //XXX: Remove unreferenced nodes.
+    bv.resize(myNumInputs + myNodes.size());
+    while (keepGoing) {
+        keepGoing = FALSE;
+        bv.resetAll();
+        for (uint i = 0; i < myNodes.size(); i++) {
+            MLFloatNode *n = &myNodes[i];
+            ASSERT(myNodes[i].index == i + myNumInputs);
+            if (n->isZero()) {
+                /*
+                 * Treat already zeroed nodes as "referenced" for now,
+                 * because we don't need to zero them again.
+                 */
+                bv.set(i);
+            } else {
+                for (uint in = 0; in < n->inputs.size(); in++) {
+                    bv.set(n->inputs[in]);
+                }
+            }
+        }
+
+        uint numInnerNodes = myNodes.size() - myNumOutputs;
+        ASSERT(myNodes.size() >= myNumOutputs);
+        for (uint i = 0; i < numInnerNodes; i++) {
+            uint ni = i + myNumInputs;
+            ASSERT(myNodes[i].index == ni);
+            if (!bv.get(ni)) {
+                myNodes[i].makeZero();
+                keepGoing = TRUE;
+            }
+        }
+    }
+
+    if (inputBV != NULL) {
+        ASSERT(inputBV->size() == myNumInputs);
+
+        for (uint i = 0; i < myNumInputs; i++) {
+            inputBV->put(i, bv.get(i));
+        }
+    }
+
+    /*
+     * XXX TODO:
+     *    Collapse zero nodes.
+     */
 }
