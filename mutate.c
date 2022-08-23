@@ -23,15 +23,15 @@
 #include "MBAssert.h"
 #include "Random.h"
 
-float Mutate_FloatRaw(float value, MutationFloatParams *mp)
+float Mutate_FloatRaw(float value, bool missing, MutationFloatParams *mp)
 {
     ASSERT(mp != NULL);
 
     if (Random_Flip(mp->mutationRate)) {
-        if (Random_Flip(mp->jumpRate)) {
+        if (missing || Random_Flip(mp->jumpRate)) {
             /*
-                * Bias jumps slightly towards interesting values.
-                */
+             * Bias jumps slightly towards interesting values.
+             */
             if (Random_Flip(0.01)) {
                 float f[] = {
                     -1.0f, 0.0f, 1.0f, mp->minValue, mp->maxValue,
@@ -72,8 +72,9 @@ void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mpa, uint32 numParams)
     for (uint32 i = 0; i < numParams; i++) {
         MutationFloatParams *mp = &mpa[i];
         if (Random_Flip(mp->mutationRate)) {
+            bool missing = !MBRegistry_ContainsKey(mreg, mp->key);
             float value = MBRegistry_GetFloat(mreg, mp->key);
-            value = Mutate_FloatRaw(value, mp);
+            value = Mutate_FloatRaw(value, missing, mp);
 
             char *vStr = NULL;
             int ret = asprintf(&vStr, "%f", value);

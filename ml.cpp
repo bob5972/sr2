@@ -394,7 +394,7 @@ void MLFloatNode::mutate(float rate,
         int r = Random_Int(0, MUTATION_TYPE_MAX - 1);
         Mutate_DefaultFloatParams(&mp, (MutationType)r);
         mp.mutationRate = (mp.mutationRate + rate) / 2.0f;
-        params[i] = Mutate_FloatRaw(params[i], &mp);
+        params[i] = Mutate_FloatRaw(params[i], FALSE, &mp);
     }
 }
 
@@ -431,7 +431,7 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     p += "params";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, params);
-    VERIFY(inputs.size() == numParams);
+    VERIFY(params.size() == numParams);
 }
 
 
