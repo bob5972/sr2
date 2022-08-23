@@ -525,7 +525,7 @@ void MLFloatNode::minimize()
         case ML_FOP_Nx0_MAX:
         case ML_FOP_Nx0_ARITHMETIC_MEAN:
         case ML_FOP_Nx0_GEOMETRIC_MEAN:
-            numInputs = inputs.size();
+            numInputs = MAX(1, inputs.size());
             numParams = 0;
             break;
 
@@ -533,6 +533,7 @@ void MLFloatNode::minimize()
         case ML_FOP_NxN_SCALED_MIN:
         case ML_FOP_NxN_SCALED_MAX:
             numInputs = MIN(inputs.size(), params.size());
+            numInputs = MAX(1, numInputs);
             numParams = numInputs;
             break;
 
