@@ -610,7 +610,8 @@ public:
         for (uint i = 0; i < myOutputDescs.size(); i++) {
             FRPoint force;
             ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
-            if (myOutputs[x] != 0.0f &&
+            if (myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO &&
+                myOutputs[x] != 0.0f &&
                 getNeuralForce(mob, &myOutputDescs[i].forceDesc,
                                &force)) {
                 force.radius = myOutputs[x];

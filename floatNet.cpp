@@ -172,10 +172,11 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 }
 
-void FloatNet::minimize(CPBitVector *inputBV)
+uint FloatNet::minimize(CPBitVector *inputBV)
 {
     CPBitVector bv;
     bool keepGoing = TRUE;
+    uint activeCount;
 
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].minimize();
@@ -183,6 +184,7 @@ void FloatNet::minimize(CPBitVector *inputBV)
 
     bv.resize(myNumInputs + myNodes.size());
     while (keepGoing) {
+        activeCount = 0;
         keepGoing = FALSE;
         bv.resetAll();
         for (uint i = 0; i < myNodes.size(); i++) {
@@ -195,6 +197,7 @@ void FloatNet::minimize(CPBitVector *inputBV)
                  */
                 bv.set(i);
             } else {
+                activeCount++;
                 for (uint in = 0; in < n->inputs.size(); in++) {
                     bv.set(n->inputs[in]);
                 }
@@ -220,6 +223,8 @@ void FloatNet::minimize(CPBitVector *inputBV)
             inputBV->put(i, bv.get(i));
         }
     }
+
+    return activeCount;
 
     /*
      * XXX TODO:
