@@ -47,12 +47,14 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_COHERE,
     NEURAL_FORCE_SEPARATE,
     NEURAL_FORCE_NEAREST_FRIEND,
+    NEURAL_FORCE_NEAREST_FRIEND_MISSILE,
     NEURAL_FORCE_EDGES,
     NEURAL_FORCE_CORNERS,
     NEURAL_FORCE_CENTER,
     NEURAL_FORCE_BASE,
     NEURAL_FORCE_BASE_DEFENSE,
     NEURAL_FORCE_ENEMY,
+    NEURAL_FORCE_ENEMY_MISSILE,
     NEURAL_FORCE_ENEMY_BASE,
     NEURAL_FORCE_ENEMY_BASE_GUESS,
     NEURAL_FORCE_CORES,
@@ -61,21 +63,23 @@ typedef enum NeuralForceType {
 } NeuralForceType;
 
 static TextMapEntry tmForces[] = {
-    { TMENTRY(NEURAL_FORCE_ZERO),             },
-    { TMENTRY(NEURAL_FORCE_HEADING),          },
-    { TMENTRY(NEURAL_FORCE_ALIGN),            },
-    { TMENTRY(NEURAL_FORCE_COHERE),           },
-    { TMENTRY(NEURAL_FORCE_SEPARATE),         },
-    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),   },
-    { TMENTRY(NEURAL_FORCE_EDGES),            },
-    { TMENTRY(NEURAL_FORCE_CORNERS),          },
-    { TMENTRY(NEURAL_FORCE_CENTER),           },
-    { TMENTRY(NEURAL_FORCE_BASE),             },
-    { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),     },
-    { TMENTRY(NEURAL_FORCE_ENEMY),            },
-    { TMENTRY(NEURAL_FORCE_ENEMY_BASE),       },
-    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS), },
-    { TMENTRY(NEURAL_FORCE_CORES),            },
+    { TMENTRY(NEURAL_FORCE_ZERO),                     },
+    { TMENTRY(NEURAL_FORCE_HEADING),                  },
+    { TMENTRY(NEURAL_FORCE_ALIGN),                    },
+    { TMENTRY(NEURAL_FORCE_COHERE),                   },
+    { TMENTRY(NEURAL_FORCE_SEPARATE),                 },
+    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),           },
+    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),   },
+    { TMENTRY(NEURAL_FORCE_EDGES),                    },
+    { TMENTRY(NEURAL_FORCE_CORNERS),                  },
+    { TMENTRY(NEURAL_FORCE_CENTER),                   },
+    { TMENTRY(NEURAL_FORCE_BASE),                     },
+    { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),             },
+    { TMENTRY(NEURAL_FORCE_ENEMY),                    },
+    { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),            },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE),               },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),         },
+    { TMENTRY(NEURAL_FORCE_CORES),                    },
 };
 
 typedef struct NeuralForceDesc {
@@ -84,7 +88,24 @@ typedef struct NeuralForceDesc {
     float radius;
 } NeuralForceDesc;
 
+typedef enum NeuralCrowdType {
+    NEURAL_CROWD_FRIEND_FIGHTER,
+    NEURAL_CROWD_FRIEND_MISSILE,
+    NEURAL_CROWD_ENEMY_SHIP,
+    NEURAL_CROWD_ENEMY_MISSILE,
+    NEURAL_CROWD_CORES,
+} NeuralCrowdType;
+
+static TextMapEntry tmCrowds[] = {
+    { TMENTRY(NEURAL_CROWD_FRIEND_FIGHTER),        },
+    { TMENTRY(NEURAL_CROWD_FRIEND_MISSILE),        },
+    { TMENTRY(NEURAL_CROWD_ENEMY_SHIP),            },
+    { TMENTRY(NEURAL_CROWD_ENEMY_MISSILE),         },
+    { TMENTRY(NEURAL_CROWD_CORES),                 },
+};
+
 typedef struct NeuralCrowdDesc {
+    NeuralCrowdType crowdType;
     float radius;
 } NeuralCrowdDesc;
 
@@ -401,6 +422,10 @@ public:
                 Mob *m = sg->findClosestFriend(mob, MOB_FLAG_FIGHTER);
                 return focusMobPosHelper(m, focusPoint);
             }
+            case NEURAL_FORCE_NEAREST_FRIEND_MISSILE: {
+                Mob *m = sg->findClosestFriend(mob, MOB_FLAG_MISSILE);
+                return focusMobPosHelper(m, focusPoint);
+            }
 
             case NEURAL_FORCE_EDGES: {
                 getEdgeFocus(mob, desc, focusPoint);
@@ -431,6 +456,10 @@ public:
             }
             case NEURAL_FORCE_ENEMY: {
                 Mob *m = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
+                return focusMobPosHelper(m, focusPoint);
+            }
+            case NEURAL_FORCE_ENEMY_MISSILE: {
+                Mob *m = sg->findClosestTarget(&mob->pos, MOB_FLAG_MISSILE);
                 return focusMobPosHelper(m, focusPoint);
             }
 
@@ -569,7 +598,22 @@ public:
     float getCrowdValue(Mob *mob, NeuralCrowdDesc *desc) {
         //XXX cache?
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-        return sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos, desc->radius);
+        if (desc->crowdType == NEURAL_CROWD_FRIEND_FIGHTER) {
+            return sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                         &mob->pos, desc->radius);
+        } else if (desc->crowdType == NEURAL_CROWD_ENEMY_SHIP) {
+            return sg->numTargetsInRange(MOB_FLAG_SHIP,
+                                         &mob->pos, desc->radius);
+        } else if (desc->crowdType == NEURAL_CROWD_CORES) {
+            return sg->numTargetsInRange(MOB_FLAG_POWER_CORE,
+                                         &mob->pos, desc->radius);
+        } else if  (desc->crowdType == NEURAL_CROWD_FRIEND_MISSILE) {
+            return sg->numFriendsInRange(MOB_FLAG_MISSILE,
+                                         &mob->pos, desc->radius);
+        } else {
+            return sg->numTargetsInRange(MOB_FLAG_MISSILE,
+                                         &mob->pos, desc->radius);
+        }
     }
 
     float getRangeValue(Mob *mob, NeuralForceDesc *desc) {
@@ -840,6 +884,17 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
         Mutate_Float(mreg, &vf, 1);
     }
 
+    if (desc->valueType == NEURAL_VALUE_CROWD) {
+        s = prefix;
+        s += "crowdType";
+        if (Random_Flip(rate)) {
+            uint i = Random_Int(0, ARRAYSIZE(tmCrowds) - 1);
+            const char *v = tmCrowds[i].str;
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            desc->crowdDesc.crowdType = (NeuralCrowdType) tmCrowds[i].value;
+        }
+    }
+
     if (desc->valueType == NEURAL_VALUE_FORCE) {
         s = prefix;
         s += "forceType";
@@ -933,10 +988,21 @@ static void LoadNeuralCrowdDesc(MBRegistry *mreg,
                                 NeuralCrowdDesc *desc, const char *prefix)
 {
     MBString s;
+    const char *v;
 
     s = prefix;
     s += "radius";
     desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "crowdType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        ASSERT(tmCrowds[0].value == NEURAL_CROWD_FRIEND_FIGHTER);
+        v = tmCrowds[0].str;
+    }
+    desc->crowdType = (NeuralCrowdType)
+        TextMap_FromString(v, tmCrowds, ARRAYSIZE(tmCrowds));
 }
 
 static void *NeuralFleetCreate(FleetAI *ai)
