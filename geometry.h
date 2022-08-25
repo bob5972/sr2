@@ -153,6 +153,8 @@ static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *r
     temp.y -= c->y;
 
     rp->radius = sqrtf((temp.x * temp.x) + (temp.y * temp.y));
+
+    //XXX: Could use atan2f ?
     rp->theta = atanf(temp.y / temp.x);
 
     if (isnanf(rp->theta)) {

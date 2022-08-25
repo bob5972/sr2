@@ -33,6 +33,19 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_NEGATE), },
     { TMENTRY(ML_FOP_1x0_SEEDED_RANDOM_UNIT), },
     { TMENTRY(ML_FOP_1x0_SQUARE), },
+    { TMENTRY(ML_FOP_1x0_SQRT), },
+    { TMENTRY(ML_FOP_1x0_ARC_COSINE), },
+    { TMENTRY(ML_FOP_1x0_ARC_SINE), },
+    { TMENTRY(ML_FOP_1x0_ARC_TANGENT), },
+    { TMENTRY(ML_FOP_1x0_HYP_COSINE), },
+    { TMENTRY(ML_FOP_1x0_HYP_SINE), },
+    { TMENTRY(ML_FOP_1x0_HYP_TANGENT), },
+    { TMENTRY(ML_FOP_1x0_EXP), },
+    { TMENTRY(ML_FOP_1x0_LN), },
+    { TMENTRY(ML_FOP_1x0_CEIL), },
+    { TMENTRY(ML_FOP_1x0_FLOOR), },
+    { TMENTRY(ML_FOP_1x0_ABS), },
+
     { TMENTRY(ML_FOP_1x1_STRICT_ON), },
     { TMENTRY(ML_FOP_1x1_STRICT_OFF), },
     { TMENTRY(ML_FOP_1x1_LINEAR_UP), },
@@ -40,11 +53,15 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x1_QUADRATIC_UP), },
     { TMENTRY(ML_FOP_1x1_QUADRATIC_DOWN), },
     { TMENTRY(ML_FOP_1x1_FMOD), },
+    { TMENTRY(ML_FOP_1x1_POW), },
+
     { TMENTRY(ML_FOP_1x2_CLAMP), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
     { TMENTRY(ML_FOP_1x2_SINE), },
     { TMENTRY(ML_FOP_1x2_COSINE), },
+
+    { TMENTRY(ML_FOP_2x0_POW), },
 
     { TMENTRY(ML_FOP_Nx0_SUM), },
     { TMENTRY(ML_FOP_Nx0_PRODUCT), },
@@ -151,7 +168,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 30);
+    ASSERT(ML_FOP_MAX == 44);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -187,6 +204,31 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return f * f;
         }
 
+        case ML_FOP_1x0_SQRT:
+            return sqrtf(getInput(0));
+        case ML_FOP_1x0_ARC_COSINE:
+            return acosf(getInput(0));
+        case ML_FOP_1x0_ARC_SINE:
+            return asinf(getInput(0));
+        case ML_FOP_1x0_ARC_TANGENT:
+            return atanf(getInput(0));
+        case ML_FOP_1x0_HYP_COSINE:
+            return coshf(getInput(0));
+        case ML_FOP_1x0_HYP_SINE:
+            return sinhf(getInput(0));
+        case ML_FOP_1x0_HYP_TANGENT:
+            return tanhf(getInput(0));
+        case ML_FOP_1x0_EXP:
+            return expf(getInput(0));
+        case ML_FOP_1x0_LN:
+            return logf(getInput(0));
+        case ML_FOP_1x0_CEIL:
+            return ceilf(getInput(0));
+        case ML_FOP_1x0_FLOOR:
+            return floorf(getInput(0));
+        case ML_FOP_1x0_ABS:
+            return fabsf(getInput(0));
+
         case ML_FOP_1x1_STRICT_ON:
         case ML_FOP_1x1_STRICT_OFF:
         case ML_FOP_1x1_LINEAR_UP:
@@ -197,6 +239,9 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
         case ML_FOP_1x1_FMOD:
             return fmodf(getInput(0), getParam(0));
+
+        case ML_FOP_1x1_POW:
+            return powf(getInput(0), getParam(0));
 
         case ML_FOP_1x2_CLAMP: {
             float f = getInput(0);
@@ -245,6 +290,9 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float t = getInput(0);
             return cosf(t/p + s);
         }
+
+        case ML_FOP_2x0_POW:
+            return powf(getInput(0), getInput(1));
 
         case ML_FOP_Nx0_SUM: {
             float f = 0.0;
@@ -449,7 +497,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    ASSERT(ML_FOP_MAX == 30);
+    ASSERT(ML_FOP_MAX == 44);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -468,6 +516,18 @@ void MLFloatNode::minimize()
         case ML_FOP_1x0_NEGATE:
         case ML_FOP_1x0_SEEDED_RANDOM_UNIT:
         case ML_FOP_1x0_SQUARE:
+        case ML_FOP_1x0_SQRT:
+        case ML_FOP_1x0_ARC_COSINE:
+        case ML_FOP_1x0_ARC_SINE:
+        case ML_FOP_1x0_ARC_TANGENT:
+        case ML_FOP_1x0_HYP_COSINE:
+        case ML_FOP_1x0_HYP_SINE:
+        case ML_FOP_1x0_HYP_TANGENT:
+        case ML_FOP_1x0_EXP:
+        case ML_FOP_1x0_LN:
+        case ML_FOP_1x0_CEIL:
+        case ML_FOP_1x0_FLOOR:
+        case ML_FOP_1x0_ABS:
             numInputs = 1;
             numParams = 0;
             break;
@@ -479,6 +539,7 @@ void MLFloatNode::minimize()
         case ML_FOP_1x1_QUADRATIC_UP:
         case ML_FOP_1x1_QUADRATIC_DOWN:
         case ML_FOP_1x1_FMOD:
+        case ML_FOP_1x1_POW:
             numInputs = 1;
             numParams = 1;
             break;
@@ -490,6 +551,11 @@ void MLFloatNode::minimize()
         case ML_FOP_1x2_COSINE:
             numInputs = 1;
             numParams = 2;
+            break;
+
+        case ML_FOP_2x0_POW:
+            numInputs = 2;
+            numParams = 0;
             break;
 
         case ML_FOP_Nx0_SUM:
