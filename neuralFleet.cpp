@@ -117,6 +117,8 @@ typedef enum NeuralValueType {
     NEURAL_VALUE_TICK,
     NEURAL_VALUE_MOBID,
     NEURAL_VALUE_RANDOM_UNIT,
+    NEURAL_VALUE_CREDITS,
+    NEURAL_VALUE_FRIEND_SHIPS,
     NEURAL_VALUE_MAX,
 } NeuralValueType;
 
@@ -128,6 +130,8 @@ static TextMapEntry tmValues[] = {
     { TMENTRY(NEURAL_VALUE_TICK),  },
     { TMENTRY(NEURAL_VALUE_MOBID), },
     { TMENTRY(NEURAL_VALUE_RANDOM_UNIT), },
+    { TMENTRY(NEURAL_VALUE_CREDITS), },
+    { TMENTRY(NEURAL_VALUE_FRIEND_SHIPS), },
 };
 
 typedef struct NeuralValueDesc {
@@ -310,6 +314,8 @@ public:
     float getNeuralValue(Mob *mob, NeuralValueDesc *desc) {
         FRPoint force;
         RandomState *rs = &myRandomState;
+        FleetAI *ai = myFleetAI;
+        MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
 
         FRPoint_Zero(&force);
 
@@ -333,6 +339,11 @@ public:
             }
             case NEURAL_VALUE_RANDOM_UNIT:
                 return RandomState_UnitFloat(rs);
+            case NEURAL_VALUE_CREDITS:
+                return (float)ai->credits;
+            case NEURAL_VALUE_FRIEND_SHIPS:
+                return (float)sg->numFriends(MOB_FLAG_SHIP);
+
             default:
                 NOT_IMPLEMENTED();
         }
@@ -952,6 +963,8 @@ static void LoadNeuralValueDesc(MBRegistry *mreg,
         case NEURAL_VALUE_TICK:
         case NEURAL_VALUE_MOBID:
         case NEURAL_VALUE_RANDOM_UNIT:
+        case NEURAL_VALUE_CREDITS:
+        case NEURAL_VALUE_FRIEND_SHIPS:
             break;
 
         default:
