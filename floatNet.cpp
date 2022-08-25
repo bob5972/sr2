@@ -88,7 +88,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         char *strp;
 
         p = prefix;
-        int ret = asprintf(&strp, "node[%d].", i);
+        int ret = asprintf(&strp, "node[%d].", i + myNumInputs);
         VERIFY(ret > 0);
         p += strp;
         free(strp);
@@ -129,8 +129,12 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     for (uint i = 0; i < myNodes.size(); i++) {
         char *strp;
 
+        /*
+         * Save the node ID offset by myNumInputs to it matches the
+         * ID used in the node input references.
+         */
         p = prefix;
-        ret = asprintf(&strp, "node[%d].", i);
+        ret = asprintf(&strp, "node[%d].", i + myNumInputs);
         VERIFY(ret > 0);
         p += strp;
         free(strp);

@@ -249,7 +249,8 @@ public:
 
         for (uint i = 0; i < myOutputDescs.size(); i++) {
             char *str = NULL;
-            int ret = asprintf(&str, "output[%d].", i);
+            int ret = asprintf(&str, "output[%d].",
+                               i + myNeuralNet.getOutputOffset());
             VERIFY(ret > 0);
             LoadNeuralValueDesc(mreg, &myOutputDescs[i], str);
             free(str);
@@ -796,7 +797,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     for (uint i = 0; i < fn.getNumOutputs(); i++) {
         NeuralValueDesc desc;
         char *str = NULL;
-        int ret = asprintf(&str, "output[%d].", i);
+        int ret = asprintf(&str, "output[%d].", i + fn.getOutputOffset());
         VERIFY(ret > 0);
         LoadNeuralValueDesc(mreg, &desc, str);
         MutateNeuralValueDesc(mreg, &desc, TRUE, rate, str);
