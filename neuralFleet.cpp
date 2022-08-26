@@ -827,6 +827,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     FloatNet fn;
     if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs") &&
+        MBRegistry_GetUint(mreg, "floatNet.numInputs") > 0 &&
         !MBRegistry_GetBool(mreg, NEURAL_SCRAMBLE_KEY)) {
         fn.load(mreg, "floatNet.");
     } else {
