@@ -511,6 +511,21 @@ void MLFloatNode::mutate(float rate,
             inputs[i] = 0;
         }
     }
+    if (inputs.size() > 0 && Random_Flip(rate)) {
+        uint p = inputs.last();
+        int n = Random_Int(0, inputs.size() - 1);
+        inputs.shrink();
+
+        for (int i = inputs.size() - 1; i > n; i--) {
+            float t = inputs[i];
+            inputs[i] = p;
+            p = t;
+        }
+
+        if (n < inputs.size()) {
+            inputs[n] = p;
+        }
+    }
 
     if (params.size() < maxParams) {
         uint oldSize = params.size();
@@ -520,6 +535,21 @@ void MLFloatNode::mutate(float rate,
 
         for (uint i = oldSize; i < params.size(); i++) {
             params[i] = 0.0f;
+        }
+    }
+    if (params.size() > 0 && Random_Flip(rate)) {
+        float p = params.last();
+        int n = Random_Int(0, params.size() - 1);
+        params.shrink();
+
+        for (int i = params.size() - 1; i > n; i--) {
+            float t = params[i];
+            params[i] = p;
+            p = t;
+        }
+
+        if (n < params.size()) {
+            params[n] = p;
         }
     }
 
