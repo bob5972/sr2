@@ -605,8 +605,9 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    //Warning("ML_FOP_MAX=%d\n", ML_FOP_MAX);
-    ASSERT(ML_FOP_MAX == 54);
+    if (mb_debug && ML_FOP_MAX != 54) {
+        PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
+    }
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
