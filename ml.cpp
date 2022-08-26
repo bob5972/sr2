@@ -760,6 +760,7 @@ void MLFloatNode::makeZero()
     op = ML_FOP_0x0_ZERO;
     params.resize(0);
     inputs.resize(0);
+    mutationRate = 0.25f;
 }
 
 const char *ML_FloatOpToString(MLFloatOp op)

@@ -75,6 +75,8 @@ class FloatNet
          */
         MBVector<MLFloatNode> myNodes;
         MBVector<float> myValues;
+
+        // void nodeShiftHelper(uint index, bool shiftUp);
 };
 
 #endif // _FLOATNET_H_202208121158

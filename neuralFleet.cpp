@@ -34,9 +34,9 @@ extern "C" {
 #include "textDump.hpp"
 
 #define NEURAL_MAX_NODE_DEGREE  8
-#define NEURAL_MAX_INPUTS      20
-#define NEURAL_MAX_OUTPUTS     20
-#define NEURAL_MAX_NODES       20
+#define NEURAL_MAX_INPUTS      25
+#define NEURAL_MAX_OUTPUTS     25
+#define NEURAL_MAX_NODES       100
 
 #define NEURAL_SCRAMBLE_KEY "neuralFleet.scrambleMutation"
 
@@ -810,7 +810,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "gatherAbandonStale",          0.05f },
     };
 
-    float rate = 0.25;
+    float rate = 0.10;
     MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "FALSE");
     if (Random_Flip(0.01)) {
         MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "TRUE");
@@ -826,19 +826,17 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     }
 
     FloatNet fn;
-    if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs")) {
+    if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs") &&
+        !MBRegistry_GetBool(mreg, NEURAL_SCRAMBLE_KEY)) {
         fn.load(mreg, "floatNet.");
     } else {
-        uint numNodes = NEURAL_MAX_OUTPUTS;
-        ASSERT(numNodes <= NEURAL_MAX_NODES);
-        fn.initialize(NEURAL_MAX_INPUTS, NEURAL_MAX_OUTPUTS, numNodes);
+        fn.initialize(NEURAL_MAX_INPUTS, NEURAL_MAX_OUTPUTS, NEURAL_MAX_NODES);
         fn.loadZeroNet();
     }
 
     fn.mutate(rate, NEURAL_MAX_NODE_DEGREE, NEURAL_MAX_NODES);
     fn.save(mreg, "floatNet.");
 
-    // XXX: resize inputs/outputs
     for (uint i = 0; i < fn.getNumInputs(); i++) {
         NeuralValueDesc desc;
         char *str = NULL;
