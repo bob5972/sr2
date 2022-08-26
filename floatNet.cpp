@@ -250,7 +250,7 @@ uint FloatNet::minimize(CPBitVector *inputBV)
                  * Treat already zeroed nodes as "referenced" for now,
                  * because we don't need to zero them again.
                  */
-                bv.set(i);
+                bv.set(i + myNumInputs);
             } else {
                 activeCount++;
                 for (uint in = 0; in < n->inputs.size(); in++) {
