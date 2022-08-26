@@ -276,8 +276,6 @@ void MainConstructScenario(void)
         maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationNewIterations"));
         maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationStaleIterations"));
         mainData.maxBscs = p * p * maxItCount + 1;
-        Warning("%s:%d p=%d, maxItCount=%d, maxBscs=%d\n", __FUNCTION__, __LINE__,
-                p, maxItCount, mainData.maxBscs);//XXX bob5972
         ASSERT(mainData.maxBscs > p);
         ASSERT(mainData.maxBscs > p * p);
         ASSERT(mainData.maxBscs > maxItCount);
@@ -384,8 +382,8 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[*tpIndex].aiType = FLEET_AI_BUNDLE6;
-        targetPlayers[*tpIndex].playerName = "BundleFleet6.Test";
+        targetPlayers[*tpIndex].aiType = FLEET_AI_NEURAL1;
+        targetPlayers[*tpIndex].playerName = "NeuralFleet1.Test";
 
         // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
