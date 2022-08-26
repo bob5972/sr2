@@ -231,6 +231,7 @@ uint FloatNet::minimize(CPBitVector *inputBV)
     CPBitVector bv;
     bool keepGoing = TRUE;
     uint activeCount;
+    uint iterations = 0;
 
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].minimize();
@@ -268,6 +269,9 @@ uint FloatNet::minimize(CPBitVector *inputBV)
                 keepGoing = TRUE;
             }
         }
+
+        VERIFY(iterations < 1 + myNumInputs + myNodes.size());
+        iterations++;
     }
 
     if (inputBV != NULL) {
