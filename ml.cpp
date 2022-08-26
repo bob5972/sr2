@@ -486,7 +486,18 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 void MLFloatNode::mutate(float rate,
                          uint maxInputs, uint maxParams)
 {
-    if (!Random_Flip((1.0f + rate) / 2.0f)) {
+    MutationFloatParams mp;
+
+    /*
+     * Mutate the mutationRate itself with a base probability.
+     */
+    Mutate_DefaultFloatParams(&mp, MUTATION_TYPE_PROBABILITY);
+    mp.mutationRate = (mp.mutationRate + rate) / 2.0f;
+    mp.minValue = 0.0f;
+    mp.maxValue = 1.0f;
+    mutationRate = Mutate_FloatRaw(mutationRate, FALSE, &mp);
+
+    if (!Random_Flip(mutationRate)) {
         return;
     }
 
@@ -523,7 +534,6 @@ void MLFloatNode::mutate(float rate,
     }
 
     for (uint i = 0; i < params.size(); i++) {
-        MutationFloatParams mp;
         int r = Random_Int(0, MUTATION_TYPE_MAX - 1);
         Mutate_DefaultFloatParams(&mp, (MutationType)r);
         mp.mutationRate = (mp.mutationRate + rate) / 2.0f;
@@ -554,6 +564,10 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     p += "params";
     str = MBRegistry_GetCStr(mreg, p.CStr());
     TextDump_Convert(str, params);
+
+    p = prefix;
+    p += "mutationRate";
+    mutationRate = MBRegistry_GetFloat(mreg, p.CStr());
 }
 
 
@@ -561,6 +575,8 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
     MBString str;
+    char *cs;
+    int ret;
 
     p = prefix;
     p += "op";
@@ -575,6 +591,13 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
     p += "params";
     TextDump_Convert(params, str);
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
+
+    p = prefix;
+    p += "mutationRate";
+    ret = asprintf(&cs, "%f", mutationRate);
+    VERIFY(ret > 0);
+    MBRegistry_PutCopy(mreg, p.CStr(), cs);
+    free(cs);
 }
 
 void MLFloatNode::minimize()

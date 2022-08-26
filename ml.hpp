@@ -105,6 +105,7 @@ class MLFloatNode {
         MLFloatOp op;
         MBVector<float> params;
         MBVector<uint> inputs;
+        float mutationRate;
 
         float compute(const MBVector<float> &values);
 
