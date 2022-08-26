@@ -89,6 +89,8 @@ typedef enum MLFloatOp {
     ML_FOP_NxN_LINEAR_COMBINATION,
     ML_FOP_NxN_SCALED_MIN,
     ML_FOP_NxN_SCALED_MAX,
+    ML_FOP_NxN_SELECT_GTE,
+    ML_FOP_NxN_SELECT_LTE,
 
     ML_FOP_MAX,
 } MLFloatOp;

@@ -83,6 +83,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_SCALED_MIN), },
     { TMENTRY(ML_FOP_NxN_SCALED_MAX), },
+    { TMENTRY(ML_FOP_NxN_SELECT_GTE), },
+    { TMENTRY(ML_FOP_NxN_SELECT_LTE), },
 };
 
 float MLFloatCheck1x1(MLFloatOp op, float input,
@@ -178,7 +180,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 52);
+    ASSERT(ML_FOP_MAX == 54);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -452,6 +454,26 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             }
             return f;
         }
+        case ML_FOP_NxN_SELECT_GTE: {
+            float f = getInput(0);
+
+            for (uint i = 1; i < inputs.size(); i++) {
+                if (f >= getParam(i)) {
+                    return getInput(i);
+                }
+            }
+            return 0.0;
+        }
+        case ML_FOP_NxN_SELECT_LTE: {
+            float f = getInput(0);
+
+            for (uint i = 1; i < inputs.size(); i++) {
+                if (f <= getParam(i)) {
+                    return getInput(i);
+                }
+            }
+            return 0.0;
+        }
 
         case ML_FOP_INVALID:
             PANIC("Unhandled MLFloatOp: ML_FOP_INVALID\n");
@@ -561,7 +583,7 @@ void MLFloatNode::minimize()
     uint numParams = 0;
 
     //Warning("ML_FOP_MAX=%d\n", ML_FOP_MAX);
-    ASSERT(ML_FOP_MAX == 52);
+    ASSERT(ML_FOP_MAX == 54);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -651,6 +673,8 @@ void MLFloatNode::minimize()
         case ML_FOP_NxN_LINEAR_COMBINATION:
         case ML_FOP_NxN_SCALED_MIN:
         case ML_FOP_NxN_SCALED_MAX:
+        case ML_FOP_NxN_SELECT_GTE:
+        case ML_FOP_NxN_SELECT_LTE:
             numInputs = MIN(inputs.size(), params.size());
             numInputs = MAX(1, numInputs);
             numParams = numInputs;
