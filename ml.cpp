@@ -54,14 +54,24 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x1_QUADRATIC_DOWN), },
     { TMENTRY(ML_FOP_1x1_FMOD), },
     { TMENTRY(ML_FOP_1x1_POW), },
+    { TMENTRY(ML_FOP_1x1_GTE), },
+    { TMENTRY(ML_FOP_1x1_LTE), },
 
     { TMENTRY(ML_FOP_1x2_CLAMP), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
     { TMENTRY(ML_FOP_1x2_SINE), },
     { TMENTRY(ML_FOP_1x2_COSINE), },
+    { TMENTRY(ML_FOP_1x2_INSIDE_RANGE), },
+    { TMENTRY(ML_FOP_1x2_OUTSIDE_RANGE), },
+
+    { TMENTRY(ML_FOP_1x3_IF_GTE_ELSE), },
+    { TMENTRY(ML_FOP_1x3_IF_LTE_ELSE), },
 
     { TMENTRY(ML_FOP_2x0_POW), },
+
+    { TMENTRY(ML_FOP_4x0_IF_GTE_ELSE), },
+    { TMENTRY(ML_FOP_4x0_IF_LTE_ELSE), },
 
     { TMENTRY(ML_FOP_Nx0_SUM), },
     { TMENTRY(ML_FOP_Nx0_PRODUCT), },
@@ -168,7 +178,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 44);
+    ASSERT(ML_FOP_MAX == 52);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -243,6 +253,11 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         case ML_FOP_1x1_POW:
             return powf(getInput(0), getParam(0));
 
+        case ML_FOP_1x1_GTE:
+            return getInput(0) >= getParam(0) ? 1.0f : 0.0f;
+        case ML_FOP_1x1_LTE:
+            return getInput(0) <= getParam(0) ? 1.0f : 0.0f;
+
         case ML_FOP_1x2_CLAMP: {
             float f = getInput(0);
             float min = getParam(0);
@@ -291,8 +306,56 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return cosf(t/p + s);
         }
 
+        case ML_FOP_1x2_INSIDE_RANGE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            return (f >= min && f <= max) ? 1.0f : 0.0f;
+        }
+        case ML_FOP_1x2_OUTSIDE_RANGE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            return (f <= min || f >= max) ? 1.0f : 0.0f;
+        }
+
+        case ML_FOP_1x3_IF_GTE_ELSE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return f >= p0 ? p1 : p2;
+        }
+        case ML_FOP_1x3_IF_LTE_ELSE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return f <= p0 ? p1 : p2;
+        }
+
+
         case ML_FOP_2x0_POW:
             return powf(getInput(0), getInput(1));
+
+        case ML_FOP_4x0_IF_GTE_ELSE: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float i2 = getInput(2);
+            float i3 = getInput(3);
+            return i0 >= i1 ? i2 : i3;
+        }
+        case ML_FOP_4x0_IF_LTE_ELSE: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float i2 = getInput(2);
+            float i3 = getInput(3);
+            return i0 <= i1 ? i2 : i3;
+        }
 
         case ML_FOP_Nx0_SUM: {
             float f = 0.0;
@@ -497,7 +560,8 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    ASSERT(ML_FOP_MAX == 44);
+    //Warning("ML_FOP_MAX=%d\n", ML_FOP_MAX);
+    ASSERT(ML_FOP_MAX == 52);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -540,6 +604,8 @@ void MLFloatNode::minimize()
         case ML_FOP_1x1_QUADRATIC_DOWN:
         case ML_FOP_1x1_FMOD:
         case ML_FOP_1x1_POW:
+        case ML_FOP_1x1_GTE:
+        case ML_FOP_1x1_LTE:
             numInputs = 1;
             numParams = 1;
             break;
@@ -549,12 +615,26 @@ void MLFloatNode::minimize()
         case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT:
         case ML_FOP_1x2_SINE:
         case ML_FOP_1x2_COSINE:
+        case ML_FOP_1x2_INSIDE_RANGE:
+        case ML_FOP_1x2_OUTSIDE_RANGE:
             numInputs = 1;
             numParams = 2;
             break;
 
+        case ML_FOP_1x3_IF_GTE_ELSE:
+        case ML_FOP_1x3_IF_LTE_ELSE:
+            numInputs = 1;
+            numParams = 3;
+            break;
+
         case ML_FOP_2x0_POW:
             numInputs = 2;
+            numParams = 0;
+            break;
+
+        case ML_FOP_4x0_IF_GTE_ELSE:
+        case ML_FOP_4x0_IF_LTE_ELSE:
+            numInputs = 4;
             numParams = 0;
             break;
 

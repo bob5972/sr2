@@ -331,7 +331,7 @@ public:
             case NEURAL_VALUE_CROWD:
                 return getCrowdValue(mob, &desc->crowdDesc);
             case NEURAL_VALUE_TICK:
-                return myFleetAI->tick;
+                return (float)myFleetAI->tick;
             case NEURAL_VALUE_MOBID: {
                 RandomState lr;
                 RandomState_CreateWithSeed(&lr, mob->mobid);
