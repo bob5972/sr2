@@ -491,7 +491,8 @@ public:
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
-        if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs")) {
+        if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs") &&
+            MBRegistry_GetUint(mreg, "floatNet.numInputs") > 0) {
             myNeuralNet.load(mreg, "floatNet.");
         } else {
             myNeuralNet.initialize(1, 1, 1);
