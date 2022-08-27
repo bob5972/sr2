@@ -1446,6 +1446,7 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_BUNDLE12,    0xF000F0, }, // DARK PURPLE
         { FLEET_AI_BUNDLE13,    0xF0F020, },
         { FLEET_AI_BUNDLE14,    0xF88144, }, // PURPLE
+        { FLEET_AI_NEURAL1,     0x4488FF, }, // GRAYISH-BLUE
     };
 
     ASSERT(repeatCount > 0);
