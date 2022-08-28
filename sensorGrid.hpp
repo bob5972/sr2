@@ -269,13 +269,20 @@ public:
         return myTargetLastSeenMap.get(mobid);
     }
 
-    void friendAvgFlock(FPoint *avgVel, FPoint *avgPos,
-                        const FPoint *p, float radius,
-                        MobTypeFlags filter) {
+    void avgFlock(FPoint *avgVel, FPoint *avgPos,
+                  const FPoint *p, float radius,
+                  MobTypeFlags filter,
+                  bool useFriends) {
         uint n = 0;
-        MobSet::MobIt mit = myFriends.iterator(filter);
+        MobSet::MobIt mit;
         FPoint lAvgVel;
         FPoint lAvgPos;
+
+        if (useFriends) {
+            mit = myFriends.iterator(filter);
+        } else {
+            mit = myTargets.iterator(filter);
+        }
 
         lAvgVel.x = 0.0f;
         lAvgVel.y = 0.0f;
@@ -315,12 +322,22 @@ public:
 
     void friendAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
                            MobTypeFlags filter) {
-        friendAvgFlock(avgVel, NULL, p, radius, filter);
+        avgFlock(avgVel, NULL, p, radius, filter, TRUE);
     }
 
     void friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
-        friendAvgFlock(NULL, avgPos, p, radius, filter);
+        avgFlock(NULL, avgPos, p, radius, filter, TRUE);
+    }
+
+    void targetAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
+                           MobTypeFlags filter) {
+        avgFlock(avgVel, NULL, p, radius, filter, FALSE);
+    }
+
+    void targetAvgPos(FPoint *avgPos, const FPoint *p, float radius,
+                      MobTypeFlags filter) {
+        avgFlock(NULL, avgPos, p, radius, filter, FALSE);
     }
 
 private:

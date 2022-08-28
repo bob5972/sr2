@@ -48,6 +48,7 @@ typedef enum MobType {
     MOB_TYPE_MAX,
 } MobType;
 
+#define MOB_FLAG_NONE     0
 #define MOB_FLAG_BASE     (1 << MOB_TYPE_BASE)
 #define MOB_FLAG_FIGHTER  (1 << MOB_TYPE_FIGHTER)
 #define MOB_FLAG_MISSILE  (1 << MOB_TYPE_MISSILE)

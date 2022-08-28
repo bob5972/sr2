@@ -140,6 +140,13 @@ public:
 
     class MobIt {
     public:
+        MobIt() {
+            myMobSet = NULL;
+            myFilter = MOB_FLAG_NONE;
+            i = 0;
+            numReturned = 0;
+            myLastMobid = MOB_ID_INVALID;
+        }
         MobIt(MobSet *ms, MobTypeFlags filter) {
             myMobSet = ms;
             i = 0;

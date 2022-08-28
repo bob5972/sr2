@@ -1106,8 +1106,8 @@ public:
             if (doFlock) {
                 FPoint avgVel;
                 FPoint avgPos;
-                sg->friendAvgFlock(&avgVel, &avgPos, &mob->pos,
-                                   myConfig.flockRadius, MOB_FLAG_FIGHTER);
+                sg->avgFlock(&avgVel, &avgPos, &mob->pos,
+                             myConfig.flockRadius, MOB_FLAG_FIGHTER, TRUE);
                 flockAlign(&avgVel, &rForce);
                 flockCohere(mob, &avgPos, &rForce);
 

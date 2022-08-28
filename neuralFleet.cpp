@@ -57,6 +57,8 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_ENEMY_MISSILE,
     NEURAL_FORCE_ENEMY_BASE,
     NEURAL_FORCE_ENEMY_BASE_GUESS,
+    NEURAL_FORCE_ENEMY_ALIGN,
+    NEURAL_FORCE_ENEMY_COHERE,
     NEURAL_FORCE_CORES,
 
     NEURAL_FORCE_MAX,
@@ -80,6 +82,8 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE),               },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),         },
     { TMENTRY(NEURAL_FORCE_CORES),                    },
+    { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),              },
+    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),             },
 };
 
 typedef struct NeuralForceDesc {
@@ -1300,10 +1304,26 @@ public:
                 *focusPoint = avgVel;
                 return TRUE;
             }
+            case NEURAL_FORCE_ENEMY_ALIGN: {
+                FPoint avgVel;
+                sg->targetAvgVelocity(&avgVel, &mob->pos, desc->radius,
+                                      MOB_FLAG_FIGHTER);
+                avgVel.x += mob->pos.x;
+                avgVel.y += mob->pos.y;
+                *focusPoint = avgVel;
+                return TRUE;
+            }
             case NEURAL_FORCE_COHERE: {
                 FPoint avgPos;
                 sg->friendAvgPos(&avgPos, &mob->pos, desc->radius,
                                  MOB_FLAG_FIGHTER);
+                *focusPoint = avgPos;
+                return TRUE;
+            }
+            case NEURAL_FORCE_ENEMY_COHERE: {
+                FPoint avgPos;
+                sg->targetAvgPos(&avgPos, &mob->pos, desc->radius,
+                                 MOB_FLAG_SHIP);
                 *focusPoint = avgPos;
                 return TRUE;
             }
