@@ -94,6 +94,8 @@ typedef enum NeuralCrowdType {
     NEURAL_CROWD_ENEMY_SHIP,
     NEURAL_CROWD_ENEMY_MISSILE,
     NEURAL_CROWD_CORES,
+    NEURAL_CROWD_BASE_ENEMY_SHIP,
+    NEURAL_CROWD_BASE_FRIEND_SHIP,
 } NeuralCrowdType;
 
 static TextMapEntry tmCrowds[] = {
@@ -102,6 +104,8 @@ static TextMapEntry tmCrowds[] = {
     { TMENTRY(NEURAL_CROWD_ENEMY_SHIP),            },
     { TMENTRY(NEURAL_CROWD_ENEMY_MISSILE),         },
     { TMENTRY(NEURAL_CROWD_CORES),                 },
+    { TMENTRY(NEURAL_CROWD_BASE_ENEMY_SHIP),       },
+    { TMENTRY(NEURAL_CROWD_BASE_FRIEND_SHIP),       },
 };
 
 typedef struct NeuralCrowdDesc {
@@ -1498,9 +1502,25 @@ public:
         } else if  (desc->crowdType == NEURAL_CROWD_FRIEND_MISSILE) {
             return sg->numFriendsInRange(MOB_FLAG_MISSILE,
                                          &mob->pos, desc->radius);
-        } else {
+        } else if (desc->crowdType == NEURAL_CROWD_ENEMY_MISSILE) {
             return sg->numTargetsInRange(MOB_FLAG_MISSILE,
                                          &mob->pos, desc->radius);
+        } else if (desc->crowdType == NEURAL_CROWD_BASE_ENEMY_SHIP) {
+            Mob *base = sg->friendBase();
+            if (base != NULL) {
+                return sg->numTargetsInRange(MOB_FLAG_SHIP,
+                                             &base->pos, desc->radius);
+            }
+            return 0.0f;
+        } else if (desc->crowdType == NEURAL_CROWD_BASE_FRIEND_SHIP) {
+            Mob *base = sg->friendBase();
+            if (base != NULL) {
+                return sg->numFriendsInRange(MOB_FLAG_SHIP,
+                                             &base->pos, desc->radius);
+            }
+            return 0.0f;
+        } else {
+            NOT_IMPLEMENTED();
         }
     }
 
