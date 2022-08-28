@@ -1103,6 +1103,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
 
         case FLEET_AI_NEURAL1:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE);
+        case FLEET_AI_NEURAL2:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE);
 
         default:
             return SPRITE_INVALID;
@@ -1447,6 +1449,7 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_BUNDLE13,    0xF0F020, },
         { FLEET_AI_BUNDLE14,    0xF88144, }, // PURPLE
         { FLEET_AI_NEURAL1,     0x4488FF, }, // GRAYISH-BLUE
+        { FLEET_AI_NEURAL2,     0xFF883F, },
     };
 
     ASSERT(repeatCount > 0);
