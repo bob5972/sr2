@@ -290,11 +290,11 @@ public:
         lAvgPos.x = 0.0f;
         lAvgPos.y = 0.0f;
 
-        while (mit.hasNext()) {
+        while (radius > 0.0f && mit.hasNext()) {
             Mob *f = mit.next();
             ASSERT(f != NULL);
 
-            if (FPoint_Distance(&f->pos, p) <= radius) {
+            if (FPoint_DistanceSquared(&f->pos, p) <= radius * radius) {
                 n++;
                 lAvgVel.x += (f->pos.x - f->lastPos.x);
                 lAvgVel.y += (f->pos.y - f->lastPos.y);

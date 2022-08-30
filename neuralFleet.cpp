@@ -1510,6 +1510,11 @@ public:
     float getCrowdValue(Mob *mob, NeuralCrowdDesc *desc) {
         //XXX cache?
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
+
+        if (desc->radius <= 0.0f) {
+            return 0.0f;
+        }
+
         if (desc->crowdType == NEURAL_CROWD_FRIEND_FIGHTER) {
             return sg->numFriendsInRange(MOB_FLAG_FIGHTER,
                                          &mob->pos, desc->radius);
