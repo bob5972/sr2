@@ -803,13 +803,14 @@ void MLFloatNode::minimize()
         case ML_FOP_NxN_SCALED_MAX:
         case ML_FOP_NxN_SELECT_GTE:
         case ML_FOP_NxN_SELECT_LTE:
+        case ML_FOP_NxN_POW_SUM:
             numInputs = MIN(inputs.size(), params.size());
             numInputs = MAX(1, numInputs);
             numParams = numInputs;
             break;
 
         default:
-            NOT_IMPLEMENTED();
+            PANIC("Unknown MLFloatOp: %d\n", op);
     }
 
     if (numInputs > inputs.size() ||
