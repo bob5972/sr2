@@ -78,6 +78,7 @@ typedef enum MLFloatOp {
 
     ML_FOP_2x0_POW,
     ML_FOP_2x0_SUM,
+    ML_FOP_2x0_SQUARE_SUM,
     ML_FOP_2x0_PRODUCT,
 
     ML_FOP_2x2_LINEAR_COMBINATION,
@@ -101,6 +102,7 @@ typedef enum MLFloatOp {
     ML_FOP_NxN_SCALED_MAX,
     ML_FOP_NxN_SELECT_GTE,
     ML_FOP_NxN_SELECT_LTE,
+    ML_FOP_NxN_POW_SUM,
 
     ML_FOP_MAX,
 } MLFloatOp;

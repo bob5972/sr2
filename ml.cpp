@@ -71,6 +71,7 @@ static TextMapEntry tmMLFloatOps[] = {
 
     { TMENTRY(ML_FOP_2x0_POW), },
     { TMENTRY(ML_FOP_2x0_SUM), },
+    { TMENTRY(ML_FOP_2x0_SQUARE_SUM), },
     { TMENTRY(ML_FOP_2x0_PRODUCT), },
 
     { TMENTRY(ML_FOP_4x0_IF_GTE_ELSE), },
@@ -88,6 +89,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_SCALED_MAX), },
     { TMENTRY(ML_FOP_NxN_SELECT_GTE), },
     { TMENTRY(ML_FOP_NxN_SELECT_LTE), },
+    { TMENTRY(ML_FOP_NxN_POW_SUM), },
 };
 
 float MLFloatCheck1x1(MLFloatOp op, float input,
@@ -183,7 +185,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 61);
+    ASSERT(ML_FOP_MAX == 63);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -362,6 +364,11 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return powf(getInput(0), getInput(1));
         case ML_FOP_2x0_SUM:
             return getInput(0) + getInput(1);
+        case ML_FOP_2x0_SQUARE_SUM: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            return (i0 * i0) + (i1 * i1);
+        }
         case ML_FOP_2x0_PRODUCT:
             return getInput(0) * getInput(1);
 
@@ -510,6 +517,14 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
                 }
             }
             return 0.0;
+        }
+        case ML_FOP_NxN_POW_SUM: {
+            float f = 0.0;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += powf(getInput(i), getParam(0));
+            }
+            return f;
         }
 
         case ML_FOP_INVALID:
@@ -672,7 +687,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 61) {
+    if (mb_debug && ML_FOP_MAX != 63) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
