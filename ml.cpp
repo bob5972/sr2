@@ -64,6 +64,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x2_COSINE), },
     { TMENTRY(ML_FOP_1x2_INSIDE_RANGE), },
     { TMENTRY(ML_FOP_1x2_OUTSIDE_RANGE), },
+    { TMENTRY(ML_FOP_1x2_SEEDED_RANDOM), },
 
     { TMENTRY(ML_FOP_1x3_IF_GTE_ELSE), },
     { TMENTRY(ML_FOP_1x3_IF_LTE_ELSE), },
@@ -180,7 +181,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 54);
+    ASSERT(ML_FOP_MAX == 59);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -324,6 +325,20 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float min = MIN(p0, p1);
             return (f <= min || f >= max) ? 1.0f : 0.0f;
         }
+        case ML_FOP_1x2_SEEDED_RANDOM: {
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            RandomState lr;
+            union {
+                float f;
+                uint32 u;
+            } value;
+            value.f = getInput(0);
+            RandomState_CreateWithSeed(&lr, value.u);
+            return RandomState_Float(&lr, min, max);
+        }
 
         case ML_FOP_1x3_IF_GTE_ELSE: {
             float f = getInput(0);
@@ -423,10 +438,26 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return f;
         }
 
+        case ML_FOP_1x1_LINEAR_COMBINATION:
+        case ML_FOP_2x2_LINEAR_COMBINATION:
+        case ML_FOP_3x3_LINEAR_COMBINATION:
+        case ML_FOP_4x4_LINEAR_COMBINATION:
         case ML_FOP_NxN_LINEAR_COMBINATION: {
-        float f = 0.0;
+            float f = 0.0;
+            uint size = inputs.size();
 
-            for (uint i = 0; i < inputs.size(); i++) {
+            // These ASSERTs should be true as long as the node was minimized.
+            if (op == ML_FOP_1x1_LINEAR_COMBINATION) {
+                ASSERT(size == 1);
+            } else if (op == ML_FOP_2x2_LINEAR_COMBINATION) {
+                ASSERT(size == 2);
+            } else if (op == ML_FOP_3x3_LINEAR_COMBINATION) {
+                ASSERT(size == 3);
+            } else if (op == ML_FOP_4x4_LINEAR_COMBINATION) {
+                ASSERT(size == 4);
+            }
+
+            for (uint i = 0; i < size; i++) {
                 f += getParam(i) * getInput(i);
             }
             return f;
@@ -635,7 +666,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 54) {
+    if (mb_debug && ML_FOP_MAX != 59) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -682,6 +713,7 @@ void MLFloatNode::minimize()
         case ML_FOP_1x1_POW:
         case ML_FOP_1x1_GTE:
         case ML_FOP_1x1_LTE:
+        case ML_FOP_1x1_LINEAR_COMBINATION:
             numInputs = 1;
             numParams = 1;
             break;
@@ -708,10 +740,25 @@ void MLFloatNode::minimize()
             numParams = 0;
             break;
 
+        case ML_FOP_2x2_LINEAR_COMBINATION:
+            numInputs = 2;
+            numParams = 2;
+            break;
+
+        case ML_FOP_3x3_LINEAR_COMBINATION:
+            numInputs = 3;
+            numParams = 3;
+            break;
+
         case ML_FOP_4x0_IF_GTE_ELSE:
         case ML_FOP_4x0_IF_LTE_ELSE:
             numInputs = 4;
             numParams = 0;
+            break;
+
+        case ML_FOP_4x4_LINEAR_COMBINATION:
+            numInputs = 4;
+            numParams = 4;
             break;
 
         case ML_FOP_Nx0_SUM:
