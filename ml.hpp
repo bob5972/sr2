@@ -77,6 +77,8 @@ typedef enum MLFloatOp {
     ML_FOP_1x3_IF_LTE_ELSE,
 
     ML_FOP_2x0_POW,
+    ML_FOP_2x0_SUM,
+    ML_FOP_2x0_PRODUCT,
 
     ML_FOP_2x2_LINEAR_COMBINATION,
 
