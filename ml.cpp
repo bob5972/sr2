@@ -537,7 +537,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             PANIC("Unhandled MLFloatOp: ML_FOP_INVALID\n");
 
         default:
-            PANIC("Unknown MLFloatOp: %d\n", op);
+            PANIC("Unknown MLFloatOp: %s(%d)\n", ML_FloatOpToString(op), op);
     }
 }
 
