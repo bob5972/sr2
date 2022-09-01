@@ -269,6 +269,12 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return floorf(getInput(0));
         case ML_FOP_1x0_ABS:
             return fabsf(getInput(0));
+        case ML_FOP_1x0_SIN:
+            return sinf(getInput(0));
+        case ML_FOP_1x0_COS:
+            return cosf(getInput(0));
+        case ML_FOP_1x0_TAN:
+            return tanf(getInput(0));
 
         case ML_FOP_1x1_STRICT_ON:
         case ML_FOP_1x1_STRICT_OFF:
