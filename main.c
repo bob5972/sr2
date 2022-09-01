@@ -39,6 +39,9 @@
 #include "mutate.h"
 #include "MBStrTable.h"
 
+// From ml.hpp
+extern void ML_UnitTest();
+
 typedef enum MainEngineWorkType {
     MAIN_WORK_INVALID = 0,
     MAIN_WORK_EXIT    = 1,
@@ -1272,6 +1275,7 @@ void MainUnitTests()
     Warning("Starting Unit Tests ...\n");
     MobPSet_UnitTest();
     Geometry_UnitTest();
+    ML_UnitTest();
     Warning("Done!\n");
 }
 

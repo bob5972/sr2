@@ -45,6 +45,9 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_CEIL), },
     { TMENTRY(ML_FOP_1x0_FLOOR), },
     { TMENTRY(ML_FOP_1x0_ABS), },
+    { TMENTRY(ML_FOP_1x0_SIN), },
+    { TMENTRY(ML_FOP_1x0_COS), },
+    { TMENTRY(ML_FOP_1x0_TAN), },
 
     { TMENTRY(ML_FOP_1x1_STRICT_ON), },
     { TMENTRY(ML_FOP_1x1_STRICT_OFF), },
@@ -69,7 +72,19 @@ static TextMapEntry tmMLFloatOps[] = {
 
     { TMENTRY(ML_FOP_1x3_IF_GTE_ELSE), },
     { TMENTRY(ML_FOP_1x3_IF_LTE_ELSE), },
+    { TMENTRY(ML_FOP_1x3_SQUARE), },
+    { TMENTRY(ML_FOP_1x3_SQRT), },
+    { TMENTRY(ML_FOP_1x3_ARC_SINE), },
+    { TMENTRY(ML_FOP_1x3_ARC_TANGENT), },
+    { TMENTRY(ML_FOP_1x3_ARC_COSINE), },
+    { TMENTRY(ML_FOP_1x3_HYP_COSINE), },
+    { TMENTRY(ML_FOP_1x3_HYP_SINE), },
+    { TMENTRY(ML_FOP_1x3_HYP_TANGENT), },
+    { TMENTRY(ML_FOP_1x3_EXP), },
     { TMENTRY(ML_FOP_1x3_LN), },
+    { TMENTRY(ML_FOP_1x3_SIN), },
+    { TMENTRY(ML_FOP_1x3_COS), },
+    { TMENTRY(ML_FOP_1x3_TAN), },
 
     { TMENTRY(ML_FOP_2x0_POW), },
     { TMENTRY(ML_FOP_2x0_SUM), },
@@ -192,7 +207,9 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 73);
+    if (mb_debug && ML_FOP_MAX != 79) {
+        PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
+    }
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -435,6 +452,27 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float p1 = getParam(1);
             float p2 = getParam(2);
             return p0 * logf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_SIN: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * sinf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_COS: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * cosf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_TAN: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * tanf(p1 * (f + p2));
         }
 
         case ML_FOP_2x0_POW:
@@ -764,7 +802,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 73) {
+    if (mb_debug && ML_FOP_MAX != 79) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -797,6 +835,9 @@ void MLFloatNode::minimize()
         case ML_FOP_1x0_CEIL:
         case ML_FOP_1x0_FLOOR:
         case ML_FOP_1x0_ABS:
+        case ML_FOP_1x0_SIN:
+        case ML_FOP_1x0_COS:
+        case ML_FOP_1x0_TAN:
             numInputs = 1;
             numParams = 0;
             break;
@@ -840,6 +881,9 @@ void MLFloatNode::minimize()
         case ML_FOP_1x3_HYP_TANGENT:
         case ML_FOP_1x3_EXP:
         case ML_FOP_1x3_LN:
+        case ML_FOP_1x3_SIN:
+        case ML_FOP_1x3_COS:
+        case ML_FOP_1x3_TAN:
             numInputs = 1;
             numParams = 3;
             break;
@@ -935,4 +979,13 @@ MLFloatOp ML_StringToFloatOp(const char *opstr)
     }
 
     return (MLFloatOp)TextMap_FromString(opstr, tmMLFloatOps, ARRAYSIZE(tmMLFloatOps));
+}
+
+void ML_UnitTest()
+{
+    MLFloatOp op;
+
+    for (op = ML_FOP_INVALID; op < ML_FOP_MAX; op++) {
+        VERIFY(ML_StringToFloatOp(ML_FloatOpToString(op)) == op);
+    }
 }

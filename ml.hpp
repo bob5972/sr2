@@ -51,6 +51,9 @@ typedef enum MLFloatOp {
     ML_FOP_1x0_CEIL,
     ML_FOP_1x0_FLOOR,
     ML_FOP_1x0_ABS,
+    ML_FOP_1x0_SIN,
+    ML_FOP_1x0_COS,
+    ML_FOP_1x0_TAN,
 
     ML_FOP_1x1_STRICT_ON,
     ML_FOP_1x1_STRICT_OFF,
@@ -85,6 +88,9 @@ typedef enum MLFloatOp {
     ML_FOP_1x3_HYP_TANGENT,
     ML_FOP_1x3_EXP,
     ML_FOP_1x3_LN,
+    ML_FOP_1x3_SIN,
+    ML_FOP_1x3_COS,
+    ML_FOP_1x3_TAN,
 
     ML_FOP_2x0_POW,
     ML_FOP_2x0_SUM,
@@ -116,6 +122,18 @@ typedef enum MLFloatOp {
 
     ML_FOP_MAX,
 } MLFloatOp;
+
+static INLINE MLFloatOp& operator++(MLFloatOp &op)
+{
+    int i = static_cast<int>(op);
+    return op = static_cast<MLFloatOp>(++i);
+}
+
+static INLINE MLFloatOp operator++(MLFloatOp &op, int) {
+    MLFloatOp tmp(op);
+    ++op;
+    return tmp;
+}
 
 class MLFloatNode {
     public:
@@ -160,5 +178,9 @@ class MLFloatNode {
 
 const char *ML_FloatOpToString(MLFloatOp op);
 MLFloatOp ML_StringToFloatOp(const char *opstr);
+
+extern "C" {
+void ML_UnitTest();
+};
 
 #endif // _ML_H_202208151722
