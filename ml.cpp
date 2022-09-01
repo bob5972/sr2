@@ -813,7 +813,7 @@ void MLFloatNode::minimize()
             break;
 
         default:
-            PANIC("Unknown MLFloatOp: %s(%d)\n", op, ML_FloatOpToString(op));
+            PANIC("Unknown MLFloatOp: %s(%d)\n", ML_FloatOpToString(op), op);
     }
 
     if (numInputs > inputs.size() ||
