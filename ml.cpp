@@ -752,6 +752,7 @@ void MLFloatNode::minimize()
         case ML_FOP_1x2_COSINE:
         case ML_FOP_1x2_INSIDE_RANGE:
         case ML_FOP_1x2_OUTSIDE_RANGE:
+        case ML_FOP_1x2_SEEDED_RANDOM:
             numInputs = 1;
             numParams = 2;
             break;
