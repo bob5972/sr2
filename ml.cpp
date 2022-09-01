@@ -763,6 +763,9 @@ void MLFloatNode::minimize()
             break;
 
         case ML_FOP_2x0_POW:
+        case ML_FOP_2x0_SUM:
+        case ML_FOP_2x0_SQUARE_SUM:
+        case ML_FOP_2x0_PRODUCT:
             numInputs = 2;
             numParams = 0;
             break;
