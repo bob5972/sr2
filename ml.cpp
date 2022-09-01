@@ -192,7 +192,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 64);
+    ASSERT(ML_FOP_MAX == 73);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -365,6 +365,70 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float p2 = getParam(2);
             return f <= p0 ? p1 : p2;
         }
+        case ML_FOP_1x3_SQUARE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            float s = (p1 * (f + p2));
+            return p0 * s * s;
+        }
+        case ML_FOP_1x3_SQRT: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * sqrtf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_ARC_SINE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * asinf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_ARC_TANGENT: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * atanf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_ARC_COSINE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * acosf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_HYP_COSINE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * coshf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_HYP_SINE: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * sinhf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_HYP_TANGENT: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * tanhf(p1 * (f + p2));
+        }
+        case ML_FOP_1x3_EXP: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * expf(p1 * (f + p2));
+        }
         case ML_FOP_1x3_LN: {
             float f = getInput(0);
             float p0 = getParam(0);
@@ -372,7 +436,6 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float p2 = getParam(2);
             return p0 * logf(p1 * (f + p2));
         }
-
 
         case ML_FOP_2x0_POW:
             return powf(getInput(0), getInput(1));
@@ -701,7 +764,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 64) {
+    if (mb_debug && ML_FOP_MAX != 73) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -767,6 +830,15 @@ void MLFloatNode::minimize()
 
         case ML_FOP_1x3_IF_GTE_ELSE:
         case ML_FOP_1x3_IF_LTE_ELSE:
+        case ML_FOP_1x3_SQUARE:
+        case ML_FOP_1x3_SQRT:
+        case ML_FOP_1x3_ARC_SINE:
+        case ML_FOP_1x3_ARC_TANGENT:
+        case ML_FOP_1x3_ARC_COSINE:
+        case ML_FOP_1x3_HYP_COSINE:
+        case ML_FOP_1x3_HYP_SINE:
+        case ML_FOP_1x3_HYP_TANGENT:
+        case ML_FOP_1x3_EXP:
         case ML_FOP_1x3_LN:
             numInputs = 1;
             numParams = 3;

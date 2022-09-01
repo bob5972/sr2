@@ -75,6 +75,15 @@ typedef enum MLFloatOp {
 
     ML_FOP_1x3_IF_GTE_ELSE,
     ML_FOP_1x3_IF_LTE_ELSE,
+    ML_FOP_1x3_SQUARE,
+    ML_FOP_1x3_SQRT,
+    ML_FOP_1x3_ARC_SINE,
+    ML_FOP_1x3_ARC_TANGENT,
+    ML_FOP_1x3_ARC_COSINE,
+    ML_FOP_1x3_HYP_COSINE,
+    ML_FOP_1x3_HYP_SINE,
+    ML_FOP_1x3_HYP_TANGENT,
+    ML_FOP_1x3_EXP,
     ML_FOP_1x3_LN,
 
     ML_FOP_2x0_POW,
