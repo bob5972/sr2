@@ -75,6 +75,7 @@ typedef enum MLFloatOp {
 
     ML_FOP_1x3_IF_GTE_ELSE,
     ML_FOP_1x3_IF_LTE_ELSE,
+    ML_FOP_1x3_LN,
 
     ML_FOP_2x0_POW,
     ML_FOP_2x0_SUM,

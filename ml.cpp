@@ -69,6 +69,7 @@ static TextMapEntry tmMLFloatOps[] = {
 
     { TMENTRY(ML_FOP_1x3_IF_GTE_ELSE), },
     { TMENTRY(ML_FOP_1x3_IF_LTE_ELSE), },
+    { TMENTRY(ML_FOP_1x3_LN), },
 
     { TMENTRY(ML_FOP_2x0_POW), },
     { TMENTRY(ML_FOP_2x0_SUM), },
@@ -191,7 +192,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    ASSERT(ML_FOP_MAX == 63);
+    ASSERT(ML_FOP_MAX == 64);
 
     switch (op) {
         case ML_FOP_0x0_ZERO:
@@ -363,6 +364,13 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float p1 = getParam(1);
             float p2 = getParam(2);
             return f <= p0 ? p1 : p2;
+        }
+        case ML_FOP_1x3_LN: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            return p0 * logf(p1 * (f + p2));
         }
 
 
@@ -693,7 +701,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 63) {
+    if (mb_debug && ML_FOP_MAX != 64) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -759,6 +767,7 @@ void MLFloatNode::minimize()
 
         case ML_FOP_1x3_IF_GTE_ELSE:
         case ML_FOP_1x3_IF_LTE_ELSE:
+        case ML_FOP_1x3_LN:
             numInputs = 1;
             numParams = 3;
             break;
