@@ -23,6 +23,12 @@
 #include "Random.h"
 #include "mutate.h"
 
+static INLINE float MLClampUnit(float x) {
+    return MAX(0.0f, MIN(1.0f, x));
+}
+#define CLAMP_UNIT(_x) (MLClampUnit(_x))
+
+
 static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_INVALID), },
     { TMENTRY(ML_FOP_0x0_ZERO), },
@@ -94,6 +100,9 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1xN_SELECT_UNIT_INTERVAL_STEP), },
     { TMENTRY(ML_FOP_1xN_SELECT_UNIT_INTERVAL_LERP), },
 
+    { TMENTRY(ML_FOP_1xN_POLYNOMIAL), },
+    { TMENTRY(ML_FOP_1xN_POLYNOMIAL_CLAMPED_UNIT), },
+
     { TMENTRY(ML_FOP_2x0_POW), },
     { TMENTRY(ML_FOP_2x0_SUM), },
     { TMENTRY(ML_FOP_2x0_SQUARE_SUM), },
@@ -132,6 +141,14 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP), },
 
     { TMENTRY(ML_FOP_Nx1_DIV_SUM), },
+
+    { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP), },
+    { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN), },
+    { TMENTRY(ML_FOP_Nx2_ACTIVATE_LINEAR_UP), },
+    { TMENTRY(ML_FOP_Nx2_ACTIVATE_LINEAR_DOWN), },
+    { TMENTRY(ML_FOP_Nx2_ACTIVATE_QUADRATIC_UP), },
+    { TMENTRY(ML_FOP_Nx2_ACTIVATE_QUADRATIC_DOWN), },
+    { TMENTRY(ML_FOP_NxN_ACTIVATE_POLYNOMIAL), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_SCALED_MIN), },
@@ -236,7 +253,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 101) {
+    if (mb_debug && ML_FOP_MAX != 110) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -307,7 +324,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         case ML_FOP_1x0_PROB_NOT:
             return (1.0f - getInput(0));
         case ML_FOP_1x0_CLAMP_UNIT:
-            return MAX(0.0f, MIN(1.0f, getInput(0)));
+            return CLAMP_UNIT(getInput(0));
 
         case ML_FOP_1x1_STRICT_ON:
         case ML_FOP_1x1_STRICT_OFF:
@@ -736,6 +753,99 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return c / f;
         }
 
+        case ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP: {
+            float f = 0.0f;
+            float t = getParam(0);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return f >= t ? 1.0f : 0.0f;
+        }
+        case ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN: {
+            float f = 0.0f;
+            float t = getParam(0);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return f >= t ? 0.0f : 1.0f;
+        }
+        case ML_FOP_Nx2_ACTIVATE_LINEAR_UP: {
+            float f = 0.0f;
+            float p0 = getParam(0);
+            float p1 = getParam(0);
+            float min = MIN(p0, p1);
+            float max = MAX(p0, p1);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float v = (f - min) / (max - min);
+            return CLAMP_UNIT(v);
+        }
+        case ML_FOP_Nx2_ACTIVATE_LINEAR_DOWN: {
+            float f = 0.0f;
+            float p0 = getParam(0);
+            float p1 = getParam(0);
+            float min = MIN(p0, p1);
+            float max = MAX(p0, p1);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float v = (f - min) / (max - min);
+            return 1.0f - CLAMP_UNIT(v);
+        }
+        case ML_FOP_Nx2_ACTIVATE_QUADRATIC_UP: {
+            float f = 0.0f;
+            float p0 = getParam(0);
+            float p1 = getParam(0);
+            float min = MIN(p0, p1);
+            float max = MAX(p0, p1);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float v = (f - min) / (max - min);
+            return CLAMP_UNIT(v);
+        }
+        case ML_FOP_Nx2_ACTIVATE_QUADRATIC_DOWN: {
+            float f = 0.0f;
+            float p0 = getParam(0);
+            float p1 = getParam(0);
+            float min = MIN(p0, p1);
+            float max = MAX(p0, p1);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float v = (f - min) / (max - min);
+            return 1.0f - CLAMP_UNIT(v * v);
+        }
+        case ML_FOP_NxN_ACTIVATE_POLYNOMIAL: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float v = 0.0f;
+            float p = 1.0f;
+            for (uint i = 0; i < params.size(); i++) {
+                v += getParam(i) * p;
+                p *= f;
+            }
+
+            return CLAMP_UNIT(v);
+        }
+
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP: {
             float i0 = getInput(0);
             float s = MAX(0.0f, MIN(1.0f, i0));
@@ -921,6 +1031,31 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
                 f += powf(getInput(i), getParam(0));
             }
             return f;
+        }
+
+        case ML_FOP_1xN_POLYNOMIAL: {
+            float i0 = getInput(0);
+
+            float v = 0.0f;
+            float p = 1.0f;
+            for (uint i = 0; i < params.size(); i++) {
+                v += getParam(i) * p;
+                p *= i0;
+            }
+
+            return v;
+        }
+        case ML_FOP_1xN_POLYNOMIAL_CLAMPED_UNIT: {
+            float i0 = getInput(0);
+
+            float v = 0.0f;
+            float p = 1.0f;
+            for (uint i = 0; i < params.size(); i++) {
+                v += getParam(i) * p;
+                p *= i0;
+            }
+
+            return MAX(0.0f, MIN(1.0f, v));
         }
 
         case ML_FOP_INVALID:
@@ -1120,7 +1255,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 101) {
+    if (mb_debug && ML_FOP_MAX != 110) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1216,8 +1351,10 @@ void MLFloatNode::minimize()
 
         case ML_FOP_1xN_SELECT_UNIT_INTERVAL_STEP:
         case ML_FOP_1xN_SELECT_UNIT_INTERVAL_LERP:
+        case ML_FOP_1xN_POLYNOMIAL:
+        case ML_FOP_1xN_POLYNOMIAL_CLAMPED_UNIT:
             numInputs = 1;
-            numParams = MAX(1, inputs.size());
+            numParams = MAX(1, params.size());
             break;
 
         case ML_FOP_2x0_POW:
@@ -1293,8 +1430,23 @@ void MLFloatNode::minimize()
             break;
 
         case ML_FOP_Nx1_DIV_SUM:
+        case ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP:
+        case ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN:
             numInputs = MAX(1, inputs.size());
             numParams = 1;
+            break;
+
+        case ML_FOP_Nx2_ACTIVATE_LINEAR_UP:
+        case ML_FOP_Nx2_ACTIVATE_LINEAR_DOWN:
+        case ML_FOP_Nx2_ACTIVATE_QUADRATIC_UP:
+        case ML_FOP_Nx2_ACTIVATE_QUADRATIC_DOWN:
+            numInputs = MAX(1, inputs.size());
+            numParams = 2;
+            break;
+
+        case ML_FOP_NxN_ACTIVATE_POLYNOMIAL:
+            numInputs = MAX(1, inputs.size());
+            numParams = MAX(1, params.size());;
             break;
 
         case ML_FOP_NxN_LINEAR_COMBINATION:
@@ -1346,7 +1498,13 @@ void MLFloatNode::makeZero()
 
 const char *ML_FloatOpToString(MLFloatOp op)
 {
-    return TextMap_ToString(op, tmMLFloatOps, ARRAYSIZE(tmMLFloatOps));
+    const char *str;
+    str = TextMap_ToStringD(op, tmMLFloatOps, ARRAYSIZE(tmMLFloatOps),  NULL);
+    if (str == NULL) {
+        str = TextMap_ToString(ML_FOP_INVALID, tmMLFloatOps,
+                               ARRAYSIZE(tmMLFloatOps));
+    }
+    return str;
 }
 
 MLFloatOp ML_StringToFloatOp(const char *opstr)
@@ -1362,9 +1520,16 @@ void ML_UnitTest()
 {
     MLFloatOp op;
 
-    VERIFY(ARRAYSIZE(tmMLFloatOps) == ML_FOP_MAX);
-
     for (op = ML_FOP_INVALID; op < ML_FOP_MAX; op++) {
-        VERIFY(ML_StringToFloatOp(ML_FloatOpToString(op)) == op);
+        const char *str = ML_FloatOpToString(op);
+        if (ML_StringToFloatOp(str) != op) {
+            PANIC("Missing TMEntry op=%d, str=%s, previousStr=%s\n", op, str,
+                  ML_FloatOpToString(((MLFloatOp)(op - 1))));
+        }
+    }
+
+    if (ARRAYSIZE(tmMLFloatOps) != ML_FOP_MAX) {
+        PANIC("ARRAYSIZE(tmMLFloatOps)=%d, ML_FOP_MAX=%d\n",
+              (uint)ARRAYSIZE(tmMLFloatOps), ML_FOP_MAX);
     }
 }
