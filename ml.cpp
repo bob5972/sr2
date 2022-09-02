@@ -853,7 +853,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint n = inputs.size() - 1;
             uint index = 1 + n * s;
 
-            index = MAX(inputs.size() - 1, index);
+            index = MIN(inputs.size() - 1, index);
 
             return getInput(index);
         }
@@ -863,7 +863,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint n = params.size();
             uint index = n * s;
 
-            index = MAX(params.size() - 1, index);
+            index = MIN(params.size() - 1, index);
 
             return getParam(index);
         }
@@ -897,8 +897,8 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint indexLower = 1 + n * s;
             uint indexUpper = indexLower + 1;
 
-            indexLower = MAX(inputs.size() - 1, indexLower);
-            indexUpper = MAX(inputs.size() - 1, indexUpper);
+            indexLower = MIN(inputs.size() - 1, indexLower);
+            indexUpper = MIN(inputs.size() - 1, indexUpper);
 
             float iL = getInput(indexLower);
             float iU = getInput(indexUpper);
@@ -914,8 +914,8 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint indexLower = n * s;
             uint indexUpper = indexLower + 1;
 
-            indexLower = MAX(n - 1, indexLower);
-            indexUpper = MAX(n - 1, indexUpper);
+            indexLower = MIN(n - 1, indexLower);
+            indexUpper = MIN(n - 1, indexUpper);
 
             ASSERT(indexLower <= indexUpper);
             ASSERT(indexLower < params.size() );
@@ -952,8 +952,8 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
                 }
             }
             uint indexUpper = 1 + indexLower;
-            indexLower = MAX(inputs.size() - 1, indexLower);
-            indexUpper = MAX(inputs.size() - 1, indexUpper);
+            indexLower = MIN(inputs.size() - 1, indexLower);
+            indexUpper = MIN(inputs.size() - 1, indexUpper);
 
             float iL = getInput(indexLower);
             float iU = getInput(indexUpper);
