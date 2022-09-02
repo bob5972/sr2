@@ -205,7 +205,11 @@ sub DumpGraph($) {
 
             while ($inputs =~ /^(\d+)\,/) {
                 my $i = $1;
-                Console("$i -> $n\n");
+
+                if (defined($nodes->{$i})) {
+                    # Avoid voided inputs to live nodes
+                    Console("$i -> $n\n");
+                }
                 $inputs =~ s/^\s*\d+\,\s*//;
             }
         }
