@@ -92,6 +92,9 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_2x0_PRODUCT), },
 
     { TMENTRY(ML_FOP_2x2_LINEAR_COMBINATION), },
+    { TMENTRY(ML_FOP_2x2_IF_GTE_ELSE), },
+    { TMENTRY(ML_FOP_2x2_IF_LTE_ELSE), },
+
     { TMENTRY(ML_FOP_3x3_LINEAR_COMBINATION), },
 
     { TMENTRY(ML_FOP_4x0_IF_GTE_ELSE), },
@@ -207,7 +210,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 79) {
+    if (mb_debug && ML_FOP_MAX != 81) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -492,6 +495,21 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         }
         case ML_FOP_2x0_PRODUCT:
             return getInput(0) * getInput(1);
+
+        case ML_FOP_2x2_IF_GTE_ELSE: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            return i0 >= i1 ? p0 : p1;
+        }
+        case ML_FOP_2x2_IF_LTE_ELSE: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            return i0 <= i1 ? p0 : p1;
+        }
 
         case ML_FOP_4x0_IF_GTE_ELSE: {
             float i0 = getInput(0);
@@ -808,7 +826,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 79) {
+    if (mb_debug && ML_FOP_MAX != 81) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -903,6 +921,8 @@ void MLFloatNode::minimize()
             break;
 
         case ML_FOP_2x2_LINEAR_COMBINATION:
+        case ML_FOP_2x2_IF_GTE_ELSE:
+        case ML_FOP_2x2_IF_LTE_ELSE:
             numInputs = 2;
             numParams = 2;
             break;
@@ -990,6 +1010,8 @@ MLFloatOp ML_StringToFloatOp(const char *opstr)
 void ML_UnitTest()
 {
     MLFloatOp op;
+
+    VERIFY(ARRAYSIZE(tmMLFloatOps) == ML_FOP_MAX);
 
     for (op = ML_FOP_INVALID; op < ML_FOP_MAX; op++) {
         VERIFY(ML_StringToFloatOp(ML_FloatOpToString(op)) == op);
