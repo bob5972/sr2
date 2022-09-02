@@ -98,6 +98,11 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_3x0_IF_GTEZ_ELSE), },
     { TMENTRY(ML_FOP_3x0_IF_LTEZ_ELSE), },
 
+    { TMENTRY(ML_FOP_3x2_IF_INSIDE_RANGE_CONST_ELSE), },
+    { TMENTRY(ML_FOP_3x2_IF_OUTSIDE_RANGE_CONST_ELSE), },
+    { TMENTRY(ML_FOP_3x2_IF_INSIDE_RANGE_ELSE_CONST), },
+    { TMENTRY(ML_FOP_3x2_IF_OUTSIDE_RANGE_ELSE_CONST), },
+
     { TMENTRY(ML_FOP_3x3_LINEAR_COMBINATION), },
 
     { TMENTRY(ML_FOP_4x0_IF_GTE_ELSE), },
@@ -216,7 +221,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 85) {
+    if (mb_debug && ML_FOP_MAX != 89) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -528,6 +533,47 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float i1 = getInput(1);
             float i2 = getInput(2);
             return i0 <= 0.0f ? i1 : i2;
+        }
+
+        case ML_FOP_3x2_IF_INSIDE_RANGE_CONST_ELSE: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float i2 = getInput(2);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            return (i0 >= min && i0 <= max) ? i1 : i2;
+        }
+        case ML_FOP_3x2_IF_OUTSIDE_RANGE_CONST_ELSE: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float i2 = getInput(2);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            return (i0 <= min || i0 >= max) ? i1 : i2;
+        }
+        case ML_FOP_3x2_IF_INSIDE_RANGE_ELSE_CONST: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float i2 = getInput(2);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(i1, i2);
+            float min = MIN(i1, i2);
+            return (i0 >= min && i0 <= max) ? p0 : p1;
+        }
+        case ML_FOP_3x2_IF_OUTSIDE_RANGE_ELSE_CONST: {
+            float i0 = getInput(0);
+            float i1 = getInput(1);
+            float i2 = getInput(2);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(i1, i2);
+            float min = MIN(i1, i2);
+            return (i0 <= min || i0 >= max) ? p0 : p1;
         }
 
         case ML_FOP_4x0_IF_GTE_ELSE: {
@@ -866,7 +912,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 85) {
+    if (mb_debug && ML_FOP_MAX != 89) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -971,6 +1017,14 @@ void MLFloatNode::minimize()
         case ML_FOP_3x0_IF_LTEZ_ELSE:
             numInputs = 3;
             numParams = 0;
+            break;
+
+        case ML_FOP_3x2_IF_INSIDE_RANGE_CONST_ELSE:
+        case ML_FOP_3x2_IF_OUTSIDE_RANGE_CONST_ELSE:
+        case ML_FOP_3x2_IF_INSIDE_RANGE_ELSE_CONST:
+        case ML_FOP_3x2_IF_OUTSIDE_RANGE_ELSE_CONST:
+            numInputs = 3;
+            numParams = 2;
             break;
 
         case ML_FOP_3x3_LINEAR_COMBINATION:
