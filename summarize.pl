@@ -11,6 +11,10 @@ use Scalar::Util qw(looks_like_number);
 use MBBasic;
 
 my $gScriptOptions = {
+    "date!" => {desc => "Add a date line to the bottom",
+                default => FALSE },
+    "opSummary!" => { desc => "Include an opcode summary",
+                      default => FALSE },
     "dumpFleet|d=i" => { desc => "Dump the specified fleet",
                          default => undef, },
     "cFormat|c" => { desc => "Print fleets with C formatting",
@@ -328,6 +332,17 @@ sub Main() {
         ResetHistory();
     } else {
         DisplaySummary();
+    }
+
+    if ($OPTIONS->{'date'}) {
+        my $date = `date`;
+        Console("$date\n");
+    }
+
+    if ($OPTIONS->{'opSummary'}) {
+        my $s = `grep op $gFile | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
+        Console($s);
+        Console("\n");
     }
 
     MBBasic::Exit();
