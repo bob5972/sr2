@@ -55,6 +55,7 @@ typedef enum MLFloatOp {
     ML_FOP_1x0_COS,
     ML_FOP_1x0_TAN,
     ML_FOP_1x0_PROB_NOT,
+    ML_FOP_1x0_CLAMP_UNIT,
 
     ML_FOP_1x1_STRICT_ON,
     ML_FOP_1x1_STRICT_OFF,
