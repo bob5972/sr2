@@ -87,6 +87,9 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x3_COS), },
     { TMENTRY(ML_FOP_1x3_TAN), },
 
+    { TMENTRY(ML_FOP_1xN_SELECT_UNIT_INTERVAL_STEP), },
+    { TMENTRY(ML_FOP_1xN_SELECT_UNIT_INTERVAL_LERP), },
+
     { TMENTRY(ML_FOP_2x0_POW), },
     { TMENTRY(ML_FOP_2x0_SUM), },
     { TMENTRY(ML_FOP_2x0_SQUARE_SUM), },
@@ -227,7 +230,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 94) {
+    if (mb_debug && ML_FOP_MAX != 96) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -714,6 +717,16 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return getInput(index);
         }
+        case ML_FOP_1xN_SELECT_UNIT_INTERVAL_STEP: {
+            float i0 = getInput(0);
+            float s = MAX(0.0f, MIN(1.0f, i0));
+            uint n = params.size();
+            uint index = n * s;
+
+            index = MAX(inputs.size(), index);
+
+            return getParam(index);
+        }
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP: {
             float i0 = getInput(0);
             float s = MAX(0.0f, MIN(1.0f, i0));
@@ -726,6 +739,23 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             float iL = getInput(indexLower);
             float iU = getInput(indexUpper);
+            float slotSize = 1.0f / n;
+            float t = (s - (indexLower * slotSize)) / slotSize;
+
+            return iL + ((iU - iL) * t);
+        }
+        case ML_FOP_1xN_SELECT_UNIT_INTERVAL_LERP: {
+            float i0 = getInput(0);
+            float s = MAX(0.0f, MIN(1.0f, i0));
+            uint n = params.size();
+            uint indexLower = n * s;
+            uint indexUpper = indexLower + 1;
+
+            indexLower = MAX(params.size(), indexLower);
+            indexUpper = MAX(params.size(), indexUpper);
+
+            float iL = getParam(indexLower);
+            float iU = getParam(indexUpper);
             float slotSize = 1.0f / n;
             float t = (s - (indexLower * slotSize)) / slotSize;
 
@@ -1000,7 +1030,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 94) {
+    if (mb_debug && ML_FOP_MAX != 96) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1085,6 +1115,12 @@ void MLFloatNode::minimize()
         case ML_FOP_1x3_TAN:
             numInputs = 1;
             numParams = 3;
+            break;
+
+        case ML_FOP_1xN_SELECT_UNIT_INTERVAL_STEP:
+        case ML_FOP_1xN_SELECT_UNIT_INTERVAL_LERP:
+            numInputs = 1;
+            numParams = MAX(1, inputs.size());
             break;
 
         case ML_FOP_2x0_POW:
