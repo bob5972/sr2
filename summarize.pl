@@ -133,7 +133,7 @@ sub DumpGraph($) {
             my $n = $1;
             my $type = $fleet->{$k};
             $nodes->{$n} = "$n\\n$type";
-            $iNodes->{$n} = TRUE;
+            $iNodes->{$n} = $type;
         }
     }
 
@@ -141,29 +141,41 @@ sub DumpGraph($) {
         if ($k =~ /^output\[(\d+)\]\.forceType/) {
             my $n = $1;
             my $type = $fleet->{$k};
-            $nodes->{$n} .= "\\n$type";
-            $oNodes->{$n} = TRUE;
+            $oNodes->{$n} = $type;
         }
     }
 
     # Dump Nodes
     foreach my $k (sort keys %{$nodes}) {
         my $v = $nodes->{$k};
-        Console("$k [label=\"$v\"];\n");
+        my $color = "";
+        if ($iNodes->{$k}) {
+            $color .= "color=blue";
+        }
+        if (!$oNodes->{$k}) {
+            Console("$k [label=\"$v\" $color];\n");
+        }
+    }
+    # Dump Outputs
+    foreach my $k (sort keys %{$oNodes}) {
+        my $v = $nodes->{$k};
+        my $color = "";
+        if ($oNodes->{$k}) {
+            $color .= "color=red";
+            Console("$k [label=\"$v\"];\n");
+
+            Console("Output_$k [label=\"" . $oNodes->{$k} . "\" color=red ];\n");
+            Console("{ rank=sink Output_$k }\n");
+            Console("$k -> Output_$k\n");
+        }
     }
 
-    # Rank Input/Output
-    Console("{ rank=same ");
+    # Rank Input
+    Console("{ rank=source ");
     foreach my $k (sort keys %{$iNodes}) {
         Console("$k ");
     }
     Console("}\n");
-
-    #Console("{ rank=same ");
-    #foreach my $k (sort keys %{$oNodes}) {
-    #    Console("$k ");
-    #}
-    #Console("}\n");
 
     # Dump Edges
     foreach my $k (sort keys %{$fleet}) {
