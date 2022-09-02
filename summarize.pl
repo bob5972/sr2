@@ -17,8 +17,10 @@ my $gScriptOptions = {
                       default => FALSE },
     "dumpFleet|d=i" => { desc => "Dump the specified fleet",
                          default => undef, },
-    "cFormat|c" => { desc => "Print fleets with C formatting",
+    "cFormat|c" => { desc => "Print fleet with C formatting",
                          default => undef, },
+    "graph!" => { desc => "Print the fleet as graphviz source",
+                  default => FALSE },
     "resetHistory|r!" => { desc => "Reset fleet history",
                            default => FALSE },
 };
@@ -63,13 +65,41 @@ sub CompareRange($$)
     NOT_IMPLEMENTED();
 }
 
-sub DumpFleet($) {
+sub GetFleet($;$) {
     my $fn = shift;
+    my $dropPrefix = shift;
+
+    if (!defined($dropPrefix)) {
+        $dropPrefix = FALSE;
+    }
+
+    my $oup = {};
 
     my $prefix = "fleet$fn";
 
-    foreach my $k (sort keys %{$gPop}) {
+    foreach my $k (keys %{$gPop}) {
         if ($k =~ /^$prefix\./) {
+            my $v = $gPop->{$k};
+
+            if ($dropPrefix) {
+                $k =~ s/^$prefix\.//;
+            }
+            $oup->{$k} = $v;
+        }
+    }
+
+    return $oup;
+}
+
+sub DumpFleet($) {
+    my $fn = shift;
+
+    if ($OPTIONS->{'graph'}) {
+        DumpGraph($fn);
+    } else {
+        my $h = GetFleet($fn, FALSE);
+        my $prefix = "fleet$fn";
+        foreach my $k (sort keys %{$h}) {
             my $v = $gPop->{$k};
             if (!$OPTIONS->{'cFormat'}) {
                 Console("$k = $v\n");
@@ -79,6 +109,59 @@ sub DumpFleet($) {
             }
         }
     }
+}
+
+sub DumpGraph($) {
+    my $fn = shift;
+    my $fleet = GetFleet($fn, TRUE);
+
+    Console("digraph G {\n");
+
+    my $nodes = {};
+
+    foreach my $k (sort keys %{$fleet}) {
+        if ($k =~ /^floatNet.node\[(\d+)\]\.op$/) {
+            my $n = $1;
+            my $op = $fleet->{$k};
+            $nodes->{$n} = "$n\\n$op";
+        }
+    }
+    foreach my $k (sort keys %{$fleet}) {
+        if ($k =~ /^input\[(\d+)\]\.valueType/) {
+            my $n = $1;
+            my $type = $fleet->{$k};
+            $nodes->{$n} = "$n\\n$type";
+        }
+    }
+
+    foreach my $k (sort keys %{$fleet}) {
+        if ($k =~ /^output\[(\d+)\]\.forceType/) {
+            my $n = $1;
+            my $type = $fleet->{$k};
+            $nodes->{$n} .= "\\n$type";
+        }
+    }
+    foreach my $k (sort keys %{$nodes}) {
+        my $v = $nodes->{$k};
+        Console("$k [label=\"$v\"];\n");
+    }
+
+    foreach my $k (sort keys %{$fleet}) {
+        if ($k =~ /^floatNet.node\[(\d+)\]\.inputs$/) {
+            my $n = $1;
+            my $v = $fleet->{$k};
+            $v =~ s/^\{//;
+            $v =~ s/\}$//;
+            my $inputs = $v;
+
+            while ($inputs =~ s/^(\d+),//) {
+                my $i = $1;
+                Console("$i -> $n\n");
+            }
+        }
+    }
+
+    Console("}\n");
 }
 
 sub GetFleetSummary($) {
