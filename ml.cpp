@@ -951,6 +951,11 @@ void MLFloatNode::mutate(float rate,
         return;
     }
 
+    /* Occaisonally scramble the whole node. */
+    if (Random_Flip(0.01)) {
+        rate = 1.0f;
+    }
+
     /* Op */
     if (Random_Flip(rate)) {
         op = (MLFloatOp)Random_Int(ML_FOP_MIN, ML_FOP_MAX - 1);
