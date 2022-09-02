@@ -118,6 +118,8 @@ sub DumpGraph($) {
     Console("digraph G {\n");
 
     my $nodes = {};
+    my $oNodes = {};
+    my $iNodes = {};
 
     foreach my $k (sort keys %{$fleet}) {
         if ($k =~ /^floatNet.node\[(\d+)\]\.op$/) {
@@ -131,6 +133,7 @@ sub DumpGraph($) {
             my $n = $1;
             my $type = $fleet->{$k};
             $nodes->{$n} = "$n\\n$type";
+            $iNodes->{$n} = TRUE;
         }
     }
 
@@ -139,13 +142,30 @@ sub DumpGraph($) {
             my $n = $1;
             my $type = $fleet->{$k};
             $nodes->{$n} .= "\\n$type";
+            $oNodes->{$n} = TRUE;
         }
     }
+
+    # Dump Nodes
     foreach my $k (sort keys %{$nodes}) {
         my $v = $nodes->{$k};
         Console("$k [label=\"$v\"];\n");
     }
 
+    # Rank Input/Output
+    Console("{ rank=same ");
+    foreach my $k (sort keys %{$iNodes}) {
+        Console("$k ");
+    }
+    Console("}\n");
+
+    #Console("{ rank=same ");
+    #foreach my $k (sort keys %{$oNodes}) {
+    #    Console("$k ");
+    #}
+    #Console("}\n");
+
+    # Dump Edges
     foreach my $k (sort keys %{$fleet}) {
         if ($k =~ /^floatNet.node\[(\d+)\]\.inputs$/) {
             my $n = $1;
