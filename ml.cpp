@@ -121,6 +121,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_ARITHMETIC_MEAN), },
     { TMENTRY(ML_FOP_Nx0_GEOMETRIC_MEAN), },
     { TMENTRY(ML_FOP_Nx0_DIV_SUM), },
+    { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP), },
+    { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP), },
 
     { TMENTRY(ML_FOP_Nx1_DIV_SUM), },
 
@@ -225,7 +227,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 92) {
+    if (mb_debug && ML_FOP_MAX != 94) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -702,6 +704,34 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return c / f;
         }
 
+        case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP: {
+            float i0 = getInput(0);
+            float s = MAX(0.0f, MIN(1.0f, i0));
+            uint n = inputs.size() - 1;
+            uint index = 1 + n * s;
+
+            index = MAX(inputs.size(), index);
+
+            return getInput(index);
+        }
+        case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP: {
+            float i0 = getInput(0);
+            float s = MAX(0.0f, MIN(1.0f, i0));
+            uint n = inputs.size() - 1;
+            uint indexLower = 1 + n * s;
+            uint indexUpper = indexLower + 1;
+
+            indexLower = MAX(inputs.size(), indexLower);
+            indexUpper = MAX(inputs.size(), indexUpper);
+
+            float iL = getInput(indexLower);
+            float iU = getInput(indexUpper);
+            float slotSize = 1.0f / n;
+            float t = (s - (indexLower * slotSize)) / slotSize;
+
+            return iL + ((iU - iL) * t);
+        }
+
         case ML_FOP_1x1_LINEAR_COMBINATION:
         case ML_FOP_2x2_LINEAR_COMBINATION:
         case ML_FOP_3x3_LINEAR_COMBINATION:
@@ -970,7 +1000,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 92) {
+    if (mb_debug && ML_FOP_MAX != 94) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1120,6 +1150,12 @@ void MLFloatNode::minimize()
         case ML_FOP_Nx0_MAX:
         case ML_FOP_Nx0_DIV_SUM:
             numInputs = MAX(1, inputs.size());
+            numParams = 0;
+            break;
+
+        case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP:
+        case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP:
+            numInputs = MAX(2, inputs.size());
             numParams = 0;
             break;
 
