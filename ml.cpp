@@ -863,7 +863,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint n = params.size();
             uint index = n * s;
 
-            index = MAX(inputs.size() - 1, index);
+            index = MAX(params.size() - 1, index);
 
             return getParam(index);
         }
