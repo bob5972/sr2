@@ -54,6 +54,7 @@ typedef enum MLFloatOp {
     ML_FOP_1x0_SIN,
     ML_FOP_1x0_COS,
     ML_FOP_1x0_TAN,
+    ML_FOP_1x0_PROB_NOT,
 
     ML_FOP_1x1_STRICT_ON,
     ML_FOP_1x1_STRICT_OFF,
@@ -125,6 +126,9 @@ typedef enum MLFloatOp {
     ML_FOP_Nx0_MAX,
     ML_FOP_Nx0_ARITHMETIC_MEAN,
     ML_FOP_Nx0_GEOMETRIC_MEAN,
+    ML_FOP_Nx0_DIV_SUM,
+
+    ML_FOP_Nx1_DIV_SUM,
 
     ML_FOP_NxN_LINEAR_COMBINATION,
     ML_FOP_NxN_SCALED_MIN,

@@ -48,6 +48,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_SIN), },
     { TMENTRY(ML_FOP_1x0_COS), },
     { TMENTRY(ML_FOP_1x0_TAN), },
+    { TMENTRY(ML_FOP_1x0_PROB_NOT), },
 
     { TMENTRY(ML_FOP_1x1_STRICT_ON), },
     { TMENTRY(ML_FOP_1x1_STRICT_OFF), },
@@ -119,6 +120,9 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_MAX), },
     { TMENTRY(ML_FOP_Nx0_ARITHMETIC_MEAN), },
     { TMENTRY(ML_FOP_Nx0_GEOMETRIC_MEAN), },
+    { TMENTRY(ML_FOP_Nx0_DIV_SUM), },
+
+    { TMENTRY(ML_FOP_Nx1_DIV_SUM), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_SCALED_MIN), },
@@ -221,7 +225,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 89) {
+    if (mb_debug && ML_FOP_MAX != 92) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -289,6 +293,8 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return cosf(getInput(0));
         case ML_FOP_1x0_TAN:
             return tanf(getInput(0));
+        case ML_FOP_1x0_PROB_NOT:
+            return (1.0f - getInput(0));
 
         case ML_FOP_1x1_STRICT_ON:
         case ML_FOP_1x1_STRICT_OFF:
@@ -652,7 +658,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         }
 
         case ML_FOP_Nx0_ARITHMETIC_MEAN: {
-            float f = 0.0;
+            float f = 0.0f;
 
             if (inputs.size() > 0) {
                 for (uint i = 0; i < inputs.size(); i++) {
@@ -664,7 +670,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return f;
         }
         case ML_FOP_Nx0_GEOMETRIC_MEAN: {
-            float f = 1.0;
+            float f = 1.0f;
 
             if (inputs.size() > 0) {
                 for (uint i = 0; i < inputs.size(); i++) {
@@ -674,6 +680,26 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             }
 
             return f;
+        }
+
+        case ML_FOP_Nx0_DIV_SUM: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return 1.0f / f;
+        }
+        case ML_FOP_Nx1_DIV_SUM: {
+            float f = 0.0f;
+            float c = getParam(0);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return c / f;
         }
 
         case ML_FOP_1x1_LINEAR_COMBINATION:
@@ -944,7 +970,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 89) {
+    if (mb_debug && ML_FOP_MAX != 92) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -980,6 +1006,7 @@ void MLFloatNode::minimize()
         case ML_FOP_1x0_SIN:
         case ML_FOP_1x0_COS:
         case ML_FOP_1x0_TAN:
+        case ML_FOP_1x0_PROB_NOT:
             numInputs = 1;
             numParams = 0;
             break;
@@ -1083,12 +1110,22 @@ void MLFloatNode::minimize()
 
         case ML_FOP_Nx0_SUM:
         case ML_FOP_Nx0_PRODUCT:
-        case ML_FOP_Nx0_MIN:
-        case ML_FOP_Nx0_MAX:
         case ML_FOP_Nx0_ARITHMETIC_MEAN:
         case ML_FOP_Nx0_GEOMETRIC_MEAN:
+            numInputs = inputs.size();
+            numParams = 0;
+            break;
+
+        case ML_FOP_Nx0_MIN:
+        case ML_FOP_Nx0_MAX:
+        case ML_FOP_Nx0_DIV_SUM:
             numInputs = MAX(1, inputs.size());
             numParams = 0;
+            break;
+
+        case ML_FOP_Nx1_DIV_SUM:
+            numInputs = MAX(1, inputs.size());
+            numParams = 1;
             break;
 
         case ML_FOP_NxN_LINEAR_COMBINATION:
