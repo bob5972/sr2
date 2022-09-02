@@ -136,6 +136,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_SELECT_LTE), },
     { TMENTRY(ML_FOP_NxN_POW_SUM), },
     { TMENTRY(ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_STEP), },
+    { TMENTRY(ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_LERP), },
 };
 
 float MLFloatCheck1x1(MLFloatOp op, float input,
@@ -231,7 +232,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 97) {
+    if (mb_debug && ML_FOP_MAX != 98) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -785,6 +786,39 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return iL + ((iU - iL) * t);
         }
+        case ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_LERP: {
+            float i0 = getInput(0);
+            float s = MAX(0.0f, MIN(1.0f, i0));
+            float totalW = 0.0f;
+
+            for (uint i = 1; i < inputs.size(); i++) {
+                totalW += getParam(i);
+            }
+
+            float curW = 0.0f;
+            float slotSize = 1.0f;
+            float lowerTrigger = 0.0f;
+            uint indexLower = inputs.size() - 1;
+            for (uint i = 1; i < inputs.size(); i++) {
+                lowerTrigger = curW;
+                slotSize = getParam(i) / totalW;
+                curW += slotSize;
+                if (s <= curW) {
+                    indexLower = i;
+                    // break loop
+                    i = inputs.size();
+                }
+            }
+            uint indexUpper = 1 + indexLower;
+            indexLower = MAX(inputs.size(), indexLower);
+            indexUpper = MAX(inputs.size(), indexUpper);
+
+            float iL = getInput(indexLower);
+            float iU = getInput(indexUpper);
+            float t = (s - lowerTrigger) / slotSize;
+
+            return iL + ((iU - iL) * t);
+        }
 
         case ML_FOP_1x1_LINEAR_COMBINATION:
         case ML_FOP_2x2_LINEAR_COMBINATION:
@@ -1054,7 +1088,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 97) {
+    if (mb_debug && ML_FOP_MAX != 98) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1232,6 +1266,13 @@ void MLFloatNode::minimize()
         case ML_FOP_NxN_POW_SUM:
             numInputs = MIN(inputs.size(), params.size());
             numInputs = MAX(1, numInputs);
+            numParams = numInputs;
+            break;
+
+        case ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_STEP:
+        case ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_LERP:
+            numInputs = MIN(inputs.size(), params.size());
+            numInputs = MAX(2, numInputs);
             numParams = numInputs;
             break;
 
