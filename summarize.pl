@@ -145,6 +145,14 @@ sub DumpGraph($) {
         if ($k =~ /^input\[(\d+)\]\.valueType/) {
             my $n = $1;
             my $type = $fleet->{$k};
+
+            if ($type eq 'NEURAL_VALUE_FORCE' ||
+                $type eq 'NEURAL_VALUE_RANGE') {
+                $type = $fleet->{"input[$n].forceType"};
+            } elsif ($type eq 'NEURAL_VALUE_CROWD') {
+                $type = $fleet->{"input[$n].crowdType"};
+            }
+
             if ($type ne "NEURAL_VALUE_VOID") {
                 $nodes->{$n} = "$n\\n$type";
                 $iNodes->{$n} = $type;

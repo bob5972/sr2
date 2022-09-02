@@ -2875,8 +2875,11 @@ public:
 
     float getRangeValue(Mob *mob, NeuralForceDesc *desc) {
         FPoint focusPoint;
-        getNeuralFocus(mob, desc, &focusPoint);
-        return FPoint_Distance(&mob->pos, &focusPoint);
+        if (getNeuralFocus(mob, desc, &focusPoint)) {
+            return FPoint_Distance(&mob->pos, &focusPoint);
+        } else {
+            return 0.0f;
+        }
     }
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
