@@ -761,7 +761,7 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
     VERIFY(popReg != NULL);
 
     fleetReg = MBRegistry_Alloc();
-    VERIFY(popReg != NULL);
+    VERIFY(fleetReg != NULL);
 
     MBRegistry_Load(popReg, MBOpt_GetCStr("usePopulation"));
 
@@ -1270,6 +1270,56 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
     }
 }
 
+void MainSanitizeFleet()
+{
+    /*
+     * This is a hack-job, but it works well enough for now.
+     */
+    uint fleetNum = MBOpt_GetUint("sanitizeFleet");
+    FleetAI ai;
+    MBRegistry *popReg = MBRegistry_Alloc();
+    MBRegistry *fleetReg = MBRegistry_Alloc();
+    MBRegistry *cleanReg = MBRegistry_Alloc();
+    MBString tmp;
+
+    VERIFY(popReg != NULL);
+    VERIFY(fleetReg != NULL);
+
+    MBRegistry_Load(popReg, MBOpt_GetCStr("usePopulation"));
+
+    MBString_Create(&tmp);
+
+    MBString_IntToString(&tmp, fleetNum);
+    MBString_PrependCStr(&tmp, "fleet");
+    MBString_AppendCStr(&tmp, ".");
+
+    MBRegistry_SplitOnPrefix(fleetReg, popReg, MBString_GetCStr(&tmp),
+                             FALSE);
+
+    const char *fleetStr = MBRegistry_GetCStr(fleetReg, "abattle.fleetName");
+    FleetAIType aiType = Fleet_GetTypeFromName(fleetStr);
+
+    BattleParams bp;
+    MBUtil_Zero(&bp, sizeof(bp));
+
+    BattlePlayer player;
+    MBUtil_Zero(&player, sizeof(player));
+    Fleet_CreateAI(&ai, aiType, 0, &bp, &player, 0x0);
+
+    if (ai.ops.dumpSanitizedParams == NULL) {
+        PANIC("Unsupported fleet: %s\n", fleetStr);
+    }
+
+    ai.ops.dumpSanitizedParams(ai.aiHandle, cleanReg);
+
+    MBRegistry_SaveToConsole(cleanReg);
+
+    MBRegistry_Free(popReg);
+    MBRegistry_Free(fleetReg);
+    MBRegistry_Free(cleanReg);
+    MBString_Destroy(&tmp);
+}
+
 void MainUnitTests()
 {
     Warning("Starting Unit Tests ...\n");
@@ -1292,6 +1342,7 @@ void MainParseCmdLine(int argc, char **argv)
         { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
         { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
         { "-M", "--mutatePopulation",  FALSE, "Mutate population"             },
+        { "-S", "--sanitizeFleet",     TRUE,  "Sanitize and dump fleet number"},
         { "-I", "--mutationNewIterations",
                                        TRUE,  "New fleet iterations per "
                                               "Mutation round"                },
@@ -1386,19 +1437,26 @@ int main(int argc, char **argv)
     MainParseCmdLine(argc, argv);
 
     // Setup
-    Warning("Starting SpaceRobots2 %s...\n", mb_debug ? "(debug enabled)" : "");
-    Warning("\n");
-
     Random_Init();
     RandomState_Create(&mainData.rs);
     if (mainData.seed != 0) {
         RandomState_SetSeed(&mainData.rs, mainData.seed);
     }
-    DebugPrint("Random seed: 0x%llX\n",
-               RandomState_GetSeed(&mainData.rs));
+
 
     SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
     MBStrTable_Init();
+
+    if (MBOpt_IsPresent("sanitizeFleet")) {
+        MainSanitizeFleet();
+        return 0;
+    }
+
+    Warning("Starting SpaceRobots2 %s...\n", mb_debug ? "(debug enabled)" : "");
+    Warning("\n");
+
+    DebugPrint("Random seed: 0x%llX\n",
+               RandomState_GetSeed(&mainData.rs));
 
     WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
     WorkQueue_Create(&mainData.resultQ, sizeof(MainEngineResultUnit));

@@ -194,6 +194,10 @@ public:
         virtual ~NeuralShipAI() {}
     };
 
+    void dumpSanitizedParams(MBRegistry *mreg) {
+        myNeuralNet.save(mreg, "floatNet.");
+    }
+
     virtual NeuralShipAI *newShip(MobID mobid) {
         return new NeuralShipAI(mobid, this);
     }
@@ -2968,6 +2972,7 @@ static void NeuralFleetRunAITick(void *aiHandle);
 static void *NeuralFleetMobSpawned(void *aiHandle, Mob *m);
 static void NeuralFleetMobDestroyed(void *aiHandle, Mob *m, void *aiMobHandle);
 static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg);
+static void NeuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg);
 
 void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
@@ -2994,6 +2999,14 @@ void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
     ops->mobSpawned = &NeuralFleetMobSpawned;
     ops->mobDestroyed = &NeuralFleetMobDestroyed;
     ops->mutateParams = &NeuralFleetMutate;
+    ops->dumpSanitizedParams = &NeuralFleetDumpSanitizedParams;
+}
+
+static void NeuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
+{
+    NeuralFleet *sf = (NeuralFleet *)aiHandle;
+    MBRegistry_PutAll(mreg, sf->mreg, "");
+    sf->gov.dumpSanitizedParams(mreg);
 }
 
 static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)

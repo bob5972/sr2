@@ -11,6 +11,8 @@ use Scalar::Util qw(looks_like_number);
 use MBBasic;
 
 my $gScriptOptions = {
+    "file=s" => { desc => "MBRegistry file to use",
+                  default => "build/tmp/popMutate.txt" },
     "date!" => {desc => "Add a date line to the bottom",
                 default => FALSE },
     "opSummary!" => { desc => "Include an opcode summary",
@@ -113,7 +115,16 @@ sub DumpFleet($) {
 
 sub DumpGraph($) {
     my $fn = shift;
-    my $fleet = GetFleet($fn, TRUE);
+
+    my $fleet;
+
+    if (-x "build/sr2") {
+        my @fleetLines = `build/sr2 --sanitizeFleet $fn -U $gFile` or
+            Panic("Unable to sanitize fleet: build/sr2 error", $!);
+        $fleet = MBBasic::LoadMRegLines(\@fleetLines);
+    } else {
+        $fleet = GetFleet($fn, TRUE);
+    }
 
     Console("digraph G {\n");
 
@@ -438,7 +449,7 @@ sub Main() {
     MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
     MBBasic::Init();
 
-    $gFile = "build/tmp/popMutate.txt";
+    $gFile = $OPTIONS->{"file"};
     $gPop = MBBasic::LoadMRegFile($gFile);
 
     if (defined($OPTIONS->{'dumpFleet'})) {

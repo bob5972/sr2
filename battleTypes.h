@@ -252,6 +252,7 @@ typedef struct FleetAIOps {
     void (*mobDestroyed)(void *aiHandle, Mob *m, void *aiMobHandle);
     void (*runAITick)(void *aiHandle);
     void (*mutateParams)(FleetAIType aiType, MBRegistry *mreg);
+    void (*dumpSanitizedParams)(void *aiHandle, MBRegistry *mreg);
 } FleetAIOps;
 
 typedef struct FleetAI {
