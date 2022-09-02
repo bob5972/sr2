@@ -163,6 +163,13 @@ typedef enum MLFloatOp {
     ML_FOP_MAX,
 } MLFloatOp;
 
+extern "C" {
+    const char *ML_FloatOpToString(MLFloatOp op);
+    MLFloatOp ML_StringToFloatOp(const char *opstr);
+
+    void ML_UnitTest();
+};
+
 static INLINE MLFloatOp& operator++(MLFloatOp &op)
 {
     int i = static_cast<int>(op);
@@ -211,16 +218,16 @@ class MLFloatNode {
         }
 
         float getParam(uint i) {
+            if (mb_debug) {
+                if (UNLIKELY(i >= params.size())) {
+                    PANIC("Param out of range: i=%d, numParams=%d, op=%s(%d)\n",
+                          i, params.size(), ML_FloatOpToString(op), op);
+                }
+            }
             ASSERT(i < params.size());
             return params[i];
         }
 };
 
-const char *ML_FloatOpToString(MLFloatOp op);
-MLFloatOp ML_StringToFloatOp(const char *opstr);
-
-extern "C" {
-void ML_UnitTest();
-};
 
 #endif // _ML_H_202208151722
