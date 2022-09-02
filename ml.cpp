@@ -151,6 +151,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_ACTIVATE_POLYNOMIAL), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
+    { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT), },
     { TMENTRY(ML_FOP_NxN_SCALED_MIN), },
     { TMENTRY(ML_FOP_NxN_SCALED_MAX), },
     { TMENTRY(ML_FOP_NxN_SELECT_GTE), },
@@ -253,7 +254,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 110) {
+    if (mb_debug && ML_FOP_MAX != 111) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -982,6 +983,16 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return f;
         }
 
+        case ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT: {
+            float f = 0.0;
+            uint size = inputs.size();
+
+            for (uint i = 0; i < size; i++) {
+                f += getParam(i) * getInput(i);
+            }
+            return CLAMP_UNIT(f);
+        }
+
         case ML_FOP_NxN_SCALED_MIN: {
             float f = getInput(0) * getParam(0);
 
@@ -1255,7 +1266,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 110) {
+    if (mb_debug && ML_FOP_MAX != 111) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1450,6 +1461,7 @@ void MLFloatNode::minimize()
             break;
 
         case ML_FOP_NxN_LINEAR_COMBINATION:
+        case ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT:
         case ML_FOP_NxN_SCALED_MIN:
         case ML_FOP_NxN_SCALED_MAX:
         case ML_FOP_NxN_SELECT_GTE:
