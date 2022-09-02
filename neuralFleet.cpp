@@ -3250,6 +3250,7 @@ static void LoadNeuralValueDesc(MBRegistry *mreg,
             LoadNeuralCrowdDesc(mreg, &desc->crowdDesc, s.CStr());
             break;
 
+        case NEURAL_VALUE_VOID:
         case NEURAL_VALUE_ZERO:
         case NEURAL_VALUE_TICK:
         case NEURAL_VALUE_MOBID:
