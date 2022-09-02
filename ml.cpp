@@ -88,6 +88,9 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x3_COS), },
     { TMENTRY(ML_FOP_1x3_TAN), },
 
+    { TMENTRY(ML_FOP_1x4_IF_INSIDE_RANGE_ELSE), },
+    { TMENTRY(ML_FOP_1x4_IF_OUTSIDE_RANGE_ELSE), },
+
     { TMENTRY(ML_FOP_1xN_SELECT_UNIT_INTERVAL_STEP), },
     { TMENTRY(ML_FOP_1xN_SELECT_UNIT_INTERVAL_LERP), },
 
@@ -233,7 +236,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 99) {
+    if (mb_debug && ML_FOP_MAX != 101) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -509,6 +512,27 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float p1 = getParam(1);
             float p2 = getParam(2);
             return p0 * tanf(p1 * (f + p2));
+        }
+
+        case ML_FOP_1x4_IF_INSIDE_RANGE_ELSE: {
+            float i0 = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            float p3 = getParam(3);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            return (i0 >= min && i0 <= max) ? p2 : p3;
+        }
+        case ML_FOP_1x4_IF_OUTSIDE_RANGE_ELSE: {
+            float i0 = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            float p3 = getParam(3);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            return (i0 <= min || i0 >= max) ? p2 : p3;
         }
 
         case ML_FOP_2x0_POW:
@@ -1091,7 +1115,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 99) {
+    if (mb_debug && ML_FOP_MAX != 101) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1177,6 +1201,12 @@ void MLFloatNode::minimize()
         case ML_FOP_1x3_TAN:
             numInputs = 1;
             numParams = 3;
+            break;
+
+        case ML_FOP_1x4_IF_INSIDE_RANGE_ELSE:
+        case ML_FOP_1x4_IF_OUTSIDE_RANGE_ELSE:
+            numInputs = 1;
+            numParams = 4;
             break;
 
         case ML_FOP_1xN_SELECT_UNIT_INTERVAL_STEP:
