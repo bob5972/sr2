@@ -853,7 +853,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint n = inputs.size() - 1;
             uint index = 1 + n * s;
 
-            index = MAX(inputs.size(), index);
+            index = MAX(inputs.size() - 1, index);
 
             return getInput(index);
         }
@@ -863,7 +863,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint n = params.size();
             uint index = n * s;
 
-            index = MAX(inputs.size(), index);
+            index = MAX(inputs.size() - 1, index);
 
             return getParam(index);
         }
@@ -1543,5 +1543,25 @@ void ML_UnitTest()
     if (ARRAYSIZE(tmMLFloatOps) != ML_FOP_MAX) {
         PANIC("ARRAYSIZE(tmMLFloatOps)=%d, ML_FOP_MAX=%d\n",
               (uint)ARRAYSIZE(tmMLFloatOps), ML_FOP_MAX);
+    }
+
+    for (op = (MLFloatOp)(ML_FOP_INVALID + 1); op < ML_FOP_MAX; op++) {
+        MLFloatNode n;
+
+        n.op = op;
+        n.index = 7;
+        n.params.resize(8);
+        n.inputs.resize(8);
+        MBVector<float> v;
+        v.resize(8);
+
+        for (uint i = 0; i < 8; i++) {
+            n.params[i] = Random_UnitFloat();
+            n.inputs[i] = Random_Int(0, 6);
+            v[i] = Random_UnitFloat();
+        }
+
+        n.minimize();
+        n.compute(v);
     }
 }

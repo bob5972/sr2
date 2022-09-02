@@ -210,6 +210,13 @@ class MLFloatNode {
         float computeWork(const MBVector<float> &values);
 
         float getInput(uint i) {
+            if (mb_debug) {
+                if (UNLIKELY(i >= inputs.size())) {
+                    PANIC("Input out of range: i=%d, numInputs=%d, op=%s(%d)\n",
+                          i, inputs.size(), ML_FloatOpToString(op), op);
+                }
+            }
+
             ASSERT(myValues != NULL);
             ASSERT(i < inputs.size());
             ASSERT(index < myValues->size());
