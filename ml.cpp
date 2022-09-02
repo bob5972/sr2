@@ -914,8 +914,12 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint indexLower = n * s;
             uint indexUpper = indexLower + 1;
 
-            indexLower = MAX(params.size() - 1, indexLower);
-            indexUpper = MAX(params.size() - 1, indexUpper);
+            indexLower = MAX(n - 1, indexLower);
+            indexUpper = MAX(n - 1, indexUpper);
+
+            ASSERT(indexLower <= indexUpper);
+            ASSERT(indexLower < params.size() );
+            ASSERT(indexUpper < params.size());
 
             float iL = getParam(indexLower);
             float iU = getParam(indexUpper);
