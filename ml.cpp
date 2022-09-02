@@ -897,8 +897,8 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint indexLower = 1 + n * s;
             uint indexUpper = indexLower + 1;
 
-            indexLower = MAX(inputs.size(), indexLower);
-            indexUpper = MAX(inputs.size(), indexUpper);
+            indexLower = MAX(inputs.size() - 1, indexLower);
+            indexUpper = MAX(inputs.size() - 1, indexUpper);
 
             float iL = getInput(indexLower);
             float iU = getInput(indexUpper);
@@ -914,8 +914,8 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             uint indexLower = n * s;
             uint indexUpper = indexLower + 1;
 
-            indexLower = MAX(params.size(), indexLower);
-            indexUpper = MAX(params.size(), indexUpper);
+            indexLower = MAX(params.size() - 1, indexLower);
+            indexUpper = MAX(params.size() - 1, indexUpper);
 
             float iL = getParam(indexLower);
             float iU = getParam(indexUpper);
@@ -948,8 +948,8 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
                 }
             }
             uint indexUpper = 1 + indexLower;
-            indexLower = MAX(inputs.size(), indexLower);
-            indexUpper = MAX(inputs.size(), indexUpper);
+            indexLower = MAX(inputs.size() - 1, indexLower);
+            indexUpper = MAX(inputs.size() - 1, indexUpper);
 
             float iL = getInput(indexLower);
             float iU = getInput(indexUpper);
