@@ -764,6 +764,8 @@ void MLFloatNode::mutate(float rate,
                          uint maxInputs, uint maxParams)
 {
     MutationFloatParams mp;
+    uint oldSize;
+    uint newSize;
 
     /*
      * Mutate the mutationRate itself with a base probability.
@@ -778,73 +780,103 @@ void MLFloatNode::mutate(float rate,
         return;
     }
 
-    if (inputs.size() < maxInputs) {
-        uint oldSize = inputs.size();
-        if (Random_Flip(rate)) {
-            inputs.resize(oldSize + 1);
-        }
-
-        for (uint i = oldSize; i < inputs.size(); i++) {
-            inputs[i] = 0;
-        }
-    }
-    if (inputs.size() > 0 && Random_Flip(rate)) {
-        uint p = inputs.last();
-        int n = Random_Int(0, inputs.size() - 1);
-        inputs.shrink();
-
-        for (int i = inputs.size() - 1; i > n; i--) {
-            float t = inputs[i];
-            inputs[i] = p;
-            p = t;
-        }
-
-        if (n < inputs.size()) {
-            inputs[n] = p;
-        }
-    }
-
-    if (params.size() < maxParams) {
-        uint oldSize = params.size();
-        if (Random_Flip(rate)) {
-            params.resize(oldSize + 1);
-        }
-
-        for (uint i = oldSize; i < params.size(); i++) {
-            params[i] = 0.0f;
-        }
-    }
-    if (params.size() > 0 && Random_Flip(rate)) {
-        float p = params.last();
-        int n = Random_Int(0, params.size() - 1);
-        params.shrink();
-
-        for (int i = params.size() - 1; i > n; i--) {
-            float t = params[i];
-            params[i] = p;
-            p = t;
-        }
-
-        if (n < params.size()) {
-            params[n] = p;
-        }
-    }
-
+    /* Op */
     if (Random_Flip(rate)) {
         op = (MLFloatOp)Random_Int(ML_FOP_MIN, ML_FOP_MAX - 1);
     }
 
+    /* Inputs */
+    oldSize = inputs.size();
+    newSize = oldSize;
+    if (oldSize > 1 && Random_Flip(rate / 2.0f)) {
+        for (uint i = 0; i < oldSize; i++) {
+            uint i0 = Random_Int(0, oldSize - 1);
+            uint i1 = Random_Int(0, oldSize - 1);
+            if (i0 != i1) {
+                uint t = inputs[i0];
+                inputs[i0] = inputs[i1];
+                inputs[i1] = t;
+            }
+        }
+    }
+
+    if (oldSize < maxInputs && Random_Flip(rate)) {
+        newSize = oldSize + 1;
+    }
+    if (oldSize > 0 && Random_Flip(rate)) {
+        newSize = oldSize - 1;
+    }
+    if (Random_Flip(rate / 2.0f)) {
+        newSize = Random_Int(0, maxInputs);
+    }
+
+    inputs.resize(newSize);
+    for (uint i = oldSize; i < newSize; i++) {
+        inputs[i] = index > 0 ? Random_Int(0, index - 1) : 0;
+    }
     for (uint i = 0; i < inputs.size(); i++) {
         if (Random_Flip(rate)) {
             inputs[i] = index > 0 ? Random_Int(0, index - 1) : 0;
         }
     }
+    if (newSize > 1 && Random_Flip(rate / 2.0f)) {
+        for (uint i = 0; i < newSize; i++) {
+            uint i0 = Random_Int(0, newSize - 1);
+            uint i1 = Random_Int(0, newSize - 1);
+            if (i0 != i1) {
+                uint t = inputs[i0];
+                inputs[i0] = inputs[i1];
+                inputs[i1] = t;
+            }
+        }
+    }
 
+
+    /* Params */
+    oldSize = params.size();
+    newSize = oldSize;
+    if (oldSize > 1 && Random_Flip(rate / 2.0f)) {
+        for (uint i = 0; i < oldSize; i++) {
+            uint i0 = Random_Int(0, oldSize - 1);
+            uint i1 = Random_Int(0, oldSize - 1);
+            if (i0 != i1) {
+                float t = params[i0];
+                params[i0] = params[i1];
+                params[i1] = t;
+            }
+        }
+    }
+
+    if (oldSize < maxParams && Random_Flip(rate)) {
+        newSize = oldSize + 1;
+    }
+    if (oldSize > 0 && Random_Flip(rate)) {
+        newSize = oldSize - 1;
+    }
+    if (Random_Flip(rate / 2.0f)) {
+        newSize = Random_Int(0, maxParams);
+    }
+
+    params.resize(newSize);
+    for (uint i = oldSize; i < newSize; i++) {
+        params[i] = 0.0f;
+    }
     for (uint i = 0; i < params.size(); i++) {
         int r = Random_Int(0, MUTATION_TYPE_MAX - 1);
         Mutate_DefaultFloatParams(&mp, (MutationType)r);
         mp.mutationRate = (mp.mutationRate + rate) / 2.0f;
         params[i] = Mutate_FloatRaw(params[i], FALSE, &mp);
+    }
+    if (newSize > 1 && Random_Flip(rate / 2.0f)) {
+        for (uint i = 0; i < newSize; i++) {
+            uint i0 = Random_Int(0, newSize - 1);
+            uint i1 = Random_Int(0, newSize - 1);
+            if (i0 != i1) {
+                float t = params[i0];
+                params[i0] = params[i1];
+                params[i1] = t;
+            }
+        }
     }
 }
 
