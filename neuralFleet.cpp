@@ -168,7 +168,7 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
 
 class NeuralAIGovernor : public BasicAIGovernor
 {
-private:
+public:
     // Members
     FloatNet myNeuralNet;
     MBVector<NeuralValueDesc> myInputDescs;
@@ -2415,17 +2415,43 @@ public:
         VERIFY(aiType <= FLEET_AI_NEURAL4);
         VERIFY(neuralIndex >= 1 && neuralIndex < ARRAYSIZE(configs));
 
-        for (int i = neuralIndex; i >= 0; i--) {
-            NeuralConfigValue *curConfig = configs[i].values;
-            uint size = configs[i].numValues;
-            for (uint k = 0; k < size; k++) {
-                if (curConfig[k].value != NULL &&
-                    !MBRegistry_ContainsKey(mreg, curConfig[k].key)) {
-                    MBRegistry_PutConst(mreg, curConfig[k].key,
-                                        curConfig[k].value);
-                }
+        int i = neuralIndex;
+        NeuralConfigValue *curConfig = configs[i].values;
+        uint size = configs[i].numValues;
+        for (uint k = 0; k < size; k++) {
+            if (curConfig[k].value != NULL &&
+                !MBRegistry_ContainsKey(mreg, curConfig[k].key)) {
+                MBRegistry_PutConst(mreg, curConfig[k].key,
+                                    curConfig[k].value);
             }
         }
+
+        i = 0;
+        curConfig = configs[i].values;
+        size = configs[i].numValues;
+        for (uint k = 0; k < size; k++) {
+            if (curConfig[k].value != NULL &&
+                !MBRegistry_ContainsKey(mreg, curConfig[k].key)) {
+                MBRegistry_PutConst(mreg, curConfig[k].key,
+                                    curConfig[k].value);
+            }
+        }
+
+        /*
+         * Don't add all the earlier configs by default.
+         */
+
+        // for (int i = neuralIndex; i >= 0; i--) {
+        //     NeuralConfigValue *curConfig = configs[i].values;
+        //     uint size = configs[i].numValues;
+        //     for (uint k = 0; k < size; k++) {
+        //         if (curConfig[k].value != NULL &&
+        //             !MBRegistry_ContainsKey(mreg, curConfig[k].key)) {
+        //             MBRegistry_PutConst(mreg, curConfig[k].key,
+        //                                 curConfig[k].value);
+        //         }
+        //     }
+        // }
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
@@ -3007,6 +3033,36 @@ static void NeuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
     NeuralFleet *sf = (NeuralFleet *)aiHandle;
     MBRegistry_PutAll(mreg, sf->mreg, "");
     sf->gov.dumpSanitizedParams(mreg);
+
+    /*
+     * If we zeroed out the inputs/outputs when the FloatNet was minimized,
+     * reflect that here.
+     */
+    for (uint i = 0; i < sf->gov.myInputDescs.size(); i++) {
+        if (sf->gov.myInputDescs[i].valueType == NEURAL_VALUE_ZERO) {
+            char *str = NULL;
+            const char *value;
+            int ret = asprintf(&str, "input[%d].valueType", i);
+            VERIFY(ret > 0);
+            value = TextMap_ToString(sf->gov.myInputDescs[i].valueType,
+                                     tmValues, ARRAYSIZE(tmValues));
+            MBRegistry_PutCopy(mreg, str, value);
+            free(str);
+        }
+    }
+    for (uint i = 0; i < sf->gov.myOutputDescs.size(); i++) {
+        if (sf->gov.myOutputDescs[i].valueType == NEURAL_VALUE_FORCE &&
+            sf->gov.myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO) {
+            char *str = NULL;
+            const char *value;
+            int ret = asprintf(&str, "output[%d].forceType", i);
+            VERIFY(ret > 0);
+            value = TextMap_ToString(sf->gov.myOutputDescs[i].forceDesc.forceType,
+                                     tmForces, ARRAYSIZE(tmForces));
+            MBRegistry_PutCopy(mreg, str, value);
+            free(str);
+        }
+    }
 }
 
 static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)

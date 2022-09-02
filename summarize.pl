@@ -132,19 +132,25 @@ sub DumpGraph($) {
     my $oNodes = {};
     my $iNodes = {};
 
+    my $allowZero = FALSE;
+
     foreach my $k (sort keys %{$fleet}) {
         if ($k =~ /^floatNet.node\[(\d+)\]\.op$/) {
             my $n = $1;
             my $op = $fleet->{$k};
-            $nodes->{$n} = "$n\\n$op";
+            if ($allowZero || $op ne "ML_FOP_0x0_ZERO") {
+                $nodes->{$n} = "$n\\n$op";
+            }
         }
     }
     foreach my $k (sort keys %{$fleet}) {
         if ($k =~ /^input\[(\d+)\]\.valueType/) {
             my $n = $1;
             my $type = $fleet->{$k};
-            $nodes->{$n} = "$n\\n$type";
-            $iNodes->{$n} = $type;
+            if ($allowZero || $type ne "NEURAL_VALUE_ZERO") {
+                $nodes->{$n} = "$n\\n$type";
+                $iNodes->{$n} = $type;
+            }
         }
     }
 
@@ -152,7 +158,9 @@ sub DumpGraph($) {
         if ($k =~ /^output\[(\d+)\]\.forceType/) {
             my $n = $1;
             my $type = $fleet->{$k};
-            $oNodes->{$n} = $type;
+            if ($allowZero || $type ne "NEURAL_FORCE_ZERO") {
+                $oNodes->{$n} = $type;
+            }
         }
     }
 
@@ -171,7 +179,7 @@ sub DumpGraph($) {
     foreach my $k (sort keys %{$oNodes}) {
         my $v = $nodes->{$k};
         my $color = "";
-        if ($oNodes->{$k}) {
+        if (defined($nodes->{$k})) {
             $color .= "color=red";
             Console("$k [label=\"$v\"];\n");
 
@@ -197,9 +205,10 @@ sub DumpGraph($) {
             $v =~ s/\}$//;
             my $inputs = $v;
 
-            while ($inputs =~ s/^(\d+),//) {
+            while ($inputs =~ /^(\d+)\,/) {
                 my $i = $1;
                 Console("$i -> $n\n");
+                $inputs =~ s/^\s*\d+\,\s*//;
             }
         }
     }
