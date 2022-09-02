@@ -245,10 +245,10 @@ uint FloatNet::minimize(CPBitVector *inputBV)
         for (uint i = 0; i < myNodes.size(); i++) {
             MLFloatNode *n = &myNodes[i];
             ASSERT(myNodes[i].index == i + myNumInputs);
-            if (n->isZero()) {
+            if (n->isVoid()) {
                 /*
-                 * Treat already zeroed nodes as "referenced" for now,
-                 * because we don't need to zero them again.
+                 * Treat already voided nodes as "referenced" for now,
+                 * because we don't need to void them again.
                  */
                 bv.set(i + myNumInputs);
             } else {
@@ -265,7 +265,7 @@ uint FloatNet::minimize(CPBitVector *inputBV)
             uint ni = i + myNumInputs;
             ASSERT(myNodes[i].index == ni);
             if (!bv.get(ni)) {
-                myNodes[i].makeZero();
+                myNodes[i].makeVoid();
                 keepGoing = TRUE;
             }
         }

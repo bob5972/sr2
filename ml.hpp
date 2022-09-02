@@ -27,9 +27,10 @@
  */
 typedef enum MLFloatOp {
     ML_FOP_INVALID = 0,
+    ML_FOP_VOID = 1,
 
-    ML_FOP_0x0_ZERO = 1,
-    ML_FOP_MIN = 1,
+    ML_FOP_0x0_ZERO = 2,
+    ML_FOP_MIN = 2,
     ML_FOP_0x0_ONE,
 
     ML_FOP_0x1_CONSTANT,
@@ -201,8 +202,9 @@ class MLFloatNode {
         void save(MBRegistry *mreg, const char *prefix);
 
         void minimize();
-        void makeZero();
+        void makeVoid();
         bool isZero() { return op == ML_FOP_0x0_ZERO; }
+        bool isVoid() { return op == ML_FOP_VOID; }
 
     private:
         const MBVector<float> *myValues;

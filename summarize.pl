@@ -132,13 +132,11 @@ sub DumpGraph($) {
     my $oNodes = {};
     my $iNodes = {};
 
-    my $allowZero = FALSE;
-
     foreach my $k (sort keys %{$fleet}) {
         if ($k =~ /^floatNet.node\[(\d+)\]\.op$/) {
             my $n = $1;
             my $op = $fleet->{$k};
-            if ($allowZero || $op ne "ML_FOP_0x0_ZERO") {
+            if ($op ne "ML_FOP_VOID") {
                 $nodes->{$n} = "$n\\n$op";
             }
         }
@@ -147,7 +145,7 @@ sub DumpGraph($) {
         if ($k =~ /^input\[(\d+)\]\.valueType/) {
             my $n = $1;
             my $type = $fleet->{$k};
-            if ($allowZero || $type ne "NEURAL_VALUE_ZERO") {
+            if ($type ne "NEURAL_VALUE_VOID") {
                 $nodes->{$n} = "$n\\n$type";
                 $iNodes->{$n} = $type;
             }
@@ -158,7 +156,7 @@ sub DumpGraph($) {
         if ($k =~ /^output\[(\d+)\]\.forceType/) {
             my $n = $1;
             my $type = $fleet->{$k};
-            if ($allowZero || $type ne "NEURAL_FORCE_ZERO") {
+            if ($type ne "NEURAL_FORCE_VOID") {
                 $oNodes->{$n} = $type;
             }
         }

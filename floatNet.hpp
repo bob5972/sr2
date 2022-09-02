@@ -57,11 +57,11 @@ class FloatNet
             return myNumInputs + myNodes.size() - myNumOutputs;
         }
 
-        void zeroOutputNode(uint i) {
+        void voidOutputNode(uint i) {
             uint numNodes = myNodes.size();
             ASSERT(numNodes >= myNumOutputs);
             i = i + numNodes - myNumOutputs;
-            myNodes[i].makeZero();
+            myNodes[i].makeVoid();
         }
 
     private:

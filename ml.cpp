@@ -31,6 +31,7 @@ static INLINE float MLClampUnit(float x) {
 
 static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_INVALID), },
+    { TMENTRY(ML_FOP_VOID), },
     { TMENTRY(ML_FOP_0x0_ZERO), },
     { TMENTRY(ML_FOP_0x0_ONE), },
     { TMENTRY(ML_FOP_0x1_CONSTANT), },
@@ -254,11 +255,12 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 111) {
+    if (mb_debug && ML_FOP_MAX != 112) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
     switch (op) {
+        case ML_FOP_VOID:
         case ML_FOP_0x0_ZERO:
             return 0.0f;
         case ML_FOP_0x0_ONE:
@@ -1270,11 +1272,12 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 111) {
+    if (mb_debug && ML_FOP_MAX != 112) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
     switch (op) {
+        case ML_FOP_VOID:
         case ML_FOP_0x0_ZERO:
         case ML_FOP_0x0_ONE:
             numInputs = 0;
@@ -1491,9 +1494,9 @@ void MLFloatNode::minimize()
         numParams > params.size()) {
         /*
          * If we don't have enough parameters,
-         * treat this as a ZERO op.
+         * treat this as a VOID op.
          */
-        makeZero();
+        makeVoid();
     } else {
         if (numInputs < inputs.size()) {
             inputs.resize(numInputs);
@@ -1504,12 +1507,11 @@ void MLFloatNode::minimize()
     }
 }
 
-void MLFloatNode::makeZero()
+void MLFloatNode::makeVoid()
 {
-    op = ML_FOP_0x0_ZERO;
+    op = ML_FOP_VOID;
     params.resize(0);
     inputs.resize(0);
-    mutationRate = 0.25f;
 }
 
 const char *ML_FloatOpToString(MLFloatOp op)

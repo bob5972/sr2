@@ -41,6 +41,7 @@ extern "C" {
 #define NEURAL_SCRAMBLE_KEY "neuralFleet.scrambleMutation"
 
 typedef enum NeuralForceType {
+    NEURAL_FORCE_VOID,
     NEURAL_FORCE_ZERO,
     NEURAL_FORCE_HEADING,
     NEURAL_FORCE_ALIGN,
@@ -65,6 +66,7 @@ typedef enum NeuralForceType {
 } NeuralForceType;
 
 static TextMapEntry tmForces[] = {
+    { TMENTRY(NEURAL_FORCE_VOID),                     },
     { TMENTRY(NEURAL_FORCE_ZERO),                     },
     { TMENTRY(NEURAL_FORCE_HEADING),                  },
     { TMENTRY(NEURAL_FORCE_ALIGN),                    },
@@ -118,6 +120,7 @@ typedef struct NeuralCrowdDesc {
 } NeuralCrowdDesc;
 
 typedef enum NeuralValueType {
+    NEURAL_VALUE_VOID,
     NEURAL_VALUE_ZERO,
     NEURAL_VALUE_FORCE,
     NEURAL_VALUE_RANGE,
@@ -131,6 +134,7 @@ typedef enum NeuralValueType {
 } NeuralValueType;
 
 static TextMapEntry tmValues[] = {
+    { TMENTRY(NEURAL_VALUE_VOID),  },
     { TMENTRY(NEURAL_VALUE_ZERO),  },
     { TMENTRY(NEURAL_VALUE_FORCE), },
     { TMENTRY(NEURAL_VALUE_RANGE), },
@@ -2483,13 +2487,15 @@ public:
 
             if (myOutputDescs[i].valueType != NEURAL_VALUE_FORCE) {
                 myOutputDescs[i].valueType = NEURAL_VALUE_FORCE;
-                myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_ZERO;
+                myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
                 myOutputDescs[i].forceDesc.useTangent = FALSE;
                 myOutputDescs[i].forceDesc.radius = 0.0f;
             }
 
-            if (myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO) {
-                myNeuralNet.zeroOutputNode(i);
+            if (myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
+                myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
+                myNeuralNet.voidOutputNode(i);
+                myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
             }
         }
 
@@ -2505,7 +2511,7 @@ public:
                 LoadNeuralValueDesc(mreg, &myInputDescs[i], str);
                 free(str);
             } else {
-                myInputDescs[i].valueType = NEURAL_VALUE_ZERO;
+                myInputDescs[i].valueType = NEURAL_VALUE_VOID;
             }
         }
 
@@ -2523,6 +2529,7 @@ public:
         ASSERT(desc != NULL);
         switch (desc->valueType) {
             case NEURAL_VALUE_ZERO:
+            case NEURAL_VALUE_VOID:
                 return 0.0f;
             case NEURAL_VALUE_FORCE:
                 getNeuralForce(mob, &desc->forceDesc, &force);
@@ -2597,6 +2604,7 @@ public:
         RandomState *rs = &myRandomState;
 
         switch(desc->forceType) {
+            case NEURAL_FORCE_VOID:
             case NEURAL_FORCE_ZERO:
                 return FALSE;
 
@@ -2904,7 +2912,8 @@ public:
         for (uint i = 0; i < myOutputDescs.size(); i++) {
             FRPoint force;
             ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
-            if (myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO &&
+            ASSERT(myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
+            if (myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_VOID &&
                 myOutputs[x] != 0.0f &&
                 getNeuralForce(mob, &myOutputDescs[i].forceDesc,
                                &force)) {
@@ -3035,11 +3044,11 @@ static void NeuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
     sf->gov.dumpSanitizedParams(mreg);
 
     /*
-     * If we zeroed out the inputs/outputs when the FloatNet was minimized,
+     * If we voided out the inputs/outputs when the FloatNet was minimized,
      * reflect that here.
      */
     for (uint i = 0; i < sf->gov.myInputDescs.size(); i++) {
-        if (sf->gov.myInputDescs[i].valueType == NEURAL_VALUE_ZERO) {
+        if (sf->gov.myInputDescs[i].valueType == NEURAL_VALUE_VOID) {
             char *str = NULL;
             const char *value;
             int ret = asprintf(&str, "input[%d].valueType", i);
@@ -3052,7 +3061,7 @@ static void NeuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
     }
     for (uint i = 0; i < sf->gov.myOutputDescs.size(); i++) {
         if (sf->gov.myOutputDescs[i].valueType == NEURAL_VALUE_FORCE &&
-            sf->gov.myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO) {
+            sf->gov.myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
             char *str = NULL;
             const char *value;
             int ret = asprintf(&str, "output[%d].forceType", i);
