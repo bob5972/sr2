@@ -135,6 +135,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_SELECT_GTE), },
     { TMENTRY(ML_FOP_NxN_SELECT_LTE), },
     { TMENTRY(ML_FOP_NxN_POW_SUM), },
+    { TMENTRY(ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_STEP), },
 };
 
 float MLFloatCheck1x1(MLFloatOp op, float input,
@@ -230,7 +231,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 96) {
+    if (mb_debug && ML_FOP_MAX != 97) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -624,7 +625,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         }
 
         case ML_FOP_Nx0_SUM: {
-            float f = 0.0;
+            float f = 0.0f;
 
             for (uint i = 0; i < inputs.size(); i++) {
                 f += getInput(i);
@@ -632,7 +633,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return f;
         }
         case ML_FOP_Nx0_PRODUCT: {
-            float f = 1.0;
+            float f = 1.0f;
 
             for (uint i = 0; i < inputs.size(); i++) {
                 f *= getInput(i);
@@ -727,6 +728,29 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return getParam(index);
         }
+        case ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_STEP: {
+            float i0 = getInput(0);
+            float s = MAX(0.0f, MIN(1.0f, i0));
+            float totalW = 0.0f;
+
+            for (uint i = 1; i < inputs.size(); i++) {
+                totalW += getParam(i);
+            }
+
+            float curW = 0.0f;
+            uint index = inputs.size() - 1;
+            for (uint i = 1; i < inputs.size(); i++) {
+                curW += getParam(i) / totalW;
+                if (s <= curW) {
+                    index = i;
+                    // break loop
+                    i = inputs.size();
+                }
+            }
+
+            return getInput(index);
+        }
+
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP: {
             float i0 = getInput(0);
             float s = MAX(0.0f, MIN(1.0f, i0));
@@ -1030,7 +1054,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 96) {
+    if (mb_debug && ML_FOP_MAX != 97) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
