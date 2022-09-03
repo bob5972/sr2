@@ -24,6 +24,9 @@
 #include "mutate.h"
 
 static INLINE float MLClampUnit(float x) {
+    if (isnan(x)) {
+        return 0.0f;
+    }
     return MAX(0.0f, MIN(1.0f, x));
 }
 #define CLAMP_UNIT(_x) (MLClampUnit(_x))
@@ -894,7 +897,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP: {
             float i0 = getInput(0);
-            float s = MAX(0.0f, MIN(1.0f, i0));
+            float s = CLAMP_UNIT(i0);
             uint n = inputs.size() - 1;
             uint indexLower = 1 + n * s;
             uint indexUpper = indexLower + 1;
@@ -911,7 +914,7 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         }
         case ML_FOP_1xN_SELECT_UNIT_INTERVAL_LERP: {
             float i0 = getInput(0);
-            float s = MAX(0.0f, MIN(1.0f, i0));
+            float s = CLAMP_UNIT(i0);
             uint n = params.size();
             uint indexLower = n * s;
             uint indexUpper = indexLower + 1;
