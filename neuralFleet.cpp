@@ -322,7 +322,7 @@ public:
             { "input[11].radius", "1410.684570" },
             { "input[11].useTangent", "FALSE" },
             { "input[11].valueType", "NEURAL_VALUE_FORCE" },
-            { "input[12].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[12].forceType", "NEURAL_FORCE_ZERO" },
             { "input[12].radius", "821.751221" },
             { "input[12].useTangent", "FALSE" },
             { "input[12].valueType", "NEURAL_VALUE_TICK" },
@@ -346,7 +346,7 @@ public:
             { "input[17].radius", "938.246948" },
             { "input[17].useTangent", "TRUE" },
             { "input[17].valueType", "NEURAL_VALUE_FORCE" },
-            { "input[18].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[18].forceType", "NEURAL_FORCE_ZERO" },
             { "input[18].radius", "1578.296631" },
             { "input[18].useTangent", "FALSE" },
             { "input[18].valueType", "NEURAL_VALUE_FORCE" },
@@ -370,7 +370,7 @@ public:
             { "input[4].radius", "2304.703857" },
             { "input[4].useTangent", "TRUE" },
             { "input[4].valueType", "NEURAL_VALUE_MOBID" },
-            { "input[5].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[5].forceType", "NEURAL_FORCE_ZERO" },
             { "input[5].radius", "1718.594727" },
             { "input[5].useTangent", "TRUE" },
             { "input[5].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
@@ -914,7 +914,7 @@ public:
             { "input[13].radius", "0.000000" },
             { "input[13].valueType", "NEURAL_VALUE_TICK" },
             { "input[14].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
-            { "input[14].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[14].forceType", "NEURAL_FORCE_ZERO" },
             { "input[14].radius", "0.000000" },
             { "input[14].useTangent", "FALSE" },
             { "input[14].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
@@ -1553,7 +1553,7 @@ public:
             { "input[13].useTangent", "TRUE" },
             { "input[13].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
             { "input[14].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
-            { "input[14].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[14].forceType", "NEURAL_FORCE_ZERO" },
             { "input[14].radius", "0.000000" },
             { "input[14].useTangent", "FALSE" },
             { "input[14].valueType", "NEURAL_VALUE_TICK" },
@@ -1568,7 +1568,7 @@ public:
             { "input[16].useTangent", "TRUE" },
             { "input[16].valueType", "NEURAL_VALUE_FORCE" },
             { "input[17].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[17].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[17].forceType", "NEURAL_FORCE_ZERO" },
             { "input[17].radius", "0.000000" },
             { "input[17].useTangent", "TRUE" },
             { "input[17].valueType", "NEURAL_VALUE_CROWD" },
@@ -1699,7 +1699,7 @@ public:
             { "output[111].radius", "0.000000" },
             { "output[111].useTangent", "TRUE" },
             { "output[111].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[112].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "output[112].forceType", "NEURAL_FORCE_ZERO" },
             { "output[112].radius", "0.000000" },
             { "output[112].useTangent", "TRUE" },
             { "output[112].valueType", "NEURAL_VALUE_FORCE" },
@@ -1719,7 +1719,7 @@ public:
             { "output[116].radius", "0.000000" },
             { "output[116].useTangent", "FALSE" },
             { "output[116].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[117].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "output[117].forceType", "NEURAL_FORCE_ZERO" },
             { "output[117].radius", "-1.000000" },
             { "output[117].useTangent", "FALSE" },
             { "output[117].valueType", "NEURAL_VALUE_FORCE" },
@@ -2195,7 +2195,7 @@ public:
             { "input[13].useTangent", "TRUE" },
             { "input[13].valueType", "NEURAL_VALUE_CREDITS" },
             { "input[14].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
-            { "input[14].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[14].forceType", "NEURAL_FORCE_ZERO" },
             { "input[14].radius", "0.000000" },
             { "input[14].useTangent", "FALSE" },
             { "input[14].valueType", "NEURAL_VALUE_TICK" },
@@ -2254,7 +2254,7 @@ public:
             { "input[24].useTangent", "TRUE" },
             { "input[24].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
             { "input[2].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
-            { "input[2].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "input[2].forceType", "NEURAL_FORCE_ZERO" },
             { "input[2].radius", "-1.000000" },
             { "input[2].useTangent", "FALSE" },
             { "input[2].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
@@ -2563,7 +2563,7 @@ public:
 
         if (getNeuralFocus(mob, desc, &focusPoint)) {
             FPoint_ToFRPoint(&focusPoint, &mob->pos, rForce);
-            rForce->radius = 1.0f;
+            FRPoint_SetSpeed(rForce, 1.0f);
 
             if (desc->useTangent) {
                 rForce->theta += (float)M_PI/2;
@@ -2723,6 +2723,11 @@ public:
         int x = 0;
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
         MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
+        float radiusSquared = desc->radius * desc->radius;
+
+        if (desc->radius <= 0.0f) {
+            return FALSE;
+        }
 
         ASSERT(self->type == MOB_TYPE_FIGHTER);
 
@@ -2732,7 +2737,8 @@ public:
             Mob *m = mit.next();
             ASSERT(m != NULL);
 
-            if (m->mobid != self->mobid) {
+            if (m->mobid != self->mobid &&
+                FPoint_DistanceSquared(&self->pos, &m->pos) <= radiusSquared) {
                 repulseFocus(&self->pos, &m->pos, &force);
                 x++;
             }
@@ -2746,7 +2752,7 @@ public:
         FRPoint f;
         RandomState *rs = &myRandomState;
 
-        FPoint_ToFRPoint(pos, selfPos, &f);
+        FPoint_ToFRPoint(selfPos, pos, &f);
 
         /*
          * Avoid 1/0 => NAN, and then randomize the direction when
@@ -2914,7 +2920,7 @@ public:
                 myOutputs[x] != 0.0f &&
                 getNeuralForce(mob, &myOutputDescs[i].forceDesc,
                                &force)) {
-                force.radius = myOutputs[x];
+                FRPoint_SetSpeed(&force, myOutputs[x]);
                 FRPoint_Add(&force, outputForce, outputForce);
             }
             x++;
@@ -2954,7 +2960,8 @@ public:
             getNeuralForce(mob, &desc, &rForce);
         }
 
-        rForce.radius = speed;
+        FRPoint_SetSpeed(&rForce, speed);
+
         FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
 
         ASSERT(!isnanf(mob->cmd.target.x));

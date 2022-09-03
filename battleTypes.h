@@ -23,7 +23,7 @@
 #include "MBVarMap.h"
 #include "MBRegistry.h"
 
-#define MICRON (0.01f)
+#define MICRON (0.001f)
 
 /*
  * PlayerID's are relative to a single scenario.

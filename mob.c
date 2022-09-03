@@ -64,10 +64,10 @@ float MobType_GetSpeed(MobType type)
         MobType type;
         float speed;
     } v[] = {
-        { MOB_TYPE_INVALID,    0.0f, },
-        { MOB_TYPE_BASE,       0.0f, },
-        { MOB_TYPE_FIGHTER,    2.5f, },
-        { MOB_TYPE_MISSILE,    5.0f, },
+        { MOB_TYPE_INVALID,      0.0f, },
+        { MOB_TYPE_BASE,         0.0f, },
+        { MOB_TYPE_FIGHTER,      2.5f, },
+        { MOB_TYPE_MISSILE,      5.0f, },
         { MOB_TYPE_POWER_CORE ,  0.5f, },
     };
 
