@@ -245,7 +245,7 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_BUNDLE15;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_NEURAL4;
+        mainData.players[p].aiType = FLEET_AI_NEURAL5;
         p++;
 
         //mainData.players[p].playerName = "HoldMod";

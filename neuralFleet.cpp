@@ -2399,6 +2399,9 @@ public:
             { "startingMaxRadius", "1000.000000" },
             { "startingMinRadius", "634.740601" },
         };
+        NeuralConfigValue configs5[] = {
+            { "void", "void" },
+        };
 
         struct {
             NeuralConfigValue *values;
@@ -2409,11 +2412,12 @@ public:
             { configs2,  ARRAYSIZE(configs2), },
             { configs3,  ARRAYSIZE(configs3), },
             { configs4,  ARRAYSIZE(configs4), },
+            { configs5,  ARRAYSIZE(configs5), },
         };
 
         int neuralIndex = aiType - FLEET_AI_NEURAL1 + 1;
         VERIFY(aiType >= FLEET_AI_NEURAL1);
-        VERIFY(aiType <= FLEET_AI_NEURAL4);
+        VERIFY(aiType <= FLEET_AI_NEURAL5);
         VERIFY(neuralIndex >= 1 && neuralIndex < ARRAYSIZE(configs));
 
         int i = neuralIndex;
@@ -3026,6 +3030,8 @@ void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "NeuralFleet3";
     } else if (aiType == FLEET_AI_NEURAL4) {
         ops->aiName = "NeuralFleet4";
+    } else if (aiType == FLEET_AI_NEURAL5) {
+        ops->aiName = "NeuralFleet5";
     } else {
         NOT_IMPLEMENTED();
     }
@@ -3233,8 +3239,8 @@ static void LoadNeuralValueDesc(MBRegistry *mreg,
     desc->valueType = NEURAL_VALUE_MAX;
 
     if (cstr == NULL) {
-        ASSERT(tmValues[0].value == NEURAL_VALUE_ZERO);
-        cstr = tmValues[0].str;
+        ASSERT(tmValues[1].value == NEURAL_VALUE_ZERO);
+        cstr = tmValues[1].str;
     }
 
     desc->valueType = (NeuralValueType)
