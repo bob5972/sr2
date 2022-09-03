@@ -3197,7 +3197,8 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
         s = prefix;
         s += "forceType";
         if (Random_Flip(rate)) {
-            uint i = Random_Int(0, ARRAYSIZE(tmForces) - 1);
+            uint i = Random_Int(1, ARRAYSIZE(tmForces) - 1);
+            ASSERT(tmForces[0].value == NEURAL_FORCE_VOID);
             const char *v = tmForces[i].str;
             MBRegistry_PutCopy(mreg, s.CStr(), v);
             desc->forceDesc.forceType = (NeuralForceType) tmForces[i].value;
