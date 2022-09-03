@@ -168,7 +168,10 @@ static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *r
 
     rp->radius = sqrtf((temp.x * temp.x) + (temp.y * temp.y));
 
-    //XXX: Could use atan2f ?
+    /*
+     * We could use atan2f here to have it deal with the signs,
+     * but then it gives negative angles.
+     */
     rp->theta = atanf(temp.y / temp.x);
 
     if (isnanf(rp->theta)) {
