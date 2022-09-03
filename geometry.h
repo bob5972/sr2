@@ -138,16 +138,14 @@ static inline void FPoint_Zero(FPoint *p)
 
 static inline void FRPoint_SetSpeed(FRPoint *p, float s)
 {
-    ASSERT(p->radius >= 0.0f && s >= 0.0f);
-    p->radius = s;
+    ASSERT(p->radius >= 0.0f);
 
-    // if (p->radius >= 0.0f && s >= 0.0f) {
-    //     p->radius = s;
-    // } else if (p->radius <= 0.0f && s <= 0.0f) {
-    //     p->radius = s;
-    // } else {
-    //     p->radius = -s;
-    // }
+    if (s >= 0.0f) {
+        p->radius = s;
+    } else {
+        p->radius = -s;
+        p->theta += M_PI;
+    }
 }
 
 static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
