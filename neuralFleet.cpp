@@ -123,7 +123,6 @@ typedef enum NeuralValueType {
     NEURAL_VALUE_VOID,
     NEURAL_VALUE_ZERO,
     NEURAL_VALUE_FORCE,
-    NEURAL_VALUE_RANGE,
     NEURAL_VALUE_CROWD,
     NEURAL_VALUE_TICK,
     NEURAL_VALUE_MOBID,
@@ -137,7 +136,6 @@ static TextMapEntry tmValues[] = {
     { TMENTRY(NEURAL_VALUE_VOID),  },
     { TMENTRY(NEURAL_VALUE_ZERO),  },
     { TMENTRY(NEURAL_VALUE_FORCE), },
-    { TMENTRY(NEURAL_VALUE_RANGE), },
     { TMENTRY(NEURAL_VALUE_CROWD), },
     { TMENTRY(NEURAL_VALUE_TICK),  },
     { TMENTRY(NEURAL_VALUE_MOBID), },
@@ -150,7 +148,6 @@ typedef struct NeuralValueDesc {
     NeuralValueType valueType;
     union {
         NeuralForceDesc forceDesc;
-        NeuralForceDesc rangeDesc;
         NeuralCrowdDesc crowdDesc;
     };
 } NeuralValueDesc;
@@ -324,7 +321,7 @@ public:
             { "input[11].forceType", "NEURAL_FORCE_ENEMY_BASE_GUESS" },
             { "input[11].radius", "1410.684570" },
             { "input[11].useTangent", "FALSE" },
-            { "input[11].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[11].valueType", "NEURAL_VALUE_FORCE" },
             { "input[12].forceType", "NEURAL_FORCE_SEPARATE" },
             { "input[12].radius", "821.751221" },
             { "input[12].useTangent", "FALSE" },
@@ -344,19 +341,19 @@ public:
             { "input[16].forceType", "NEURAL_FORCE_ZERO" },
             { "input[16].radius", "1642.232056" },
             { "input[16].useTangent", "FALSE" },
-            { "input[16].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[16].valueType", "NEURAL_VALUE_FORCE" },
             { "input[17].forceType", "NEURAL_FORCE_EDGES" },
             { "input[17].radius", "938.246948" },
             { "input[17].useTangent", "TRUE" },
-            { "input[17].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[17].valueType", "NEURAL_VALUE_FORCE" },
             { "input[18].forceType", "NEURAL_FORCE_SEPARATE" },
             { "input[18].radius", "1578.296631" },
             { "input[18].useTangent", "FALSE" },
-            { "input[18].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[18].valueType", "NEURAL_VALUE_FORCE" },
             { "input[19].forceType", "NEURAL_FORCE_BASE_DEFENSE" },
             { "input[19].radius", "2423.319824" },
             { "input[19].useTangent", "TRUE" },
-            { "input[19].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[19].valueType", "NEURAL_VALUE_FORCE" },
             { "input[1].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
             { "input[1].radius", "2067.721191" },
             { "input[1].useTangent", "FALSE" },
@@ -384,7 +381,7 @@ public:
             { "input[7].forceType", "NEURAL_FORCE_ENEMY_BASE" },
             { "input[7].radius", "2474.785889" },
             { "input[7].useTangent", "FALSE" },
-            { "input[7].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[7].valueType", "NEURAL_VALUE_FORCE" },
             { "input[8].forceType", "NEURAL_FORCE_CENTER" },
             { "input[8].radius", "2051.518799" },
             { "input[8].useTangent", "FALSE" },
@@ -967,7 +964,7 @@ public:
             { "input[23].forceType", "NEURAL_FORCE_CENTER" },
             { "input[23].radius", "0.000000" },
             { "input[23].useTangent", "FALSE" },
-            { "input[23].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[23].valueType", "NEURAL_VALUE_FORCE" },
             { "input[24].crowdType", "NEURAL_CROWD_CORES" },
             { "input[24].forceType", "NEURAL_FORCE_ENEMY_MISSILE" },
             { "input[24].radius", "1876.846924" },
@@ -997,7 +994,7 @@ public:
             { "input[6].forceType", "NEURAL_FORCE_EDGES" },
             { "input[6].radius", "0.000000" },
             { "input[6].useTangent", "TRUE" },
-            { "input[6].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[6].valueType", "NEURAL_VALUE_FORCE" },
             { "input[7].crowdType", "NEURAL_CROWD_ENEMY_MISSILE" },
             { "input[7].forceType", "NEURAL_FORCE_BASE" },
             { "input[7].radius", "0.000000" },
@@ -1583,7 +1580,7 @@ public:
             { "input[19].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
             { "input[19].radius", "-1.000000" },
             { "input[19].useTangent", "FALSE" },
-            { "input[19].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[19].valueType", "NEURAL_VALUE_FORCE" },
             { "input[1].crowdType", "NEURAL_CROWD_CORES" },
             { "input[1].forceType", "NEURAL_FORCE_ALIGN" },
             { "input[1].radius", "0.000000" },
@@ -1598,7 +1595,7 @@ public:
             { "input[21].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
             { "input[21].radius", "0.000000" },
             { "input[21].useTangent", "TRUE" },
-            { "input[21].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[21].valueType", "NEURAL_VALUE_FORCE" },
             { "input[22].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
             { "input[22].forceType", "NEURAL_FORCE_BASE" },
             { "input[22].radius", "-1.000000" },
@@ -1653,7 +1650,7 @@ public:
             { "input[9].forceType", "NEURAL_FORCE_EDGES" },
             { "input[9].radius", "0.000000" },
             { "input[9].useTangent", "FALSE" },
-            { "input[9].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[9].valueType", "NEURAL_VALUE_FORCE" },
             { "output[100].forceType", "NEURAL_FORCE_ALIGN" },
             { "output[100].radius", "-1.000000" },
             { "output[100].useTangent", "FALSE" },
@@ -2235,7 +2232,7 @@ public:
             { "input[20].forceType", "NEURAL_FORCE_ALIGN" },
             { "input[20].radius", "0.000000" },
             { "input[20].useTangent", "TRUE" },
-            { "input[20].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[20].valueType", "NEURAL_VALUE_FORCE" },
             { "input[21].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
             { "input[21].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
             { "input[21].radius", "144.088669" },
@@ -2265,7 +2262,7 @@ public:
             { "input[3].forceType", "NEURAL_FORCE_EDGES" },
             { "input[3].radius", "-1.000000" },
             { "input[3].useTangent", "FALSE" },
-            { "input[3].valueType", "NEURAL_VALUE_RANGE" },
+            { "input[3].valueType", "NEURAL_VALUE_FORCE" },
             { "input[4].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
             { "input[4].forceType", "NEURAL_FORCE_CORES" },
             { "input[4].radius", "0.000000" },
@@ -2532,10 +2529,7 @@ public:
             case NEURAL_VALUE_VOID:
                 return 0.0f;
             case NEURAL_VALUE_FORCE:
-                getNeuralForce(mob, &desc->forceDesc, &force);
-                return force.radius;
-            case NEURAL_VALUE_RANGE:
-                return getRangeValue(mob, &desc->rangeDesc);
+                return getRangeValue(mob, &desc->forceDesc);
             case NEURAL_VALUE_CROWD:
                 return getCrowdValue(mob, &desc->crowdDesc);
             case NEURAL_VALUE_TICK:
@@ -3178,7 +3172,6 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
     MBRegistry_PutCopy(mreg, s.CStr(), v);
 
     if (desc->valueType == NEURAL_VALUE_FORCE ||
-        desc->valueType == NEURAL_VALUE_RANGE ||
         desc->valueType == NEURAL_VALUE_CROWD) {
         MutationFloatParams vf;
 
@@ -3243,9 +3236,6 @@ static void LoadNeuralValueDesc(MBRegistry *mreg,
     s = prefix;
     switch (desc->valueType) {
         case NEURAL_VALUE_FORCE:
-        case NEURAL_VALUE_RANGE:
-            ASSERT(&desc->forceDesc == &desc->rangeDesc);
-            ASSERT(sizeof(desc->forceDesc) == sizeof(desc->rangeDesc));
             LoadNeuralForceDesc(mreg, &desc->forceDesc, s.CStr());
             break;
 
