@@ -2519,7 +2519,7 @@ public:
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
-    float getNeuralValue(Mob *mob, NeuralValueDesc *desc) {
+    float getNeuralValue(Mob *mob, NeuralValueDesc *desc, uint i) {
         FRPoint force;
         RandomState *rs = &myRandomState;
         FleetAI *ai = myFleetAI;
@@ -2540,7 +2540,9 @@ public:
                 return (float)myFleetAI->tick;
             case NEURAL_VALUE_MOBID: {
                 RandomState lr;
-                RandomState_CreateWithSeed(&lr, mob->mobid);
+                uint64 seed = mob->mobid;
+                seed = (seed << 32) | i;
+                RandomState_CreateWithSeed(&lr, seed);
                 return RandomState_UnitFloat(&lr);
             }
             case NEURAL_VALUE_RANDOM_UNIT:
@@ -2898,7 +2900,7 @@ public:
         ASSERT(myInputs.size() == myInputDescs.size());
 
         for (uint i = 0; i < myInputDescs.size(); i++) {
-            myInputs[i] = getNeuralValue(mob, &myInputDescs[i]);
+            myInputs[i] = getNeuralValue(mob, &myInputDescs[i], i);
         }
 
         ASSERT(myOutputs.size() == myOutputDescs.size());
