@@ -3267,8 +3267,7 @@ static void LoadNeuralForceDesc(MBRegistry *mreg,
     s += "forceType";
     v = MBRegistry_GetCStr(mreg, s.CStr());
     if (v == NULL) {
-        ASSERT(tmForces[0].value == NEURAL_FORCE_ZERO);
-        v = tmForces[0].str;
+        v = TextMap_ToString(NEURAL_FORCE_ZERO, tmForces, ARRAYSIZE(tmForces));
     }
     desc->forceType = (NeuralForceType)
         TextMap_FromString(v, tmForces, ARRAYSIZE(tmForces));
