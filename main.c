@@ -1304,6 +1304,7 @@ void MainSanitizeFleet()
 
     BattlePlayer player;
     MBUtil_Zero(&player, sizeof(player));
+    player.mreg = fleetReg;
     Fleet_CreateAI(&ai, aiType, 0, &bp, &player, 0x0);
 
     if (ai.ops.dumpSanitizedParams == NULL) {
