@@ -3290,7 +3290,7 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
     } else if (desc->valueType == NEURAL_VALUE_TICK) {
         MutationFloatParams vf;
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_RADIUS);
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
         s = prefix;
         s += "frequency";
         vf.key = s.CStr();
