@@ -56,6 +56,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_FLOOR), },
     { TMENTRY(ML_FOP_1x0_ABS), },
     { TMENTRY(ML_FOP_1x0_SIN), },
+    { TMENTRY(ML_FOP_1x0_UNIT_SINE), },
+    { TMENTRY(ML_FOP_1x0_ABS_SINE), },
     { TMENTRY(ML_FOP_1x0_COS), },
     { TMENTRY(ML_FOP_1x0_TAN), },
     { TMENTRY(ML_FOP_1x0_PROB_NOT), },
@@ -258,7 +260,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 112) {
+    if (mb_debug && ML_FOP_MAX != 114) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -323,6 +325,10 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return fabsf(getInput(0));
         case ML_FOP_1x0_SIN:
             return sinf(getInput(0));
+        case ML_FOP_1x0_UNIT_SINE:
+            return 0.5f * sinf(getInput(0)) + 0.5f;
+        case ML_FOP_1x0_ABS_SINE:
+            return fabsf(sinf(getInput(0)));
         case ML_FOP_1x0_COS:
             return cosf(getInput(0));
         case ML_FOP_1x0_TAN:
@@ -1275,7 +1281,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 112) {
+    if (mb_debug && ML_FOP_MAX != 114) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1310,6 +1316,8 @@ void MLFloatNode::minimize()
         case ML_FOP_1x0_FLOOR:
         case ML_FOP_1x0_ABS:
         case ML_FOP_1x0_SIN:
+        case ML_FOP_1x0_UNIT_SINE:
+        case ML_FOP_1x0_ABS_SINE:
         case ML_FOP_1x0_COS:
         case ML_FOP_1x0_TAN:
         case ML_FOP_1x0_PROB_NOT:
