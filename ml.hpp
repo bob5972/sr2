@@ -70,6 +70,8 @@ typedef enum MLFloatOp {
     ML_FOP_1x1_POW,
     ML_FOP_1x1_GTE,
     ML_FOP_1x1_LTE,
+    ML_FOP_1x1_PRODUCT,
+    ML_FOP_1x1_SUM,
 
     ML_FOP_1x2_CLAMP,
     ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT,

@@ -73,6 +73,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x1_POW), },
     { TMENTRY(ML_FOP_1x1_GTE), },
     { TMENTRY(ML_FOP_1x1_LTE), },
+    { TMENTRY(ML_FOP_1x1_PRODUCT), },
+    { TMENTRY(ML_FOP_1x1_SUM), },
     { TMENTRY(ML_FOP_1x1_LINEAR_COMBINATION), },
 
     { TMENTRY(ML_FOP_1x2_CLAMP), },
@@ -260,7 +262,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 114) {
+    if (mb_debug && ML_FOP_MAX != 116) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -356,6 +358,11 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return getInput(0) >= getParam(0) ? 1.0f : 0.0f;
         case ML_FOP_1x1_LTE:
             return getInput(0) <= getParam(0) ? 1.0f : 0.0f;
+
+        case ML_FOP_1x1_PRODUCT:
+            return getInput(0) * getParam(0);
+        case ML_FOP_1x1_SUM:
+            return getInput(0) + getParam(0);
 
         case ML_FOP_1x2_CLAMP: {
             float f = getInput(0);
@@ -1281,7 +1288,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 114) {
+    if (mb_debug && ML_FOP_MAX != 116) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1337,6 +1344,8 @@ void MLFloatNode::minimize()
         case ML_FOP_1x1_GTE:
         case ML_FOP_1x1_LTE:
         case ML_FOP_1x1_LINEAR_COMBINATION:
+        case ML_FOP_1x1_PRODUCT:
+        case ML_FOP_1x1_SUM:
             numInputs = 1;
             numParams = 1;
             break;
