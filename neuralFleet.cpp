@@ -119,6 +119,27 @@ typedef struct NeuralCrowdDesc {
     float radius;
 } NeuralCrowdDesc;
 
+typedef enum NeuralWaveType {
+    NEURAL_WAVE_NONE,
+    NEURAL_WAVE_SINE,
+    NEURAL_WAVE_UNIT_SINE,
+    NEURAL_WAVE_ABS_SINE,
+    NEURAL_WAVE_FMOD,
+} NeuralWaveType;
+
+static TextMapEntry tmWaves[] = {
+    { TMENTRY(NEURAL_WAVE_NONE),        },
+    { TMENTRY(NEURAL_WAVE_SINE),        },
+    { TMENTRY(NEURAL_WAVE_UNIT_SINE),   },
+    { TMENTRY(NEURAL_WAVE_ABS_SINE),    },
+    { TMENTRY(NEURAL_WAVE_FMOD),        },
+};
+
+typedef struct NeuralTickDesc {
+    NeuralWaveType waveType;
+    float frequency;
+} NeuralTickDesc;
+
 typedef enum NeuralValueType {
     NEURAL_VALUE_VOID,
     NEURAL_VALUE_ZERO,
@@ -149,6 +170,7 @@ typedef struct NeuralValueDesc {
     union {
         NeuralForceDesc forceDesc;
         NeuralCrowdDesc crowdDesc;
+        NeuralTickDesc tickDesc;
     };
 } NeuralValueDesc;
 
@@ -163,6 +185,8 @@ static void LoadNeuralForceDesc(MBRegistry *mreg,
                                 NeuralForceDesc *desc, const char *prefix);
 static void LoadNeuralCrowdDesc(MBRegistry *mreg,
                                 NeuralCrowdDesc *desc, const char *prefix);
+static void LoadNeuralTickDesc(MBRegistry *mreg,
+                               NeuralTickDesc *desc, const char *prefix);
 static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
                                   bool isOutput, float rate,
                                   const char *prefix);
@@ -2537,7 +2561,7 @@ public:
             case NEURAL_VALUE_CROWD:
                 return getCrowdValue(mob, &desc->crowdDesc);
             case NEURAL_VALUE_TICK:
-                return (float)myFleetAI->tick;
+                return getTickValue(&desc->tickDesc);
             case NEURAL_VALUE_MOBID: {
                 RandomState lr;
                 uint64 seed = mob->mobid;
@@ -2879,6 +2903,33 @@ public:
         }
     }
 
+    float getTickValue(NeuralTickDesc *desc) {
+        FleetAI *ai = myFleetAI;
+
+        //XXX cache?
+
+        if (desc->waveType != NEURAL_WAVE_NONE &&
+            desc->frequency == 0.0f) {
+            return 0.0f;
+        }
+
+        float t = (float)ai->tick;
+
+        if (desc->waveType == NEURAL_WAVE_NONE) {
+            return t;
+        } else if (desc->waveType == NEURAL_WAVE_SINE) {
+            return sinf(t / desc->frequency);
+        } else if (desc->waveType == NEURAL_WAVE_UNIT_SINE) {
+            return 0.5f * sinf(t / desc->frequency) + 0.5f;
+        } else if (desc->waveType == NEURAL_WAVE_ABS_SINE) {
+            return fabsf(sinf(t / desc->frequency));
+        } else if (desc->waveType == NEURAL_WAVE_FMOD) {
+            return fmodf(t, desc->frequency);
+        } else {
+            NOT_IMPLEMENTED();
+        }
+    }
+
     float getRangeValue(Mob *mob, NeuralForceDesc *desc) {
         FPoint focusPoint;
         if (getNeuralFocus(mob, desc, &focusPoint)) {
@@ -3206,9 +3257,7 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
             MBRegistry_PutCopy(mreg, s.CStr(), v);
             desc->crowdDesc.crowdType = (NeuralCrowdType) tmCrowds[i].value;
         }
-    }
-
-    if (desc->valueType == NEURAL_VALUE_FORCE) {
+    } else if (desc->valueType == NEURAL_VALUE_FORCE) {
         s = prefix;
         s += "forceType";
         if (Random_Flip(rate)) {
@@ -3225,6 +3274,23 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
         bf.key = s.CStr();
         bf.flipRate = rate;
         Mutate_Bool(mreg, &bf, 1);
+    } else if (desc->valueType == NEURAL_VALUE_TICK) {
+        MutationFloatParams vf;
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_RADIUS);
+        s = prefix;
+        s += "frequency";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+
+        s = prefix;
+        s += "waveType";
+        if (Random_Flip(rate)) {
+            uint i = Random_Int(0, ARRAYSIZE(tmWaves) - 1);
+            const char *v = tmWaves[i].str;
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            desc->forceDesc.forceType = (NeuralForceType) tmWaves[i].value;
+        }
     }
 }
 
@@ -3259,9 +3325,12 @@ static void LoadNeuralValueDesc(MBRegistry *mreg,
             LoadNeuralCrowdDesc(mreg, &desc->crowdDesc, s.CStr());
             break;
 
+        case NEURAL_VALUE_TICK:
+            LoadNeuralTickDesc(mreg, &desc->tickDesc, s.CStr());
+            break;
+
         case NEURAL_VALUE_VOID:
         case NEURAL_VALUE_ZERO:
-        case NEURAL_VALUE_TICK:
         case NEURAL_VALUE_MOBID:
         case NEURAL_VALUE_RANDOM_UNIT:
         case NEURAL_VALUE_CREDITS:
@@ -3316,6 +3385,27 @@ static void LoadNeuralCrowdDesc(MBRegistry *mreg,
     }
     desc->crowdType = (NeuralCrowdType)
         TextMap_FromString(v, tmCrowds, ARRAYSIZE(tmCrowds));
+}
+
+static void LoadNeuralTickDesc(MBRegistry *mreg,
+                               NeuralTickDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *v;
+
+    s = prefix;
+    s += "frequency";
+    desc->frequency = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "waveType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        ASSERT(tmWaves[0].value == NEURAL_WAVE_NONE);
+        v = tmWaves[0].str;
+    }
+    desc->waveType = (NeuralWaveType)
+        TextMap_FromString(v, tmWaves, ARRAYSIZE(tmWaves));
 }
 
 static void *NeuralFleetCreate(FleetAI *ai)
