@@ -330,10 +330,10 @@ public:
         avgFlock(NULL, avgPos, p, radius, filter, TRUE);
     }
 
-    void targetAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
-                           MobTypeFlags filter) {
-        avgFlock(avgVel, NULL, p, radius, filter, FALSE);
-    }
+    /*
+     * We don't get lastPos for targets, so we can't calculate
+     * velocity easily.
+     */
 
     void targetAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
