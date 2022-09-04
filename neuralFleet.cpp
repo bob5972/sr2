@@ -3232,14 +3232,14 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
         desc->valueType = NEURAL_VALUE_FORCE;
     } else if (Random_Flip(rate)) {
         EnumDistribution vts[] = {
-            { NEURAL_VALUE_ZERO,         0.01f, },
+            { NEURAL_VALUE_ZERO,         0.02f, },
             { NEURAL_VALUE_FORCE,        0.40f, },
-            { NEURAL_VALUE_CROWD,        0.50f, },
-            { NEURAL_VALUE_TICK,         0.02f, },
-            { NEURAL_VALUE_MOBID,        0.02f, },
-            { NEURAL_VALUE_RANDOM_UNIT,  0.02f, },
-            { NEURAL_VALUE_CREDITS,      0.01f, },
-            { NEURAL_VALUE_FRIEND_SHIPS, 0.02f, },
+            { NEURAL_VALUE_CROWD,        0.40f, },
+            { NEURAL_VALUE_TICK,         0.04f, },
+            { NEURAL_VALUE_MOBID,        0.04f, },
+            { NEURAL_VALUE_RANDOM_UNIT,  0.04f, },
+            { NEURAL_VALUE_CREDITS,      0.02f, },
+            { NEURAL_VALUE_FRIEND_SHIPS, 0.04f, },
         };
 
         // We intentionally left off NEURAL_VALUE_VOID.
