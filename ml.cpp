@@ -1111,8 +1111,6 @@ void MLFloatNode::mutate(float rate,
      */
     Mutate_DefaultFloatParams(&mp, MUTATION_TYPE_PROBABILITY);
     mp.mutationRate = (mp.mutationRate + rate) / 2.0f;
-    mp.minValue = 0.0f;
-    mp.maxValue = 1.0f;
     mutationRate = Mutate_FloatRaw(mutationRate, FALSE, &mp);
 
     if (!Random_Flip(mutationRate)) {
@@ -1206,7 +1204,22 @@ void MLFloatNode::mutate(float rate,
         params[i] = 0.0f;
     }
     for (uint i = 0; i < params.size(); i++) {
-        int r = Random_Int(0, MUTATION_TYPE_MAX - 1);
+        EnumDistribution mts[] = {
+            { MUTATION_TYPE_WEIGHT,              0.05f },
+            { MUTATION_TYPE_AMPLITUDE,           0.01f },
+            { MUTATION_TYPE_BOOL,                0.01f },
+            { MUTATION_TYPE_UNIT,                0.17f },
+            { MUTATION_TYPE_MOB_JITTER_SCALE,    0.01f },
+            { MUTATION_TYPE_PROBABILITY,         0.10f },
+            { MUTATION_TYPE_SCALE_POW,           0.05f },
+            { MUTATION_TYPE_INVERSE_PROBABILITY, 0.05f },
+            { MUTATION_TYPE_RADIUS,              0.20f },
+            { MUTATION_TYPE_PERIOD,              0.10f },
+            { MUTATION_TYPE_TICKS,               0.05f },
+            { MUTATION_TYPE_COUNT,               0.20f },
+        };
+        ASSERT(ARRAYSIZE(mts) == MUTATION_TYPE_MAX);
+        int r = Random_Enum(mts, ARRAYSIZE(mts));
         Mutate_DefaultFloatParams(&mp, (MutationType)r);
         mp.mutationRate = (mp.mutationRate + rate) / 2.0f;
         params[i] = Mutate_FloatRaw(params[i], FALSE, &mp);
