@@ -937,6 +937,12 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 {
     uint32 iterations = 0;
     uint32 i;
+    uint32 minAge = 0;
+    bool useMinAge = MBOpt_IsPresent("mutationMinAge");
+
+    if (useMinAge) {
+        minAge = MBOpt_GetUint("mutationMinAge");
+    }
 
     i = Random_Int(0, numFleets - 1);
     while (TRUE) {
@@ -954,6 +960,12 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         }
 
         sProb = numBattles > 0 ? weight / (float)numBattles : 0.0f;
+
+        if (useMinAge) {
+            sProb = MBRegistry_GetUint(fleetReg, "abattle.age") >= minAge ?
+                    sProb : 0.0f;
+        }
+
         sProb += (iterations / numFleets) + 0.01;
         sProb = MIN(1.0f, sProb);
         sProb = MAX(0.0f, sProb);
@@ -1350,6 +1362,8 @@ void MainParseCmdLine(int argc, char **argv)
         { "-J", "--mutationStaleIterations",
                                        TRUE,  "Stale fleet Iterations per "
                                               "Mutation round"                },
+        { "-A", "--mutationMinAge",
+                                       TRUE,  "Minimum age to mutate"         },
         { "-Z", "--populationLimit",   TRUE,  "Population limit for mutating" },
         { "-K", "--populationKillRatio",
                                        TRUE,  "Kill ratio for population"     },
@@ -1383,7 +1397,7 @@ void MainParseCmdLine(int argc, char **argv)
     }
 
     mainData.headless = MBOpt_GetBool("headless");
-    if (!sr2_gui) {
+    if (!sr2_gui || MBOpt_IsPresent("sanitizeFleet")) {
         mainData.headless = TRUE;
     }
 
@@ -1430,6 +1444,8 @@ void MainParseCmdLine(int argc, char **argv)
     if (MBOpt_IsPresent("scenario")) {
         mainData.scenario = MBOpt_GetCStr("scenario");
     }
+
+
 }
 
 int main(int argc, char **argv)

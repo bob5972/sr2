@@ -26,6 +26,11 @@ OPTS="${OPTS} --populationLimit $POPLIMIT"
 OPTS="${OPTS} --mutationNewIterations $NEW_IT"
 OPTS="${OPTS} --mutationStaleIterations $STALE_IT"
 OPTS="${OPTS} --populationDefectiveRatio $DEFECTIVERATIO"
+
+if [ "$MINAGE" != "" ]; then
+    OPTS="${OPTS} --mutationMinAge $MINAGE";
+fi;
+
 OPTS="${OPTS} -S fast"
 OPTS="${OPTS} -t $THREADS"
 
