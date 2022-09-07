@@ -937,8 +937,10 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
 {
     uint32 iterations = 0;
     uint32 i;
+
+    // XXX: We're assuming that "useWinRatio" means "mutate" here.
     uint32 minAge = 0;
-    bool useMinAge = MBOpt_IsPresent("mutationMinAge");
+    bool useMinAge = useWinRatio && MBOpt_IsPresent("mutationMinAge");
 
     if (useMinAge) {
         minAge = MBOpt_GetUint("mutationMinAge");
