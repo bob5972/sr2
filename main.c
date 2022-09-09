@@ -245,7 +245,7 @@ void MainConstructScenario(void)
         mainData.players[p].aiType = FLEET_AI_BUNDLE15;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_NEURAL5;
+        mainData.players[p].aiType = FLEET_AI_NEURAL6;
         p++;
 
         //mainData.players[p].playerName = "HoldMod";
@@ -385,8 +385,8 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[*tpIndex].aiType = FLEET_AI_NEURAL4;
-        targetPlayers[*tpIndex].playerName = "NeuralFleet4.Test";
+        targetPlayers[*tpIndex].aiType = FLEET_AI_NEURAL6;
+        targetPlayers[*tpIndex].playerName = "NeuralFleet6.Test";
 
         // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
