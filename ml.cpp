@@ -1132,7 +1132,7 @@ void MLFloatNode::mutate(float rate,
     }
 
     /* Occaisonally scramble the whole node. */
-    if (Random_Flip(0.01)) {
+    if (Random_Flip(0.05)) {
         rate = 1.0f;
     }
 
