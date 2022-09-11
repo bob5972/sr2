@@ -149,6 +149,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP), },
 
     { TMENTRY(ML_FOP_Nx1_DIV_SUM), },
+    { TMENTRY(ML_FOP_NxN_SCALED_DIV_SUM), },
 
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP), },
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN), },
@@ -262,7 +263,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 116) {
+    if (mb_debug && ML_FOP_MAX != 117) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -770,6 +771,16 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             }
 
             return c / f;
+        }
+        case ML_FOP_NxN_SCALED_DIV_SUM: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                float c = getParam(i);
+                f += c * getInput(i);
+            }
+
+            return 1.0f / f;
         }
 
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP: {
@@ -1310,7 +1321,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 116) {
+    if (mb_debug && ML_FOP_MAX != 117) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1516,6 +1527,7 @@ void MLFloatNode::minimize()
         case ML_FOP_NxN_SELECT_GTE:
         case ML_FOP_NxN_SELECT_LTE:
         case ML_FOP_NxN_POW_SUM:
+        case ML_FOP_NxN_SCALED_DIV_SUM:
             numInputs = MIN(inputs.size(), params.size());
             numInputs = MAX(1, numInputs);
             numParams = numInputs;
