@@ -1503,7 +1503,6 @@ static void MainThreadsExit(void)
 
 void MainDefaultCmd(void)
 {
-    MainThreadsInit();
     MainConstructScenario();
 
     if (!mainData.headless) {
@@ -1520,6 +1519,9 @@ void MainDefaultCmd(void)
     }
 
     mainData.totalBattles = mainData.loop * mainData.numBSCs;
+    mainData.numThreads = MAX(1, mainData.numThreads);
+    mainData.numThreads = MIN(mainData.totalBattles, mainData.numThreads);
+    MainThreadsInit();
 
     uint battleId = 0;
 
