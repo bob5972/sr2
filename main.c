@@ -125,8 +125,6 @@ static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
 
 static void MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
                                       uint32 cpSize, uint32 *cpIndex,
-                                      BattlePlayer *targetPlayers,
-                                      uint32 tpSize, uint32 *tpIndex,
                                       BattlePlayer *mainPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
 static void MainUsePopulation(BattlePlayer *mainPlayers,
@@ -191,8 +189,6 @@ void MainConstructScenario(void)
      */
     BattlePlayer controlPlayers[MAX_PLAYERS];
     uint cp = 0;
-    BattlePlayer targetPlayers[MAX_PLAYERS];
-    uint tp = 0;
 
     for (int i = 0; i < FLEET_AI_MAX; i++) {
         FleetAIType aiType = Fleet_GetTypeFromRanking(i);
@@ -221,8 +217,6 @@ void MainConstructScenario(void)
     } else if (mainData.optimize) {
         MainAddPlayersForOptimize(controlPlayers,
                                   ARRAYSIZE(controlPlayers), &cp,
-                                  targetPlayers,
-                                  ARRAYSIZE(targetPlayers), &tp,
                                   &mainData.players[0],
                                   ARRAYSIZE(mainData.players), &p);
     } else if (mainData.tournament) {
@@ -377,8 +371,6 @@ void MainConstructScenario(void)
 static void
 MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
                           uint32 cpSize, uint32 *cpIndex,
-                          BattlePlayer *targetPlayers,
-                          uint32 tpSize, uint32 *tpIndex,
                           BattlePlayer *mainPlayers,
                           uint32 mpSize, uint32 *mpIndex)
 {
@@ -386,34 +378,36 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
     const int doTable = 1;
     const int doRandom = 2;
     int method = doSimple;
+    BattlePlayer targetPlayers[MAX_PLAYERS];
+    uint32 tpIndex = 0;
 
     /*
      * Target fleets to optimize.
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[*tpIndex].aiType = FLEET_AI_NEURAL6;
-        targetPlayers[*tpIndex].playerName = "NeuralFleet6.Test";
+        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL6;
+        targetPlayers[tpIndex].playerName = "NeuralFleet6.Test";
 
-        // targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "gatherRange", "200");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackRange", "100");
+        // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "gatherRange", "200");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackRange", "100");
 
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "alignWeight", "0.7");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "cohereWeight", "-0.15");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "separateWeight", "0.95");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "edgesWeight", "0.85");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "enemyWeight", "0.6");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "coresWeight", "0.10");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "alignWeight", "0.7");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "cohereWeight", "-0.15");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "separateWeight", "0.95");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "edgesWeight", "0.85");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "enemyWeight", "0.6");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "coresWeight", "0.10");
 
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "curHeadingWeight", "0.10");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackSeparateWeight", "0.50");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "curHeadingWeight", "0.10");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackSeparateWeight", "0.50");
 
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "flockRadius", "171");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "repulseRadius", "100");
-        // MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "edgeRadius", "50");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "flockRadius", "171");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "repulseRadius", "100");
+        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "edgeRadius", "50");
 
-        (*tpIndex)++;
+        tpIndex++;
 
     } else if (method == doTable) {
         struct {
@@ -431,26 +425,26 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
 
             MBUtil_Zero(&vstr, sizeof(vstr));
 
-            targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
+            targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
 
             asprintf(&vstr[0], "%1.0f", v[i].attackRange);
-            MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackRange", vstr[0]);
+            MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackRange", vstr[0]);
 
             asprintf(&vstr[1], "%d", v[i].attackExtendedRange);
-            MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "attackExtendedRange", vstr[1]);
+            MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackExtendedRange", vstr[1]);
 
             asprintf(&vstr[2], "%1.0f", v[i].holdCount);
-            MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, "holdCount", vstr[2]);
+            MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "holdCount", vstr[2]);
 
-            targetPlayers[*tpIndex].aiType = FLEET_AI_HOLD;
+            targetPlayers[tpIndex].aiType = FLEET_AI_HOLD;
 
             char *name = NULL;
             asprintf(&name, "%s %s:%s:%s",
-                    Fleet_GetName(targetPlayers[*tpIndex].aiType),
+                    Fleet_GetName(targetPlayers[tpIndex].aiType),
                     vstr[0], vstr[1], vstr[2]);
-            targetPlayers[*tpIndex].playerName = name;
+            targetPlayers[tpIndex].playerName = name;
 
-            (*tpIndex)++;
+            tpIndex++;
 
             // XXX: Leak strings!
         }
@@ -485,26 +479,26 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
             ASSERT(ARRAYSIZE(vstr) >= ARRAYSIZE(v));
             MBUtil_Zero(&vstr, sizeof(vstr));
 
-            targetPlayers[*tpIndex].mreg = MBRegistry_Alloc();
+            targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
 
             for (uint i = 0; i < ARRAYSIZE(v); i++) {
                 float value = Random_Float(v[i].minValue, v[i].maxValue);
                 asprintf(&vstr[i], "%1.2f", value);
-                MBRegistry_PutConst(targetPlayers[*tpIndex].mreg, v[i].param, vstr[i]);
+                MBRegistry_PutConst(targetPlayers[tpIndex].mreg, v[i].param, vstr[i]);
             }
 
-            targetPlayers[*tpIndex].aiType = FLEET_AI_FLOCK4;
+            targetPlayers[tpIndex].aiType = FLEET_AI_FLOCK4;
             char *name = NULL;
             asprintf(&name, "%s %s:%s %s:%s %s:%s",
-                     Fleet_GetName(targetPlayers[*tpIndex].aiType),
+                     Fleet_GetName(targetPlayers[tpIndex].aiType),
                      vstr[0], vstr[1], vstr[2], vstr[3], vstr[4],
                      vstr[5]);
             // asprintf(&name, "%s %s",
-            //              Fleet_GetName(targetPlayers[*tpIndex].aiType),
+            //              Fleet_GetName(targetPlayers[tpIndex].aiType),
             //              vstr[0]);
-            targetPlayers[*tpIndex].playerName = name;
+            targetPlayers[tpIndex].playerName = name;
 
-            (*tpIndex)++;
+            tpIndex++;
 
             // XXX: Leak strings!
         }
@@ -518,7 +512,7 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
         mainPlayers[*mpIndex] = controlPlayers[i];
         (*mpIndex)++;
     }
-    for (uint i = 0; i < *tpIndex; i++) {
+    for (uint i = 0; i < tpIndex; i++) {
         ASSERT(*mpIndex < mpSize);
         mainPlayers[*mpIndex] = targetPlayers[i];
         (*mpIndex)++;
