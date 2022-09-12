@@ -119,7 +119,7 @@ sub DumpGraph($) {
     my $fleet;
 
     if (-x "build/sr2") {
-        my @fleetLines = `build/sr2 --sanitizeFleet $fn -U $gFile` or
+        my @fleetLines = `build/sr2 sanitizeFleet -f $fn -U $gFile` or
             Panic("Unable to sanitize fleet: build/sr2 error", $!);
         $fleet = MBBasic::LoadMRegLines(\@fleetLines);
     } else {

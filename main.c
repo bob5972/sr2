@@ -1290,7 +1290,7 @@ void MainSanitizeFleet()
     /*
      * This is a hack-job, but it works well enough for now.
      */
-    uint fleetNum = MBOpt_GetUint("sanitizeFleet");
+    uint fleetNum = MBOpt_GetUint("dumpFleet");
     FleetAI ai;
     MBRegistry *popReg = MBRegistry_Alloc();
     MBRegistry *fleetReg = MBRegistry_Alloc();
@@ -1344,7 +1344,6 @@ void MainUnitTests()
         MobPSet_UnitTest();
         Geometry_UnitTest();
         ML_UnitTest();
-        Warning("Done!\n");
     } else {
         Warning("Unit tests disabled on non-devel build.\n");
     }
@@ -1363,7 +1362,6 @@ void MainParseCmdLine(int argc, char **argv)
         { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
         { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
         { "-M", "--mutatePopulation",  FALSE, "Mutate population"             },
-        { "-S", "--sanitizeFleet",     TRUE,  "Sanitize and dump fleet number"},
         { "-I", "--mutationNewIterations",
                                        TRUE,  "New fleet iterations per "
                                               "Mutation round"                },
@@ -1382,30 +1380,26 @@ void MainParseCmdLine(int argc, char **argv)
         { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
         { "-R", "--reuseSeed",         FALSE, "Reuse the seed across battles" },
-        { "-u", "--unitTests",         FALSE, "Run unit tests"                },
-        { "-p", "--dumpPNG",           TRUE,  "Dump a PNG of sprites"         },
         { "-P", "--startPaused",       FALSE, "Start paused"                  },
+    };
+
+    MBOption dumpPNG_opts[] = {
+        { "-o", "--outputFile",       TRUE, "Output file for PNG"             },
+    };
+    MBOption sanitizeFleet_opts[] = {
+        { "-f", "--dumpFleet",        TRUE,  "Fleet number to dump"           },
     };
 
     MBOpt_SetProgram("sr2", NULL);
     MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
+    MBOpt_LoadOptions("unitTests", NULL, 0);
+    MBOpt_LoadOptions("dumpPNG", dumpPNG_opts, ARRAYSIZE(dumpPNG_opts));
+    MBOpt_LoadOptions("sanitizeFleet",
+                      sanitizeFleet_opts, ARRAYSIZE(sanitizeFleet_opts));
     MBOpt_Init(argc, argv);
 
-    if (MBOpt_IsPresent("unitTests")) {
-        MainUnitTests();
-        exit(0);
-    }
-    if (MBOpt_IsPresent("dumpPNG")) {
-        Display_DumpPNG(MBOpt_GetCStr("dumpPNG"));
-        exit(0);
-    }
-    if (MBOpt_IsPresent("sanitizeFleet")) {
-        MainSanitizeFleet();
-        exit(0);
-    }
-
     mainData.headless = MBOpt_GetBool("headless");
-    if (!sr2_gui || MBOpt_IsPresent("sanitizeFleet")) {
+    if (!sr2_gui || MBOpt_GetCmd() != NULL) {
         mainData.headless = TRUE;
     }
 
@@ -1452,35 +1446,10 @@ void MainParseCmdLine(int argc, char **argv)
     if (MBOpt_IsPresent("scenario")) {
         mainData.scenario = MBOpt_GetCStr("scenario");
     }
-
-
 }
 
-int main(int argc, char **argv)
+void MainDefaultCmd(void)
 {
-    ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
-
-    MBStrTable_Init();
-    MainParseCmdLine(argc, argv);
-
-    // Setup
-    Random_Init();
-    RandomState_Create(&mainData.rs);
-    if (mainData.seed != 0) {
-        RandomState_SetSeed(&mainData.rs, mainData.seed);
-    }
-
-    SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
-
-    Warning("Starting SpaceRobots2 %s...\n", mb_debug ? "(debug enabled)" : "");
-    Warning("\n");
-
-    DebugPrint("Random seed: 0x%llX\n",
-               RandomState_GetSeed(&mainData.rs));
-
-    WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
-    WorkQueue_Create(&mainData.resultQ, sizeof(MainEngineResultUnit));
-
     uint tDataSize = mainData.numThreads * sizeof(mainData.tData[0]);
     mainData.tData = malloc(tDataSize);
     for (uint i = 0; i < mainData.numThreads; i++) {
@@ -1617,6 +1586,48 @@ int main(int argc, char **argv)
 
     free(mainData.bscs);
     mainData.bscs = NULL;
+}
+
+int main(int argc, char **argv)
+{
+    const char *cmd;
+    ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
+
+    MBStrTable_Init();
+    MainParseCmdLine(argc, argv);
+
+    // Setup
+    Random_Init();
+    RandomState_Create(&mainData.rs);
+    if (mainData.seed != 0) {
+        RandomState_SetSeed(&mainData.rs, mainData.seed);
+    }
+
+    SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
+
+    Warning("Starting SpaceRobots2 %s...\n", mb_debug ? "(debug enabled)" : "");
+    Warning("\n");
+
+    DebugPrint("Random seed: 0x%llX\n",
+               RandomState_GetSeed(&mainData.rs));
+
+    WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
+    WorkQueue_Create(&mainData.resultQ, sizeof(MainEngineResultUnit));
+
+    cmd = MBOpt_GetCmd();
+    if (cmd == NULL) {
+        cmd = "default";
+    }
+
+    if (strcmp(cmd, "unitTests") == 0) {
+        MainUnitTests();
+    } else if (strcmp(cmd, "dumpPNG") == 0) {
+        Display_DumpPNG(MBOpt_GetCStr("outputFile"));
+    } else if (strcmp(cmd, "sanitizeFleet") == 0) {
+        MainSanitizeFleet();
+    } else {
+        MainDefaultCmd();
+    }
 
     RandomState_Destroy(&mainData.rs);
 
