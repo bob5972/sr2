@@ -109,6 +109,8 @@ struct MainData {
     MainWinnerData winners[MAX_PLAYERS];
     MainWinnerData winnerBreakdown[MAX_PLAYERS][MAX_PLAYERS];
 
+    bool threadsInitialized;
+    bool threadsRequestExit;
     uint numThreads;
     MainEngineThreadData *tData;
     WorkQueue workQ;
@@ -142,6 +144,10 @@ static void MainKillFleet(BattlePlayer *mainPlayers,
                           uint32 startingMPIndex, uint32 *numFleets,
                           uint32 *numTargetFleets, uint32 fi);
 static bool MainIsFleetDefective(BattlePlayer *player);
+
+static void MainThreadsInit(void);
+static void MainThreadsRequestExit(void);
+static void MainThreadsExit(void);
 
 void MainConstructScenario(void)
 {
@@ -1448,8 +1454,11 @@ void MainParseCmdLine(int argc, char **argv)
     }
 }
 
-void MainDefaultCmd(void)
+static void MainThreadsInit(void)
 {
+    WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
+    WorkQueue_Create(&mainData.resultQ, sizeof(MainEngineResultUnit));
+
     uint tDataSize = mainData.numThreads * sizeof(mainData.tData[0]);
     mainData.tData = malloc(tDataSize);
     for (uint i = 0; i < mainData.numThreads; i++) {
@@ -1467,6 +1476,43 @@ void MainDefaultCmd(void)
         ASSERT(tData->sdlThread != NULL);
     }
 
+    mainData.threadsInitialized = TRUE;
+}
+
+static void MainThreadsRequestExit(void)
+{
+    ASSERT(mainData.threadsInitialized);
+    for (uint i = 0; i < mainData.numThreads; i++) {
+        MainEngineWorkUnit wu;
+        MBUtil_Zero(&wu, sizeof(wu));
+        wu.type = MAIN_WORK_EXIT;
+        WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
+    }
+
+    mainData.threadsRequestExit = TRUE;
+}
+
+static void MainThreadsExit(void)
+{
+    ASSERT(mainData.threadsInitialized);
+    ASSERT(mainData.threadsRequestExit);
+
+    for (uint i = 0; i < mainData.numThreads; i++) {
+        SDL_WaitThread(mainData.tData[i].sdlThread, NULL);
+    }
+    ASSERT(WorkQueue_IsEmpty(&mainData.workQ));
+
+    WorkQueue_Destroy(&mainData.workQ);
+    WorkQueue_Destroy(&mainData.resultQ);
+    free(mainData.tData);
+    mainData.tData = NULL;
+
+    mainData.threadsInitialized = FALSE;
+}
+
+void MainDefaultCmd(void)
+{
+    MainThreadsInit();
     MainConstructScenario();
 
     if (!mainData.headless) {
@@ -1550,16 +1596,7 @@ void MainDefaultCmd(void)
 
     WorkQueue_WaitForAllFinished(&mainData.workQ);
     ASSERT(WorkQueue_IsIdle(&mainData.workQ));
-    for (uint i = 0; i < mainData.numThreads; i++) {
-        MainEngineWorkUnit wu;
-        MBUtil_Zero(&wu, sizeof(wu));
-        wu.type = MAIN_WORK_EXIT;
-        WorkQueue_QueueItem(&mainData.workQ, &wu, sizeof(wu));
-    }
-    for (uint i = 0; i < mainData.numThreads; i++) {
-        SDL_WaitThread(mainData.tData[i].sdlThread, NULL);
-    }
-    ASSERT(WorkQueue_IsEmpty(&mainData.workQ));
+    MainThreadsRequestExit();
 
     WorkQueue_Lock(&mainData.resultQ);
     uint qSize = WorkQueue_QueueSize(&mainData.resultQ);
@@ -1586,6 +1623,8 @@ void MainDefaultCmd(void)
 
     free(mainData.bscs);
     mainData.bscs = NULL;
+
+    MainThreadsExit();
 }
 
 int main(int argc, char **argv)
@@ -1611,9 +1650,6 @@ int main(int argc, char **argv)
     DebugPrint("Random seed: 0x%llX\n",
                RandomState_GetSeed(&mainData.rs));
 
-    WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
-    WorkQueue_Create(&mainData.resultQ, sizeof(MainEngineResultUnit));
-
     cmd = MBOpt_GetCmd();
     if (cmd == NULL) {
         cmd = "default";
@@ -1630,11 +1666,6 @@ int main(int argc, char **argv)
     }
 
     RandomState_Destroy(&mainData.rs);
-
-    WorkQueue_Destroy(&mainData.workQ);
-    WorkQueue_Destroy(&mainData.resultQ);
-    free(mainData.tData);
-    mainData.tData = NULL;
 
     SDL_Quit();
     MBOpt_Exit();
