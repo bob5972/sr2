@@ -62,13 +62,9 @@ typedef struct MainEngineResultUnit {
 
 typedef struct MainWinnerData {
     uint battles;
-    uint battleTicks;
     uint wins;
-    uint winTicks;
     uint losses;
-    uint lossTicks;
     uint draws;
-    uint drawTicks;
 } MainWinnerData;
 
 typedef struct MainEngineThreadData {
@@ -104,7 +100,7 @@ struct MainData {
     uint totalBattles;
     bool doneQueueing;
 
-    int numPlayers;
+    uint numPlayers;
     BattlePlayer players[MAX_PLAYERS];
     MainWinnerData winners[MAX_PLAYERS];
     MainWinnerData winnerBreakdown[MAX_PLAYERS][MAX_PLAYERS];
@@ -126,20 +122,22 @@ static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
 static void MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
 static void MainUsePopulation(BattlePlayer *mainPlayers,
-                              uint32 mpSize, uint32 *mpIndex);
+                              uint32 mpSize, uint *mpIndex);
 static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                                   uint32 startingMPIndex, uint32 numFleets,
                                   bool useWinRatio, float *weightOut);
 static uint32 MainFleetCompetition(BattlePlayer *mainPlayers, uint32 mpSize,
                                    uint32 startingMPIndex, uint32 numFleets,
                                    bool useWinRatio);
-static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
-                            uint32 fi, uint32 mi, uint32 bi);
 static void MainKillFleet(BattlePlayer *mainPlayers,
                           uint32 mpSize, uint32 *mpIndex,
                           uint32 startingMPIndex, uint32 *numFleets,
                           uint32 *numTargetFleets, uint32 fi);
 static bool MainIsFleetDefective(BattlePlayer *player);
+static void MainCleanupPlayers(void);
+static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
+                            BattlePlayer *dest,
+                            uint32 mi, uint32 bi);
 
 static void MainThreadsInit(void);
 static void MainThreadsRequestExit(void);
@@ -565,28 +563,18 @@ static void MainRecordWinner(MainWinnerData *wd, PlayerUID puid,
 
     if (puid == bs->winnerUID) {
         wd->wins++;
-        wd->winTicks += bs->tick;
     } else if (bs->winnerUID == PLAYER_ID_NEUTRAL) {
         wd->draws++;
-        wd->drawTicks += bs->tick;
     } else {
         wd->losses++;
-        wd->lossTicks += bs->tick;
     }
     wd->battles++;
-    wd->battleTicks += bs->tick;
 
     ASSERT(wd->wins >= 0);
     ASSERT(wd->losses >= 0);
     ASSERT(wd->draws >= 0);
     ASSERT(wd->battles >= 0);
     ASSERT(wd->wins + wd->losses + wd->draws == wd->battles);
-
-    ASSERT(wd->winTicks >= 0);
-    ASSERT(wd->lossTicks >= 0);
-    ASSERT(wd->drawTicks >= 0);
-    ASSERT(wd->battleTicks >= 0);
-    ASSERT(wd->winTicks + wd->lossTicks + wd->drawTicks == wd->battleTicks);
 }
 
 static void MainPrintWinnerData(MainWinnerData *wd)
@@ -673,7 +661,7 @@ static void MainDumpAddToKey(MBRegistry *source, MBRegistry *dest,
     MBString_Destroy(&tmp);
 }
 
-static void MainDumpPopulation(void)
+static void MainDumpPopulation(const char *outputFile)
 {
     uint32 i;
     MBRegistry *popReg;
@@ -681,6 +669,8 @@ static void MainDumpPopulation(void)
     MBString key;
     MBString tmp;
     uint32 numFleets = 0;
+
+    ASSERT(outputFile != NULL);
 
     MBString_Create(&prefix);
     MBString_Create(&key);
@@ -714,11 +704,6 @@ static void MainDumpPopulation(void)
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key), fleetName);
 
         MBString_Copy(&key, &prefix);
-        MBString_AppendCStr(&key, "abattle.playerName");
-        MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
-                           mainData.players[i].playerName);
-
-        MBString_Copy(&key, &prefix);
         MBString_AppendCStr(&key, "abattle.playerType");
         MBRegistry_PutCopy(popReg, MBString_GetCStr(&key),
                            PlayerType_ToString(mainData.players[i].playerType));
@@ -736,7 +721,7 @@ static void MainDumpPopulation(void)
     MBString_IntToString(&tmp, numFleets);
     MBRegistry_PutCopy(popReg, "numFleets", MBString_GetCStr(&tmp));
 
-    MBRegistry_Save(popReg, MBOpt_GetCStr("dumpPopulation"));
+    MBRegistry_Save(popReg, outputFile);
 
     MBString_Destroy(&prefix);
     MBString_Destroy(&key);
@@ -890,7 +875,8 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
                                              startingMPIndex, numFleets,
                                              TRUE);
             ASSERT(*mpIndex < mpSize);
-            MainMutateFleet(mainPlayers, mpSize, *mpIndex, mi, bi);
+            MainMutateFleet(mainPlayers, mpSize,
+                            &mainPlayers[*mpIndex], mi, bi);
             (*mpIndex)++;
             targetMutateCount--;
             actualMutateCount++;
@@ -1060,16 +1046,13 @@ static void MainKillFleet(BattlePlayer *mainPlayers,
 
 
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
-                            uint32 fi, uint32 mi, uint32 bi)
+                            BattlePlayer *dest,
+                            uint32 mi, uint32 bi)
 {
-    BattlePlayer *dest = &mainPlayers[fi];
     BattlePlayer *src = &mainPlayers[mi];
     BattlePlayer *breeder = &mainPlayers[bi];
 
-    ASSERT(fi < mpSize);
     ASSERT(mi < mpSize);
-    ASSERT(bi != fi);
-    ASSERT(mi != fi);
 
     ASSERT(dest->playerType == PLAYER_TYPE_INVALID);
     ASSERT(src->playerType == PLAYER_TYPE_TARGET);
@@ -1282,7 +1265,7 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
     }
 }
 
-void MainSanitizeFleet()
+void MainSanitizeFleetCmd()
 {
     /*
      * This is a hack-job, but it works well enough for now.
@@ -1386,6 +1369,10 @@ void MainParseCmdLine(int argc, char **argv)
     MBOption sanitizeFleet_opts[] = {
         { "-f", "--dumpFleet",        TRUE,  "Fleet number to dump"           },
     };
+    MBOption mutate_opts[] = {
+        { "-o", "--outputFile",        TRUE,  "Output population file"        },
+        { "-c", "--mutationCount",     TRUE,  "Number of mutations"           },
+    };
 
     MBOpt_SetProgram("sr2", NULL);
     MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
@@ -1393,6 +1380,7 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_LoadOptions("dumpPNG", dumpPNG_opts, ARRAYSIZE(dumpPNG_opts));
     MBOpt_LoadOptions("sanitizeFleet",
                       sanitizeFleet_opts, ARRAYSIZE(sanitizeFleet_opts));
+    MBOpt_LoadOptions("mutate", mutate_opts, ARRAYSIZE(mutate_opts));
     MBOpt_Init(argc, argv);
 
     mainData.headless = MBOpt_GetBool("headless");
@@ -1501,6 +1489,77 @@ static void MainThreadsExit(void)
     mainData.threadsInitialized = FALSE;
 }
 
+static void MainCleanupPlayers(void)
+{
+    for (uint p = 0; p < mainData.numPlayers; p++) {
+        if (mainData.players[p].mreg != NULL) {
+            MBRegistry_Free(mainData.players[p].mreg);
+            mainData.players[p].mreg = NULL;
+        }
+    }
+}
+
+void MainMutateCmd(void)
+{
+    BattlePlayer mutants[MAX_PLAYERS];
+    const char *outputFile = MBOpt_GetCStr("outputFile");
+    const char *inputFile = MBOpt_GetCStr("usePopulation");
+
+    if (outputFile == NULL) {
+        PANIC("--outputFile required for mutate\n");
+    }
+    if (inputFile == NULL) {
+        PANIC("--usePopulation required for mutate\n");
+    }
+
+    ASSERT(mainData.numPlayers == 0);
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+    MainUsePopulation(&mainData.players[0],
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+
+    VERIFY(mainData.numPlayers > 0);
+
+    uint targetMutateCount = MBOpt_GetUint("mutationCount");
+    uint actualMutateCount = 0;
+
+    VERIFY(targetMutateCount <= ARRAYSIZE(mutants));
+    MBUtil_Zero(mutants, sizeof(mutants));
+
+    while (targetMutateCount > 0) {
+        uint32 mi = MainFleetCompetition(&mainData.players[0],
+                                         mainData.numPlayers,
+                                         1, mainData.numPlayers - 1, TRUE);
+        uint32 bi = MainFleetCompetition(&mainData.players[0],
+                                         mainData.numPlayers,
+                                         1, mainData.numPlayers - 1, TRUE);
+        MainMutateFleet(&mainData.players[0], mainData.numPlayers,
+                        &mutants[actualMutateCount], mi, bi);
+        targetMutateCount--;
+        actualMutateCount++;
+    }
+
+    // Dump the original population (with updated numSpawns)
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    MainDumpPopulation(inputFile);
+    MainCleanupPlayers();
+
+    // Dump the new mutants to the outputFile
+    mainData.numPlayers = 0;
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+
+    for (uint i = 0; i < actualMutateCount; i++) {
+        mainData.players[mainData.numPlayers] = mutants[i];
+        mainData.numPlayers++;
+    }
+
+    MainDumpPopulation(outputFile);
+    MainCleanupPlayers();
+}
+
 void MainDefaultCmd(void)
 {
     MainConstructScenario();
@@ -1604,15 +1663,10 @@ void MainDefaultCmd(void)
     MainPrintWinners();
 
     if (MBOpt_IsPresent("dumpPopulation")) {
-        MainDumpPopulation();
+        MainDumpPopulation(MBOpt_GetCStr("dumpPopulation"));
     }
 
-    for (uint p = 0; p < mainData.numPlayers; p++) {
-        if (mainData.players[p].mreg != NULL) {
-            MBRegistry_Free(mainData.players[p].mreg);
-            mainData.players[p].mreg = NULL;
-        }
-    }
+    MainCleanupPlayers();
 
     free(mainData.bscs);
     mainData.bscs = NULL;
@@ -1653,7 +1707,9 @@ int main(int argc, char **argv)
     } else if (strcmp(cmd, "dumpPNG") == 0) {
         Display_DumpPNG(MBOpt_GetCStr("outputFile"));
     } else if (strcmp(cmd, "sanitizeFleet") == 0) {
-        MainSanitizeFleet();
+        MainSanitizeFleetCmd();
+    } else if (strcmp(cmd, "mutate") == 0) {
+        MainMutateCmd();
     } else {
         MainDefaultCmd();
     }

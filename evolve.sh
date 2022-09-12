@@ -18,7 +18,7 @@ POPFILE="build/tmp/popMutate.txt";
 
 OPTS="-H"
 OPTS="${OPTS} --tickLimit $TICK_LIMIT";
-OPTS="${OPTS} --dumpPopulation $POPFILE --usePopulation $POPFILE"
+OPTS="${OPTS} --dumpPopulation $POPFILE"
 OPTS="${OPTS} --usePopulation $POPFILE"
 OPTS="${OPTS} --mutatePopulation"
 OPTS="${OPTS} --populationKillRatio $KILLRATIO"
@@ -39,9 +39,3 @@ cp -f $POPFILE $POPFILE.old
 ./compile.sh $BUILDTYPE && echo && \
     echo build/sr2 $OPTS "$@" && \
     build/sr2 $OPTS "$@"
-
-#if [ $? == 0 ]; then
-#    echo
-#    echo "$POPFILE: "
-#    cat $POPFILE
-#fi;
