@@ -1366,14 +1366,20 @@ void MainParseCmdLine(int argc, char **argv)
     };
 
     MBOption dumpPNG_opts[] = {
-        { "-o", "--outputFile",       TRUE, "Output file for PNG"             },
+        { "-o", "--outputFile",        TRUE, "Output file for PNG"            },
     };
     MBOption sanitizeFleet_opts[] = {
-        { "-f", "--dumpFleet",        TRUE,  "Fleet number to dump"           },
+        { "-f", "--dumpFleet",         TRUE,  "Fleet number to dump"          },
     };
     MBOption mutate_opts[] = {
         { "-o", "--outputFile",        TRUE,  "Output population file"        },
         { "-c", "--mutationCount",     TRUE,  "Number of mutations"           },
+    };
+    MBOption kill_opts[] = {
+        { NULL, "--killRatio",         TRUE,  "Kill ratio for population"     },
+        { NULL, "--minPop",            TRUE,  "Minimum population"            },
+        { NULL, "--maxPop",            TRUE,  "Maximum population"            },
+        { NULL, "--defectiveLevel",    TRUE,  "Defective win ratio"           },
     };
 
     MBOpt_SetProgram("sr2", NULL);
@@ -1383,6 +1389,7 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_LoadOptions("sanitizeFleet",
                       sanitizeFleet_opts, ARRAYSIZE(sanitizeFleet_opts));
     MBOpt_LoadOptions("mutate", mutate_opts, ARRAYSIZE(mutate_opts));
+    MBOpt_LoadOptions("kill", kill_opts, ARRAYSIZE(kill_opts));
     MBOpt_Init(argc, argv);
 
     mainData.headless = MBOpt_GetBool("headless");
@@ -1676,6 +1683,11 @@ void MainDefaultCmd(void)
     MainThreadsExit();
 }
 
+static void MainKillCmd(void)
+{
+    NOT_IMPLEMENTED();
+}
+
 int main(int argc, char **argv)
 {
     const char *cmd;
@@ -1712,7 +1724,10 @@ int main(int argc, char **argv)
         MainSanitizeFleetCmd();
     } else if (strcmp(cmd, "mutate") == 0) {
         MainMutateCmd();
+    } else if (strcmp(cmd, "kill") == 0) {
+        MainKillCmd();
     } else {
+        ASSERT(strcmp(cmd, "default") == 0);
         MainDefaultCmd();
     }
 
