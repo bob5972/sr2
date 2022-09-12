@@ -1040,10 +1040,16 @@ static void MainKillFleet(BattlePlayer *mainPlayers,
 
     ASSERT(*numFleets > 0);
     (*numFleets)--;
-    ASSERT(*numTargetFleets > 0);
-    (*numTargetFleets)--;
-    ASSERT(*mpIndex > 0);
-    (*mpIndex)--;
+
+    if (numTargetFleets != NULL) {
+        ASSERT(*numTargetFleets > 0);
+        (*numTargetFleets)--;
+    }
+
+    if (mpIndex != NULL) {
+        ASSERT(*mpIndex > 0);
+        (*mpIndex)--;
+    }
 }
 
 
@@ -1685,7 +1691,125 @@ void MainDefaultCmd(void)
 
 static void MainKillCmd(void)
 {
-    NOT_IMPLEMENTED();
+    const char *file = MBOpt_GetCStr("usePopulation");
+
+    if (file == NULL) {
+        PANIC("--usePopulation required for kill\n");
+    }
+
+    ASSERT(mainData.numPlayers == 0);
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+    MainUsePopulation(&mainData.players[0],
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+
+    VERIFY(mainData.numPlayers > 0);
+
+    // Account for FLEET_AI_NEUTRAL
+    uint numFleets = mainData.numPlayers - 1;
+
+
+    uint actualKillCount = 0;
+    uint minPop = 0;
+    uint maxPop = numFleets;
+    if (MBOpt_IsPresent("minPop")) {
+        minPop = MBOpt_GetUint("minPop");
+    }
+    if (MBOpt_IsPresent("maxPop")) {
+        maxPop = MBOpt_GetUint("maxPop");
+    }
+    if (numFleets <= minPop) {
+        Warning("Population is already too low pop=%d, minPop=%d\n",
+                numFleets, minPop);
+        Warning("Not killing anything.\n");
+        MainCleanupPlayers();
+        return;
+    }
+
+    /*
+     * Kill defective fleets.
+     */
+    uint i = 1;
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    while (numFleets > minPop && i < mainData.numPlayers) {
+        ASSERT(numFleets > 0);
+        ASSERT(numFleets < mainData.numPlayers);
+        ASSERT(mainData.numPlayers > 1);
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+
+        if (MainIsFleetDefective(&mainData.players[i])) {
+            MainKillFleet(&mainData.players[0], mainData.numPlayers,
+                          NULL, 1, &numFleets, NULL, i);
+            /*
+             * Re-use the same i index because we swapped the fleet
+             * out.
+             */
+            ASSERT(i > 0);
+            i--;
+
+            ASSERT(numFleets >= 0);
+            ASSERT(mainData.numPlayers > 0);
+            mainData.numPlayers--;
+            ASSERT(mainData.numPlayers > 0);
+            ASSERT(numFleets < mainData.numPlayers);
+
+            actualKillCount++;
+        }
+
+        i++;
+    }
+
+    if (actualKillCount > 0) {
+        Warning("Killed %d defective fleets.\n", actualKillCount);
+    }
+
+    uint targetKillCount = 0;
+
+    if (MBOpt_IsPresent("killRatio")) {
+        targetKillCount = numFleets * MBOpt_GetFloat("killRatio");
+    }
+
+    if (minPop > 0) {
+        targetKillCount = MIN(numFleets - minPop, targetKillCount);
+    }
+    if (numFleets > maxPop) {
+        targetKillCount = MAX(numFleets - maxPop, targetKillCount);
+    }
+
+    ASSERT(targetKillCount <= numFleets);
+
+    while (targetKillCount > 0) {
+        ASSERT(numFleets > 0);
+        ASSERT(numFleets < mainData.numPlayers);
+        ASSERT(mainData.numPlayers > 1);
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+
+        uint32 ki = MainFleetCompetition(&mainData.players[0],
+                                         mainData.numPlayers,
+                                         1, numFleets, FALSE);
+        MainKillFleet(&mainData.players[0], mainData.numPlayers,
+                      NULL, 1, &numFleets, NULL, ki);
+        targetKillCount--;
+        actualKillCount++;
+        ASSERT(numFleets >= 0);
+        ASSERT(mainData.numPlayers > 0);
+        mainData.numPlayers--;
+        ASSERT(mainData.numPlayers > 0);
+        ASSERT(numFleets < mainData.numPlayers);
+    }
+
+    ASSERT(numFleets >= minPop);
+    ASSERT(numFleets <= maxPop);
+
+    Warning("Killed %d total fleets.\n", actualKillCount);
+
+    // Dump the original population (with updated numSpawns)
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    if (actualKillCount > 0) {
+        MainDumpPopulation(file);
+    }
+    MainCleanupPlayers();
 }
 
 int main(int argc, char **argv)
