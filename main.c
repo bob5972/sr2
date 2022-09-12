@@ -123,9 +123,7 @@ static void MainRunBattle(MainEngineThreadData *tData,
                           MainEngineWorkUnit *wu);
 static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
 
-static void MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
-                                      uint32 cpSize, uint32 *cpIndex,
-                                      BattlePlayer *mainPlayers,
+static void MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
 static void MainUsePopulation(BattlePlayer *mainPlayers,
                               uint32 mpSize, uint32 *mpIndex);
@@ -182,28 +180,6 @@ void MainConstructScenario(void)
     }
 
     /*
-     * controlPlayers are the fleets for tournaments, and the control
-     * fleets for optimize-mode.
-     *
-     * targetPlayers are the ones used in optimize mode to optimize.
-     */
-    BattlePlayer controlPlayers[MAX_PLAYERS];
-    uint cp = 0;
-
-    for (int i = 0; i < FLEET_AI_MAX; i++) {
-        FleetAIType aiType = Fleet_GetTypeFromRanking(i);
-        if (aiType != FLEET_AI_INVALID) {
-            ASSERT(Fleet_GetRanking(aiType) == i);
-            ASSERT(cp < ARRAYSIZE(controlPlayers));
-            controlPlayers[cp].aiType = aiType;
-            controlPlayers[cp].playerType = PLAYER_TYPE_CONTROL;
-            cp++;
-        }
-    }
-    ASSERT(Fleet_GetTypeFromRanking(-1) == FLEET_AI_INVALID);
-    ASSERT(Fleet_GetTypeFromRanking(FLEET_AI_MAX) == FLEET_AI_INVALID);
-
-    /*
      * The NEUTRAL fleet always needs to be there.
      */
     p = 0;
@@ -215,20 +191,27 @@ void MainConstructScenario(void)
         MainUsePopulation(&mainData.players[0],
                           ARRAYSIZE(mainData.players), &p);
     } else if (mainData.optimize) {
-        MainAddPlayersForOptimize(controlPlayers,
-                                  ARRAYSIZE(controlPlayers), &cp,
-                                  &mainData.players[0],
+        MainAddPlayersForOptimize(&mainData.players[0],
                                   ARRAYSIZE(mainData.players), &p);
     } else if (mainData.tournament) {
-        /*
-         * Copy over control players.
-         */
         ASSERT(p == FLEET_AI_NEUTRAL);
 
-        for (uint i = 0; i < cp; i++) {
-            mainData.players[p] = controlPlayers[i];
-            p++;
+        /*
+         * Add everybody in order of rankings.
+         */
+        for (uint i = 0; i < FLEET_AI_MAX; i++) {
+            FleetAIType aiType = Fleet_GetTypeFromRanking(i);
+            ASSERT(aiType != FLEET_AI_NEUTRAL);
+            if (aiType != FLEET_AI_INVALID) {
+                ASSERT(Fleet_GetRanking(aiType) == i);
+                ASSERT(p < ARRAYSIZE(mainData.players));
+                mainData.players[p].aiType = aiType;
+                mainData.players[p].playerType = PLAYER_TYPE_CONTROL;
+                p++;
+            }
         }
+        ASSERT(Fleet_GetTypeFromRanking(-1) == FLEET_AI_INVALID);
+        ASSERT(Fleet_GetTypeFromRanking(FLEET_AI_MAX) == FLEET_AI_INVALID);
     } else {
         /*
          * See fleet.c::gRankings for a rough order of fleet strength.
@@ -369,9 +352,7 @@ void MainConstructScenario(void)
 }
 
 static void
-MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
-                          uint32 cpSize, uint32 *cpIndex,
-                          BattlePlayer *mainPlayers,
+MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
                           uint32 mpSize, uint32 *mpIndex)
 {
     const int doSimple = 0;
@@ -380,6 +361,22 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
     int method = doSimple;
     BattlePlayer targetPlayers[MAX_PLAYERS];
     uint32 tpIndex = 0;
+
+    BattlePlayer controlPlayers[MAX_PLAYERS];
+    uint cp = 0;
+
+    for (int i = 0; i < FLEET_AI_MAX; i++) {
+        FleetAIType aiType = Fleet_GetTypeFromRanking(i);
+        if (aiType != FLEET_AI_INVALID) {
+            ASSERT(Fleet_GetRanking(aiType) == i);
+            ASSERT(cp < ARRAYSIZE(controlPlayers));
+            controlPlayers[cp].aiType = aiType;
+            controlPlayers[cp].playerType = PLAYER_TYPE_CONTROL;
+            cp++;
+        }
+    }
+    ASSERT(Fleet_GetTypeFromRanking(-1) == FLEET_AI_INVALID);
+    ASSERT(Fleet_GetTypeFromRanking(FLEET_AI_MAX) == FLEET_AI_INVALID);
 
     /*
      * Target fleets to optimize.
@@ -507,7 +504,7 @@ MainAddPlayersForOptimize(BattlePlayer *controlPlayers,
     /*
      * Copy over control/target players.
      */
-    for (uint i = 0; i < *cpIndex; i++) {
+    for (uint i = 0; i < cp; i++) {
         ASSERT(*mpIndex < mpSize);
         mainPlayers[*mpIndex] = controlPlayers[i];
         (*mpIndex)++;
