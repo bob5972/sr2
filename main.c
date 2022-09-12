@@ -1338,12 +1338,16 @@ void MainSanitizeFleet()
 
 void MainUnitTests()
 {
-    MBUnitTest_RunTests();
-    Warning("Starting sr2 Unit Tests ...\n");
-    MobPSet_UnitTest();
-    Geometry_UnitTest();
-    ML_UnitTest();
-    Warning("Done!\n");
+    if (mb_devel) {
+        MBUnitTest_RunTests();
+        Warning("Starting sr2 Unit Tests ...\n");
+        MobPSet_UnitTest();
+        Geometry_UnitTest();
+        ML_UnitTest();
+        Warning("Done!\n");
+    } else {
+        Warning("Unit tests disabled on non-devel build.\n");
+    }
 }
 
 void MainParseCmdLine(int argc, char **argv)
