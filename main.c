@@ -693,10 +693,12 @@ static void MainDumpPopulation(const char *outputFile)
 
         /*
          * Copy them over first, so we can override some of them.
+         * Because we're using unique prefixes, we can assume that the
+         * key isn't already in the registry.
          */
         if (mainData.players[i].mreg != NULL) {
-            MBRegistry_PutAll(popReg, mainData.players[i].mreg,
-                              MBString_GetCStr(&prefix));
+            MBRegistry_PutAllUnique(popReg, mainData.players[i].mreg,
+                                    MBString_GetCStr(&prefix));
         }
 
         MBString_Copy(&key, &prefix);
