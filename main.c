@@ -38,6 +38,7 @@
 #include "MBString.h"
 #include "mutate.h"
 #include "MBStrTable.h"
+#include "MBUnitTest.h"
 
 // From ml.hpp
 extern void ML_UnitTest();
@@ -1337,7 +1338,8 @@ void MainSanitizeFleet()
 
 void MainUnitTests()
 {
-    Warning("Starting Unit Tests ...\n");
+    MBUnitTest_RunTests();
+    Warning("Starting sr2 Unit Tests ...\n");
     MobPSet_UnitTest();
     Geometry_UnitTest();
     ML_UnitTest();
@@ -1381,20 +1383,20 @@ void MainParseCmdLine(int argc, char **argv)
         { "-P", "--startPaused",       FALSE, "Start paused"                  },
     };
 
-    MBOpt_Init(opts, ARRAYSIZE(opts), argc, argv);
-
-    if (MBOpt_IsPresent("help")) {
-        MBOpt_PrintHelpText();
-        exit(1);
-    }
+    MBOpt_SetProgram("sr2", NULL);
+    MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
+    MBOpt_Init(argc, argv);
 
     if (MBOpt_IsPresent("unitTests")) {
         MainUnitTests();
         exit(0);
     }
-
     if (MBOpt_IsPresent("dumpPNG")) {
         Display_DumpPNG(MBOpt_GetCStr("dumpPNG"));
+        exit(0);
+    }
+    if (MBOpt_IsPresent("sanitizeFleet")) {
+        MainSanitizeFleet();
         exit(0);
     }
 
@@ -1453,6 +1455,8 @@ void MainParseCmdLine(int argc, char **argv)
 int main(int argc, char **argv)
 {
     ASSERT(MBUtil_IsZero(&mainData, sizeof(mainData)));
+
+    MBStrTable_Init();
     MainParseCmdLine(argc, argv);
 
     // Setup
@@ -1462,14 +1466,7 @@ int main(int argc, char **argv)
         RandomState_SetSeed(&mainData.rs, mainData.seed);
     }
 
-
     SDL_Init(mainData.headless ? 0 : SDL_INIT_VIDEO);
-    MBStrTable_Init();
-
-    if (MBOpt_IsPresent("sanitizeFleet")) {
-        MainSanitizeFleet();
-        return 0;
-    }
 
     Warning("Starting SpaceRobots2 %s...\n", mb_debug ? "(debug enabled)" : "");
     Warning("\n");
