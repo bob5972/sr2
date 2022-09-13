@@ -336,8 +336,12 @@ sub DisplaySummary() {
             my $numBattles = $gPop->{"$fPrefix.numBattles"};
             my $f = 0.0;
 
+            if (!defined($numWins)) {
+                $numWins = 0;
+            }
+
             if (defined($numBattles) && $numBattles > 0) {
-                $f = $gPop->{"$fPrefix.numWins"} / $numBattles;
+                $f = $numWins / $numBattles;
             }
 
             if (defined($numBattles)) {
@@ -365,15 +369,14 @@ sub DisplaySummary() {
                 }
             }
 
-            if (defined($numWins)) {
-                if (!defined($maxWinsP) ||
-                    $numWins > $gPop->{"$maxWinsP.numWins"}) {
-                    $maxWinsP = $fPrefix;
-                }
-                if (!defined($maxFP) || $f > $maxFV) {
-                    $maxFP = $fPrefix;
-                    $maxFV = $f;
-                }
+            if (!defined($maxWinsP) ||
+                !defined($gPop->{"$maxWinsP.numWins"}) ||
+                $numWins > $gPop->{"$maxWinsP.numWins"}) {
+                $maxWinsP = $fPrefix;
+            }
+            if (!defined($maxFP) || $f > $maxFV) {
+                $maxFP = $fPrefix;
+                $maxFV = $f;
             }
         }
     }
