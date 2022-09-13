@@ -1,10 +1,8 @@
 #!/bin/bash
 
-POPLIMIT=50
-KILLRATIO=0.30
-DEFECTIVERATIO=0.0
-STALE_IT=1
-NEW_IT=5
+STABLE_POP=50
+NOOB_POP=50
+
 TICK_LIMIT=40000
 SCENARIO=fast
 THREADS=14
@@ -14,28 +12,49 @@ if [ -f evolve.local ]; then
     source evolve.local ;
 fi;
 
-POPFILE="build/tmp/popMutate.txt";
+STABLE_FILE="build/tmp/stable.zoo";
+NOOB_FILE="build/tmp/noob.zoo";
+
+SCREEN1_FILE="build/tmp/screen1.zoo";
+SCREEN1_ITERATIONS=3
+SCREEN1_DEFECTIVE=0.1
+
+SCREENS_FILE="build/tmp/screenS.zoo";
+SCREENS_ITERATIONS=10
 
 OPTS="-H"
 OPTS="${OPTS} --tickLimit $TICK_LIMIT";
-OPTS="${OPTS} --dumpPopulation $POPFILE"
-OPTS="${OPTS} --usePopulation $POPFILE"
-OPTS="${OPTS} --mutatePopulation"
-OPTS="${OPTS} --populationKillRatio $KILLRATIO"
-OPTS="${OPTS} --populationLimit $POPLIMIT"
-OPTS="${OPTS} --mutationNewIterations $NEW_IT"
-OPTS="${OPTS} --mutationStaleIterations $STALE_IT"
-OPTS="${OPTS} --populationDefectiveRatio $DEFECTIVERATIO"
-
-if [ "$MINAGE" != "" ]; then
-    OPTS="${OPTS} --mutationMinAge $MINAGE";
-fi;
-
-OPTS="${OPTS} -S fast"
+OPTS="${OPTS} -S $SCENARIO"
 OPTS="${OPTS} -t $THREADS"
 
 cp -f $POPFILE $POPFILE.old
 
-./compile.sh $BUILDTYPE && echo && \
-    echo build/sr2 $OPTS "$@" && \
-    build/sr2 $OPTS "$@"
+./compile.sh $BUILDTYPE
+if [ $? != 0 ]; then
+    exit $?
+fi;
+
+echo
+
+build/sr2 mutate $OPTS --usePopulation $STABLE_FILE \
+                       --outputFile $NOOB_FILE \
+                       --mutationCount $NOOB_POP
+
+build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
+                        --controlPopulation $SCREEN1_FILE \
+                        --loop $SCREEN1_ITERATIONS
+
+build/sr2 kill $OPTS --usePopulation $NOOB_FILE \
+                     --defectiveLevel $SCREEN1_DEFECTIVE \
+                     --resetAfter
+
+build/sr2 merge $OPTS --usePopulation $STABLE_FILE \
+                      --inputPopulation $NOOB_FILE
+
+build/sr2 measure $OPTS --usePopulation $STABLE_FILE \
+                        --controlPopulation $SCREENS_FILE \
+                        --loop $SCREENS_ITERATIONS
+
+build/sr2 kill $OPTS --usePopulation $STABLE_FILE \
+                     --maxPop $STABLE_POP
+

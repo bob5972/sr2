@@ -1533,6 +1533,7 @@ void MainParseCmdLine(int argc, char **argv)
         { NULL, "--minPop",            TRUE,  "Minimum population"            },
         { NULL, "--maxPop",            TRUE,  "Maximum population"            },
         { NULL, "--defectiveLevel",    TRUE,  "Defective win ratio"           },
+        { NULL, "--resetAfter",        FALSE, "Reset after killing"           },
     };
     MBOption measure_opts[] = {
         { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
@@ -1882,8 +1883,12 @@ static void MainKillCmd(void)
     // Dump the original population (with updated numSpawns)
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
     if (actualKillCount > 0) {
+        if (MBOpt_IsPresent("resetAfter")) {
+            MainResetFleetStats();
+        }
         MainDumpPopulation(file);
     }
+
     MainCleanupPlayers();
 }
 
@@ -1971,6 +1976,20 @@ static void MainMergeCmd(void)
     MainCleanupPlayers();
 }
 
+static void MainResetFleetStats(void)
+{
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    for (uint i = 1; i < mainData.numPlayers; i++) {
+        MBRegistry *mreg = mainData.players[i].mreg;
+        if (mreg != NULL) {
+            MBRegistry_Remove(mreg, "abattle.numBattles");
+            MBRegistry_Remove(mreg, "abattle.numWins");
+            MBRegistry_Remove(mreg, "abattle.numLosses");
+            MBRegistry_Remove(mreg, "abattle.numDraws");
+        }
+    }
+}
+
 static void MainResetCmd(void)
 {
     const char *file = MBOpt_GetCStr("usePopulation");
@@ -1987,14 +2006,7 @@ static void MainResetCmd(void)
                       ARRAYSIZE(mainData.players), &mainData.numPlayers);
     VERIFY(mainData.numPlayers > 0);
 
-    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-    for (uint i = 1; i < mainData.numPlayers; i++) {
-        MBRegistry *mreg = mainData.players[i].mreg;
-        MBRegistry_Remove(mreg, "abattle.numBattles");
-        MBRegistry_Remove(mreg, "abattle.numWins");
-        MBRegistry_Remove(mreg, "abattle.numLosses");
-        MBRegistry_Remove(mreg, "abattle.numDraws");
-    }
+    MainResetFleetStats();
 
     MainDumpPopulation(file);
     MainCleanupPlayers();
