@@ -33,13 +33,6 @@ if [ $? != 0 ]; then
     exit $?
 fi;
 
-echo sr2: kill screenS
-build/sr2 kill $OPTS --usePopulation $STABLE_FILE \
-                     --maxPop $STABLE_POP
-if [ $? != 0 ]; then
-    exit $?
-fi;
-
 echo sr2: mutate
 build/sr2 mutate $OPTS --usePopulation $STABLE_FILE \
                        --outputFile $NOOB_FILE \
@@ -87,3 +80,9 @@ if [ $? != 0 ]; then
     exit $?
 fi;
 
+echo sr2: kill screenS
+build/sr2 kill $OPTS --usePopulation $STABLE_FILE \
+                     --maxPop $STABLE_POP
+if [ $? != 0 ]; then
+    exit $?
+fi;
