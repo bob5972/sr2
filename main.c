@@ -775,10 +775,10 @@ static void MainDumpAddToKey(MBRegistry *source, MBRegistry *dest,
 {
     uint x;
     MBString destKey;
-    MBString tmp;
+
 
     MBString_Create(&destKey);
-    MBString_Create(&tmp);
+
 
     MBString_MakeEmpty(&destKey);
     if (destPrefix != NULL) {
@@ -792,12 +792,18 @@ static void MainDumpAddToKey(MBRegistry *source, MBRegistry *dest,
         x = 0;
     }
 
-    MBString_IntToString(&tmp, value + x);
-    MBRegistry_PutCopy(dest, MBString_GetCStr(&destKey),
-                       MBString_GetCStr(&tmp));
+    if (value + x == 0) {
+        MBRegistry_Remove(dest, MBString_GetCStr(&destKey));
+    } else {
+        MBString tmp;
+        MBString_Create(&tmp);
+        MBString_IntToString(&tmp, value + x);
+        MBRegistry_PutCopy(dest, MBString_GetCStr(&destKey),
+                           MBString_GetCStr(&tmp));
+        MBString_Destroy(&tmp);
+    }
 
     MBString_Destroy(&destKey);
-    MBString_Destroy(&tmp);
 }
 
 static void MainDumpPopulation(const char *outputFile)
@@ -1965,6 +1971,35 @@ static void MainMergeCmd(void)
     MainCleanupPlayers();
 }
 
+static void MainResetCmd(void)
+{
+    const char *file = MBOpt_GetCStr("usePopulation");
+    if (file == NULL) {
+        PANIC("--usePopulation required for reset\n");
+    }
+
+    ASSERT(mainData.numPlayers == 0);
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+
+    MainUsePopulation(file, &mainData.players[0],
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+    VERIFY(mainData.numPlayers > 0);
+
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    for (uint i = 1; i < mainData.numPlayers; i++) {
+        MBRegistry *mreg = mainData.players[i].mreg;
+        MBRegistry_Remove(mreg, "abattle.numBattles");
+        MBRegistry_Remove(mreg, "abattle.numWins");
+        MBRegistry_Remove(mreg, "abattle.numLosses");
+        MBRegistry_Remove(mreg, "abattle.numDraws");
+    }
+
+    MainDumpPopulation(file);
+    MainCleanupPlayers();
+}
+
 int main(int argc, char **argv)
 {
     const char *cmd;
@@ -2006,7 +2041,7 @@ int main(int argc, char **argv)
     } else if (strcmp(cmd, "measure") == 0) {
         MainMeasureCmd();
     } else if (strcmp(cmd, "reset") == 0) {
-        NOT_IMPLEMENTED();
+        MainResetCmd();
     } else if (strcmp(cmd, "merge") == 0) {
         MainMergeCmd();
     } else {
