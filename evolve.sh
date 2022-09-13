@@ -60,7 +60,7 @@ if [ -f $SCREEN2_FILE ]; then
     echo 'sr2: measure screen2'
     build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
                             --controlPopulation $SCREEN2_FILE \
-                            --loop $SCREEN1_ITERATIONS
+                            --loop $SCREEN2_ITERATIONS
     if [ $? != 0 ]; then exit $? ; fi;
 
     echo 'sr2: kill screen2'
