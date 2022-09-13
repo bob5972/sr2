@@ -1920,9 +1920,10 @@ static void MainMeasureCmd(void)
         MainCleanupSinglePlayer(i);
     }
     uint numControl = lastControl;
-    uint numTarget = mainData.numPlayers - numControl;
-    memmove(&mainData.players[1], &mainData.players[lastControl + 1],
-            sizeof(mainData.players[0]) * numTarget);
+    uint numTarget = mainData.numPlayers - numControl - 1;
+    for (uint i = 1; i <= numTarget; i++) {
+        mainData.players[i] = mainData.players[i + numControl];
+    }
     mainData.numPlayers = numTarget + 1;
 
     MainDumpPopulation(file);
