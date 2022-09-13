@@ -151,7 +151,7 @@ static void MainKillFleet(BattlePlayer *mainPlayers,
                           uint32 mpSize, uint32 *mpIndex,
                           uint32 startingMPIndex, uint32 *numFleets,
                           uint32 *numTargetFleets, uint32 fi);
-static bool MainIsFleetDefective(BattlePlayer *player);
+static bool MainIsFleetDefective(BattlePlayer *player, float defectiveLevel);
 static void MainResetFleetStats(void);
 static void MainCleanupPlayers(void);
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
@@ -967,7 +967,8 @@ static void MainUsePopulation(const char *file,
             uint32 i = 0;
             while (i < numFleets && numTargetFleets > 1) {
                 uint32 fi = i + startingMPIndex;
-                if (MainIsFleetDefective(&mainPlayers[fi])) {
+                if (MainIsFleetDefective(&mainPlayers[fi],
+                                         MBOpt_GetFloat("populationDefectiveRatio"))) {
                     ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
                     MainKillFleet(mainPlayers, mpSize, mpIndex,
                                   startingMPIndex, &numFleets,
@@ -1128,10 +1129,15 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     NOT_REACHED();
 }
 
-static bool MainIsFleetDefective(BattlePlayer *player)
+static bool MainIsFleetDefective(BattlePlayer *player,
+                                 float defectiveLevel)
 {
     MBRegistry *fleetReg = player->mreg;
-    uint numBattles = MBRegistry_GetUint(fleetReg, "abattle.numBattles");
+    uint numBattles;
+
+    if (defectiveLevel == 0.0f) {
+        return FALSE;
+    }
 
     if (player->playerType != PLAYER_TYPE_TARGET) {
         /*
@@ -1140,6 +1146,7 @@ static bool MainIsFleetDefective(BattlePlayer *player)
         return FALSE;
     }
 
+    numBattles = MBRegistry_GetUint(fleetReg, "abattle.numBattles");
     if (numBattles == 0) {
         /*
          * Keep brand-new fleets.
@@ -1155,15 +1162,6 @@ static bool MainIsFleetDefective(BattlePlayer *player)
          * Something funny happened, probably someone manually editing
          * the population file wrong.
          */
-        return FALSE;
-    }
-
-    float defectiveLevel = 0.0f;
-    if (MBOpt_IsPresent("populationDefectiveRatio")) {
-        defectiveLevel = MBOpt_GetFloat("populationDefectiveRatio");
-    }
-
-    if (defectiveLevel == 0.0f) {
         return FALSE;
     }
 
@@ -1807,6 +1805,7 @@ static void MainKillCmd(void)
     /*
      * Kill defective fleets.
      */
+    float defectiveLevel = MBOpt_GetFloat("defectiveLevel");
     uint i = 1;
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
     while (numFleets > minPop && i < mainData.numPlayers) {
@@ -1815,7 +1814,7 @@ static void MainKillCmd(void)
         ASSERT(mainData.numPlayers > 1);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
 
-        if (MainIsFleetDefective(&mainData.players[i])) {
+        if (MainIsFleetDefective(&mainData.players[i], defectiveLevel)) {
             MainKillFleet(&mainData.players[0], mainData.numPlayers,
                           NULL, 1, &numFleets, NULL, i);
             /*
@@ -1880,10 +1879,11 @@ static void MainKillCmd(void)
     ASSERT(numFleets <= maxPop);
 
     Warning("Killed %d total fleets.\n", actualKillCount);
+    Warning("%d fleets remaining.\n", numFleets);
 
     // Dump the original population (with updated numSpawns)
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-    if (actualKillCount > 0) {
+    if (actualKillCount > 0 || MBOpt_IsPresent("resetAfter")) {
         if (MBOpt_IsPresent("resetAfter")) {
             MainResetFleetStats();
         }
