@@ -43,6 +43,23 @@
 // From ml.hpp
 extern void ML_UnitTest();
 
+typedef enum MainBattleType {
+    /*
+     * Single battle-royale with all players.
+     */
+    MAIN_BT_SINGLE,
+
+    /*
+     * Run each control fleet 1x1 against each target fleet.
+     */
+    MAIN_BT_OPTIMIZE,
+
+    /*
+     * Run every fleet 1x1 against each other fleet.
+     */
+    MAIN_BT_TOURNAMENT,
+} MainBattleType;
+
 typedef enum MainEngineWorkType {
     MAIN_WORK_INVALID = 0,
     MAIN_WORK_EXIT    = 1,
@@ -121,7 +138,8 @@ static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
 
 static void MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
-static void MainUsePopulation(BattlePlayer *mainPlayers,
+static void MainUsePopulation(const char *file,
+                              BattlePlayer *mainPlayers,
                               uint32 mpSize, uint *mpIndex);
 static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                                   uint32 startingMPIndex, uint32 numFleets,
@@ -143,50 +161,22 @@ static void MainThreadsInit(void);
 static void MainThreadsRequestExit(void);
 static void MainThreadsExit(void);
 
-void MainConstructScenario(void)
+static void MainProcessSingleResult(MainEngineResultUnit *ru);
+static void MainPrintWinners(void);
+
+void MainLoadDefaultPlayers(void)
 {
-    uint p;
-    MBRegistry *mreg = MBRegistry_Alloc();
-    BattleScenario bsc;
-
-    MainLoadScenario(mreg, NULL);
-    if (mainData.scenario != NULL) {
-        MainLoadScenario(mreg, mainData.scenario);
-    }
-
-    MBUtil_Zero(&bsc, sizeof(bsc));
-
-    bsc.bp.width = MBRegistry_GetUint(mreg, "width");
-    bsc.bp.height = MBRegistry_GetUint(mreg, "height");
-    bsc.bp.startingCredits = MBRegistry_GetUint(mreg, "startingCredits");
-    bsc.bp.creditsPerTick = MBRegistry_GetUint(mreg, "creditsPerTick");
-    bsc.bp.tickLimit = MBRegistry_GetUint(mreg, "tickLimit");
-    bsc.bp.powerCoreDropRate = MBRegistry_GetFloat(mreg, "powerCoreDropRate");
-    bsc.bp.powerCoreSpawnRate = MBRegistry_GetFloat(mreg, "powerCoreSpawnRate");
-    bsc.bp.minPowerCoreSpawn = MBRegistry_GetUint(mreg, "minPowerCoreSpawn");
-    bsc.bp.maxPowerCoreSpawn = MBRegistry_GetUint(mreg, "maxPowerCoreSpawn");
-    bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
-    bsc.bp.startingBases = MBRegistry_GetUint(mreg, "startingBases");
-    bsc.bp.startingFighters = MBRegistry_GetUint(mreg, "startingFighters");
-    bsc.bp.baseVictory = MBRegistry_GetBool(mreg, "baseVictory");
-
-    MBRegistry_Free(mreg);
-    mreg = NULL;
-
-    if (mainData.tickLimit != 0) {
-        bsc.bp.tickLimit = mainData.tickLimit;
-    }
-
     /*
      * The NEUTRAL fleet always needs to be there.
      */
-    p = 0;
+    uint p = 0;
     mainData.players[p].aiType = FLEET_AI_NEUTRAL;
     mainData.players[p].playerType = PLAYER_TYPE_NEUTRAL;
     p++;
 
     if (MBOpt_IsPresent("usePopulation")) {
-        MainUsePopulation(&mainData.players[0],
+        MainUsePopulation(MBOpt_GetCStr("usePopulation"),
+                          &mainData.players[0],
                           ARRAYSIZE(mainData.players), &p);
     } else if (mainData.optimize) {
         MainAddPlayersForOptimize(&mainData.players[0],
@@ -239,6 +229,47 @@ void MainConstructScenario(void)
 
     ASSERT(p <= ARRAYSIZE(mainData.players));
     mainData.numPlayers = p;
+}
+
+void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
+{
+    MBRegistry *mreg = MBRegistry_Alloc();
+    BattleScenario bsc;
+
+    MainLoadScenario(mreg, NULL);
+    if (mainData.scenario != NULL) {
+        MainLoadScenario(mreg, mainData.scenario);
+    }
+
+    MBUtil_Zero(&bsc, sizeof(bsc));
+
+    bsc.bp.width = MBRegistry_GetUint(mreg, "width");
+    bsc.bp.height = MBRegistry_GetUint(mreg, "height");
+    bsc.bp.startingCredits = MBRegistry_GetUint(mreg, "startingCredits");
+    bsc.bp.creditsPerTick = MBRegistry_GetUint(mreg, "creditsPerTick");
+    bsc.bp.tickLimit = MBRegistry_GetUint(mreg, "tickLimit");
+    bsc.bp.powerCoreDropRate = MBRegistry_GetFloat(mreg, "powerCoreDropRate");
+    bsc.bp.powerCoreSpawnRate = MBRegistry_GetFloat(mreg, "powerCoreSpawnRate");
+    bsc.bp.minPowerCoreSpawn = MBRegistry_GetUint(mreg, "minPowerCoreSpawn");
+    bsc.bp.maxPowerCoreSpawn = MBRegistry_GetUint(mreg, "maxPowerCoreSpawn");
+    bsc.bp.restrictedStart = MBRegistry_GetBool(mreg, "restrictedStart");
+    bsc.bp.startingBases = MBRegistry_GetUint(mreg, "startingBases");
+    bsc.bp.startingFighters = MBRegistry_GetUint(mreg, "startingFighters");
+    bsc.bp.baseVictory = MBRegistry_GetBool(mreg, "baseVictory");
+
+    MBRegistry_Free(mreg);
+    mreg = NULL;
+
+    if (mainData.tickLimit != 0) {
+        bsc.bp.tickLimit = mainData.tickLimit;
+    }
+
+    if (loadPlayers) {
+        MainLoadDefaultPlayers();
+    }
+    ASSERT(mainData.numPlayers > 1);
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    uint p = mainData.numPlayers;
 
     for (uint i = 0; i < p; i++) {
         mainData.players[i].playerUID = i;
@@ -253,9 +284,7 @@ void MainConstructScenario(void)
         }
     }
 
-    if (mainData.optimize ||
-        (MBOpt_IsPresent("usePopulation") &&
-         MBOpt_IsPresent("mutatePopulation"))) {
+    if (bt == MAIN_BT_OPTIMIZE) {
         uint maxItCount = 1;
 
         maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationNewIterations"));
@@ -307,7 +336,7 @@ void MainConstructScenario(void)
         }
 
         ASSERT(mainData.numBSCs <= mainData.maxBscs);
-    } else if (mainData.tournament) {
+    } else if (bt == MAIN_BT_TOURNAMENT) {
         // This is too big, but it works.
         mainData.maxBscs = mainData.numPlayers * mainData.numPlayers;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * mainData.maxBscs);
@@ -316,7 +345,6 @@ void MainConstructScenario(void)
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
         for (uint x = 1; x < mainData.numPlayers; x++) {
-            ASSERT(mainData.players[x].playerType == PLAYER_TYPE_CONTROL);
 
             for (uint y = 1; y < mainData.numPlayers; y++) {
                 if (x == y) {
@@ -335,6 +363,7 @@ void MainConstructScenario(void)
 
         ASSERT(mainData.numBSCs <= mainData.maxBscs);
     } else {
+        ASSERT(bt == MAIN_BT_SINGLE);
         ASSERT(mainData.numPlayers > 0);
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
 
@@ -347,6 +376,116 @@ void MainConstructScenario(void)
         memcpy(&mainData.bscs[0].players, &mainData.players,
                sizeof(mainData.players));
     }
+}
+
+static void MainRunScenarios(void)
+{
+    if (!mainData.headless) {
+        if (mainData.numThreads != 1) {
+            PANIC("Multiple threads requires --headless\n");
+        }
+        if (mainData.numBSCs != 1) {
+            PANIC("Multiple scenarios requries --headless\n");
+        }
+        if (mainData.loop != 1) {
+            PANIC("Multiple battles requires --headless\n");
+        }
+        Display_Init(&mainData.bscs[0]);
+    }
+
+    ASSERT(mainData.numBSCs > 0);
+    ASSERT(mainData.loop > 0);
+    ASSERT(mainData.numThreads > 0);
+
+    mainData.totalBattles = mainData.loop * mainData.numBSCs;
+    mainData.numThreads = MAX(1, mainData.numThreads);
+    mainData.numThreads = MIN(mainData.totalBattles, mainData.numThreads);
+    MainThreadsInit();
+
+    uint battleId = 0;
+
+    WorkQueue_Lock(&mainData.workQ);
+    for (uint i = 0; i < mainData.loop; i++) {
+        for (uint b = 0; b < mainData.numBSCs; b++) {
+            MainEngineWorkUnit wu;
+            MBUtil_Zero(&wu, sizeof(wu));
+            wu.bsc = mainData.bscs[b];
+
+            for (uint p = 0; p < wu.bsc.bp.numPlayers; p++) {
+                if (wu.bsc.players[p].mreg != NULL) {
+                    wu.bsc.players[p].mreg =
+                        MBRegistry_AllocCopy(wu.bsc.players[p].mreg);
+                }
+            }
+
+            wu.type = MAIN_WORK_BATTLE;
+            wu.battleId = battleId++;
+
+            if ((i == 0 && b == 0) || mainData.reuseSeed) {
+                /*
+                 * Use the actual seed for the first battle, so that it's
+                 * easy to re-create a single battle from the battle seed
+                 * without specifying --reuseSeed.
+                 */
+                wu.seed = RandomState_GetSeed(&mainData.rs);
+            } else {
+                wu.seed = RandomState_Uint64(&mainData.rs);
+            }
+
+            Warning("Queueing Battle %d of %d...\n", wu.battleId,
+                    mainData.totalBattles);
+            WorkQueue_QueueItemLocked(&mainData.workQ, &wu, sizeof(wu));
+
+            if ((battleId + 1) % mainData.numThreads == 0) {
+                WorkQueue_Unlock(&mainData.workQ);
+                uint workTarget = MAX(10, mainData.numThreads * 4);
+
+                /*
+                 * Try to process the results as they come in, to reduce
+                 * memory usage.
+                 */
+                while (!WorkQueue_IsEmpty(&mainData.resultQ) &&
+                       !WorkQueue_IsCountBelow(&mainData.workQ, workTarget)) {
+                    MainEngineResultUnit ru;
+                    WorkQueue_WaitForItem(&mainData.resultQ, &ru, sizeof(ru));
+                    MainProcessSingleResult(&ru);
+                }
+
+                WorkQueue_WaitForCountBelow(&mainData.workQ, workTarget);
+                WorkQueue_Lock(&mainData.workQ);
+            }
+        }
+    }
+    WorkQueue_Unlock(&mainData.workQ);
+    Warning("Done Queueing\n");
+    mainData.doneQueueing = TRUE;
+
+    if (!mainData.headless) {
+        Display_Main(mainData.startPaused);
+        mainData.asyncExit = TRUE;
+        Display_Exit();
+    }
+
+    WorkQueue_WaitForAllFinished(&mainData.workQ);
+    ASSERT(WorkQueue_IsIdle(&mainData.workQ));
+    MainThreadsRequestExit();
+
+    WorkQueue_Lock(&mainData.resultQ);
+    uint qSize = WorkQueue_QueueSize(&mainData.resultQ);
+    for (uint i = 0; i < qSize; i++) {
+        MainEngineResultUnit ru;
+        WorkQueue_GetItemLocked(&mainData.resultQ, &ru, sizeof(ru));
+        MainProcessSingleResult(&ru);
+    }
+    WorkQueue_Unlock(&mainData.resultQ);
+    ASSERT(WorkQueue_IsEmpty(&mainData.resultQ));
+
+    MainPrintWinners();
+
+    free(mainData.bscs);
+    mainData.bscs = NULL;
+
+    MainThreadsExit();
 }
 
 static void
@@ -730,7 +869,8 @@ static void MainDumpPopulation(const char *outputFile)
     MBString_Destroy(&tmp);
     MBRegistry_Free(popReg);
 }
-static void MainUsePopulation(BattlePlayer *mainPlayers,
+static void MainUsePopulation(const char *file,
+                              BattlePlayer *mainPlayers,
                               uint32 mpSize, uint32 *mpIndex)
 {
     MBRegistry *popReg;
@@ -748,7 +888,8 @@ static void MainUsePopulation(BattlePlayer *mainPlayers,
     fleetReg = MBRegistry_Alloc();
     VERIFY(fleetReg != NULL);
 
-    MBRegistry_Load(popReg, MBOpt_GetCStr("usePopulation"));
+    ASSERT(file != NULL);
+    MBRegistry_Load(popReg, file);
 
     numFleets = MBRegistry_GetInt(popReg, "numFleets");
     if (numFleets <= 0) {
@@ -1387,6 +1528,9 @@ void MainParseCmdLine(int argc, char **argv)
         { NULL, "--maxPop",            TRUE,  "Maximum population"            },
         { NULL, "--defectiveLevel",    TRUE,  "Defective win ratio"           },
     };
+    MBOption measure_opts[] = {
+        { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
+    };
 
     MBOpt_SetProgram("sr2", NULL);
     MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
@@ -1396,6 +1540,7 @@ void MainParseCmdLine(int argc, char **argv)
                       sanitizeFleet_opts, ARRAYSIZE(sanitizeFleet_opts));
     MBOpt_LoadOptions("mutate", mutate_opts, ARRAYSIZE(mutate_opts));
     MBOpt_LoadOptions("kill", kill_opts, ARRAYSIZE(kill_opts));
+    MBOpt_LoadOptions("measure", measure_opts, ARRAYSIZE(measure_opts));
     MBOpt_Init(argc, argv);
 
     mainData.headless = MBOpt_GetBool("headless");
@@ -1504,13 +1649,22 @@ static void MainThreadsExit(void)
     mainData.threadsInitialized = FALSE;
 }
 
+static void MainCleanupSinglePlayer(uint p)
+{
+    ASSERT(p < mainData.numPlayers);
+    ASSERT(mainData.players[p].playerType != PLAYER_TYPE_INVALID);
+
+    if (mainData.players[p].mreg != NULL) {
+        MBRegistry_Free(mainData.players[p].mreg);
+        mainData.players[p].mreg = NULL;
+    }
+    mainData.players[p].playerType = PLAYER_TYPE_INVALID;
+}
+
 static void MainCleanupPlayers(void)
 {
     for (uint p = 0; p < mainData.numPlayers; p++) {
-        if (mainData.players[p].mreg != NULL) {
-            MBRegistry_Free(mainData.players[p].mreg);
-            mainData.players[p].mreg = NULL;
-        }
+        MainCleanupSinglePlayer(p);
     }
 }
 
@@ -1531,7 +1685,8 @@ void MainMutateCmd(void)
     mainData.players[0].aiType = FLEET_AI_NEUTRAL;
     mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
     mainData.numPlayers++;
-    MainUsePopulation(&mainData.players[0],
+    MainUsePopulation(MBOpt_GetCStr("usePopulation"),
+                      &mainData.players[0],
                       ARRAYSIZE(mainData.players), &mainData.numPlayers);
 
     VERIFY(mainData.numPlayers > 0);
@@ -1577,116 +1732,26 @@ void MainMutateCmd(void)
 
 void MainDefaultCmd(void)
 {
-    MainConstructScenario();
+    MainBattleType bt;
 
-    if (!mainData.headless) {
-        if (mainData.numThreads != 1) {
-            PANIC("Multiple threads requires --headless\n");
-        }
-        if (mainData.numBSCs != 1) {
-            PANIC("Multiple scenarios requries --headless\n");
-        }
-        if (mainData.loop != 1) {
-            PANIC("Multiple battles requires --headless\n");
-        }
-        Display_Init(&mainData.bscs[0]);
+    if (mainData.optimize ||
+        (MBOpt_IsPresent("usePopulation") &&
+         MBOpt_IsPresent("mutatePopulation"))) {
+        bt = MAIN_BT_OPTIMIZE;
+    } else if (mainData.tournament) {
+        bt = MAIN_BT_TOURNAMENT;
+    } else {
+        bt = MAIN_BT_SINGLE;
     }
 
-    mainData.totalBattles = mainData.loop * mainData.numBSCs;
-    mainData.numThreads = MAX(1, mainData.numThreads);
-    mainData.numThreads = MIN(mainData.totalBattles, mainData.numThreads);
-    MainThreadsInit();
-
-    uint battleId = 0;
-
-    WorkQueue_Lock(&mainData.workQ);
-    for (uint i = 0; i < mainData.loop; i++) {
-        for (uint b = 0; b < mainData.numBSCs; b++) {
-            MainEngineWorkUnit wu;
-            MBUtil_Zero(&wu, sizeof(wu));
-            wu.bsc = mainData.bscs[b];
-
-            for (uint p = 0; p < wu.bsc.bp.numPlayers; p++) {
-                if (wu.bsc.players[p].mreg != NULL) {
-                    wu.bsc.players[p].mreg =
-                        MBRegistry_AllocCopy(wu.bsc.players[p].mreg);
-                }
-            }
-
-            wu.type = MAIN_WORK_BATTLE;
-            wu.battleId = battleId++;
-
-            if ((i == 0 && b == 0) || mainData.reuseSeed) {
-                /*
-                 * Use the actual seed for the first battle, so that it's
-                 * easy to re-create a single battle from the battle seed
-                 * without specifying --reuseSeed.
-                 */
-                wu.seed = RandomState_GetSeed(&mainData.rs);
-            } else {
-                wu.seed = RandomState_Uint64(&mainData.rs);
-            }
-
-            Warning("Queueing Battle %d of %d...\n", wu.battleId,
-                    mainData.totalBattles);
-            WorkQueue_QueueItemLocked(&mainData.workQ, &wu, sizeof(wu));
-
-            if ((battleId + 1) % mainData.numThreads == 0) {
-                WorkQueue_Unlock(&mainData.workQ);
-                uint workTarget = MAX(10, mainData.numThreads * 4);
-
-                /*
-                 * Try to process the results as they come in, to reduce
-                 * memory usage.
-                 */
-                while (!WorkQueue_IsEmpty(&mainData.resultQ) &&
-                       !WorkQueue_IsCountBelow(&mainData.workQ, workTarget)) {
-                    MainEngineResultUnit ru;
-                    WorkQueue_WaitForItem(&mainData.resultQ, &ru, sizeof(ru));
-                    MainProcessSingleResult(&ru);
-                }
-
-                WorkQueue_WaitForCountBelow(&mainData.workQ, workTarget);
-                WorkQueue_Lock(&mainData.workQ);
-            }
-        }
-    }
-    WorkQueue_Unlock(&mainData.workQ);
-    Warning("Done Queueing\n");
-    mainData.doneQueueing = TRUE;
-
-    if (!mainData.headless) {
-        Display_Main(mainData.startPaused);
-        mainData.asyncExit = TRUE;
-        Display_Exit();
-    }
-
-    WorkQueue_WaitForAllFinished(&mainData.workQ);
-    ASSERT(WorkQueue_IsIdle(&mainData.workQ));
-    MainThreadsRequestExit();
-
-    WorkQueue_Lock(&mainData.resultQ);
-    uint qSize = WorkQueue_QueueSize(&mainData.resultQ);
-    for (uint i = 0; i < qSize; i++) {
-        MainEngineResultUnit ru;
-        WorkQueue_GetItemLocked(&mainData.resultQ, &ru, sizeof(ru));
-        MainProcessSingleResult(&ru);
-    }
-    WorkQueue_Unlock(&mainData.resultQ);
-    ASSERT(WorkQueue_IsEmpty(&mainData.resultQ));
-
-    MainPrintWinners();
+    MainConstructScenarios(TRUE, bt);
+    MainRunScenarios();
 
     if (MBOpt_IsPresent("dumpPopulation")) {
         MainDumpPopulation(MBOpt_GetCStr("dumpPopulation"));
     }
 
     MainCleanupPlayers();
-
-    free(mainData.bscs);
-    mainData.bscs = NULL;
-
-    MainThreadsExit();
 }
 
 static void MainKillCmd(void)
@@ -1701,14 +1766,13 @@ static void MainKillCmd(void)
     mainData.players[0].aiType = FLEET_AI_NEUTRAL;
     mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
     mainData.numPlayers++;
-    MainUsePopulation(&mainData.players[0],
+    MainUsePopulation(MBOpt_GetCStr("usePopulation"),
+                      &mainData.players[0],
                       ARRAYSIZE(mainData.players), &mainData.numPlayers);
-
     VERIFY(mainData.numPlayers > 0);
 
     // Account for FLEET_AI_NEUTRAL
     uint numFleets = mainData.numPlayers - 1;
-
 
     uint actualKillCount = 0;
     uint minPop = 0;
@@ -1812,6 +1876,60 @@ static void MainKillCmd(void)
     MainCleanupPlayers();
 }
 
+static void MainMeasureCmd(void)
+{
+    const char *file = MBOpt_GetCStr("usePopulation");
+    if (file == NULL) {
+        PANIC("--usePopulation required for measure\n");
+    }
+
+    const char *controlFile = MBOpt_GetCStr("controlPopulation");
+    if (controlFile == NULL) {
+        PANIC("--controlPopulation required for measure\n");
+    }
+
+    ASSERT(mainData.numPlayers == 0);
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+
+    MainUsePopulation(MBOpt_GetCStr("controlPopulation"),
+                      &mainData.players[0],
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+    VERIFY(mainData.numPlayers > 0);
+
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    for (uint i = 1; i < mainData.numPlayers; i++) {
+        VERIFY(mainData.players[i].playerType == PLAYER_TYPE_CONTROL);
+    }
+    uint lastControl = mainData.numPlayers - 1;
+
+    MainUsePopulation(MBOpt_GetCStr("usePopulation"),
+                      &mainData.players[0],
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+    VERIFY(mainData.numPlayers > 0);
+    for (uint i = lastControl + 1; i < mainData.numPlayers; i++) {
+        VERIFY(mainData.players[i].playerType == PLAYER_TYPE_TARGET);
+    }
+
+    MainConstructScenarios(FALSE, MAIN_BT_OPTIMIZE);
+    MainRunScenarios();
+
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    for (uint i = 1; i <= lastControl; i++) {
+        MainCleanupSinglePlayer(i);
+    }
+    uint numControl = lastControl;
+    uint numTarget = mainData.numPlayers - numControl;
+    memmove(&mainData.players[1], &mainData.players[lastControl + 1],
+            sizeof(mainData.players[0]) * numTarget);
+    mainData.numPlayers = numTarget + 1;
+
+    MainDumpPopulation(file);
+
+    MainCleanupPlayers();
+}
+
 int main(int argc, char **argv)
 {
     const char *cmd;
@@ -1850,6 +1968,8 @@ int main(int argc, char **argv)
         MainMutateCmd();
     } else if (strcmp(cmd, "kill") == 0) {
         MainKillCmd();
+    } else if (strcmp(cmd, "measure") == 0) {
+        MainMeasureCmd();
     } else {
         ASSERT(strcmp(cmd, "default") == 0);
         MainDefaultCmd();
