@@ -1531,6 +1531,9 @@ void MainParseCmdLine(int argc, char **argv)
     MBOption measure_opts[] = {
         { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
     };
+    MBOption merge_opts[] = {
+        { "-i", "--inputPopulation",   TRUE,  "Input file for extra population" },
+    };
 
     MBOpt_SetProgram("sr2", NULL);
     MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
@@ -1542,7 +1545,7 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_LoadOptions("kill", kill_opts, ARRAYSIZE(kill_opts));
     MBOpt_LoadOptions("measure", measure_opts, ARRAYSIZE(measure_opts));
     MBOpt_LoadOptions("reset", NULL, 0);
-    MBOpt_LoadOptions("merge", NULL, 0);
+    MBOpt_LoadOptions("merge", merge_opts, ARRAYSIZE(merge_opts));
     MBOpt_Init(argc, argv);
 
     mainData.headless = MBOpt_GetBool("headless");
@@ -1895,8 +1898,7 @@ static void MainMeasureCmd(void)
     mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
     mainData.numPlayers++;
 
-    MainUsePopulation(MBOpt_GetCStr("controlPopulation"),
-                      &mainData.players[0],
+    MainUsePopulation(controlFile, &mainData.players[0],
                       ARRAYSIZE(mainData.players), &mainData.numPlayers);
     VERIFY(mainData.numPlayers > 0);
 
@@ -1906,8 +1908,7 @@ static void MainMeasureCmd(void)
     }
     uint lastControl = mainData.numPlayers - 1;
 
-    MainUsePopulation(MBOpt_GetCStr("usePopulation"),
-                      &mainData.players[0],
+    MainUsePopulation(file, &mainData.players[0],
                       ARRAYSIZE(mainData.players), &mainData.numPlayers);
     VERIFY(mainData.numPlayers > 0);
     for (uint i = lastControl + 1; i < mainData.numPlayers; i++) {
@@ -1930,6 +1931,37 @@ static void MainMeasureCmd(void)
 
     MainDumpPopulation(file);
 
+    MainCleanupPlayers();
+}
+
+static void MainMergeCmd(void)
+{
+    const char *file = MBOpt_GetCStr("usePopulation");
+    if (file == NULL) {
+        PANIC("--usePopulation required for merge\n");
+    }
+
+    const char *inputFile = MBOpt_GetCStr("inputPopulation");
+    if (inputFile == NULL) {
+        PANIC("--inputPopulation required for merge\n");
+    }
+
+    ASSERT(mainData.numPlayers == 0);
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+
+    MainUsePopulation(file, &mainData.players[0],
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+    VERIFY(mainData.numPlayers > 0);
+
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+
+    MainUsePopulation(inputFile, &mainData.players[0],
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+    VERIFY(mainData.numPlayers > 0);
+
+    MainDumpPopulation(file);
     MainCleanupPlayers();
 }
 
@@ -1976,7 +2008,7 @@ int main(int argc, char **argv)
     } else if (strcmp(cmd, "reset") == 0) {
         NOT_IMPLEMENTED();
     } else if (strcmp(cmd, "merge") == 0) {
-        NOT_IMPLEMENTED();
+        MainMergeCmd();
     } else {
         ASSERT(strcmp(cmd, "default") == 0);
         MainDefaultCmd();
