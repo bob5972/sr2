@@ -152,6 +152,7 @@ static void MainKillFleet(BattlePlayer *mainPlayers,
                           uint32 startingMPIndex, uint32 *numFleets,
                           uint32 *numTargetFleets, uint32 fi);
 static bool MainIsFleetDefective(BattlePlayer *player);
+static void MainResetFleetStats(void);
 static void MainCleanupPlayers(void);
 static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                             BattlePlayer *dest,
