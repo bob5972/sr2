@@ -16,8 +16,12 @@ SCREEN1_ITERATIONS=3
 SCREEN1_DEFECTIVE=0.1
 
 SCREEN2_FILE="build/tmp/screen2.zoo";
-SCREEN2_ITERATIONS=10
+SCREEN2_ITERATIONS=5
 SCREEN2_DEFECTIVE=0.1
+
+SCREEN3_FILE="build/tmp/screen3.zoo";
+SCREEN3_ITERATIONS=10
+SCREEN3_DEFECTIVE=0.1
 
 SCREENS_FILE="build/tmp/screenS.zoo";
 SCREENS_DEFECTIVE=0.1
@@ -66,6 +70,20 @@ if [ -f $SCREEN2_FILE ]; then
     echo 'sr2: kill screen2'
     build/sr2 kill $OPTS --usePopulation $NOOB_FILE \
                         --defectiveLevel $SCREEN2_DEFECTIVE \
+                        --resetAfter
+    if [ $? != 0 ]; then exit $? ; fi;
+fi;
+
+if [ -f $SCREEN3_FILE ]; then
+    echo 'sr2: measure screen3'
+    build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
+                            --controlPopulation $SCREEN3_FILE \
+                            --loop $SCREEN3_ITERATIONS
+    if [ $? != 0 ]; then exit $? ; fi;
+
+    echo 'sr2: kill screen3'
+    build/sr2 kill $OPTS --usePopulation $NOOB_FILE \
+                        --defectiveLevel $SCREEN3_DEFECTIVE \
                         --resetAfter
     if [ $? != 0 ]; then exit $? ; fi;
 fi;
