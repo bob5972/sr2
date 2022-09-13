@@ -12,7 +12,7 @@ use MBBasic;
 
 my $gScriptOptions = {
     "file=s" => { desc => "MBRegistry file to use",
-                  default => "build/tmp/popMutate.txt" },
+                  default => "build/tmp/stable.zoo" },
     "date!" => {desc => "Add a date line to the bottom",
                 default => FALSE },
     "opSummary!" => { desc => "Include an opcode summary",
