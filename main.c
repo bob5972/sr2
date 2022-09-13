@@ -1541,6 +1541,8 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_LoadOptions("mutate", mutate_opts, ARRAYSIZE(mutate_opts));
     MBOpt_LoadOptions("kill", kill_opts, ARRAYSIZE(kill_opts));
     MBOpt_LoadOptions("measure", measure_opts, ARRAYSIZE(measure_opts));
+    MBOpt_LoadOptions("reset", NULL, 0);
+    MBOpt_LoadOptions("merge", NULL, 0);
     MBOpt_Init(argc, argv);
 
     mainData.headless = MBOpt_GetBool("headless");
@@ -1971,6 +1973,10 @@ int main(int argc, char **argv)
         MainKillCmd();
     } else if (strcmp(cmd, "measure") == 0) {
         MainMeasureCmd();
+    } else if (strcmp(cmd, "reset") == 0) {
+        NOT_IMPLEMENTED();
+    } else if (strcmp(cmd, "merge") == 0) {
+        NOT_IMPLEMENTED();
     } else {
         ASSERT(strcmp(cmd, "default") == 0);
         MainDefaultCmd();
