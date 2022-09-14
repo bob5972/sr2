@@ -807,7 +807,7 @@ static void MainDumpAddToKey(MBRegistry *source, MBRegistry *dest,
     MBString_Destroy(&destKey);
 }
 
-static void MainDumpPopulation(const char *outputFile)
+static void MainDumpPopulation(const char *outputFile, bool targetOnly)
 {
     uint32 i;
     MBRegistry *popReg;
@@ -815,6 +815,7 @@ static void MainDumpPopulation(const char *outputFile)
     MBString key;
     MBString tmp;
     uint32 numFleets = 0;
+    uint32 fleetI = 1;
 
     ASSERT(outputFile != NULL);
 
@@ -827,13 +828,19 @@ static void MainDumpPopulation(const char *outputFile)
 
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
     for (i = 1; i < mainData.numPlayers; i++) {
+        if (targetOnly &&
+            mainData.players[i].playerType != PLAYER_TYPE_TARGET) {
+            continue;
+        }
+
         MainWinnerData *wd = &mainData.winners[i];
         const char *fleetName = Fleet_GetName(mainData.players[i].aiType);
 
         numFleets++;
 
         MBString_CopyCStr(&prefix, "fleet");
-        MBString_IntToString(&tmp, i);
+        MBString_IntToString(&tmp, fleetI);
+        fleetI++;
         MBString_AppendStr(&prefix, &tmp);
         MBString_AppendCStr(&prefix, ".");
 
@@ -1723,7 +1730,7 @@ void MainMutateCmd(void)
 
     // Dump the original population (with updated numSpawns)
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-    MainDumpPopulation(inputFile);
+    MainDumpPopulation(inputFile, FALSE);
     MainCleanupPlayers();
 
     // Dump the new mutants to the outputFile
@@ -1737,7 +1744,7 @@ void MainMutateCmd(void)
         mainData.numPlayers++;
     }
 
-    MainDumpPopulation(outputFile);
+    MainDumpPopulation(outputFile, FALSE);
     MainCleanupPlayers();
 }
 
@@ -1759,7 +1766,7 @@ void MainDefaultCmd(void)
     MainRunScenarios();
 
     if (MBOpt_IsPresent("dumpPopulation")) {
-        MainDumpPopulation(MBOpt_GetCStr("dumpPopulation"));
+        MainDumpPopulation(MBOpt_GetCStr("dumpPopulation"), FALSE);
     }
 
     MainCleanupPlayers();
@@ -1887,7 +1894,7 @@ static void MainKillCmd(void)
         if (MBOpt_IsPresent("resetAfter")) {
             MainResetFleetStats();
         }
-        MainDumpPopulation(file);
+        MainDumpPopulation(file, FALSE);
     }
 
     MainCleanupPlayers();
@@ -1941,7 +1948,7 @@ static void MainMeasureCmd(void)
     }
     mainData.numPlayers = numTarget + 1;
 
-    MainDumpPopulation(file);
+    MainDumpPopulation(file, TRUE);
 
     MainCleanupPlayers();
 }
@@ -1973,7 +1980,7 @@ static void MainMergeCmd(void)
                       ARRAYSIZE(mainData.players), &mainData.numPlayers);
     VERIFY(mainData.numPlayers > 0);
 
-    MainDumpPopulation(file);
+    MainDumpPopulation(file, FALSE);
     MainCleanupPlayers();
 }
 
@@ -2009,7 +2016,7 @@ static void MainResetCmd(void)
 
     MainResetFleetStats();
 
-    MainDumpPopulation(file);
+    MainDumpPopulation(file, FALSE);
     MainCleanupPlayers();
 }
 
