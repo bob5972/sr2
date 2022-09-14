@@ -319,6 +319,7 @@ sub DisplaySummary() {
     my $totalBattles = 0;
     my $ages = {};
     my $maxAge = 0;
+    my $minAge;
     my $fitnessRange = {};
     my $maxWinsP;
     my $maxFP;
@@ -367,6 +368,9 @@ sub DisplaySummary() {
                 if ($a > $maxAge) {
                     $maxAge = $a;
                 }
+                if (!defined($minAge) || $a < $minAge) {
+                    $minAge = $a;
+                }
             }
 
             if (!defined($maxWinsP) ||
@@ -389,9 +393,16 @@ sub DisplaySummary() {
 
     if (scalar keys %{$ages} > 10) {
         my $collapsedAges = {};
-        $collapsedAges->{"0"} = GetCountFromRange($ages, 0, 0);
-        $collapsedAges->{"1"} = GetCountFromRange($ages, 1, 1);
-        $collapsedAges->{" 2 -  9"} = GetCountFromRange($ages, 2, 9);
+
+        if ($minAge < 10) {
+            my $nextMin = $minAge + 1;
+            $collapsedAges->{"$minAge"} = GetCountFromRange($ages, $minAge, $minAge);
+            if ($nextMin < 9) {
+                $collapsedAges->{" $nextMin -  9"} = GetCountFromRange($ages, $nextMin, 9);
+            } else {
+                $collapsedAges->{"9"} = GetCountFromRange($ages, 9, 9);
+            }
+        }
 
         for (my $x = 10; $x < $maxAge; $x+=10) {
             my $low = $x;
