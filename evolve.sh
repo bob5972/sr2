@@ -8,6 +8,8 @@ SCENARIO=fast
 THREADS=14
 BUILDTYPE="release";
 
+LOG_FILE="build/tmp/evolve.log";
+
 STABLE_FILE="build/tmp/stable.zoo";
 NOOB_FILE="build/tmp/noob.zoo";
 
@@ -40,11 +42,14 @@ OPTS="${OPTS} -t $THREADS"
 ./compile.sh $BUILDTYPE
 if [ $? != 0 ]; then exit $? ; fi;
 
+echo > $LOG_FILE
+
 echo 'sr2: mutate'
 build/sr2 mutate $OPTS --usePopulation $STABLE_FILE \
                        --outputFile $NOOB_FILE \
                        --mutationCount $NOOB_POP
 if [ $? != 0 ]; then exit $? ; fi;
+tail -n 1 $NOOB_FILE >> $LOG_FILE
 
 if [ -f $SCREEN1_FILE ]; then
     echo 'sr2: measure screen1'
@@ -58,6 +63,7 @@ if [ -f $SCREEN1_FILE ]; then
                         --defectiveLevel $SCREEN1_DEFECTIVE \
                         --resetAfter
     if [ $? != 0 ]; then exit $? ; fi;
+    tail -n 1 $NOOB_FILE >> $LOG_FILE
 fi;
 
 if [ -f $SCREEN2_FILE ]; then
@@ -72,6 +78,7 @@ if [ -f $SCREEN2_FILE ]; then
                         --defectiveLevel $SCREEN2_DEFECTIVE \
                         --resetAfter
     if [ $? != 0 ]; then exit $? ; fi;
+    tail -n 1 $NOOB_FILE >> $LOG_FILE
 fi;
 
 if [ -f $SCREEN3_FILE ]; then
@@ -86,6 +93,7 @@ if [ -f $SCREEN3_FILE ]; then
                         --defectiveLevel $SCREEN3_DEFECTIVE \
                         --resetAfter
     if [ $? != 0 ]; then exit $? ; fi;
+    tail -n 1 $NOOB_FILE >> $LOG_FILE
 fi;
 
 # Final screen
