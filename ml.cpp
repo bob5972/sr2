@@ -53,8 +53,6 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_HYP_TANGENT), },
     { TMENTRY(ML_FOP_1x0_EXP), },
     { TMENTRY(ML_FOP_1x0_LN), },
-    { TMENTRY(ML_FOP_1x0_CEIL), },
-    { TMENTRY(ML_FOP_1x0_FLOOR), },
     { TMENTRY(ML_FOP_1x0_ABS), },
     { TMENTRY(ML_FOP_1x0_SIN), },
     { TMENTRY(ML_FOP_1x0_UNIT_SINE), },
@@ -63,6 +61,13 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_TAN), },
     { TMENTRY(ML_FOP_1x0_PROB_NOT), },
     { TMENTRY(ML_FOP_1x0_CLAMP_UNIT), },
+
+    { TMENTRY(ML_FOP_1x0_CEIL), },
+    { TMENTRY(ML_FOP_1x0_FLOOR), },
+    { TMENTRY(ML_FOP_1x1_CEIL_STEP), },
+    { TMENTRY(ML_FOP_1x1_FLOOR_STEP), },
+    { TMENTRY(ML_FOP_2x0_CEIL_STEP), },
+    { TMENTRY(ML_FOP_2x0_FLOOR_STEP), },
 
     { TMENTRY(ML_FOP_1x1_STRICT_ON), },
     { TMENTRY(ML_FOP_1x1_STRICT_OFF), },
@@ -270,7 +275,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 122) {
+    if (mb_debug && ML_FOP_MAX != 126) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -329,10 +334,6 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return expf(getInput(0));
         case ML_FOP_1x0_LN:
             return logf(getInput(0));
-        case ML_FOP_1x0_CEIL:
-            return ceilf(getInput(0));
-        case ML_FOP_1x0_FLOOR:
-            return floorf(getInput(0));
         case ML_FOP_1x0_ABS:
             return fabsf(getInput(0));
         case ML_FOP_1x0_SIN:
@@ -349,6 +350,19 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return (1.0f - getInput(0));
         case ML_FOP_1x0_CLAMP_UNIT:
             return CLAMP_UNIT(getInput(0));
+
+        case ML_FOP_1x0_CEIL:
+            return ceilf(getInput(0));
+        case ML_FOP_1x0_FLOOR:
+            return floorf(getInput(0));
+        case ML_FOP_1x1_CEIL_STEP:
+            return ceilf(getInput(0) / getParam(0)) * getParam(0);
+        case ML_FOP_1x1_FLOOR_STEP:
+            return floorf(getInput(0) / getParam(0)) * getParam(0);
+        case ML_FOP_2x0_CEIL_STEP:
+            return ceilf(getInput(0) / getInput(1)) * getInput(1);
+        case ML_FOP_2x0_FLOOR_STEP:
+            return floorf(getInput(0) / getInput(1)) * getInput(1);
 
         case ML_FOP_1x1_STRICT_ON:
         case ML_FOP_1x1_STRICT_OFF:
@@ -1376,7 +1390,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 122) {
+    if (mb_debug && ML_FOP_MAX != 126) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1419,6 +1433,18 @@ void MLFloatNode::minimize()
         case ML_FOP_1x0_PROB_NOT:
         case ML_FOP_1x0_CLAMP_UNIT:
             numInputs = 1;
+            numParams = 0;
+            break;
+
+        case ML_FOP_1x1_CEIL_STEP:
+        case ML_FOP_1x1_FLOOR_STEP:
+            numInputs = 1;
+            numParams = 1;
+            break;
+
+        case ML_FOP_2x0_CEIL_STEP:
+        case ML_FOP_2x0_FLOOR_STEP:
+            numInputs = 2;
             numParams = 0;
             break;
 

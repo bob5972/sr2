@@ -50,8 +50,6 @@ typedef enum MLFloatOp {
     ML_FOP_1x0_HYP_TANGENT,
     ML_FOP_1x0_EXP,
     ML_FOP_1x0_LN,
-    ML_FOP_1x0_CEIL,
-    ML_FOP_1x0_FLOOR,
     ML_FOP_1x0_ABS,
     ML_FOP_1x0_SIN,
     ML_FOP_1x0_UNIT_SINE,
@@ -60,6 +58,13 @@ typedef enum MLFloatOp {
     ML_FOP_1x0_TAN,
     ML_FOP_1x0_PROB_NOT,
     ML_FOP_1x0_CLAMP_UNIT,
+
+    ML_FOP_1x0_CEIL,
+    ML_FOP_1x0_FLOOR,
+    ML_FOP_1x1_CEIL_STEP,
+    ML_FOP_1x1_FLOOR_STEP,
+    ML_FOP_2x0_CEIL_STEP,
+    ML_FOP_2x0_FLOOR_STEP,
 
     ML_FOP_1x1_STRICT_ON,
     ML_FOP_1x1_STRICT_OFF,
@@ -139,7 +144,6 @@ typedef enum MLFloatOp {
     ML_FOP_Nx0_DIV_SUM,
     ML_FOP_Nx1_DIV_SUM,
     ML_FOP_NxN_SCALED_DIV_SUM,
-
 
     ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP,
     ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN,
