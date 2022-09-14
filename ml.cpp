@@ -143,8 +143,14 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_PRODUCT), },
     { TMENTRY(ML_FOP_Nx0_MIN), },
     { TMENTRY(ML_FOP_Nx0_MAX), },
+
     { TMENTRY(ML_FOP_Nx0_ARITHMETIC_MEAN), },
     { TMENTRY(ML_FOP_Nx0_GEOMETRIC_MEAN), },
+    { TMENTRY(ML_FOP_NxN_WEIGHTED_ARITHMETIC_MEAN), },
+    { TMENTRY(ML_FOP_NxN_WEIGHTED_GEOMETRIC_MEAN), },
+    { TMENTRY(ML_FOP_NxN_ANCHORED_ARITHMETIC_MEAN), },
+    { TMENTRY(ML_FOP_NxN_ANCHORED_GEOMETRIC_MEAN), },
+
     { TMENTRY(ML_FOP_Nx0_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP), },
     { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP), },
@@ -264,7 +270,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 118) {
+    if (mb_debug && ML_FOP_MAX != 122) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -743,6 +749,38 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return f;
         }
+        case ML_FOP_NxN_WEIGHTED_ARITHMETIC_MEAN: {
+            float f = 0.0f;
+
+            if (inputs.size() > 0) {
+                for (uint i = 0; i < inputs.size(); i++) {
+                    f += getInput(i) * getParam(i);
+                }
+                f /= inputs.size();
+            }
+
+            return f;
+        }
+        case ML_FOP_NxN_ANCHORED_ARITHMETIC_MEAN: {
+            float f = 0.0f;
+            uint count = 0;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+                count++;
+            }
+            for (uint i = 0; i < params.size(); i++) {
+                f += getParam(i);
+                count++;
+            }
+
+            if (count > 0) {
+                f /= count;
+            }
+
+            return f;
+        }
+
         case ML_FOP_Nx0_GEOMETRIC_MEAN: {
             float f = 1.0f;
 
@@ -751,6 +789,37 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
                     f *= getInput(i);
                 }
                 f = powf(f, 1.0f / inputs.size());
+            }
+
+            return f;
+        }
+        case ML_FOP_NxN_WEIGHTED_GEOMETRIC_MEAN: {
+            float f = 1.0f;
+
+            if (inputs.size() > 0) {
+                for (uint i = 0; i < inputs.size(); i++) {
+                    f *= getInput(i) * getParam(i);
+                }
+                f = powf(f, 1.0f / inputs.size());
+            }
+
+            return f;
+        }
+        case ML_FOP_NxN_ANCHORED_GEOMETRIC_MEAN: {
+            float f = 1.0f;
+            uint count = 0;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f *= getInput(i);
+                count++;
+            }
+            for (uint i = 0; i < params.size(); i++) {
+                f *= getParam(i);
+                count++;
+            }
+
+            if (count > 0) {
+                f = powf(f, 1.0f / count);
             }
 
             return f;
@@ -1307,7 +1376,7 @@ void MLFloatNode::minimize()
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 118) {
+    if (mb_debug && ML_FOP_MAX != 122) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1472,6 +1541,18 @@ void MLFloatNode::minimize()
         case ML_FOP_Nx0_GEOMETRIC_MEAN:
             numInputs = inputs.size();
             numParams = 0;
+            break;
+
+        case ML_FOP_NxN_WEIGHTED_ARITHMETIC_MEAN:
+        case ML_FOP_NxN_WEIGHTED_GEOMETRIC_MEAN:
+            numInputs = MIN(params.size(), inputs.size());
+            numParams = numInputs;
+            break;
+
+        case ML_FOP_NxN_ANCHORED_ARITHMETIC_MEAN:
+        case ML_FOP_NxN_ANCHORED_GEOMETRIC_MEAN:
+            numInputs = inputs.size();
+            numParams = params.size();
             break;
 
         case ML_FOP_Nx0_MIN:
