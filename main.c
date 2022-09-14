@@ -140,7 +140,8 @@ static void MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
                                       uint32 mpSize, uint32 *mpIndex);
 static void MainUsePopulation(const char *file,
                               BattlePlayer *mainPlayers,
-                              uint32 mpSize, uint *mpIndex);
+                              uint32 mpSize, uint *mpIndex,
+                              bool incrementAge);
 static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
                                   uint32 startingMPIndex, uint32 numFleets,
                                   bool useWinRatio, float *weightOut);
@@ -178,7 +179,7 @@ void MainLoadDefaultPlayers(void)
     if (MBOpt_IsPresent("usePopulation")) {
         MainUsePopulation(MBOpt_GetCStr("usePopulation"),
                           &mainData.players[0],
-                          ARRAYSIZE(mainData.players), &p);
+                          ARRAYSIZE(mainData.players), &p, TRUE);
     } else if (mainData.optimize) {
         MainAddPlayersForOptimize(&mainData.players[0],
                                   ARRAYSIZE(mainData.players), &p);
@@ -885,7 +886,8 @@ static void MainDumpPopulation(const char *outputFile, bool targetOnly)
 }
 static void MainUsePopulation(const char *file,
                               BattlePlayer *mainPlayers,
-                              uint32 mpSize, uint32 *mpIndex)
+                              uint32 mpSize, uint32 *mpIndex,
+                              bool incrementAge)
 {
     MBRegistry *popReg;
     MBRegistry *fleetReg;
@@ -938,9 +940,12 @@ static void MainUsePopulation(const char *file,
         }
 
         if (MBRegistry_ContainsKey(fleetReg, "abattle.age")) {
-            uint age = MBRegistry_GetUint(fleetReg, "abattle.age");
-            MBString_IntToString(&tmp, age + 1);
-            MBRegistry_PutCopy(fleetReg, "abattle.age", MBString_GetCStr(&tmp));
+            if (incrementAge) {
+                uint age = MBRegistry_GetUint(fleetReg, "abattle.age");
+                MBString_IntToString(&tmp, age + 1);
+                MBRegistry_PutCopy(fleetReg, "abattle.age",
+                                   MBString_GetCStr(&tmp));
+            }
         } else {
             MBRegistry_PutCopy(fleetReg, "abattle.age", "0");
         }
@@ -1705,7 +1710,8 @@ void MainMutateCmd(void)
     mainData.numPlayers++;
     MainUsePopulation(MBOpt_GetCStr("usePopulation"),
                       &mainData.players[0],
-                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                      FALSE);
 
     VERIFY(mainData.numPlayers > 0);
 
@@ -1786,7 +1792,8 @@ static void MainKillCmd(void)
     mainData.numPlayers++;
     MainUsePopulation(MBOpt_GetCStr("usePopulation"),
                       &mainData.players[0],
-                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                      FALSE);
     VERIFY(mainData.numPlayers > 0);
 
     // Account for FLEET_AI_NEUTRAL
@@ -1918,7 +1925,8 @@ static void MainMeasureCmd(void)
     mainData.numPlayers++;
 
     MainUsePopulation(controlFile, &mainData.players[0],
-                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                      FALSE);
     VERIFY(mainData.numPlayers > 0);
 
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
@@ -1928,7 +1936,8 @@ static void MainMeasureCmd(void)
     uint lastControl = mainData.numPlayers - 1;
 
     MainUsePopulation(file, &mainData.players[0],
-                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                      TRUE);
     VERIFY(mainData.numPlayers > 0);
     for (uint i = lastControl + 1; i < mainData.numPlayers; i++) {
         VERIFY(mainData.players[i].playerType == PLAYER_TYPE_TARGET);
@@ -1960,13 +1969,15 @@ static void MainMergeCmd(void)
     mainData.numPlayers++;
 
     MainUsePopulation(file, &mainData.players[0],
-                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                      FALSE);
     VERIFY(mainData.numPlayers > 0);
 
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
 
     MainUsePopulation(inputFile, &mainData.players[0],
-                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                      FALSE);
     VERIFY(mainData.numPlayers > 0);
 
     MainDumpPopulation(file, FALSE);
@@ -2000,7 +2011,8 @@ static void MainResetCmd(void)
     mainData.numPlayers++;
 
     MainUsePopulation(file, &mainData.players[0],
-                      ARRAYSIZE(mainData.players), &mainData.numPlayers);
+                      ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                      FALSE);
     VERIFY(mainData.numPlayers > 0);
 
     MainResetFleetStats();
