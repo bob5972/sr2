@@ -193,14 +193,13 @@ static INLINE MLFloatOp operator++(MLFloatOp &op, int) {
 class MLFloatNode {
     public:
         MLFloatNode()
-        : index(-1), op(ML_FOP_INVALID), mutationRate(0.25f), myValues(NULL)
+        : index(-1), op(ML_FOP_INVALID), myValues(NULL)
         {}
 
         uint index;
         MLFloatOp op;
         MBVector<float> params;
         MBVector<uint> inputs;
-        float mutationRate;
 
         float compute(const MBVector<float> &values);
 
