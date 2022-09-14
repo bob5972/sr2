@@ -207,9 +207,6 @@ void MainLoadDefaultPlayers(void)
          * See fleet.c::gRankings for a rough order of fleet strength.
          */
 
-        mainData.players[p].aiType = FLEET_AI_BASIC;
-        p++;
-
         mainData.players[p].aiType = FLEET_AI_HOLD;
         p++;
 
@@ -217,9 +214,6 @@ void MainLoadDefaultPlayers(void)
         p++;
 
         mainData.players[p].aiType = FLEET_AI_BUNDLE15;
-        p++;
-
-        mainData.players[p].aiType = FLEET_AI_NEURAL5;
         p++;
 
         mainData.players[p].aiType = FLEET_AI_NEURAL6;
