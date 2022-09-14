@@ -287,12 +287,10 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
     }
 
     if (bt == MAIN_BT_OPTIMIZE) {
-        uint maxItCount = 1;
 
-        mainData.maxBscs = p * p * maxItCount + 1;
+        mainData.maxBscs = p * p + 1;
         ASSERT(mainData.maxBscs > p);
         ASSERT(mainData.maxBscs > p * p);
-        ASSERT(mainData.maxBscs > maxItCount);
         ASSERT(mainData.maxBscs * sizeof(mainData.bscs[0]) > mainData.maxBscs);
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * mainData.maxBscs);
 
@@ -301,31 +299,25 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
         ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
 
         for (uint ti = 0; ti < p; ti++) {
-            uint itCount;
             if (mainData.players[ti].playerType != PLAYER_TYPE_TARGET) {
                 continue;
             }
 
-            itCount = 1;
-            ASSERT(itCount <= maxItCount);
-
-            for (uint ii = 0; ii < itCount; ii++) {
-                for (uint ci = 0; ci < p; ci++) {
-                    if (mainData.players[ci].playerType != PLAYER_TYPE_CONTROL) {
-                        continue;
-                    }
-
-                    uint b = mainData.numBSCs++;
-                    ASSERT(b < mainData.maxBscs);
-                    mainData.bscs[b].bp = bsc.bp;
-                    mainData.bscs[b].bp.numPlayers = 3;
-                    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-                    mainData.bscs[b].players[0] = mainData.players[0];
-                    mainData.bscs[b].players[1] = mainData.players[ti];
-                    ASSERT(mainData.players[ti].playerType == PLAYER_TYPE_TARGET);
-                    mainData.bscs[b].players[2] = mainData.players[ci];
-                    ASSERT(mainData.players[ci].playerType == PLAYER_TYPE_CONTROL);
+            for (uint ci = 0; ci < p; ci++) {
+                if (mainData.players[ci].playerType != PLAYER_TYPE_CONTROL) {
+                    continue;
                 }
+
+                uint b = mainData.numBSCs++;
+                ASSERT(b < mainData.maxBscs);
+                mainData.bscs[b].bp = bsc.bp;
+                mainData.bscs[b].bp.numPlayers = 3;
+                ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+                mainData.bscs[b].players[0] = mainData.players[0];
+                mainData.bscs[b].players[1] = mainData.players[ti];
+                ASSERT(mainData.players[ti].playerType == PLAYER_TYPE_TARGET);
+                mainData.bscs[b].players[2] = mainData.players[ci];
+                ASSERT(mainData.players[ci].playerType == PLAYER_TYPE_CONTROL);
             }
         }
 
