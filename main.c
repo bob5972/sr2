@@ -1937,17 +1937,6 @@ static void MainMeasureCmd(void)
     MainConstructScenarios(FALSE, MAIN_BT_OPTIMIZE);
     MainRunScenarios();
 
-    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
-    for (uint i = 1; i <= lastControl; i++) {
-        MainCleanupSinglePlayer(i);
-    }
-    uint numControl = lastControl;
-    uint numTarget = mainData.numPlayers - numControl - 1;
-    for (uint i = 1; i <= numTarget; i++) {
-        mainData.players[i] = mainData.players[i + numControl];
-    }
-    mainData.numPlayers = numTarget + 1;
-
     MainDumpPopulation(file, TRUE);
 
     MainCleanupPlayers();
