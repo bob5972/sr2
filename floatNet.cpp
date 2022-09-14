@@ -233,10 +233,55 @@ uint FloatNet::minimize(CPBitVector *inputBV)
     uint activeCount;
     uint iterations = 0;
 
+    /*
+     * Handle all simple reductions.
+     */
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].minimize();
     }
 
+    /*
+     * Constant folding.
+     */
+    CPBitVector nodesBV;
+    nodesBV.resize(myNodes.size() + myNumInputs);
+    nodesBV.resetAll();
+    for (uint i = 0; i < myNodes.size(); i++) {
+        MLFloatNode *n = &myNodes[i];
+        uint vindex = i + myNumInputs;
+        ASSERT(myNodes[i].index == vindex);
+
+        bool allConstant = TRUE;
+        if (!n->isConstant()) {
+            for (uint ii = 0; ii < n->inputs.size(); ii++) {
+                if (n->inputs[ii] >= myNumInputs) {
+                    uint indexi = n->inputs[ii] - myNumInputs;
+                    MLFloatNode *ni = &myNodes[indexi];
+                    ASSERT(ni->index == indexi + myNumInputs);
+                    if (!nodesBV.get(n->inputs[ii])) {
+                        ASSERT(!ni->isConstant());
+                        allConstant = FALSE;
+                        break;
+                    } else {
+                        ASSERT(ni->isConstant());
+                    }
+                } else {
+                    allConstant = FALSE;
+                    break;
+                }
+            }
+        }
+
+        if (allConstant) {
+            myValues[vindex] = n->compute(myValues);
+            n->makeConstant(myValues[vindex]);
+            nodesBV.set(vindex);
+        }
+    }
+
+    /*
+     * Compute reachable nodes.
+     */
     bv.resize(myNumInputs + myNodes.size());
     while (keepGoing) {
         activeCount = 0;
@@ -274,6 +319,9 @@ uint FloatNet::minimize(CPBitVector *inputBV)
         iterations++;
     }
 
+    /*
+     * Copy reachable nodes out to the caller.
+     */
     if (inputBV != NULL) {
         ASSERT(inputBV->size() == myNumInputs);
 

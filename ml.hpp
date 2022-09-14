@@ -187,7 +187,7 @@ extern "C" {
     void ML_UnitTest();
 };
 
-void ML_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP);
+void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP);
 
 static INLINE MLFloatOp& operator++(MLFloatOp &op)
 {
@@ -222,6 +222,14 @@ class MLFloatNode {
         void makeVoid();
         bool isZero() { return op == ML_FOP_0x0_ZERO; }
         bool isVoid() { return op == ML_FOP_VOID; }
+
+        bool isConstant();
+        void makeConstant(float f) {
+            op = ML_FOP_0x1_CONSTANT;
+            inputs.resize(0);
+            params.resize(1);
+            params[0] = f;
+        }
 
     private:
         const MBVector<float> *myValues;

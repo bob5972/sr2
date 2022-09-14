@@ -1645,6 +1645,19 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     *numParamsP = numParams;
 }
 
+bool MLFloatNode::isConstant()
+{
+  switch (op) {
+        case ML_FOP_0x0_ZERO:
+        case ML_FOP_0x0_ONE:
+        case ML_FOP_0x1_CONSTANT:
+        case ML_FOP_0x1_UNIT_CONSTANT:
+            return TRUE;
+        default:
+            return FALSE;
+    }
+}
+
 void MLFloatNode::minimize()
 {
     uint numInputs = inputs.size();
