@@ -289,8 +289,6 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
     if (bt == MAIN_BT_OPTIMIZE) {
         uint maxItCount = 1;
 
-        maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationNewIterations"));
-        maxItCount = MAX(maxItCount, MBOpt_GetUint("mutationStaleIterations"));
         mainData.maxBscs = p * p * maxItCount + 1;
         ASSERT(mainData.maxBscs > p);
         ASSERT(mainData.maxBscs > p * p);
@@ -308,13 +306,7 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
                 continue;
             }
 
-            if (!MBOpt_IsPresent("mutatePopulation")) {
-                itCount = 1;
-            } else if (MBRegistry_GetInt(mainData.players[ti].mreg, "numBattles") == 0) {
-                itCount = MBOpt_GetUint("mutationNewIterations");
-            } else {
-                itCount = MBOpt_GetUint("mutationStaleIterations");
-            }
+            itCount = 1;
             ASSERT(itCount <= maxItCount);
 
             for (uint ii = 0; ii < itCount; ii++) {
@@ -894,7 +886,6 @@ static void MainUsePopulation(const char *file,
     uint32 numFleets;
     uint32 numTargetFleets = 0;
     MBString tmp;
-    uint32 startingMPIndex = *mpIndex;
 
     MBString_Create(&tmp);
 
@@ -968,91 +959,6 @@ static void MainUsePopulation(const char *file,
         (*mpIndex)++;
     }
 
-    /*
-     * Mutate fleets.
-     */
-    uint32 origNumFleets = numFleets;
-    if (MBOpt_IsPresent("mutatePopulation")) {
-        uint actualKillCount = 0;
-
-        {
-            uint32 i = 0;
-            while (i < numFleets && numTargetFleets > 1) {
-                uint32 fi = i + startingMPIndex;
-                if (MainIsFleetDefective(&mainPlayers[fi],
-                                         MBOpt_GetFloat("populationDefectiveRatio"))) {
-                    ASSERT(mainPlayers[fi].playerType == PLAYER_TYPE_TARGET);
-                    MainKillFleet(mainPlayers, mpSize, mpIndex,
-                                  startingMPIndex, &numFleets,
-                                  &numTargetFleets, fi);
-
-                    actualKillCount++;
-
-                    /*
-                     * Re-use the same i index because we swapped the fleet
-                     * out.
-                     */
-                } else {
-                    i++;
-                }
-            }
-        }
-        ASSERT(numFleets > 0);
-
-        uint popLimit = MBOpt_GetUint("populationLimit");
-        VERIFY(popLimit > 0);
-        float killRatio = MBOpt_GetFloat("populationKillRatio");
-        VERIFY(killRatio > 0.0f && killRatio <= 1.0f);
-        uint targetKillCount = popLimit * killRatio;
-        if (numFleets > popLimit) {
-            targetKillCount = MAX(origNumFleets - popLimit, targetKillCount);
-        }
-        targetKillCount = MAX(actualKillCount, targetKillCount);
-        ASSERT(targetKillCount >= actualKillCount);
-        targetKillCount -= actualKillCount;
-        targetKillCount = MIN(numTargetFleets - 1, targetKillCount);
-        ASSERT(targetKillCount <= numTargetFleets - 1);
-
-        while (targetKillCount > 0) {
-            uint fi = MainFleetCompetition(mainPlayers, mpSize,
-                                           startingMPIndex, numFleets,
-                                           FALSE);
-            MainKillFleet(mainPlayers, mpSize, mpIndex,
-                          startingMPIndex, &numFleets, &numTargetFleets,
-                          fi);
-            targetKillCount--;
-            ASSERT(numFleets > 0);
-            actualKillCount++;
-        }
-
-        VERIFY(popLimit >= numFleets);
-        uint targetMutateCount = popLimit - numFleets;
-        uint actualMutateCount = 0;
-
-        ASSERT(*mpIndex == startingMPIndex + numFleets);
-        while (targetMutateCount > 0) {
-            uint32 mi = MainFleetCompetition(mainPlayers, mpSize,
-                                             startingMPIndex, numFleets,
-                                             TRUE);
-            uint32 bi = MainFleetCompetition(mainPlayers, mpSize,
-                                             startingMPIndex, numFleets,
-                                             TRUE);
-            ASSERT(*mpIndex < mpSize);
-            MainMutateFleet(mainPlayers, mpSize,
-                            &mainPlayers[*mpIndex], mi, bi);
-            (*mpIndex)++;
-            targetMutateCount--;
-            actualMutateCount++;
-        }
-        numFleets += actualMutateCount;
-        numTargetFleets += actualMutateCount;
-
-        VERIFY(numFleets <= popLimit);
-        VERIFY(numFleets > 0);
-        VERIFY(numTargetFleets > 0);
-        VERIFY(numTargetFleets < numFleets);
-    }
-
     MBRegistry_Free(popReg);
     MBRegistry_Free(fleetReg);
     MBString_Destroy(&tmp);
@@ -1085,14 +991,6 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
     uint32 iterations = 0;
     uint32 i;
 
-    // XXX: We're assuming that "useWinRatio" means "mutate" here.
-    uint32 minAge = 0;
-    bool useMinAge = useWinRatio && MBOpt_IsPresent("mutationMinAge");
-
-    if (useMinAge) {
-        minAge = MBOpt_GetUint("mutationMinAge");
-    }
-
     i = Random_Int(0, numFleets - 1);
     while (TRUE) {
         uint32 fi = i + startingMPIndex;
@@ -1109,11 +1007,6 @@ static uint32 MainFindRandomFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         }
 
         sProb = numBattles > 0 ? weight / (float)numBattles : 0.0f;
-
-        if (useMinAge) {
-            sProb = MBRegistry_GetUint(fleetReg, "abattle.age") >= minAge ?
-                    sProb : 0.0f;
-        }
 
         sProb += (iterations / numFleets) + 0.01;
         sProb = MIN(1.0f, sProb);
@@ -1498,7 +1391,8 @@ void MainUnitTests()
 void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
-        { "-h", "--help",              FALSE, "Print help text"               },
+        //{ "-h", "--help",              FALSE, "Print the help text"           },
+        //{ "-v", "--version",           FALSE, "Print the version information" },
         { "-H", "--headless",          FALSE, "Run headless"                  },
         { "-F", "--frameSkip",         FALSE, "Allow frame skipping"          },
         { "-l", "--loop",              TRUE,  "Loop <arg> times"              },
@@ -1507,21 +1401,6 @@ void MainParseCmdLine(int argc, char **argv)
         { "-O", "--optimize",          FALSE, "Optimize mode"                 },
         { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
         { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
-        { "-M", "--mutatePopulation",  FALSE, "Mutate population"             },
-        { "-I", "--mutationNewIterations",
-                                       TRUE,  "New fleet iterations per "
-                                              "Mutation round"                },
-        { "-J", "--mutationStaleIterations",
-                                       TRUE,  "Stale fleet Iterations per "
-                                              "Mutation round"                },
-        { "-A", "--mutationMinAge",
-                                       TRUE,  "Minimum age to mutate"         },
-        { "-Z", "--populationLimit",   TRUE,  "Population limit for mutating" },
-        { "-K", "--populationKillRatio",
-                                       TRUE,  "Kill ratio for population"     },
-        { "-D", "--populationDefectiveRatio",
-                                       TRUE,  "Win ratio to consider a fleet "
-                                              "defective"                     },
         { "-s", "--seed",              TRUE,  "Set random seed"               },
         { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
@@ -1758,9 +1637,7 @@ void MainDefaultCmd(void)
 {
     MainBattleType bt;
 
-    if (mainData.optimize ||
-        (MBOpt_IsPresent("usePopulation") &&
-         MBOpt_IsPresent("mutatePopulation"))) {
+    if (mainData.optimize) {
         bt = MAIN_BT_OPTIMIZE;
     } else if (mainData.tournament) {
         bt = MAIN_BT_TOURNAMENT;
