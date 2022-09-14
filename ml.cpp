@@ -1364,7 +1364,6 @@ void MLFloatNode::load(MBRegistry *mreg, const char *prefix)
     TextDump_Convert(str, params);
 }
 
-
 void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
@@ -1385,8 +1384,12 @@ void MLFloatNode::save(MBRegistry *mreg, const char *prefix)
     MBRegistry_PutCopy(mreg, p.CStr(), str.CStr());
 }
 
-void MLFloatNode::minimize()
+
+void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 {
+    uint numInputsIn = *numInputsP;
+    uint numParamsIn = *numParamsP;
+
     uint numInputs = 0;
     uint numParams = 0;
 
@@ -1507,7 +1510,7 @@ void MLFloatNode::minimize()
         case ML_FOP_1xN_POLYNOMIAL:
         case ML_FOP_1xN_POLYNOMIAL_CLAMPED_UNIT:
             numInputs = 1;
-            numParams = MAX(1, params.size());
+            numParams = MAX(1, numParamsIn);
             break;
 
         case ML_FOP_2x0_POW:
@@ -1565,39 +1568,39 @@ void MLFloatNode::minimize()
         case ML_FOP_Nx0_PRODUCT:
         case ML_FOP_Nx0_ARITHMETIC_MEAN:
         case ML_FOP_Nx0_GEOMETRIC_MEAN:
-            numInputs = inputs.size();
+            numInputs = numInputsIn;
             numParams = 0;
             break;
 
         case ML_FOP_NxN_WEIGHTED_ARITHMETIC_MEAN:
         case ML_FOP_NxN_WEIGHTED_GEOMETRIC_MEAN:
-            numInputs = MIN(params.size(), inputs.size());
+            numInputs = MIN(numParamsIn, numInputsIn);
             numParams = numInputs;
             break;
 
         case ML_FOP_NxN_ANCHORED_ARITHMETIC_MEAN:
         case ML_FOP_NxN_ANCHORED_GEOMETRIC_MEAN:
-            numInputs = inputs.size();
-            numParams = params.size();
+            numInputs = numInputsIn;
+            numParams = numParamsIn;
             break;
 
         case ML_FOP_Nx0_MIN:
         case ML_FOP_Nx0_MAX:
         case ML_FOP_Nx0_DIV_SUM:
-            numInputs = MAX(1, inputs.size());
+            numInputs = MAX(1, numInputsIn);
             numParams = 0;
             break;
 
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP:
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP:
-            numInputs = MAX(2, inputs.size());
+            numInputs = MAX(2, numInputsIn);
             numParams = 0;
             break;
 
         case ML_FOP_Nx1_DIV_SUM:
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP:
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN:
-            numInputs = MAX(1, inputs.size());
+            numInputs = MAX(1, numInputsIn);
             numParams = 1;
             break;
 
@@ -1605,13 +1608,13 @@ void MLFloatNode::minimize()
         case ML_FOP_Nx2_ACTIVATE_LINEAR_DOWN:
         case ML_FOP_Nx2_ACTIVATE_QUADRATIC_UP:
         case ML_FOP_Nx2_ACTIVATE_QUADRATIC_DOWN:
-            numInputs = MAX(1, inputs.size());
+            numInputs = MAX(1, numInputsIn);
             numParams = 2;
             break;
 
         case ML_FOP_NxN_ACTIVATE_POLYNOMIAL:
-            numInputs = MAX(1, inputs.size());
-            numParams = MAX(1, params.size());;
+            numInputs = MAX(1, numInputsIn);
+            numParams = MAX(1, numParamsIn);;
             break;
 
         case ML_FOP_NxN_LINEAR_COMBINATION:
@@ -1622,14 +1625,14 @@ void MLFloatNode::minimize()
         case ML_FOP_NxN_SELECT_LTE:
         case ML_FOP_NxN_POW_SUM:
         case ML_FOP_NxN_SCALED_DIV_SUM:
-            numInputs = MIN(inputs.size(), params.size());
+            numInputs = MIN(numInputsIn, numParamsIn);
             numInputs = MAX(1, numInputs);
             numParams = numInputs;
             break;
 
         case ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_STEP:
         case ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_LERP:
-            numInputs = MIN(inputs.size(), params.size());
+            numInputs = MIN(numInputsIn, numParamsIn);
             numInputs = MAX(2, numInputs);
             numParams = numInputs;
             break;
@@ -1637,6 +1640,16 @@ void MLFloatNode::minimize()
         default:
             PANIC("Unknown MLFloatOp: %s(%d)\n", ML_FloatOpToString(op), op);
     }
+
+    *numInputsP = numInputs;
+    *numParamsP = numParams;
+}
+
+void MLFloatNode::minimize()
+{
+    uint numInputs = inputs.size();
+    uint numParams = params.size();
+    MLFloatOp_GetNumParams(op, &numInputs, &numParams);
 
     if (numInputs > inputs.size() ||
         numParams > params.size()) {

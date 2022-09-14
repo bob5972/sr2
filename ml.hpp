@@ -187,6 +187,8 @@ extern "C" {
     void ML_UnitTest();
 };
 
+void ML_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP);
+
 static INLINE MLFloatOp& operator++(MLFloatOp &op)
 {
     int i = static_cast<int>(op);
