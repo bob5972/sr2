@@ -1111,6 +1111,10 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE);
         case FLEET_AI_NEURAL5:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN);
+        case FLEET_AI_NEURAL6:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_MAGENTA);
+        case FLEET_AI_NEURAL7:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_RED);
 
         default:
             return SPRITE_INVALID;
@@ -1459,6 +1463,8 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
         { FLEET_AI_NEURAL3,     0xBEBD7F, },
         { FLEET_AI_NEURAL4,     0x587246, },
         { FLEET_AI_NEURAL5,     0x308446, },
+        { FLEET_AI_NEURAL6,     0x474A51, },
+        { FLEET_AI_NEURAL7,     0xB32428, },
     };
 
     ASSERT(repeatCount > 0);
