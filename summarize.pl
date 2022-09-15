@@ -483,10 +483,12 @@ sub Main() {
     MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
     MBBasic::Init();
 
-    if (defined($OPTIONS->{'evolveLog'}) &&
-        -f $OPTIONS->{'evolveLog'}) {
-        my $s = `cat $OPTIONS->{'evolveLog'}`;
-        Console($s);
+    my $evolveLog = "build/tmp/evolve.log";
+    if ($OPTIONS->{'evolveLog'} && -f $evolveLog) {
+        open(my $fh, '<', $evolveLog) or Panic($!);
+        my @s = <$fh>;
+        close($fh);
+        Console(join('', @s));
     }
 
     $gFile = $OPTIONS->{'file'};
