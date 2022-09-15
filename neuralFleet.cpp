@@ -3997,7 +3997,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "gatherAbandonStale",          0.05f },
     };
 
-    float rate = 0.20;
+    float rate = 0.15;
     MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "FALSE");
     if (Random_Flip(0.01)) {
         MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "TRUE");
