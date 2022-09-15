@@ -45,19 +45,25 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE1,  // 26.3%
     FLEET_AI_BASIC,    // 26.8%
     FLEET_AI_FLOCK2,   // 34.9%
+    FLEET_AI_NEURAL4,  // 37.4%
     FLEET_AI_BUNDLE2,  // 38.4%
+    FLEET_AI_NEURAL2,  // 41.0%
     FLEET_AI_BUNDLE7,  // 42.7%
+    FLEET_AI_NEURAL3,  // 43.8%
     FLEET_AI_BUNDLE8,  // 44.0%
     FLEET_AI_HOLD,     // 44.2%
     FLEET_AI_BUNDLE3,  // 44.6%
     FLEET_AI_BUNDLE5,  // 45.5%
+    FLEET_AI_NEURAL1,  // 45.6%
     FLEET_AI_BUNDLE6,  // 48.3%
     FLEET_AI_BUNDLE4,  // 49.5%
     FLEET_AI_META,     // 50.8%
     FLEET_AI_BUNDLE9,  // 53.0%
     FLEET_AI_FLOCK4,   // 57.2%
-    FLEET_AI_FLOCK5,   // 66.0%
+    FLEET_AI_NEURAL6,  // 63.5%
+    FLEET_AI_NEURAL5,  // 64.0%
     FLEET_AI_FLOCK3,   // 64.6%
+    FLEET_AI_FLOCK5,   // 66.0%
     FLEET_AI_BUNDLE10, // 66.0%
     FLEET_AI_BUNDLE11, // 67.4%
     FLEET_AI_FLOCK6,   // 73.9%
@@ -69,12 +75,6 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE15, // 81.7%
     FLEET_AI_BUNDLE14, // 83.5%
     FLEET_AI_FLOCK9,   // 91.1%
-    FLEET_AI_NEURAL1,  // Unranked
-    FLEET_AI_NEURAL2,  // Unranked
-    FLEET_AI_NEURAL3,  // Unranked
-    FLEET_AI_NEURAL4,  // Unranked
-    FLEET_AI_NEURAL5,  // Unranked
-    FLEET_AI_NEURAL6,  // Unranked
     FLEET_AI_NEURAL7,  // Unranked
 };
 
