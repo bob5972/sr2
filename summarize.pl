@@ -17,6 +17,8 @@ my $gScriptOptions = {
                 default => FALSE },
     "opSummary!" => { desc => "Include an opcode summary",
                       default => FALSE },
+    "evolveLog!" => { desc => "Include the evolve log",
+                      default => FALSE },
     "dumpFleet|d=i" => { desc => "Dump the specified fleet",
                          default => undef, },
     "cFormat|c" => { desc => "Print fleet with C formatting",
@@ -481,7 +483,13 @@ sub Main() {
     MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
     MBBasic::Init();
 
-    $gFile = $OPTIONS->{"file"};
+    if (defined($OPTIONS->{'evolveLog'}) &&
+        -f $OPTIONS->{'evolveLog'}) {
+        my $s = `cat $OPTIONS->{'evolveLog'}`;
+        Console($s);
+    }
+
+    $gFile = $OPTIONS->{'file'};
     $gPop = MBBasic::LoadMRegFile($gFile);
 
     if (defined($OPTIONS->{'dumpFleet'})) {
