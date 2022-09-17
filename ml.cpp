@@ -178,6 +178,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_QUADRATIC_DOWN), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_SQRT_UP), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_SQRT_DOWN), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_LN_UP), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_LN_DOWN), },
     { TMENTRY(ML_FOP_NxN_ACTIVATE_POLYNOMIAL), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_DIV_SUM), },
@@ -306,7 +308,7 @@ static float MLGaussian(float x, float mean, float stddev)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 145) {
+    if (mb_debug && ML_FOP_MAX != 147) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1061,6 +1063,24 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return CLAMP_UNIT(1.0f - sqrtf(f));
         }
+        case ML_FOP_Nx0_ACTIVATE_LN_UP: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return CLAMP_UNIT(logf(f));
+        }
+        case ML_FOP_Nx0_ACTIVATE_LN_DOWN: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return CLAMP_UNIT(1.0f - logf(f));
+        }
         case ML_FOP_NxN_ACTIVATE_POLYNOMIAL: {
             float f = 0.0f;
 
@@ -1545,11 +1565,11 @@ void MLFloatNode::mutate(float rate,
         int r = Random_Enum(mts, ARRAYSIZE(mts));
         int tries = 0;
         Mutate_DefaultFloatParams(&mp, (MutationType)r);
-        while (tries < 4 &&
+        while (tries < 8 &&
                (params[i] < mp.minValue || params[i] > mp.maxValue)) {
             /*
              * If the current value doesn't look like the picked mutation type,
-             * give it another chance to pick something closer.
+             * give it more chances to pick something closer.
              */
             r = Random_Enum(mts, ARRAYSIZE(mts));
             Mutate_DefaultFloatParams(&mp, (MutationType)r);
@@ -1626,7 +1646,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 145) {
+    if (mb_debug && ML_FOP_MAX != 147) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1852,6 +1872,8 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
         case ML_FOP_Nx0_ACTIVATE_SQRT_UP:
         case ML_FOP_Nx0_ACTIVATE_SQRT_DOWN:
+        case ML_FOP_Nx0_ACTIVATE_LN_UP:
+        case ML_FOP_Nx0_ACTIVATE_LN_DOWN:
             numInputs = MAX(1, numInputsIn);
             numParams = 0;
             break;
