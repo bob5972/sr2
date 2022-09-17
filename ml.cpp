@@ -158,12 +158,16 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_ANCHORED_ARITHMETIC_MEAN), },
     { TMENTRY(ML_FOP_NxN_ANCHORED_GEOMETRIC_MEAN), },
 
-    { TMENTRY(ML_FOP_Nx0_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP), },
     { TMENTRY(ML_FOP_Nx0_SELECT_UNIT_INTERVAL_LERP), },
 
+    { TMENTRY(ML_FOP_Nx0_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx1_DIV_SUM), },
     { TMENTRY(ML_FOP_NxN_SCALED_DIV_SUM), },
+    { TMENTRY(ML_FOP_NxN_ANCHORED_DIV_SUM), },
+    { TMENTRY(ML_FOP_Nx0_DIV_SUM_SQUARED), },
+    { TMENTRY(ML_FOP_NxN_SCALED_DIV_SUM_SQUARED), },
+    { TMENTRY(ML_FOP_NxN_ANCHORED_DIV_SUM_SQUARED), },
 
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP), },
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN), },
@@ -277,7 +281,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 127) {
+    if (mb_debug && ML_FOP_MAX != 131) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -879,6 +883,53 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return 1.0f / f;
         }
+        case ML_FOP_NxN_ANCHORED_DIV_SUM: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+            for (uint i = 0; i < params.size(); i++) {
+                f += getParam(i);
+            }
+
+            return 1.0f / f;
+        }
+
+        case ML_FOP_Nx0_DIV_SUM_SQUARED: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float s = 1.0f / f;
+            return s * s;
+        }
+        case ML_FOP_NxN_SCALED_DIV_SUM_SQUARED: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                float c = getParam(i);
+                f += c * getInput(i);
+            }
+
+            float s =  1.0f / f;
+            return s * s;
+        }
+        case ML_FOP_NxN_ANCHORED_DIV_SUM_SQUARED: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+            for (uint i = 0; i < params.size(); i++) {
+                f += getParam(i);
+            }
+
+            float s = 1.0f / f;
+            return s * s;
+        }
 
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP: {
             float f = 0.0f;
@@ -1404,7 +1455,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 127) {
+    if (mb_debug && ML_FOP_MAX != 131) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1600,9 +1651,16 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numParams = numParamsIn;
             break;
 
+        case ML_FOP_NxN_ANCHORED_DIV_SUM:
+        case ML_FOP_NxN_ANCHORED_DIV_SUM_SQUARED:
+            numInputs = MAX(1, numInputsIn);
+            numParams = MAX(1, numParamsIn);
+            break;
+
         case ML_FOP_Nx0_MIN:
         case ML_FOP_Nx0_MAX:
         case ML_FOP_Nx0_DIV_SUM:
+        case ML_FOP_Nx0_DIV_SUM_SQUARED:
             numInputs = MAX(1, numInputsIn);
             numParams = 0;
             break;
@@ -1641,6 +1699,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_NxN_SELECT_LTE:
         case ML_FOP_NxN_POW_SUM:
         case ML_FOP_NxN_SCALED_DIV_SUM:
+        case ML_FOP_NxN_SCALED_DIV_SUM_SQUARED:
             numInputs = MIN(numInputsIn, numParamsIn);
             numInputs = MAX(1, numInputs);
             numParams = numInputs;
