@@ -176,6 +176,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_LINEAR_DOWN), },
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_QUADRATIC_UP), },
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_QUADRATIC_DOWN), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_SQRT_UP), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_SQRT_DOWN), },
     { TMENTRY(ML_FOP_NxN_ACTIVATE_POLYNOMIAL), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_DIV_SUM), },
@@ -304,7 +306,7 @@ static float MLGaussian(float x, float mean, float stddev)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 143) {
+    if (mb_debug && ML_FOP_MAX != 145) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1041,6 +1043,24 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float v = (f - min) / (max - min);
             return 1.0f - CLAMP_UNIT(v * v);
         }
+        case ML_FOP_Nx0_ACTIVATE_SQRT_UP: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return CLAMP_UNIT(sqrtf(f));
+        }
+        case ML_FOP_Nx0_ACTIVATE_SQRT_DOWN: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return CLAMP_UNIT(1.0f - sqrtf(f));
+        }
         case ML_FOP_NxN_ACTIVATE_POLYNOMIAL: {
             float f = 0.0f;
 
@@ -1606,7 +1626,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 143) {
+    if (mb_debug && ML_FOP_MAX != 145) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1828,6 +1848,12 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN:
             numInputs = MAX(1, numInputsIn);
             numParams = 1;
+            break;
+
+        case ML_FOP_Nx0_ACTIVATE_SQRT_UP:
+        case ML_FOP_Nx0_ACTIVATE_SQRT_DOWN:
+            numInputs = MAX(1, numInputsIn);
+            numParams = 0;
             break;
 
         case ML_FOP_Nx2_ACTIVATE_LINEAR_UP:
