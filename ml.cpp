@@ -166,6 +166,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_SCALED_DIV_SUM), },
     { TMENTRY(ML_FOP_NxN_ANCHORED_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx0_DIV_SUM_SQUARED), },
+    { TMENTRY(ML_FOP_Nx1_DIV_SUM_SQUARED), },
     { TMENTRY(ML_FOP_NxN_SCALED_DIV_SUM_SQUARED), },
     { TMENTRY(ML_FOP_NxN_ANCHORED_DIV_SUM_SQUARED), },
 
@@ -281,7 +282,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 131) {
+    if (mb_debug && ML_FOP_MAX != 132) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -906,6 +907,17 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float s = 1.0f / f;
             return s * s;
         }
+        case ML_FOP_Nx1_DIV_SUM_SQUARED: {
+            float f = 0.0f;
+            float c = getParam(0);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float s = c / f;
+            return s * s;
+        }
         case ML_FOP_NxN_SCALED_DIV_SUM_SQUARED: {
             float f = 0.0f;
 
@@ -1455,7 +1467,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 131) {
+    if (mb_debug && ML_FOP_MAX != 132) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1672,6 +1684,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             break;
 
         case ML_FOP_Nx1_DIV_SUM:
+        case ML_FOP_Nx1_DIV_SUM_SQUARED:
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP:
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN:
             numInputs = MAX(1, numInputsIn);
