@@ -1564,8 +1564,9 @@ void MLFloatNode::mutate(float rate,
         ASSERT(ARRAYSIZE(mts) == MUTATION_TYPE_MAX);
         int r = Random_Enum(mts, ARRAYSIZE(mts));
         int tries = 0;
+        int maxTries = Random_Flip(0.1f) ? 0 : 8;
         Mutate_DefaultFloatParams(&mp, (MutationType)r);
-        while (tries < 8 &&
+        while (tries < maxTries &&
                (params[i] < mp.minValue || params[i] > mp.maxValue)) {
             /*
              * If the current value doesn't look like the picked mutation type,
