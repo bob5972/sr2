@@ -177,6 +177,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_QUADRATIC_UP), },
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_QUADRATIC_DOWN), },
     { TMENTRY(ML_FOP_NxN_ACTIVATE_POLYNOMIAL), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_DIV_SUM), },
+    { TMENTRY(ML_FOP_Nx1_ACTIVATE_DIV_SUM), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT), },
@@ -282,7 +284,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 132) {
+    if (mb_debug && ML_FOP_MAX != 134) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1035,6 +1037,27 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return CLAMP_UNIT(v);
         }
+        case ML_FOP_Nx0_ACTIVATE_DIV_SUM: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float s = 1.0f / f;
+            return CLAMP_UNIT(s);
+        }
+        case ML_FOP_Nx1_ACTIVATE_DIV_SUM: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float c = getParam(0);
+            float s = c / f;
+            return CLAMP_UNIT(s);
+        }
 
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP: {
             float i0 = getInput(0);
@@ -1467,7 +1490,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 132) {
+    if (mb_debug && ML_FOP_MAX != 134) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1701,7 +1724,15 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
         case ML_FOP_NxN_ACTIVATE_POLYNOMIAL:
             numInputs = MAX(1, numInputsIn);
-            numParams = MAX(1, numParamsIn);;
+            numParams = MAX(1, numParamsIn);
+            break;
+        case ML_FOP_Nx0_ACTIVATE_DIV_SUM:
+            numInputs = MAX(1, numInputsIn);
+            numParams = 0;
+            break;
+        case ML_FOP_Nx1_ACTIVATE_DIV_SUM:
+            numInputs = MAX(1, numInputsIn);
+            numParams = 1;
             break;
 
         case ML_FOP_NxN_LINEAR_COMBINATION:
