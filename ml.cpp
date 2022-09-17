@@ -179,6 +179,7 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_ACTIVATE_POLYNOMIAL), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_DIV_SUM), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_HYP_TANGENT), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT), },
@@ -284,7 +285,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 134) {
+    if (mb_debug && ML_FOP_MAX != 135) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1058,6 +1059,15 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float s = c / f;
             return CLAMP_UNIT(s);
         }
+        case ML_FOP_Nx0_ACTIVATE_HYP_TANGENT: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            return CLAMP_UNIT(tanhf(f));
+        }
 
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP: {
             float i0 = getInput(0);
@@ -1490,7 +1500,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 134) {
+    if (mb_debug && ML_FOP_MAX != 135) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1727,6 +1737,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numParams = MAX(1, numParamsIn);
             break;
         case ML_FOP_Nx0_ACTIVATE_DIV_SUM:
+        case ML_FOP_Nx0_ACTIVATE_HYP_TANGENT:
             numInputs = MAX(1, numInputsIn);
             numParams = 0;
             break;
