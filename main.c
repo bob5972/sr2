@@ -503,8 +503,8 @@ MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL6;
-        targetPlayers[tpIndex].playerName = "NeuralFleet6.Test";
+        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL8;
+        targetPlayers[tpIndex].playerName = "NeuralFleet8.Test";
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "gatherRange", "200");

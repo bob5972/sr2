@@ -172,6 +172,7 @@ typedef enum FleetAIType {
     FLEET_AI_NEURAL6     = 43,
     FLEET_AI_NEURAL7     = 44,
     FLEET_AI_NEURAL8     = 45,
+    FLEET_AI_NEURAL9     = 46,
     FLEET_AI_MAX,
 } FleetAIType;
 
