@@ -183,7 +183,11 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_LOGISTIC), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_SOFTPLUS), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_GAUSSIAN), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_GAUSSIAN_PROB_INVERSE), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_GAUSSIAN_UP), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_GAUSSIAN_UP_PROB_INVERSE), },
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_GAUSSIAN), },
+    { TMENTRY(ML_FOP_Nx3_ACTIVATE_GAUSSIAN), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT), },
@@ -286,10 +290,21 @@ float MLFloatNode::compute(const MBVector<float> &values)
     return f;
 }
 
+static float MLGaussian(float x, float mean, float stddev)
+{
+    float c = stddev * sqrtf(2.0f * M_PI);
+    c = 1.0f / c;
+
+    float e = (x - mean) / stddev;
+    e = (-1.0f / 2.0f) * e * e;
+
+    return c * expf(e);
+}
+
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 139) {
+    if (mb_debug && ML_FOP_MAX != 143) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1102,6 +1117,40 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float s = expf(-(f * f));
             return CLAMP_UNIT(s);
         }
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN_PROB_INVERSE: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float s = 1.0f - expf(-(f * f));
+            return CLAMP_UNIT(s);
+        }
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN_UP: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            f -= 1.0f;
+
+            float s = expf(-(f * f));
+            return CLAMP_UNIT(s);
+        }
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN_UP_PROB_INVERSE: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            f -= 1.0f;
+
+            float s = 1.0f - expf(-(f * f));
+            return CLAMP_UNIT(s);
+        }
         case ML_FOP_Nx2_ACTIVATE_GAUSSIAN: {
             float f = 0.0f;
             float mean = getParam(0);
@@ -1110,15 +1159,20 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             for (uint i = 0; i < inputs.size(); i++) {
                 f += getInput(i);
             }
+            return CLAMP_UNIT(MLGaussian(f, mean, stddev));
+        }
+        case ML_FOP_Nx3_ACTIVATE_GAUSSIAN: {
+            float f = 0.0f;
+            float mean = getParam(0);
+            float stddev = getParam(1);
+            float shift = getParam(2);
 
-            float c = stddev * sqrtf(2.0f * M_PI);
-            c = 1.0f / c;
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
 
-            float e = (f - mean) / stddev;
-            e = (-1.0f / 2.0f) * e * e;
-
-            float s = c * expf(e);
-            return CLAMP_UNIT(s);
+            f -= shift;
+            return CLAMP_UNIT(MLGaussian(f, mean, stddev));
         }
 
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP: {
@@ -1552,7 +1606,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 139) {
+    if (mb_debug && ML_FOP_MAX != 143) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1793,6 +1847,9 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_Nx0_ACTIVATE_LOGISTIC:
         case ML_FOP_Nx0_ACTIVATE_SOFTPLUS:
         case ML_FOP_Nx0_ACTIVATE_GAUSSIAN:
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN_PROB_INVERSE:
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN_UP:
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN_UP_PROB_INVERSE:
             numInputs = MAX(1, numInputsIn);
             numParams = 0;
             break;
@@ -1803,6 +1860,10 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_Nx2_ACTIVATE_GAUSSIAN:
             numInputs = MAX(1, numInputsIn);
             numParams = 2;
+            break;
+        case ML_FOP_Nx3_ACTIVATE_GAUSSIAN:
+            numInputs = MAX(1, numInputsIn);
+            numParams = 3;
             break;
 
         case ML_FOP_NxN_LINEAR_COMBINATION:
