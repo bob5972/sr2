@@ -57,7 +57,6 @@ typedef enum MLFloatOp {
     ML_FOP_1x0_COS,
     ML_FOP_1x0_TAN,
     ML_FOP_1x0_PROB_NOT,
-    ML_FOP_1x0_CLAMP_UNIT,
 
     ML_FOP_1x0_CEIL,
     ML_FOP_1x0_FLOOR,
@@ -79,9 +78,12 @@ typedef enum MLFloatOp {
     ML_FOP_1x1_PRODUCT,
     ML_FOP_1x1_SUM,
 
+    ML_FOP_1x0_CLAMP_UNIT,
     ML_FOP_1x2_CLAMP,
     ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT,
     ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT,
+    ML_FOP_3x0_CLAMP,
+
     ML_FOP_1x2_SINE,
     ML_FOP_1x2_COSINE,
     ML_FOP_1x2_INSIDE_RANGE,

@@ -86,6 +86,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x2_CLAMP), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
     { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
+    { TMENTRY(ML_FOP_3x0_CLAMP), },
+
     { TMENTRY(ML_FOP_1x2_SINE), },
     { TMENTRY(ML_FOP_1x2_COSINE), },
     { TMENTRY(ML_FOP_1x2_INSIDE_RANGE), },
@@ -275,7 +277,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 126) {
+    if (mb_debug && ML_FOP_MAX != 127) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -392,6 +394,15 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             float f = getInput(0);
             float min = getParam(0);
             float max = getParam(1);
+            f = MAX(f, max);
+            f = MIN(f, min);
+            return f;
+        }
+
+        case ML_FOP_3x0_CLAMP: {
+            float f = getInput(0);
+            float min = getInput(1);
+            float max = getInput(2);
             f = MAX(f, max);
             f = MIN(f, min);
             return f;
@@ -1393,7 +1404,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 126) {
+    if (mb_debug && ML_FOP_MAX != 127) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1478,6 +1489,11 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_1x2_SEEDED_RANDOM:
             numInputs = 1;
             numParams = 2;
+            break;
+
+        case ML_FOP_3x0_CLAMP:
+            numInputs = 3;
+            numParams = 0;
             break;
 
         case ML_FOP_1x3_IF_GTE_ELSE:
