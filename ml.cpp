@@ -180,6 +180,10 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_DIV_SUM), },
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_HYP_TANGENT), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_LOGISTIC), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_SOFTPLUS), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_GAUSSIAN), },
+    { TMENTRY(ML_FOP_Nx2_ACTIVATE_GAUSSIAN), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT), },
@@ -285,7 +289,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 135) {
+    if (mb_debug && ML_FOP_MAX != 139) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1068,6 +1072,54 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             return CLAMP_UNIT(tanhf(f));
         }
+        case ML_FOP_Nx0_ACTIVATE_LOGISTIC: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float s = 1.0f / (1.0f + expf(-f));
+            return CLAMP_UNIT(s);
+        }
+        case ML_FOP_Nx0_ACTIVATE_SOFTPLUS: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float s = logf(1 + expf(f));
+            return CLAMP_UNIT(s);
+        }
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float s = expf(-(f * f));
+            return CLAMP_UNIT(s);
+        }
+        case ML_FOP_Nx2_ACTIVATE_GAUSSIAN: {
+            float f = 0.0f;
+            float mean = getParam(0);
+            float stddev = getParam(1);
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getInput(i);
+            }
+
+            float c = stddev * sqrtf(2.0f * M_PI);
+            c = 1.0f / c;
+
+            float e = (f - mean) / stddev;
+            e = (-1.0f / 2.0f) * e * e;
+
+            float s = c * expf(e);
+            return CLAMP_UNIT(s);
+        }
 
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP: {
             float i0 = getInput(0);
@@ -1500,7 +1552,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 135) {
+    if (mb_debug && ML_FOP_MAX != 139) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1738,12 +1790,19 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             break;
         case ML_FOP_Nx0_ACTIVATE_DIV_SUM:
         case ML_FOP_Nx0_ACTIVATE_HYP_TANGENT:
+        case ML_FOP_Nx0_ACTIVATE_LOGISTIC:
+        case ML_FOP_Nx0_ACTIVATE_SOFTPLUS:
+        case ML_FOP_Nx0_ACTIVATE_GAUSSIAN:
             numInputs = MAX(1, numInputsIn);
             numParams = 0;
             break;
         case ML_FOP_Nx1_ACTIVATE_DIV_SUM:
             numInputs = MAX(1, numInputsIn);
             numParams = 1;
+            break;
+        case ML_FOP_Nx2_ACTIVATE_GAUSSIAN:
+            numInputs = MAX(1, numInputsIn);
+            numParams = 2;
             break;
 
         case ML_FOP_NxN_LINEAR_COMBINATION:
