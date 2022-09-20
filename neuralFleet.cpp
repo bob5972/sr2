@@ -4971,6 +4971,9 @@ public:
         NeuralConfigValue configs10[] = {
             { "void", "void" },
         };
+        NeuralConfigValue configs11[] = {
+            { "void", "void" },
+        };
 
         struct {
             NeuralConfigValue *values;
@@ -4986,12 +4989,13 @@ public:
             { configs7,  ARRAYSIZE(configs7), },
             { configs8,  ARRAYSIZE(configs8), },
             { configs9,  ARRAYSIZE(configs9), },
-            { configs10,  ARRAYSIZE(configs10), },
+            { configs10, ARRAYSIZE(configs10), },
+            { configs11, ARRAYSIZE(configs11), },
         };
 
         int neuralIndex = aiType - FLEET_AI_NEURAL1 + 1;
         VERIFY(aiType >= FLEET_AI_NEURAL1);
-        VERIFY(aiType <= FLEET_AI_NEURAL10);
+        VERIFY(aiType <= FLEET_AI_NEURAL11);
         VERIFY(neuralIndex >= 1 && neuralIndex < ARRAYSIZE(configs));
 
         int i = neuralIndex;
@@ -5636,6 +5640,8 @@ void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "NeuralFleet9";
     } else if (aiType == FLEET_AI_NEURAL10) {
         ops->aiName = "NeuralFleet10";
+    } else if (aiType == FLEET_AI_NEURAL11) {
+        ops->aiName = "NeuralFleet11";
     } else {
         NOT_IMPLEMENTED();
     }
