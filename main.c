@@ -505,27 +505,19 @@ MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
     if (method == doSimple) {
         targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL8;
         targetPlayers[tpIndex].playerName = "NeuralFleet8.Test";
+        tpIndex++;
+
+        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL9;
+        targetPlayers[tpIndex].playerName = "NeuralFleet9.Test";
+        tpIndex++;
+
+        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL10;
+        targetPlayers[tpIndex].playerName = "NeuralFleet10.Test";
+        tpIndex++;
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "gatherRange", "200");
         // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackRange", "100");
-
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "alignWeight", "0.7");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "cohereWeight", "-0.15");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "separateWeight", "0.95");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "edgesWeight", "0.85");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "enemyWeight", "0.6");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "coresWeight", "0.10");
-
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "curHeadingWeight", "0.10");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackSeparateWeight", "0.50");
-
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "flockRadius", "171");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "repulseRadius", "100");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "edgeRadius", "50");
-
-        tpIndex++;
-
     } else if (method == doTable) {
         struct {
             float attackRange;
