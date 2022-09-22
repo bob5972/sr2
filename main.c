@@ -503,6 +503,10 @@ MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
+        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL7;
+        targetPlayers[tpIndex].playerName = "NeuralFleet7.Test";
+        tpIndex++;
+
         targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL8;
         targetPlayers[tpIndex].playerName = "NeuralFleet8.Test";
         tpIndex++;
