@@ -1123,6 +1123,8 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK2);
         case FLEET_AI_NEURAL11:
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN2);
+        case FLEET_AI_NEURAL12:
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE2);
 
         default:
             return SPRITE_INVALID;
