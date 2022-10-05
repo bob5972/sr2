@@ -90,6 +90,8 @@ typedef struct NeuralForceDesc {
     NeuralForceType forceType;
     bool useTangent;
     float radius;
+    bool doIdle;
+    bool doAttack;
 } NeuralForceDesc;
 
 typedef enum NeuralCrowdType {
@@ -199,6 +201,7 @@ public:
     MBVector<float> myInputs;
     MBVector<float> myOutputs;
     uint myNumNodes;
+    bool myUseAttackForces;
 
 public:
     NeuralAIGovernor(FleetAI *ai, MappingSensorGrid *sg)
@@ -256,6 +259,8 @@ public:
 
             { "startingMaxRadius",           "300"       },
             { "startingMinRadius",           "250"       },
+
+            { "useAttackForces",             "FALSE"     },
         };
 
         NeuralConfigValue configs1[] = {
@@ -6180,6 +6185,8 @@ public:
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
+        myUseAttackForces = MBRegistry_GetBoolD(mreg, "useAttackForces", FALSE);
+
         if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs") &&
             MBRegistry_GetUint(mreg, "floatNet.numInputs") > 0) {
             myNeuralNet.load(mreg, "floatNet.");
@@ -6211,6 +6218,8 @@ public:
                 myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
                 myOutputDescs[i].forceDesc.useTangent = FALSE;
                 myOutputDescs[i].forceDesc.radius = 0.0f;
+                myOutputDescs[i].forceDesc.doIdle = FALSE;
+                myOutputDescs[i].forceDesc.doAttack = FALSE;
             }
 
             if (myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
@@ -6626,12 +6635,7 @@ public:
         }
     }
 
-    virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-
-        BasicAIGovernor::doAttack(mob, enemyTarget);
-    }
-
-    void doForces(Mob *mob, FRPoint *outputForce) {
+    void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce) {
         uint x;
         float maxV = (1.0f / MICRON);
 
@@ -6645,7 +6649,11 @@ public:
         myNeuralNet.compute(myInputs, myOutputs);
 
         for (uint i = 0; i < myOutputs.size(); i++) {
-            if (isnan(myOutputs[i])) {
+            ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
+            if ((state == BSAI_STATE_IDLE && !myOutputDescs[i].forceDesc.doIdle) ||
+                (state == BSAI_STATE_ATTACK && !myOutputDescs[i].forceDesc.doAttack)) {
+                myOutputs[i] = 0.0f;
+            } else if (isnan(myOutputs[i])) {
                 myOutputs[i] = 0.0f;
             } else if (myOutputs[i] > maxV) {
                 myOutputs[i] = maxV;
@@ -6673,14 +6681,51 @@ public:
         ASSERT(x <= myOutputs.size());
     }
 
+    void applyForceToMob(Mob *mob, FRPoint *rForce) {
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+
+        if (rForce->radius < MICRON) {
+            /*
+             * Continue on the current heading if we didn't get a strong-enough
+             * force.
+             */
+            NeuralForceDesc desc;
+            MBUtil_Zero(&desc, sizeof(desc));
+            desc.forceType = NEURAL_FORCE_HEADING;
+            desc.useTangent = FALSE;
+            desc.radius = speed;
+            getNeuralForce(mob, &desc, rForce);
+        }
+        FRPoint_SetSpeed(rForce, speed);
+
+        FRPoint_ToFPoint(rForce, &mob->pos, &mob->cmd.target);
+    }
+
+    virtual void doAttack(Mob *mob, Mob *enemyTarget) {
+        if (myUseAttackForces) {
+            NeuralShipAI *ship = (NeuralShipAI *)mob->aiMobHandle;
+            ASSERT(ship == (NeuralShipAI *)getShip(mob->mobid));
+            ASSERT(ship != NULL);
+
+            FPoint origTarget = mob->cmd.target;
+            BasicAIGovernor::doAttack(mob, enemyTarget);
+
+            mob->cmd.target = origTarget;
+
+            FRPoint rForce;
+            doForces(mob, ship->state, &rForce);
+            applyForceToMob(mob, &rForce);
+        } else {
+            BasicAIGovernor::doAttack(mob, enemyTarget);
+        }
+    }
+
     virtual void doIdle(Mob *mob, bool newlyIdle) {
         //RandomState *rs = &myRandomState;
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
 
         NeuralShipAI *ship = (NeuralShipAI *)mob->aiMobHandle;
         ASSERT(ship == (NeuralShipAI *)getShip(mob->mobid));
-        ASSERT(ship != NULL);
-
         ASSERT(ship != NULL);
 
         ship->state = BSAI_STATE_IDLE;
@@ -6691,22 +6736,8 @@ public:
         }
 
         FRPoint rForce;
-        doForces(mob, &rForce);
-        if (rForce.radius < MICRON) {
-            /*
-             * Continue on the current heading if we didn't get a strong-enough
-             * force.
-             */
-            NeuralForceDesc desc;
-            desc.forceType = NEURAL_FORCE_HEADING;
-            desc.useTangent = FALSE;
-            desc.radius = speed;
-            getNeuralForce(mob, &desc, &rForce);
-        }
-
-        FRPoint_SetSpeed(&rForce, speed);
-
-        FRPoint_ToFPoint(&rForce, &mob->pos, &mob->cmd.target);
+        doForces(mob, ship->state, &rForce);
+        applyForceToMob(mob, &rForce);
 
         ASSERT(!isnanf(mob->cmd.target.x));
         ASSERT(!isnanf(mob->cmd.target.y));
@@ -6864,6 +6895,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "attackExtendedRange",         0.05f },
         { "rotateStartingAngle",         0.05f },
         { "gatherAbandonStale",          0.05f },
+        { "useAttackForces",             0.05f },
     };
 
     float rate = 0.12;
@@ -6988,6 +7020,18 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
         bf.key = s.CStr();
         bf.flipRate = rate;
         Mutate_Bool(mreg, &bf, 1);
+
+        s = prefix;
+        s += "doIdle";
+        bf.key = s.CStr();
+        bf.flipRate = rate;
+        Mutate_Bool(mreg, &bf, 1);
+
+        s = prefix;
+        s += "doAttack";
+        bf.key = s.CStr();
+        bf.flipRate = rate;
+        Mutate_Bool(mreg, &bf, 1);
     } else if (desc->valueType == NEURAL_VALUE_TICK) {
         MutationFloatParams vf;
 
@@ -7078,6 +7122,14 @@ static void LoadNeuralForceDesc(MBRegistry *mreg,
     s = prefix;
     s += "radius";
     desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "doIdle";
+    desc->doIdle = MBRegistry_GetBoolD(mreg, s.CStr(), TRUE);
+
+    s = prefix;
+    s += "doAttack";
+    desc->doAttack = MBRegistry_GetBoolD(mreg, s.CStr(), FALSE);
 }
 
 static void LoadNeuralCrowdDesc(MBRegistry *mreg,

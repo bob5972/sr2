@@ -62,9 +62,9 @@ void BasicAIGovernor::doSpawn(Mob *mob)
                     keepGoing = FALSE;
                 }
             } while (keepGoing &&
-                        p.radius >= myConfig.startingMinRadius &&
-                        FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
-                                    0.0f, ai->bp.height));
+                     p.radius >= myConfig.startingMinRadius &&
+                     FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
+                                  0.0f, ai->bp.height));
         } while (keepGoing &&
                     p.radius < myConfig.startingMinRadius);
     }
@@ -112,16 +112,15 @@ void BasicAIGovernor::doAttack(Mob *mob, Mob *enemyTarget)
     } else if (enemyTarget->type == MOB_TYPE_BASE) {
         beAggressive = TRUE;
     } else if (friendBase != NULL && myConfig.guardRange > 0 &&
-                FPoint_Distance(&enemyTarget->pos, &friendBase->pos) <=
-                myConfig.guardRange) {
+               FPoint_Distance(&enemyTarget->pos, &friendBase->pos) <=
+               myConfig.guardRange) {
         beAggressive = TRUE;
     }
 
-
     if (beAggressive) {
-        float range = MIN(firingRange, scanningRange) - 1;
+        float range = MIN(firingRange, scanningRange) - 1.0f;
         FleetUtil_RandomPointInRange(rs, &mob->cmd.target,
-                                        &enemyTarget->pos, range);
+                                     &enemyTarget->pos, range);
     }
 }
 
