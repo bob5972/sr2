@@ -1,0 +1,27 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: setup
+      run: sudo apt-get install libsdl2-dev
+    - name: configure
+      run: ./configure
+    - name: make
+      run: make
+    - name: test
+      run: ./test.sh
