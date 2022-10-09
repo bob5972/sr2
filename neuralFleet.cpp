@@ -33,146 +33,14 @@ extern "C" {
 #include "floatNet.hpp"
 #include "textDump.hpp"
 
+#include "neuralNet.hpp"
+
 #define NEURAL_MAX_NODE_DEGREE  8
 #define NEURAL_MAX_INPUTS      25
 #define NEURAL_MAX_OUTPUTS     25
 #define NEURAL_MAX_NODES       100
 
 #define NEURAL_SCRAMBLE_KEY "neuralFleet.scrambleMutation"
-
-typedef enum NeuralForceType {
-    NEURAL_FORCE_VOID,
-    NEURAL_FORCE_ZERO,
-    NEURAL_FORCE_HEADING,
-    NEURAL_FORCE_ALIGN,
-    NEURAL_FORCE_COHERE,
-    NEURAL_FORCE_SEPARATE,
-    NEURAL_FORCE_NEAREST_FRIEND,
-    NEURAL_FORCE_NEAREST_FRIEND_MISSILE,
-    NEURAL_FORCE_EDGES,
-    NEURAL_FORCE_CORNERS,
-    NEURAL_FORCE_CENTER,
-    NEURAL_FORCE_BASE,
-    NEURAL_FORCE_BASE_DEFENSE,
-    NEURAL_FORCE_ENEMY,
-    NEURAL_FORCE_ENEMY_MISSILE,
-    NEURAL_FORCE_ENEMY_BASE,
-    NEURAL_FORCE_ENEMY_BASE_GUESS,
-    NEURAL_FORCE_ENEMY_COHERE,
-    NEURAL_FORCE_CORES,
-
-    NEURAL_FORCE_MAX,
-} NeuralForceType;
-
-static TextMapEntry tmForces[] = {
-    { TMENTRY(NEURAL_FORCE_VOID),                     },
-    { TMENTRY(NEURAL_FORCE_ZERO),                     },
-    { TMENTRY(NEURAL_FORCE_HEADING),                  },
-    { TMENTRY(NEURAL_FORCE_ALIGN),                    },
-    { TMENTRY(NEURAL_FORCE_COHERE),                   },
-    { TMENTRY(NEURAL_FORCE_SEPARATE),                 },
-    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),           },
-    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),   },
-    { TMENTRY(NEURAL_FORCE_EDGES),                    },
-    { TMENTRY(NEURAL_FORCE_CORNERS),                  },
-    { TMENTRY(NEURAL_FORCE_CENTER),                   },
-    { TMENTRY(NEURAL_FORCE_BASE),                     },
-    { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),             },
-    { TMENTRY(NEURAL_FORCE_ENEMY),                    },
-    { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),            },
-    { TMENTRY(NEURAL_FORCE_ENEMY_BASE),               },
-    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),         },
-    { TMENTRY(NEURAL_FORCE_CORES),                    },
-    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),             },
-};
-
-typedef struct NeuralForceDesc {
-    NeuralForceType forceType;
-    bool useTangent;
-    float radius;
-    bool doIdle;
-    bool doAttack;
-} NeuralForceDesc;
-
-typedef enum NeuralCrowdType {
-    NEURAL_CROWD_FRIEND_FIGHTER,
-    NEURAL_CROWD_FRIEND_MISSILE,
-    NEURAL_CROWD_ENEMY_SHIP,
-    NEURAL_CROWD_ENEMY_MISSILE,
-    NEURAL_CROWD_CORES,
-    NEURAL_CROWD_BASE_ENEMY_SHIP,
-    NEURAL_CROWD_BASE_FRIEND_SHIP,
-} NeuralCrowdType;
-
-static TextMapEntry tmCrowds[] = {
-    { TMENTRY(NEURAL_CROWD_FRIEND_FIGHTER),        },
-    { TMENTRY(NEURAL_CROWD_FRIEND_MISSILE),        },
-    { TMENTRY(NEURAL_CROWD_ENEMY_SHIP),            },
-    { TMENTRY(NEURAL_CROWD_ENEMY_MISSILE),         },
-    { TMENTRY(NEURAL_CROWD_CORES),                 },
-    { TMENTRY(NEURAL_CROWD_BASE_ENEMY_SHIP),       },
-    { TMENTRY(NEURAL_CROWD_BASE_FRIEND_SHIP),       },
-};
-
-typedef struct NeuralCrowdDesc {
-    NeuralCrowdType crowdType;
-    float radius;
-} NeuralCrowdDesc;
-
-typedef enum NeuralWaveType {
-    NEURAL_WAVE_NONE,
-    NEURAL_WAVE_SINE,
-    NEURAL_WAVE_UNIT_SINE,
-    NEURAL_WAVE_ABS_SINE,
-    NEURAL_WAVE_FMOD,
-} NeuralWaveType;
-
-static TextMapEntry tmWaves[] = {
-    { TMENTRY(NEURAL_WAVE_NONE),        },
-    { TMENTRY(NEURAL_WAVE_SINE),        },
-    { TMENTRY(NEURAL_WAVE_UNIT_SINE),   },
-    { TMENTRY(NEURAL_WAVE_ABS_SINE),    },
-    { TMENTRY(NEURAL_WAVE_FMOD),        },
-};
-
-typedef struct NeuralTickDesc {
-    NeuralWaveType waveType;
-    float frequency;
-} NeuralTickDesc;
-
-typedef enum NeuralValueType {
-    NEURAL_VALUE_VOID,
-    NEURAL_VALUE_ZERO,
-    NEURAL_VALUE_FORCE,
-    NEURAL_VALUE_CROWD,
-    NEURAL_VALUE_TICK,
-    NEURAL_VALUE_MOBID,
-    NEURAL_VALUE_RANDOM_UNIT,
-    NEURAL_VALUE_CREDITS,
-    NEURAL_VALUE_FRIEND_SHIPS,
-    NEURAL_VALUE_MAX,
-} NeuralValueType;
-
-static TextMapEntry tmValues[] = {
-    { TMENTRY(NEURAL_VALUE_VOID),  },
-    { TMENTRY(NEURAL_VALUE_ZERO),  },
-    { TMENTRY(NEURAL_VALUE_FORCE), },
-    { TMENTRY(NEURAL_VALUE_CROWD), },
-    { TMENTRY(NEURAL_VALUE_TICK),  },
-    { TMENTRY(NEURAL_VALUE_MOBID), },
-    { TMENTRY(NEURAL_VALUE_RANDOM_UNIT), },
-    { TMENTRY(NEURAL_VALUE_CREDITS), },
-    { TMENTRY(NEURAL_VALUE_FRIEND_SHIPS), },
-};
-
-typedef struct NeuralValueDesc {
-    NeuralValueType valueType;
-    union {
-        NeuralForceDesc forceDesc;
-        NeuralCrowdDesc crowdDesc;
-        NeuralTickDesc tickDesc;
-    };
-} NeuralValueDesc;
 
 typedef struct NeuralConfigValue {
     const char *key;
@@ -6848,8 +6716,7 @@ static void NeuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
             const char *value;
             int ret = asprintf(&str, "input[%d].valueType", i);
             VERIFY(ret > 0);
-            value = TextMap_ToString(sf->gov.myInputDescs[i].valueType,
-                                     tmValues, ARRAYSIZE(tmValues));
+            value = NeuralValue_ToString(sf->gov.myInputDescs[i].valueType);
             MBRegistry_PutCopy(mreg, str, value);
             free(str);
         }
@@ -6861,8 +6728,7 @@ static void NeuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
             const char *value;
             int ret = asprintf(&str, "output[%d].forceType", i);
             VERIFY(ret > 0);
-            value = TextMap_ToString(sf->gov.myOutputDescs[i].forceDesc.forceType,
-                                     tmForces, ARRAYSIZE(tmForces));
+            value = NeuralForce_ToString(sf->gov.myOutputDescs[i].forceDesc.forceType);
             MBRegistry_PutCopy(mreg, str, value);
             free(str);
         }
@@ -6964,23 +6830,9 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
     if (isOutput) {
         desc->valueType = NEURAL_VALUE_FORCE;
     } else if (Random_Flip(rate)) {
-        EnumDistribution vts[] = {
-            { NEURAL_VALUE_ZERO,         0.02f, },
-            { NEURAL_VALUE_FORCE,        0.40f, },
-            { NEURAL_VALUE_CROWD,        0.40f, },
-            { NEURAL_VALUE_TICK,         0.04f, },
-            { NEURAL_VALUE_MOBID,        0.04f, },
-            { NEURAL_VALUE_RANDOM_UNIT,  0.04f, },
-            { NEURAL_VALUE_CREDITS,      0.02f, },
-            { NEURAL_VALUE_FRIEND_SHIPS, 0.04f, },
-        };
-
-        // We intentionally left off NEURAL_VALUE_VOID.
-        ASSERT(ARRAYSIZE(vts) == NEURAL_VALUE_MAX - 1);
-        int i = Random_Enum(vts, ARRAYSIZE(vts));
-        desc->valueType = (NeuralValueType) tmValues[i].value;
+        desc->valueType = NeuralValue_Random();
     }
-    const char *v = TextMap_ToString(desc->valueType, tmValues, ARRAYSIZE(tmValues));
+    const char *v = NeuralValue_ToString(desc->valueType);
     MBRegistry_PutCopy(mreg, s.CStr(), v);
 
     if (desc->valueType == NEURAL_VALUE_FORCE ||
@@ -6998,20 +6850,19 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
         s = prefix;
         s += "crowdType";
         if (Random_Flip(rate)) {
-            uint i = Random_Int(0, ARRAYSIZE(tmCrowds) - 1);
-            const char *v = tmCrowds[i].str;
+            NeuralCrowdType ct = NeuralCrowd_Random();
+            const char *v = NeuralCrowd_ToString(ct);
             MBRegistry_PutCopy(mreg, s.CStr(), v);
-            desc->crowdDesc.crowdType = (NeuralCrowdType) tmCrowds[i].value;
+            desc->crowdDesc.crowdType = ct;
         }
     } else if (desc->valueType == NEURAL_VALUE_FORCE) {
         s = prefix;
         s += "forceType";
         if (Random_Flip(rate)) {
-            uint i = Random_Int(1, ARRAYSIZE(tmForces) - 1);
-            ASSERT(tmForces[0].value == NEURAL_FORCE_VOID);
-            const char *v = tmForces[i].str;
+            NeuralForceType ft = NeuralForce_Random();
+            const char *v = NeuralForce_ToString(ft);;
             MBRegistry_PutCopy(mreg, s.CStr(), v);
-            desc->forceDesc.forceType = (NeuralForceType) tmForces[i].value;
+            desc->forceDesc.forceType = ft;
         }
 
         MutationBoolParams bf;
@@ -7044,10 +6895,10 @@ static void MutateNeuralValueDesc(MBRegistry *mreg, NeuralValueDesc *desc,
         s = prefix;
         s += "waveType";
         if (Random_Flip(rate)) {
-            uint i = Random_Int(0, ARRAYSIZE(tmWaves) - 1);
-            const char *v = tmWaves[i].str;
+            NeuralWaveType wi = NeuralWave_Random();
+            const char *v = NeuralWave_ToString(wi);
             MBRegistry_PutCopy(mreg, s.CStr(), v);
-            desc->forceDesc.forceType = (NeuralForceType) tmWaves[i].value;
+            desc->tickDesc.waveType = wi;
         }
     }
 }
@@ -7065,12 +6916,10 @@ static void LoadNeuralValueDesc(MBRegistry *mreg,
     desc->valueType = NEURAL_VALUE_MAX;
 
     if (cstr == NULL) {
-        ASSERT(tmValues[1].value == NEURAL_VALUE_ZERO);
-        cstr = tmValues[1].str;
+        cstr = NeuralValue_ToString(NEURAL_VALUE_ZERO);
     }
 
-    desc->valueType = (NeuralValueType)
-        TextMap_FromString(cstr, tmValues, ARRAYSIZE(tmValues));
+    desc->valueType = NeuralValue_FromString(cstr);
     VERIFY(desc->valueType < NEURAL_VALUE_MAX);
 
     s = prefix;
@@ -7110,10 +6959,9 @@ static void LoadNeuralForceDesc(MBRegistry *mreg,
     s += "forceType";
     v = MBRegistry_GetCStr(mreg, s.CStr());
     if (v == NULL) {
-        v = TextMap_ToString(NEURAL_FORCE_ZERO, tmForces, ARRAYSIZE(tmForces));
+        v = NeuralForce_ToString(NEURAL_FORCE_ZERO);
     }
-    desc->forceType = (NeuralForceType)
-        TextMap_FromString(v, tmForces, ARRAYSIZE(tmForces));
+    desc->forceType = NeuralForce_FromString(v);
 
     s = prefix;
     s += "useTangent";
@@ -7146,11 +6994,9 @@ static void LoadNeuralCrowdDesc(MBRegistry *mreg,
     s += "crowdType";
     v = MBRegistry_GetCStr(mreg, s.CStr());
     if (v == NULL) {
-        ASSERT(tmCrowds[0].value == NEURAL_CROWD_FRIEND_FIGHTER);
-        v = tmCrowds[0].str;
+        NeuralCrowd_ToString(NEURAL_CROWD_FRIEND_FIGHTER);
     }
-    desc->crowdType = (NeuralCrowdType)
-        TextMap_FromString(v, tmCrowds, ARRAYSIZE(tmCrowds));
+    desc->crowdType = NeuralCrowd_FromString(v);
 }
 
 static void LoadNeuralTickDesc(MBRegistry *mreg,
@@ -7167,11 +7013,9 @@ static void LoadNeuralTickDesc(MBRegistry *mreg,
     s += "waveType";
     v = MBRegistry_GetCStr(mreg, s.CStr());
     if (v == NULL) {
-        ASSERT(tmWaves[0].value == NEURAL_WAVE_NONE);
-        v = tmWaves[0].str;
+        v = NeuralWave_ToString(NEURAL_WAVE_NONE);
     }
-    desc->waveType = (NeuralWaveType)
-        TextMap_FromString(v, tmWaves, ARRAYSIZE(tmWaves));
+    desc->waveType = NeuralWave_FromString(v);
 }
 
 static void *NeuralFleetCreate(FleetAI *ai)
