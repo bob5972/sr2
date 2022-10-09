@@ -128,5 +128,9 @@ void NeuralCrowd_Load(MBRegistry *mreg,
 void NeuralTick_Load(MBRegistry *mreg,
                      NeuralTickDesc *desc, const char *prefix);
 
+void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
+                        bool isOutput, float rate,
+                        const char *prefix);
+
 
 #endif // _NEURAL_NET_H_202210081813

@@ -21,6 +21,8 @@ extern "C" {
 #include "MBRegistry.h"
 }
 
+#include "mutate.h"
+
 #include "neuralNet.hpp"
 #include "textDump.hpp"
 
@@ -272,4 +274,89 @@ void NeuralTick_Load(MBRegistry *mreg,
         v = NeuralWave_ToString(NEURAL_WAVE_NONE);
     }
     desc->waveType = NeuralWave_FromString(v);
+}
+
+void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
+                        bool isOutput, float rate,
+                        const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    s += "valueType";
+
+    if (isOutput) {
+        desc->valueType = NEURAL_VALUE_FORCE;
+    } else if (Random_Flip(rate)) {
+        desc->valueType = NeuralValue_Random();
+    }
+    const char *v = NeuralValue_ToString(desc->valueType);
+    MBRegistry_PutCopy(mreg, s.CStr(), v);
+
+    if (desc->valueType == NEURAL_VALUE_FORCE ||
+        desc->valueType == NEURAL_VALUE_CROWD) {
+        MutationFloatParams vf;
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_RADIUS);
+        s = prefix;
+        s += "radius";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+    }
+
+    if (desc->valueType == NEURAL_VALUE_CROWD) {
+        s = prefix;
+        s += "crowdType";
+        if (Random_Flip(rate)) {
+            NeuralCrowdType ct = NeuralCrowd_Random();
+            const char *v = NeuralCrowd_ToString(ct);
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            desc->crowdDesc.crowdType = ct;
+        }
+    } else if (desc->valueType == NEURAL_VALUE_FORCE) {
+        s = prefix;
+        s += "forceType";
+        if (Random_Flip(rate)) {
+            NeuralForceType ft = NeuralForce_Random();
+            const char *v = NeuralForce_ToString(ft);;
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            desc->forceDesc.forceType = ft;
+        }
+
+        MutationBoolParams bf;
+        s = prefix;
+        s += "useTangent";
+        bf.key = s.CStr();
+        bf.flipRate = rate;
+        Mutate_Bool(mreg, &bf, 1);
+
+        s = prefix;
+        s += "doIdle";
+        bf.key = s.CStr();
+        bf.flipRate = rate;
+        Mutate_Bool(mreg, &bf, 1);
+
+        s = prefix;
+        s += "doAttack";
+        bf.key = s.CStr();
+        bf.flipRate = rate;
+        Mutate_Bool(mreg, &bf, 1);
+    } else if (desc->valueType == NEURAL_VALUE_TICK) {
+        MutationFloatParams vf;
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+        s = prefix;
+        s += "frequency";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+
+        s = prefix;
+        s += "waveType";
+        if (Random_Flip(rate)) {
+            NeuralWaveType wi = NeuralWave_Random();
+            const char *v = NeuralWave_ToString(wi);
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            desc->tickDesc.waveType = wi;
+        }
+    }
 }
