@@ -119,5 +119,14 @@ NeuralValueType NeuralValue_Random();
 NeuralWaveType NeuralWave_Random();
 NeuralCrowdType NeuralCrowd_Random();
 
+void NeuralValue_Load(MBRegistry *mreg,
+                      NeuralValueDesc *desc, const char *prefix);
+void NeuralForce_Load(MBRegistry *mreg,
+                      NeuralForceDesc *desc, const char *prefix);
+void NeuralCrowd_Load(MBRegistry *mreg,
+                      NeuralCrowdDesc *desc, const char *prefix);
+void NeuralTick_Load(MBRegistry *mreg,
+                     NeuralTickDesc *desc, const char *prefix);
+
 
 #endif // _NEURAL_NET_H_202210081813

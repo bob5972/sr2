@@ -18,6 +18,7 @@
 
 extern "C" {
 #include "Random.h"
+#include "MBRegistry.h"
 }
 
 #include "neuralNet.hpp"
@@ -157,4 +158,118 @@ NeuralCrowdType NeuralCrowd_Random()
     uint i = Random_Int(0, ARRAYSIZE(tmCrowds) - 1);
     ASSERT(ARRAYSIZE(tmCrowds) == NEURAL_CROWD_MAX);
     return (NeuralCrowdType) tmCrowds[i].value;
+}
+
+void NeuralValue_Load(MBRegistry *mreg,
+                      NeuralValueDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *cstr;
+
+    s = prefix;
+    s += "valueType";
+    cstr = MBRegistry_GetCStr(mreg, s.CStr());
+    desc->valueType = NEURAL_VALUE_MAX;
+
+    if (cstr == NULL) {
+        cstr = NeuralValue_ToString(NEURAL_VALUE_ZERO);
+    }
+
+    desc->valueType = NeuralValue_FromString(cstr);
+    VERIFY(desc->valueType < NEURAL_VALUE_MAX);
+
+    s = prefix;
+    switch (desc->valueType) {
+        case NEURAL_VALUE_FORCE:
+            NeuralForce_Load(mreg, &desc->forceDesc, s.CStr());
+            break;
+
+        case NEURAL_VALUE_CROWD:
+            NeuralCrowd_Load(mreg, &desc->crowdDesc, s.CStr());
+            break;
+
+        case NEURAL_VALUE_TICK:
+            NeuralTick_Load(mreg, &desc->tickDesc, s.CStr());
+            break;
+
+        case NEURAL_VALUE_VOID:
+        case NEURAL_VALUE_ZERO:
+        case NEURAL_VALUE_MOBID:
+        case NEURAL_VALUE_RANDOM_UNIT:
+        case NEURAL_VALUE_CREDITS:
+        case NEURAL_VALUE_FRIEND_SHIPS:
+            break;
+
+        default:
+            NOT_IMPLEMENTED();
+    }
+}
+
+void NeuralForce_Load(MBRegistry *mreg,
+                      NeuralForceDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *v;
+
+    s = prefix;
+    s += "forceType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        v = NeuralForce_ToString(NEURAL_FORCE_ZERO);
+    }
+    desc->forceType = NeuralForce_FromString(v);
+
+    s = prefix;
+    s += "useTangent";
+    desc->useTangent = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
+    s += "radius";
+    desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "doIdle";
+    desc->doIdle = MBRegistry_GetBoolD(mreg, s.CStr(), TRUE);
+
+    s = prefix;
+    s += "doAttack";
+    desc->doAttack = MBRegistry_GetBoolD(mreg, s.CStr(), FALSE);
+}
+
+void NeuralCrowd_Load(MBRegistry *mreg,
+                      NeuralCrowdDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *v;
+
+    s = prefix;
+    s += "radius";
+    desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "crowdType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        NeuralCrowd_ToString(NEURAL_CROWD_FRIEND_FIGHTER);
+    }
+    desc->crowdType = NeuralCrowd_FromString(v);
+}
+
+void NeuralTick_Load(MBRegistry *mreg,
+                     NeuralTickDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *v;
+
+    s = prefix;
+    s += "frequency";
+    desc->frequency = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "waveType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        v = NeuralWave_ToString(NEURAL_WAVE_NONE);
+    }
+    desc->waveType = NeuralWave_FromString(v);
 }
