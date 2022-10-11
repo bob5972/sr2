@@ -58,11 +58,16 @@ public:
     MBVector<float> myOutputs;
     uint myNumNodes;
     bool myUseAttackForces;
+    NeuralNetContext myNNC;
 
 public:
     NeuralAIGovernor(FleetAI *ai, MappingSensorGrid *sg)
     :BasicAIGovernor(ai, sg)
-    { }
+    {
+        myNNC.rs = &myRandomState;
+        myNNC.sg = sg;
+        myNNC.ai = myFleetAI;
+    }
 
     virtual ~NeuralAIGovernor() { }
 
@@ -6142,6 +6147,13 @@ public:
         }
     }
 
+    NeuralNetContext *getNeuralNetContext(void) {
+        ASSERT(myNNC.rs != NULL);
+        ASSERT(myNNC.sg != NULL);
+        ASSERT(myNNC.ai != NULL);
+        return &myNNC;
+    }
+
     /*
      * getNeuralForce --
      *    Calculate the specified force.
@@ -6152,7 +6164,7 @@ public:
                         FRPoint *rForce) {
         FPoint focusPoint;
 
-        if (getNeuralFocus(mob, desc, &focusPoint)) {
+        if (NeuralForce_GetFocus(getNeuralNetContext(), mob, desc, &focusPoint)) {
             FPoint_ToFRPoint(&focusPoint, &mob->pos, rForce);
             FRPoint_SetSpeed(rForce, 1.0f);
 
@@ -6164,253 +6176,6 @@ public:
             FRPoint_Zero(rForce);
             return FALSE;
         }
-    }
-
-    bool focusMobPosHelper(Mob *mob, FPoint *focusPoint)
-    {
-        ASSERT(focusPoint != NULL);
-        if (mob != NULL) {
-            *focusPoint = mob->pos;
-            return TRUE;
-        }
-        return FALSE;
-    }
-
-    /*
-     * getNeuralFocus --
-     *     Get the focus point associated with the specified force.
-     *     Returns TRUE if the force is valid.
-     *     Returns FALSE if the force is invalid.
-     */
-    bool getNeuralFocus(Mob *mob,
-                        NeuralForceDesc *desc,
-                        FPoint *focusPoint) {
-        MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-        RandomState *rs = &myRandomState;
-
-        switch(desc->forceType) {
-            case NEURAL_FORCE_VOID:
-            case NEURAL_FORCE_ZERO:
-                return FALSE;
-
-            case NEURAL_FORCE_HEADING: {
-                FRPoint rPos;
-                FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-
-                if (rPos.radius < MICRON) {
-                    rPos.radius = 1.0f;
-                    rPos.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
-                }
-                FRPoint_ToFPoint(&rPos, &mob->pos, focusPoint);
-                return TRUE;
-            }
-            case NEURAL_FORCE_ALIGN: {
-                FPoint avgVel;
-                sg->friendAvgVelocity(&avgVel, &mob->pos, desc->radius,
-                                      MOB_FLAG_FIGHTER);
-                avgVel.x += mob->pos.x;
-                avgVel.y += mob->pos.y;
-                *focusPoint = avgVel;
-                return TRUE;
-            }
-            case NEURAL_FORCE_COHERE: {
-                FPoint avgPos;
-                sg->friendAvgPos(&avgPos, &mob->pos, desc->radius,
-                                 MOB_FLAG_FIGHTER);
-                *focusPoint = avgPos;
-                return TRUE;
-            }
-            case NEURAL_FORCE_ENEMY_COHERE: {
-                FPoint avgPos;
-                sg->targetAvgPos(&avgPos, &mob->pos, desc->radius,
-                                 MOB_FLAG_SHIP);
-                *focusPoint = avgPos;
-                return TRUE;
-            }
-            case NEURAL_FORCE_SEPARATE:
-                return getSeparateFocus(mob, desc, focusPoint);
-
-            case NEURAL_FORCE_NEAREST_FRIEND: {
-                Mob *m = sg->findClosestFriend(mob, MOB_FLAG_FIGHTER);
-                return focusMobPosHelper(m, focusPoint);
-            }
-            case NEURAL_FORCE_NEAREST_FRIEND_MISSILE: {
-                Mob *m = sg->findClosestFriend(mob, MOB_FLAG_MISSILE);
-                return focusMobPosHelper(m, focusPoint);
-            }
-
-            case NEURAL_FORCE_EDGES: {
-                getEdgeFocus(mob, desc, focusPoint);
-                return TRUE;
-            }
-            case NEURAL_FORCE_CORNERS: {
-                flockCorners(mob, desc, focusPoint);
-                return TRUE;
-            }
-            case NEURAL_FORCE_CENTER: {
-                focusPoint->x = myFleetAI->bp.width / 2;
-                focusPoint->y = myFleetAI->bp.height / 2;
-                return TRUE;
-            }
-            case NEURAL_FORCE_BASE:
-                return focusMobPosHelper(sg->friendBase(), focusPoint);
-
-            case NEURAL_FORCE_BASE_DEFENSE: {
-                Mob *base = sg->friendBase();
-                if (base != NULL) {
-                    Mob *enemy = sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
-                    if (enemy != NULL) {
-                        *focusPoint = enemy->pos;
-                        return TRUE;
-                    }
-                }
-                return FALSE;
-            }
-            case NEURAL_FORCE_ENEMY: {
-                Mob *m = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
-                return focusMobPosHelper(m, focusPoint);
-            }
-            case NEURAL_FORCE_ENEMY_MISSILE: {
-                Mob *m = sg->findClosestTarget(&mob->pos, MOB_FLAG_MISSILE);
-                return focusMobPosHelper(m, focusPoint);
-            }
-
-            case NEURAL_FORCE_ENEMY_BASE:
-                return focusMobPosHelper(sg->enemyBase(), focusPoint);
-
-            case NEURAL_FORCE_ENEMY_BASE_GUESS: {
-                if (!sg->hasEnemyBase() && sg->hasEnemyBaseGuess()) {
-                    *focusPoint = sg->getEnemyBaseGuess();
-                    return TRUE;
-                }
-                return FALSE;
-            }
-
-            case NEURAL_FORCE_CORES: {
-                Mob *m = sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
-                return focusMobPosHelper(m, focusPoint);
-            }
-
-            default:
-                PANIC("%s: Unhandled forceType: %d\n", __FUNCTION__,
-                      desc->forceType);
-        }
-
-        NOT_REACHED();
-    }
-
-    bool getSeparateFocus(Mob *self, NeuralForceDesc *desc,
-                          FPoint *focusPoint) {
-        FRPoint force;
-        int x = 0;
-        MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-        MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
-        float radiusSquared = desc->radius * desc->radius;
-
-        if (desc->radius <= 0.0f) {
-            return FALSE;
-        }
-
-        ASSERT(self->type == MOB_TYPE_FIGHTER);
-
-        FRPoint_Zero(&force);
-
-        while (mit.hasNext()) {
-            Mob *m = mit.next();
-            ASSERT(m != NULL);
-
-            if (m->mobid != self->mobid &&
-                FPoint_DistanceSquared(&self->pos, &m->pos) <= radiusSquared) {
-                repulseFocus(&self->pos, &m->pos, &force);
-                x++;
-            }
-        }
-
-        FRPoint_ToFPoint(&force, &self->pos, focusPoint);
-        return x > 0;
-    }
-
-    void repulseFocus(const FPoint *selfPos, const FPoint *pos, FRPoint *force) {
-        FRPoint f;
-        RandomState *rs = &myRandomState;
-
-        FPoint_ToFRPoint(selfPos, pos, &f);
-
-        /*
-         * Avoid 1/0 => NAN, and then randomize the direction when
-         * the point is more or less directly on top of us.
-         */
-        if (f.radius < MICRON) {
-            f.radius = MICRON;
-            f.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
-        }
-
-        f.radius = 1.0f / (f.radius * f.radius);
-        FRPoint_Add(force, &f, force);
-    }
-
-    void getEdgeFocus(Mob *self, NeuralForceDesc *desc, FPoint *focusPoint) {
-        FleetAI *ai = myFleetAI;
-        FPoint edgePoint;
-        FRPoint force;
-
-        FRPoint_Zero(&force);
-
-        /*
-         * Left Edge
-         */
-        edgePoint = self->pos;
-        edgePoint.x = 0.0f;
-        repulseFocus(&self->pos, &edgePoint, &force);
-
-        /*
-         * Right Edge
-         */
-        edgePoint = self->pos;
-        edgePoint.x = ai->bp.width;
-        repulseFocus(&self->pos, &edgePoint, &force);
-
-        /*
-         * Top Edge
-         */
-        edgePoint = self->pos;
-        edgePoint.y = 0.0f;
-        repulseFocus(&self->pos, &edgePoint, &force);
-
-        /*
-         * Bottom edge
-         */
-        edgePoint = self->pos;
-        edgePoint.y = ai->bp.height;
-        repulseFocus(&self->pos, &edgePoint, &force);
-
-        FRPoint_ToFPoint(&force, &self->pos, focusPoint);
-    }
-
-    void flockCorners(Mob *self, NeuralForceDesc *desc, FPoint *focusPoint) {
-        FleetAI *ai = myFleetAI;
-        FPoint cornerPoint;
-        FRPoint force;
-
-        FRPoint_Zero(&force);
-
-        cornerPoint.x = 0.0f;
-        cornerPoint.y = 0.0f;
-        repulseFocus(&self->pos, &cornerPoint, &force);
-
-        cornerPoint.x = ai->bp.width;
-        cornerPoint.y = 0.0f;
-        repulseFocus(&self->pos, &cornerPoint, &force);
-
-        cornerPoint.x = 0.0f;
-        cornerPoint.y = ai->bp.height;
-        repulseFocus(&self->pos, &cornerPoint, &force);
-
-        cornerPoint.x = ai->bp.width;
-        cornerPoint.y = ai->bp.height;
-        repulseFocus(&self->pos, &cornerPoint, &force);
-
-        FRPoint_ToFPoint(&force, &self->pos, focusPoint);
     }
 
     float getCrowdValue(Mob *mob, NeuralCrowdDesc *desc) {
@@ -6484,7 +6249,8 @@ public:
 
     float getRangeValue(Mob *mob, NeuralForceDesc *desc) {
         FPoint focusPoint;
-        if (getNeuralFocus(mob, desc, &focusPoint)) {
+        if (NeuralForce_GetFocus(getNeuralNetContext(),
+                                 mob, desc, &focusPoint)) {
             return FPoint_Distance(&mob->pos, &focusPoint);
         } else {
             return 0.0f;

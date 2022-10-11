@@ -26,6 +26,11 @@ extern "C" {
 #include "neuralNet.hpp"
 #include "textDump.hpp"
 
+static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint);
+static void NeuralForceGetRepulseFocus(NeuralNetContext *nc,
+                                       const FPoint *selfPos,
+                                       const FPoint *pos, FRPoint *force);
+
 static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_VOID),                     },
     { TMENTRY(NEURAL_FORCE_ZERO),                     },
@@ -359,4 +364,258 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
             desc->tickDesc.waveType = wi;
         }
     }
+}
+
+static bool NeuralForceGetSeparateFocus(NeuralNetContext *nc,
+                                        Mob *self, NeuralForceDesc *desc,
+                                        FPoint *focusPoint)
+{
+    FRPoint force;
+    int x = 0;
+    MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
+    float radiusSquared = desc->radius * desc->radius;
+
+    if (desc->radius <= 0.0f) {
+        return FALSE;
+    }
+
+    ASSERT(self->type == MOB_TYPE_FIGHTER);
+
+    FRPoint_Zero(&force);
+
+    while (mit.hasNext()) {
+        Mob *m = mit.next();
+        ASSERT(m != NULL);
+
+        if (m->mobid != self->mobid &&
+            FPoint_DistanceSquared(&self->pos, &m->pos) <= radiusSquared) {
+            NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
+            x++;
+        }
+    }
+
+    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+    return x > 0;
+}
+
+static void NeuralForceGetRepulseFocus(NeuralNetContext *nc,
+                                       const FPoint *selfPos,
+                                       const FPoint *pos, FRPoint *force)
+{
+    FRPoint f;
+
+    FPoint_ToFRPoint(selfPos, pos, &f);
+
+    /*
+     * Avoid 1/0 => NAN, and then randomize the direction when
+     * the point is more or less directly on top of us.
+     */
+    if (f.radius < MICRON) {
+        f.radius = MICRON;
+        f.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
+    }
+
+    f.radius = 1.0f / (f.radius * f.radius);
+    FRPoint_Add(force, &f, force);
+}
+
+static void NeuralForceGetEdgeFocus(NeuralNetContext *nc,
+                                    Mob *self, NeuralForceDesc *desc,
+                                    FPoint *focusPoint)
+{
+    FPoint edgePoint;
+    FRPoint force;
+
+    FRPoint_Zero(&force);
+
+    /*
+     * Left Edge
+     */
+    edgePoint = self->pos;
+    edgePoint.x = 0.0f;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &edgePoint, &force);
+
+    /*
+     * Right Edge
+     */
+    edgePoint = self->pos;
+    edgePoint.x = nc->ai->bp.width;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &edgePoint, &force);
+
+    /*
+     * Top Edge
+     */
+    edgePoint = self->pos;
+    edgePoint.y = 0.0f;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &edgePoint, &force);
+
+    /*
+     * Bottom edge
+     */
+    edgePoint = self->pos;
+    edgePoint.y = nc->ai->bp.height;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &edgePoint, &force);
+
+    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+}
+
+
+void NeuralForceGetCornersFocus(NeuralNetContext *nc,
+                                Mob *self, NeuralForceDesc *desc,
+                                FPoint *focusPoint) {
+    FPoint cornerPoint;
+    FRPoint force;
+
+    FRPoint_Zero(&force);
+
+    cornerPoint.x = 0.0f;
+    cornerPoint.y = 0.0f;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &cornerPoint, &force);
+
+    cornerPoint.x = nc->ai->bp.width;
+    cornerPoint.y = 0.0f;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &cornerPoint, &force);
+
+    cornerPoint.x = 0.0f;
+    cornerPoint.y = nc->ai->bp.height;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &cornerPoint, &force);
+
+    cornerPoint.x = nc->ai->bp.width;
+    cornerPoint.y = nc->ai->bp.height;
+    NeuralForceGetRepulseFocus(nc, &self->pos, &cornerPoint, &force);
+
+    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+}
+
+/*
+ * NeuralForce_GetFocus --
+ *     Get the focus point associated with the specified force.
+ *     Returns TRUE if the force is valid.
+ *     Returns FALSE if the force is invalid.
+ */
+bool NeuralForce_GetFocus(NeuralNetContext *nc,
+                          Mob *mob,
+                          NeuralForceDesc *desc,
+                          FPoint *focusPoint)
+{
+    switch(desc->forceType) {
+        case NEURAL_FORCE_VOID:
+        case NEURAL_FORCE_ZERO:
+            return FALSE;
+
+        case NEURAL_FORCE_HEADING: {
+            FRPoint rPos;
+            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+
+            if (rPos.radius < MICRON) {
+                rPos.radius = 1.0f;
+                rPos.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
+            }
+            FRPoint_ToFPoint(&rPos, &mob->pos, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_ALIGN: {
+            FPoint avgVel;
+            nc->sg->friendAvgVelocity(&avgVel, &mob->pos, desc->radius,
+                                      MOB_FLAG_FIGHTER);
+            avgVel.x += mob->pos.x;
+            avgVel.y += mob->pos.y;
+            *focusPoint = avgVel;
+            return TRUE;
+        }
+        case NEURAL_FORCE_COHERE: {
+            FPoint avgPos;
+            nc->sg->friendAvgPos(&avgPos, &mob->pos, desc->radius,
+                                 MOB_FLAG_FIGHTER);
+            *focusPoint = avgPos;
+            return TRUE;
+        }
+        case NEURAL_FORCE_ENEMY_COHERE: {
+            FPoint avgPos;
+            nc->sg->targetAvgPos(&avgPos, &mob->pos, desc->radius,
+                                 MOB_FLAG_SHIP);
+            *focusPoint = avgPos;
+            return TRUE;
+        }
+        case NEURAL_FORCE_SEPARATE:
+            return NeuralForceGetSeparateFocus(nc, mob, desc, focusPoint);
+
+        case NEURAL_FORCE_NEAREST_FRIEND: {
+            Mob *m = nc->sg->findClosestFriend(mob, MOB_FLAG_FIGHTER);
+            return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+        case NEURAL_FORCE_NEAREST_FRIEND_MISSILE: {
+            Mob *m = nc->sg->findClosestFriend(mob, MOB_FLAG_MISSILE);
+            return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+
+        case NEURAL_FORCE_EDGES: {
+            NeuralForceGetEdgeFocus(nc, mob, desc, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_CORNERS: {
+            NeuralForceGetCornersFocus(nc, mob, desc, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_CENTER: {
+            focusPoint->x = nc->ai->bp.width / 2;
+            focusPoint->y = nc->ai->bp.height / 2;
+            return TRUE;
+        }
+        case NEURAL_FORCE_BASE:
+            return NeuralForceGetFocusMobPosHelper(nc->sg->friendBase(), focusPoint);
+
+        case NEURAL_FORCE_BASE_DEFENSE: {
+            Mob *base = nc->sg->friendBase();
+            if (base != NULL) {
+                Mob *enemy = nc->sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
+                if (enemy != NULL) {
+                    *focusPoint = enemy->pos;
+                    return TRUE;
+                }
+            }
+            return FALSE;
+        }
+        case NEURAL_FORCE_ENEMY: {
+            Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
+            return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+        case NEURAL_FORCE_ENEMY_MISSILE: {
+            Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_MISSILE);
+            return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+
+        case NEURAL_FORCE_ENEMY_BASE:
+            return NeuralForceGetFocusMobPosHelper(nc->sg->enemyBase(), focusPoint);
+
+        case NEURAL_FORCE_ENEMY_BASE_GUESS: {
+            if (!nc->sg->hasEnemyBase() && nc->sg->hasEnemyBaseGuess()) {
+                *focusPoint = nc->sg->getEnemyBaseGuess();
+                return TRUE;
+            }
+            return FALSE;
+        }
+
+        case NEURAL_FORCE_CORES: {
+            Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
+            return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+
+        default:
+            PANIC("%s: Unhandled forceType: %d\n", __FUNCTION__,
+                    desc->forceType);
+    }
+
+    NOT_REACHED();
+}
+
+
+static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint)
+{
+    ASSERT(focusPoint != NULL);
+    if (mob != NULL) {
+        *focusPoint = mob->pos;
+        return TRUE;
+    }
+    return FALSE;
 }

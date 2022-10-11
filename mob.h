@@ -19,6 +19,10 @@
 #ifndef _MOB_H_202006041753
 #define _MOB_H_202006041753
 
+#ifdef __cplusplus
+	extern "C" {
+#endif
+
 #include "MBConfig.h"
 #include "geometry.h"
 #include "MBVector.h"
@@ -158,5 +162,9 @@ static inline bool Mob_CheckInvariants(const Mob *m)
 
     return TRUE;
 }
+
+#ifdef __cplusplus
+    }
+#endif
 
 #endif // _MOB_H_202006041753

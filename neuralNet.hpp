@@ -19,6 +19,15 @@
 #ifndef _NEURAL_NET_H_202210081813
 #define _NEURAL_NET_H_202210081813
 
+#include "mob.h"
+#include "sensorGrid.hpp"
+
+typedef struct NeuralNetContext {
+    RandomState *rs;
+    MappingSensorGrid *sg;
+    FleetAI *ai;
+} NeuralNetContext;
+
 typedef enum NeuralForceType {
     NEURAL_FORCE_VOID,
     NEURAL_FORCE_ZERO,
@@ -131,6 +140,9 @@ void NeuralTick_Load(MBRegistry *mreg,
 void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
                         bool isOutput, float rate,
                         const char *prefix);
+
+bool NeuralForce_GetFocus(NeuralNetContext *nc, Mob *mob,
+                          NeuralForceDesc *desc, FPoint *focusPoint);
 
 
 #endif // _NEURAL_NET_H_202210081813
