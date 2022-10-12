@@ -75,6 +75,8 @@ typedef enum SpriteSource {
     SPRITE_SOURCE_URSA15,
     SPRITE_SOURCE_URSA16,
 
+    SPRITE_SOURCE_VEGA,
+
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
 } SpriteSource;
@@ -451,6 +453,10 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_URSA_ORANGE3_MISSILE,    SPRITE_SOURCE_URSA16,        115, 1,  7, 7, },
     { SPRITE_URSA_ORANGE3_POWER_CORE, SPRITE_SOURCE_URSA16,        123, 1,  5, 5, },
 
+    { SPRITE_VEGA_BASE,       SPRITE_SOURCE_VEGA,                  2,   2, 101, 101, },
+    { SPRITE_VEGA_FIGHTER,    SPRITE_SOURCE_VEGA,                  103, 1,  11, 11, },
+    { SPRITE_VEGA_MISSILE,    SPRITE_SOURCE_VEGA,                  115, 1,  7, 7, },
+    { SPRITE_VEGA_POWER_CORE, SPRITE_SOURCE_VEGA,                  123, 1,  5, 5, },
 };
 
 typedef struct SpriteBacking {
@@ -495,7 +501,7 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 48);
+    ASSERT(SPRITE_SOURCE_MAX == 49);
     gSprite.sources[SPRITE_SOURCE_SPACE15] = Sprite_LoadPNG("art/space15.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE16] = Sprite_LoadPNG("art/space16.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE17] = Sprite_LoadPNG("art/space17.png", 129, 103);
@@ -547,6 +553,8 @@ void Sprite_Init()
     gSprite.sources[SPRITE_SOURCE_URSA14] = Sprite_LoadPNG("art/ursa14.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_URSA15] = Sprite_LoadPNG("art/ursa15.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_URSA16] = Sprite_LoadPNG("art/ursa16.png", 129, 103);
+
+    gSprite.sources[SPRITE_SOURCE_VEGA] = Sprite_LoadPNG("art/vega1.png", 129, 103);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
         uint32 backingID;
@@ -957,6 +965,10 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
             st = SPRITE_URSA_ORANGE3_BASE;
             break;
 
+        case SPRITE_SET_VEGA:
+            st = SPRITE_VEGA_BASE;
+            break;
+
         default:
             NOT_IMPLEMENTED();
     }
@@ -1000,6 +1012,16 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
 
     if (ss >= SPRITE_SET_URSA_BLUE &&
         ss <= SPRITE_SET_URSA_ORANGE3) {
+        ASSERT(MOB_TYPE_BASE == 1);
+        ASSERT(MOB_TYPE_FIGHTER == 2);
+        ASSERT(MOB_TYPE_MISSILE == 3);
+        ASSERT(MOB_TYPE_POWER_CORE == 4);
+        ASSERT(t >= 1 && t <= 4);
+        return st + (t - 1);
+    }
+
+    if (ss >= SPRITE_SET_VEGA &&
+        ss <= SPRITE_SET_VEGA) {
         ASSERT(MOB_TYPE_BASE == 1);
         ASSERT(MOB_TYPE_FIGHTER == 2);
         ASSERT(MOB_TYPE_MISSILE == 3);
@@ -1102,29 +1124,30 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
 
         case FLEET_AI_NEURAL1:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE);
         case FLEET_AI_NEURAL2:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE);
         case FLEET_AI_NEURAL3:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK);
         case FLEET_AI_NEURAL4:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE);
         case FLEET_AI_NEURAL5:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN);
         case FLEET_AI_NEURAL6:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_MAGENTA);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_MAGENTA);
         case FLEET_AI_NEURAL7:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_RED);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_RED);
         case FLEET_AI_NEURAL8:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE2);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE2);
         case FLEET_AI_NEURAL9:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE2);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE2);
         case FLEET_AI_NEURAL10:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK2);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK2);
         case FLEET_AI_NEURAL11:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN2);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN2);
         case FLEET_AI_NEURAL12:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE2);
+            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_VEGA);
 
         default:
             return SPRITE_INVALID;

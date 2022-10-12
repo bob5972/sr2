@@ -91,6 +91,8 @@ typedef enum SpriteSet {
     SPRITE_SET_URSA_ORANGE2,        // Neural12
     SPRITE_SET_URSA_GREEN4,
     SPRITE_SET_URSA_ORANGE3,
+
+    SPRITE_SET_VEGA,
 } SpriteSet;
 
 typedef enum SpriteType {
@@ -458,6 +460,11 @@ typedef enum SpriteType {
     SPRITE_URSA_ORANGE3_FIGHTER,
     SPRITE_URSA_ORANGE3_MISSILE,
     SPRITE_URSA_ORANGE3_POWER_CORE,
+
+    SPRITE_VEGA_BASE,
+    SPRITE_VEGA_FIGHTER,
+    SPRITE_VEGA_MISSILE,
+    SPRITE_VEGA_POWER_CORE,
 
     SPRITE_TYPE_MAX,
 } SpriteType;
