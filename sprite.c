@@ -75,7 +75,22 @@ typedef enum SpriteSource {
     SPRITE_SOURCE_URSA15,
     SPRITE_SOURCE_URSA16,
 
-    SPRITE_SOURCE_VEGA,
+    SPRITE_SOURCE_VEGA1,
+    SPRITE_SOURCE_VEGA2,
+    SPRITE_SOURCE_VEGA3,
+    SPRITE_SOURCE_VEGA4,
+    SPRITE_SOURCE_VEGA5,
+    SPRITE_SOURCE_VEGA6,
+    SPRITE_SOURCE_VEGA7,
+    SPRITE_SOURCE_VEGA8,
+    SPRITE_SOURCE_VEGA9,
+    SPRITE_SOURCE_VEGA10,
+    SPRITE_SOURCE_VEGA11,
+    SPRITE_SOURCE_VEGA12,
+    SPRITE_SOURCE_VEGA13,
+    SPRITE_SOURCE_VEGA14,
+    SPRITE_SOURCE_VEGA15,
+    SPRITE_SOURCE_VEGA16,
 
     SPRITE_SOURCE_MAX,
     SPRITE_SOURCE_INVALID,
@@ -453,10 +468,85 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_URSA_ORANGE3_MISSILE,    SPRITE_SOURCE_URSA16,        115, 1,  7, 7, },
     { SPRITE_URSA_ORANGE3_POWER_CORE, SPRITE_SOURCE_URSA16,        123, 1,  5, 5, },
 
-    { SPRITE_VEGA_BASE,       SPRITE_SOURCE_VEGA,                  2,   2, 101, 101, },
-    { SPRITE_VEGA_FIGHTER,    SPRITE_SOURCE_VEGA,                  103, 1,  11, 11, },
-    { SPRITE_VEGA_MISSILE,    SPRITE_SOURCE_VEGA,                  115, 1,  7, 7, },
-    { SPRITE_VEGA_POWER_CORE, SPRITE_SOURCE_VEGA,                  123, 1,  5, 5, },
+    { SPRITE_VEGA_BLUE_BASE,            SPRITE_SOURCE_VEGA1, 2, 2, 101, 101, },
+    { SPRITE_VEGA_BLUE_FIGHTER,         SPRITE_SOURCE_VEGA1, 103, 1, 11, 11, },
+    { SPRITE_VEGA_BLUE_MISSILE,         SPRITE_SOURCE_VEGA1, 115, 1, 7, 7, },
+    { SPRITE_VEGA_BLUE_POWER_CORE,      SPRITE_SOURCE_VEGA1, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_BLUE2_BASE,           SPRITE_SOURCE_VEGA9, 2, 2, 101, 101, },
+    { SPRITE_VEGA_BLUE2_FIGHTER,        SPRITE_SOURCE_VEGA9, 103, 1, 11, 11, },
+    { SPRITE_VEGA_BLUE2_MISSILE,        SPRITE_SOURCE_VEGA9, 115, 1, 7, 7, },
+    { SPRITE_VEGA_BLUE2_POWER_CORE,     SPRITE_SOURCE_VEGA9, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_ORANGE_BASE,          SPRITE_SOURCE_VEGA2, 2, 2, 101, 101, },
+    { SPRITE_VEGA_ORANGE_FIGHTER,       SPRITE_SOURCE_VEGA2, 103, 1, 11, 11, },
+    { SPRITE_VEGA_ORANGE_MISSILE,       SPRITE_SOURCE_VEGA2, 115, 1, 7, 7, },
+    { SPRITE_VEGA_ORANGE_POWER_CORE,    SPRITE_SOURCE_VEGA2, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_ORANGE2_BASE,         SPRITE_SOURCE_VEGA5, 2, 2, 101, 101, },
+    { SPRITE_VEGA_ORANGE2_FIGHTER,      SPRITE_SOURCE_VEGA5, 103, 1, 11, 11, },
+    { SPRITE_VEGA_ORANGE2_MISSILE,      SPRITE_SOURCE_VEGA5, 115, 1, 7, 7, },
+    { SPRITE_VEGA_ORANGE2_POWER_CORE,   SPRITE_SOURCE_VEGA5, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_ORANGE3_BASE,         SPRITE_SOURCE_VEGA6, 2, 2, 101, 101, },
+    { SPRITE_VEGA_ORANGE3_FIGHTER,      SPRITE_SOURCE_VEGA6, 103, 1, 11, 11, },
+    { SPRITE_VEGA_ORANGE3_MISSILE,      SPRITE_SOURCE_VEGA6, 115, 1, 7, 7, },
+    { SPRITE_VEGA_ORANGE3_POWER_CORE,   SPRITE_SOURCE_VEGA6, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_ORANGE4_BASE,         SPRITE_SOURCE_VEGA12, 2, 2, 101, 101, },
+    { SPRITE_VEGA_ORANGE4_FIGHTER,      SPRITE_SOURCE_VEGA12, 103, 1, 11, 11, },
+    { SPRITE_VEGA_ORANGE4_MISSILE,      SPRITE_SOURCE_VEGA12, 115, 1, 7, 7, },
+    { SPRITE_VEGA_ORANGE4_POWER_CORE,   SPRITE_SOURCE_VEGA12, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_PURPLE_BASE,          SPRITE_SOURCE_VEGA3, 2, 2, 101, 101, },
+    { SPRITE_VEGA_PURPLE_FIGHTER,       SPRITE_SOURCE_VEGA3, 103, 1, 11, 11, },
+    { SPRITE_VEGA_PURPLE_MISSILE,       SPRITE_SOURCE_VEGA3, 115, 1, 7, 7, },
+    { SPRITE_VEGA_PURPLE_POWER_CORE,    SPRITE_SOURCE_VEGA3, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_PURPLE2_BASE,         SPRITE_SOURCE_VEGA7, 2, 2, 101, 101, },
+    { SPRITE_VEGA_PURPLE2_FIGHTER,      SPRITE_SOURCE_VEGA7, 103, 1, 11, 11, },
+    { SPRITE_VEGA_PURPLE2_MISSILE,      SPRITE_SOURCE_VEGA7, 115, 1, 7, 7, },
+    { SPRITE_VEGA_PURPLE2_POWER_CORE,   SPRITE_SOURCE_VEGA7, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_GREEN_BASE,           SPRITE_SOURCE_VEGA4, 2, 2, 101, 101, },
+    { SPRITE_VEGA_GREEN_FIGHTER,        SPRITE_SOURCE_VEGA4, 103, 1, 11, 11, },
+    { SPRITE_VEGA_GREEN_MISSILE,        SPRITE_SOURCE_VEGA4, 115, 1, 7, 7, },
+    { SPRITE_VEGA_GREEN_POWER_CORE,     SPRITE_SOURCE_VEGA4, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_GREEN2_BASE,          SPRITE_SOURCE_VEGA10, 2, 2, 101, 101, },
+    { SPRITE_VEGA_GREEN2_FIGHTER,       SPRITE_SOURCE_VEGA10, 103, 1, 11, 11, },
+    { SPRITE_VEGA_GREEN2_MISSILE,       SPRITE_SOURCE_VEGA10, 115, 1, 7, 7, },
+    { SPRITE_VEGA_GREEN2_POWER_CORE,    SPRITE_SOURCE_VEGA10, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_BROWN_BASE,           SPRITE_SOURCE_VEGA8, 2, 2, 101, 101, },
+    { SPRITE_VEGA_BROWN_FIGHTER,        SPRITE_SOURCE_VEGA8, 103, 1, 11, 11, },
+    { SPRITE_VEGA_BROWN_MISSILE,        SPRITE_SOURCE_VEGA8, 115, 1, 7, 7, },
+    { SPRITE_VEGA_BROWN_POWER_CORE,     SPRITE_SOURCE_VEGA8, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_RED_BASE,             SPRITE_SOURCE_VEGA11, 2, 2, 101, 101, },
+    { SPRITE_VEGA_RED_FIGHTER,          SPRITE_SOURCE_VEGA11, 103, 1, 11, 11, },
+    { SPRITE_VEGA_RED_MISSILE,          SPRITE_SOURCE_VEGA11, 115, 1, 7, 7, },
+    { SPRITE_VEGA_RED_POWER_CORE,       SPRITE_SOURCE_VEGA11, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_RED2_BASE,            SPRITE_SOURCE_VEGA16, 2, 2, 101, 101, },
+    { SPRITE_VEGA_RED2_FIGHTER,         SPRITE_SOURCE_VEGA16, 103, 1, 11, 11, },
+    { SPRITE_VEGA_RED2_MISSILE,         SPRITE_SOURCE_VEGA16, 115, 1, 7, 7, },
+    { SPRITE_VEGA_RED2_POWER_CORE,      SPRITE_SOURCE_VEGA16, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_BLACK_BASE,           SPRITE_SOURCE_VEGA13, 2, 2, 101, 101, },
+    { SPRITE_VEGA_BLACK_FIGHTER,        SPRITE_SOURCE_VEGA13, 103, 1, 11, 11, },
+    { SPRITE_VEGA_BLACK_MISSILE,        SPRITE_SOURCE_VEGA13, 115, 1, 7, 7, },
+    { SPRITE_VEGA_BLACK_POWER_CORE,     SPRITE_SOURCE_VEGA13, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_YELLOW_BASE,          SPRITE_SOURCE_VEGA15, 2, 2, 101, 101, },
+    { SPRITE_VEGA_YELLOW_FIGHTER,       SPRITE_SOURCE_VEGA15, 103, 1, 11, 11, },
+    { SPRITE_VEGA_YELLOW_MISSILE,       SPRITE_SOURCE_VEGA15, 115, 1, 7, 7, },
+    { SPRITE_VEGA_YELLOW_POWER_CORE,    SPRITE_SOURCE_VEGA15, 123, 1, 5, 5, },
+
+    { SPRITE_VEGA_GREY_BASE,            SPRITE_SOURCE_VEGA14, 2, 2, 101, 101, },
+    { SPRITE_VEGA_GREY_FIGHTER,         SPRITE_SOURCE_VEGA14, 103, 1, 11, 11, },
+    { SPRITE_VEGA_GREY_MISSILE,         SPRITE_SOURCE_VEGA14, 115, 1, 7, 7, },
+    { SPRITE_VEGA_GREY_POWER_CORE,      SPRITE_SOURCE_VEGA14, 123, 1, 5, 5, },
 };
 
 typedef struct SpriteBacking {
@@ -501,7 +591,7 @@ void Sprite_Init()
     ASSERT(MBUtil_IsZero(&gSprite, sizeof(gSprite)));
 
     ASSERT(ARRAYSIZE(gSprite.sources) == SPRITE_SOURCE_MAX);
-    ASSERT(SPRITE_SOURCE_MAX == 49);
+    ASSERT(SPRITE_SOURCE_MAX == 64);
     gSprite.sources[SPRITE_SOURCE_SPACE15] = Sprite_LoadPNG("art/space15.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE16] = Sprite_LoadPNG("art/space16.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_SPACE17] = Sprite_LoadPNG("art/space17.png", 129, 103);
@@ -554,7 +644,22 @@ void Sprite_Init()
     gSprite.sources[SPRITE_SOURCE_URSA15] = Sprite_LoadPNG("art/ursa15.png", 129, 103);
     gSprite.sources[SPRITE_SOURCE_URSA16] = Sprite_LoadPNG("art/ursa16.png", 129, 103);
 
-    gSprite.sources[SPRITE_SOURCE_VEGA] = Sprite_LoadPNG("art/vega1.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA1] = Sprite_LoadPNG("art/vega1.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA2] = Sprite_LoadPNG("art/vega2.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA3] = Sprite_LoadPNG("art/vega3.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA4] = Sprite_LoadPNG("art/vega4.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA5] = Sprite_LoadPNG("art/vega5.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA6] = Sprite_LoadPNG("art/vega6.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA7] = Sprite_LoadPNG("art/vega7.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA8] = Sprite_LoadPNG("art/vega8.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA9] = Sprite_LoadPNG("art/vega9.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA10] = Sprite_LoadPNG("art/vega10.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA11] = Sprite_LoadPNG("art/vega11.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA12] = Sprite_LoadPNG("art/vega12.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA13] = Sprite_LoadPNG("art/vega13.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA14] = Sprite_LoadPNG("art/vega14.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA15] = Sprite_LoadPNG("art/vega15.png", 129, 103);
+    gSprite.sources[SPRITE_SOURCE_VEGA16] = Sprite_LoadPNG("art/vega16.png", 129, 103);
 
     for (int x = 0; x < ARRAYSIZE(gSprite.sources); x++) {
         uint32 backingID;
@@ -904,69 +1009,99 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         case SPRITE_SET_URSA_BLUE:
             st = SPRITE_URSA_BLUE_BASE;
             break;
-
         case SPRITE_SET_URSA_BLUE2:
             st = SPRITE_URSA_BLUE2_BASE;
             break;
-
         case SPRITE_SET_URSA_PURPLE:
             st = SPRITE_URSA_PURPLE_BASE;
             break;
-
         case SPRITE_SET_URSA_PURPLE2:
             st = SPRITE_URSA_PURPLE2_BASE;
             break;
-
         case SPRITE_SET_URSA_PINK:
             st = SPRITE_URSA_PINK_BASE;
             break;
-
         case SPRITE_SET_URSA_PINK2:
             st = SPRITE_URSA_PINK2_BASE;
             break;
-
         case SPRITE_SET_URSA_ORANGE:
             st = SPRITE_URSA_ORANGE_BASE;
             break;
-
         case SPRITE_SET_URSA_GREEN:
             st = SPRITE_URSA_GREEN_BASE;
             break;
-
         case SPRITE_SET_URSA_GREEN2:
             st = SPRITE_URSA_GREEN2_BASE;
             break;
-
         case SPRITE_SET_URSA_GREEN3:
             st = SPRITE_URSA_GREEN3_BASE;
             break;
-
         case SPRITE_SET_URSA_BLUE3:
             st = SPRITE_URSA_BLUE3_BASE;
             break;
-
         case SPRITE_SET_URSA_MAGENTA:
             st = SPRITE_URSA_MAGENTA_BASE;
             break;
-
         case SPRITE_SET_URSA_RED:
             st = SPRITE_URSA_RED_BASE;
             break;
-
         case SPRITE_SET_URSA_ORANGE2:
             st = SPRITE_URSA_ORANGE2_BASE;
             break;
-
         case SPRITE_SET_URSA_GREEN4:
             st = SPRITE_URSA_GREEN4_BASE;
             break;
-
         case SPRITE_SET_URSA_ORANGE3:
             st = SPRITE_URSA_ORANGE3_BASE;
             break;
 
-        case SPRITE_SET_VEGA:
-            st = SPRITE_VEGA_BASE;
+        case SPRITE_SET_VEGA_BLUE:
+            st = SPRITE_VEGA_BLUE_BASE;
+            break;
+        case SPRITE_SET_VEGA_BLUE2:
+            st = SPRITE_VEGA_BLUE2_BASE;
+            break;
+        case SPRITE_SET_VEGA_ORANGE:
+            st = SPRITE_VEGA_ORANGE_BASE;
+            break;
+        case SPRITE_SET_VEGA_ORANGE2:
+            st = SPRITE_VEGA_ORANGE2_BASE;
+            break;
+        case SPRITE_SET_VEGA_ORANGE3:
+            st = SPRITE_VEGA_ORANGE3_BASE;
+            break;
+        case SPRITE_SET_VEGA_ORANGE4:
+            st = SPRITE_VEGA_ORANGE4_BASE;
+            break;
+        case SPRITE_SET_VEGA_PURPLE:
+            st = SPRITE_VEGA_PURPLE_BASE;
+            break;
+        case SPRITE_SET_VEGA_PURPLE2:
+            st = SPRITE_VEGA_PURPLE2_BASE;
+            break;
+        case SPRITE_SET_VEGA_GREEN:
+            st = SPRITE_VEGA_GREEN_BASE;
+            break;
+        case SPRITE_SET_VEGA_GREEN2:
+            st = SPRITE_VEGA_GREEN2_BASE;
+            break;
+        case SPRITE_SET_VEGA_BROWN:
+            st = SPRITE_VEGA_BROWN_BASE;
+            break;
+        case SPRITE_SET_VEGA_RED:
+            st = SPRITE_VEGA_RED_BASE;
+            break;
+        case SPRITE_SET_VEGA_RED2:
+            st = SPRITE_VEGA_RED2_BASE;
+            break;
+        case SPRITE_SET_VEGA_BLACK:
+            st = SPRITE_VEGA_BLACK_BASE;
+            break;
+        case SPRITE_SET_VEGA_YELLOW:
+            st = SPRITE_VEGA_YELLOW_BASE;
+            break;
+        case SPRITE_SET_VEGA_GREY:
+            st = SPRITE_VEGA_GREY_BASE;
             break;
 
         default:
@@ -1020,8 +1155,8 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         return st + (t - 1);
     }
 
-    if (ss >= SPRITE_SET_VEGA &&
-        ss <= SPRITE_SET_VEGA) {
+    if (ss >= SPRITE_SET_VEGA_BLUE &&
+        ss <= SPRITE_SET_VEGA_GREY) {
         ASSERT(MOB_TYPE_BASE == 1);
         ASSERT(MOB_TYPE_FIGHTER == 2);
         ASSERT(MOB_TYPE_MISSILE == 3);
@@ -1124,30 +1259,29 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
             return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
 
         case FLEET_AI_NEURAL1:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE);
         case FLEET_AI_NEURAL2:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE);
         case FLEET_AI_NEURAL3:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK);
         case FLEET_AI_NEURAL4:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE);
         case FLEET_AI_NEURAL5:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN);
         case FLEET_AI_NEURAL6:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_MAGENTA);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_MAGENTA);
         case FLEET_AI_NEURAL7:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_RED);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_RED);
         case FLEET_AI_NEURAL8:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE2);
         case FLEET_AI_NEURAL9:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE2);
         case FLEET_AI_NEURAL10:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK2);
         case FLEET_AI_NEURAL11:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN2);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN2);
         case FLEET_AI_NEURAL12:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE2);
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_VEGA);
+            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE2);
 
         default:
             return SPRITE_INVALID;
