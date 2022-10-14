@@ -80,7 +80,8 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE15,  // 81.7%
     FLEET_AI_BUNDLE14,  // 83.5%
     FLEET_AI_FLOCK9,    // 91.1%
-    FLEET_AI_BINEURAL1, // Experimental
+    FLEET_AI_NEURAL12,  // Unranked
+    FLEET_AI_BINEURAL1, // In-Development
 };
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
@@ -349,7 +350,7 @@ bool Fleet_IsBundleFleet(FleetAIType aiType)
 
 bool Fleet_IsNeuralFleet(FleetAIType aiType)
 {
-    if (aiType >= FLEET_AI_NEURAL1 && aiType <= FLEET_AI_NEURAL11) {
+    if (aiType >= FLEET_AI_NEURAL1 && aiType <= FLEET_AI_NEURAL12) {
         return TRUE;
     }
     return FALSE;
