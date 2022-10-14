@@ -1,6 +1,6 @@
 /*
  * sprite.c -- part of SpaceRobots2
- * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2022 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -549,7 +549,7 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_VEGA_GREY_POWER_CORE,      SPRITE_SOURCE_VEGA14, 123, 1, 5, 5, },
 };
 
-struct {
+static const struct {
     FleetAIType aiType;
     SpriteSet spriteSet;
     uint32 color;
@@ -604,6 +604,97 @@ struct {
         { FLEET_AI_NEURAL10,    SPRITE_SET_URSA_PINK2,      0x063971, },
         { FLEET_AI_NEURAL11,    SPRITE_SET_URSA_GREEN2,     0x6C4675, },
         { FLEET_AI_NEURAL12,    SPRITE_SET_URSA_ORANGE2,    0x9C1175, },
+};
+
+static const struct {
+    SpriteSet ss;
+    SpriteType base;
+} spriteMappingTable[] = {
+        { SPRITE_SET_INVALID,       SPRITE_INVALID, },
+
+        { SPRITE_SET_SPACE_BLUE,    SPRITE_SPACE_BLUE_BASE, },
+        { SPRITE_SET_SPACE_PURPLE,  SPRITE_SPACE_PURPLE_BASE, },
+        { SPRITE_SET_SPACE_GREEN,   SPRITE_SPACE_GREEN_BASE, },
+        { SPRITE_SET_SPACE_GREEN2,  SPRITE_SPACE_GREEN2_BASE, },
+        { SPRITE_SET_SPACE_GREEN3,  SPRITE_SPACE_GREEN3_BASE, },
+        { SPRITE_SET_SPACE_YELLOW,  SPRITE_SPACE_YELLOW_BASE, },
+        { SPRITE_SET_SPACE_ORANGE,  SPRITE_SPACE_ORANGE_BASE, },
+        { SPRITE_SET_SPACE_RED,     SPRITE_SPACE_RED_BASE, },
+        { SPRITE_SET_SPACE_PURPLE2, SPRITE_SPACE_PURPLE2_BASE, },
+        { SPRITE_SET_SPACE_RED2,    SPRITE_SPACE_RED2_BASE, },
+        { SPRITE_SET_SPACE_WHITE,   SPRITE_SPACE_WHITE_BASE, },
+        { SPRITE_SET_SPACE_YELLOW2, SPRITE_SPACE_YELLOW2_BASE, },
+        { SPRITE_SET_SPACE_BROWN,   SPRITE_SPACE_BROWN_BASE, },
+        { SPRITE_SET_SPACE_RED3,    SPRITE_SPACE_RED3_BASE, },
+        { SPRITE_SET_SPACE_PURPLE3, SPRITE_SPACE_PURPLE3_BASE, },
+
+        { SPRITE_SET_NAJU_BLUE,     SPRITE_NAJU_BLUE_BASE, },
+        { SPRITE_SET_NAJU_PURPLE,   SPRITE_NAJU_PURPLE_BASE, },
+        { SPRITE_SET_NAJU_GRAY,     SPRITE_NAJU_GRAY_BASE, },
+        { SPRITE_SET_NAJU_YELLOW,   SPRITE_NAJU_YELLOW_BASE, },
+        { SPRITE_SET_NAJU_GREEN,    SPRITE_NAJU_GREEN_BASE, },
+        { SPRITE_SET_NAJU_RED,      SPRITE_NAJU_RED_BASE, },
+        { SPRITE_SET_NAJU_BLUE2,    SPRITE_NAJU_BLUE2_BASE, },
+        { SPRITE_SET_NAJU_ORANGE,   SPRITE_NAJU_ORANGE_BASE, },
+        { SPRITE_SET_NAJU_TURQUOISE,SPRITE_NAJU_TURQUOISE_BASE, },
+        { SPRITE_SET_NAJU_PURPLE2,  SPRITE_NAJU_PURPLE2_BASE, },
+        { SPRITE_SET_NAJU_WHITE,    SPRITE_NAJU_WHITE_BASE, },
+        { SPRITE_SET_NAJU_RED2,     SPRITE_NAJU_RED2_BASE, },
+        { SPRITE_SET_NAJU_YELLOW2,  SPRITE_NAJU_YELLOW2_BASE, },
+        { SPRITE_SET_NAJU_MAGENTA,  SPRITE_NAJU_MAGENTA_BASE, },
+        { SPRITE_SET_NAJU_ORANGE2,  SPRITE_NAJU_ORANGE2_BASE, },
+        { SPRITE_SET_NAJU_YELLOW3,  SPRITE_NAJU_YELLOW3_BASE, },
+
+        { SPRITE_SET_ALTAIR_PURPLE, SPRITE_ALTAIR_PURPLE_BASE, },
+        { SPRITE_SET_ALTAIR_PURPLE2,SPRITE_ALTAIR_PURPLE2_BASE, },
+        { SPRITE_SET_ALTAIR_YELLOW, SPRITE_ALTAIR_YELLOW_BASE, },
+        { SPRITE_SET_ALTAIR_RED2,   SPRITE_ALTAIR_RED2_BASE, },
+        { SPRITE_SET_ALTAIR_GREEN,  SPRITE_ALTAIR_GREEN_BASE, },
+        { SPRITE_SET_ALTAIR_GREEN2, SPRITE_ALTAIR_GREEN2_BASE, },
+        { SPRITE_SET_ALTAIR_BLUE,   SPRITE_ALTAIR_BLUE_BASE, },
+        { SPRITE_SET_ALTAIR_BLUE2,  SPRITE_ALTAIR_BLUE2_BASE, },
+        { SPRITE_SET_ALTAIR_MAGENTA,SPRITE_ALTAIR_MAGENTA_BASE, },
+        { SPRITE_SET_ALTAIR_RED,    SPRITE_ALTAIR_RED_BASE, },
+        { SPRITE_SET_ALTAIR_RED3,   SPRITE_ALTAIR_RED3_BASE, },
+        { SPRITE_SET_ALTAIR_GREEN3, SPRITE_ALTAIR_GREEN3_BASE, },
+        { SPRITE_SET_ALTAIR_ORANGE, SPRITE_ALTAIR_ORANGE_BASE, },
+        { SPRITE_SET_ALTAIR_ORANGE2,SPRITE_ALTAIR_ORANGE2_BASE, },
+        { SPRITE_SET_ALTAIR_YELLOW2,SPRITE_ALTAIR_YELLOW2_BASE, },
+        { SPRITE_SET_ALTAIR_BLUE3,  SPRITE_ALTAIR_BLUE3_BASE, },
+
+        { SPRITE_SET_URSA_BLUE,     SPRITE_URSA_BLUE_BASE, },
+        { SPRITE_SET_URSA_BLUE2,    SPRITE_URSA_BLUE2_BASE, },
+        { SPRITE_SET_URSA_PURPLE,   SPRITE_URSA_PURPLE_BASE, },
+        { SPRITE_SET_URSA_PURPLE2,  SPRITE_URSA_PURPLE2_BASE, },
+        { SPRITE_SET_URSA_PINK,     SPRITE_URSA_PINK_BASE, },
+        { SPRITE_SET_URSA_PINK2,    SPRITE_URSA_PINK2_BASE, },
+        { SPRITE_SET_URSA_ORANGE,   SPRITE_URSA_ORANGE_BASE, },
+        { SPRITE_SET_URSA_GREEN,    SPRITE_URSA_GREEN_BASE, },
+        { SPRITE_SET_URSA_GREEN2,   SPRITE_URSA_GREEN2_BASE, },
+        { SPRITE_SET_URSA_GREEN3,   SPRITE_URSA_GREEN3_BASE, },
+        { SPRITE_SET_URSA_BLUE3,    SPRITE_URSA_BLUE3_BASE, },
+        { SPRITE_SET_URSA_MAGENTA,  SPRITE_URSA_MAGENTA_BASE, },
+        { SPRITE_SET_URSA_RED,      SPRITE_URSA_RED_BASE, },
+        { SPRITE_SET_URSA_ORANGE2,  SPRITE_URSA_ORANGE2_BASE, },
+        { SPRITE_SET_URSA_GREEN4,   SPRITE_URSA_GREEN4_BASE, },
+        { SPRITE_SET_URSA_ORANGE3,  SPRITE_URSA_ORANGE3_BASE, },
+
+        { SPRITE_SET_VEGA_BLUE,     SPRITE_VEGA_BLUE_BASE, },
+        { SPRITE_SET_VEGA_BLUE2,    SPRITE_VEGA_BLUE2_BASE, },
+        { SPRITE_SET_VEGA_ORANGE,   SPRITE_VEGA_ORANGE_BASE, },
+        { SPRITE_SET_VEGA_ORANGE2,  SPRITE_VEGA_ORANGE2_BASE, },
+        { SPRITE_SET_VEGA_ORANGE3,  SPRITE_VEGA_ORANGE3_BASE, },
+        { SPRITE_SET_VEGA_ORANGE4,  SPRITE_VEGA_ORANGE4_BASE, },
+        { SPRITE_SET_VEGA_PURPLE,   SPRITE_VEGA_PURPLE_BASE, },
+        { SPRITE_SET_VEGA_PURPLE2,  SPRITE_VEGA_PURPLE2_BASE, },
+        { SPRITE_SET_VEGA_GREEN,    SPRITE_VEGA_GREEN_BASE, },
+        { SPRITE_SET_VEGA_GREEN2,   SPRITE_VEGA_GREEN2_BASE, },
+        { SPRITE_SET_VEGA_BROWN,    SPRITE_VEGA_BROWN_BASE, },
+        { SPRITE_SET_VEGA_RED,      SPRITE_VEGA_RED_BASE, },
+        { SPRITE_SET_VEGA_RED2,     SPRITE_VEGA_RED2_BASE, },
+        { SPRITE_SET_VEGA_BLACK,    SPRITE_VEGA_BLACK_BASE, },
+        { SPRITE_SET_VEGA_YELLOW,   SPRITE_VEGA_YELLOW_BASE, },
+        { SPRITE_SET_VEGA_GREY,     SPRITE_VEGA_GREY_BASE, },
 };
 
 typedef struct SpriteBacking {
@@ -913,256 +1004,13 @@ Sprite *Sprite_CreateMob(MobType t, FleetAIType aiType, uint32 repeatCount)
 static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
                                                 SpriteSet ss)
 {
-    SpriteType st;
+    SpriteType st = SPRITE_INVALID;
 
-    switch (ss) {
-        case SPRITE_SET_INVALID:
-            st = SPRITE_INVALID;
-            break;
-        case SPRITE_SET_SPACE_BLUE:
-            st = SPRITE_SPACE_BLUE_BASE;
-            break;
-        case SPRITE_SET_SPACE_PURPLE:
-            st = SPRITE_SPACE_PURPLE_BASE;
-            break;
-        case SPRITE_SET_SPACE_GREEN:
-            st = SPRITE_SPACE_GREEN_BASE;
-            break;
-        case SPRITE_SET_SPACE_GREEN2:
-            st = SPRITE_SPACE_GREEN2_BASE;
-            break;
-        case SPRITE_SET_SPACE_GREEN3:
-            st = SPRITE_SPACE_GREEN3_BASE;
-            break;
-        case SPRITE_SET_SPACE_YELLOW:
-            st = SPRITE_SPACE_YELLOW_BASE;
-            break;
-        case SPRITE_SET_SPACE_ORANGE:
-            st = SPRITE_SPACE_ORANGE_BASE;
-            break;
-        case SPRITE_SET_SPACE_RED:
-            st = SPRITE_SPACE_RED_BASE;
-            break;
-        case SPRITE_SET_SPACE_PURPLE2:
-            st = SPRITE_SPACE_PURPLE2_BASE;
-            break;
-        case SPRITE_SET_SPACE_RED2:
-            st = SPRITE_SPACE_RED2_BASE;
-            break;
-        case SPRITE_SET_SPACE_WHITE:
-            st = SPRITE_SPACE_WHITE_BASE;
-            break;
-        case SPRITE_SET_SPACE_YELLOW2:
-            st = SPRITE_SPACE_YELLOW2_BASE;
-            break;
-        case SPRITE_SET_SPACE_BROWN:
-            st = SPRITE_SPACE_BROWN_BASE;
-            break;
-        case SPRITE_SET_SPACE_RED3:
-            st = SPRITE_SPACE_RED3_BASE;
-            break;
-        case SPRITE_SET_SPACE_PURPLE3:
-            st = SPRITE_SPACE_PURPLE3_BASE;
-            break;
-
-        case SPRITE_SET_NAJU_BLUE:
-            st = SPRITE_NAJU_BLUE_BASE;
-            break;
-        case SPRITE_SET_NAJU_PURPLE:
-            st = SPRITE_NAJU_PURPLE_BASE;
-            break;
-        case SPRITE_SET_NAJU_GRAY:
-            st = SPRITE_NAJU_GRAY_BASE;
-            break;
-        case SPRITE_SET_NAJU_YELLOW:
-            st = SPRITE_NAJU_YELLOW_BASE;
-            break;
-        case SPRITE_SET_NAJU_GREEN:
-            st = SPRITE_NAJU_GREEN_BASE;
-            break;
-        case SPRITE_SET_NAJU_RED:
-            st = SPRITE_NAJU_RED_BASE;
-            break;
-        case SPRITE_SET_NAJU_BLUE2:
-            st = SPRITE_NAJU_BLUE2_BASE;
-            break;
-        case SPRITE_SET_NAJU_ORANGE:
-            st = SPRITE_NAJU_ORANGE_BASE;
-            break;
-        case SPRITE_SET_NAJU_TURQUOISE:
-            st = SPRITE_NAJU_TURQUOISE_BASE;
-            break;
-        case SPRITE_SET_NAJU_PURPLE2:
-            st = SPRITE_NAJU_PURPLE2_BASE;
-            break;
-        case SPRITE_SET_NAJU_WHITE:
-            st = SPRITE_NAJU_WHITE_BASE;
-            break;
-        case SPRITE_SET_NAJU_RED2:
-            st = SPRITE_NAJU_RED2_BASE;
-            break;
-        case SPRITE_SET_NAJU_YELLOW2:
-            st = SPRITE_NAJU_YELLOW2_BASE;
-            break;
-        case SPRITE_SET_NAJU_MAGENTA:
-            st = SPRITE_NAJU_MAGENTA_BASE;
-            break;
-        case SPRITE_SET_NAJU_ORANGE2:
-            st = SPRITE_NAJU_ORANGE2_BASE;
-            break;
-        case SPRITE_SET_NAJU_YELLOW3:
-            st = SPRITE_NAJU_YELLOW3_BASE;
-            break;
-
-        case SPRITE_SET_ALTAIR_PURPLE:
-            st = SPRITE_ALTAIR_PURPLE_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_PURPLE2:
-            st = SPRITE_ALTAIR_PURPLE2_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_YELLOW:
-            st = SPRITE_ALTAIR_YELLOW_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_RED2:
-            st = SPRITE_ALTAIR_RED2_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_GREEN:
-            st = SPRITE_ALTAIR_GREEN_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_GREEN2:
-            st = SPRITE_ALTAIR_GREEN2_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_BLUE:
-            st = SPRITE_ALTAIR_BLUE_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_BLUE2:
-            st = SPRITE_ALTAIR_BLUE2_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_MAGENTA:
-            st = SPRITE_ALTAIR_MAGENTA_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_RED:
-            st = SPRITE_ALTAIR_RED_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_RED3:
-            st = SPRITE_ALTAIR_RED3_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_GREEN3:
-            st = SPRITE_ALTAIR_GREEN3_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_ORANGE:
-            st = SPRITE_ALTAIR_ORANGE_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_ORANGE2:
-            st = SPRITE_ALTAIR_ORANGE2_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_YELLOW2:
-            st = SPRITE_ALTAIR_YELLOW2_BASE;
-            break;
-        case SPRITE_SET_ALTAIR_BLUE3:
-            st = SPRITE_ALTAIR_BLUE3_BASE;
-            break;
-
-        case SPRITE_SET_URSA_BLUE:
-            st = SPRITE_URSA_BLUE_BASE;
-            break;
-        case SPRITE_SET_URSA_BLUE2:
-            st = SPRITE_URSA_BLUE2_BASE;
-            break;
-        case SPRITE_SET_URSA_PURPLE:
-            st = SPRITE_URSA_PURPLE_BASE;
-            break;
-        case SPRITE_SET_URSA_PURPLE2:
-            st = SPRITE_URSA_PURPLE2_BASE;
-            break;
-        case SPRITE_SET_URSA_PINK:
-            st = SPRITE_URSA_PINK_BASE;
-            break;
-        case SPRITE_SET_URSA_PINK2:
-            st = SPRITE_URSA_PINK2_BASE;
-            break;
-        case SPRITE_SET_URSA_ORANGE:
-            st = SPRITE_URSA_ORANGE_BASE;
-            break;
-        case SPRITE_SET_URSA_GREEN:
-            st = SPRITE_URSA_GREEN_BASE;
-            break;
-        case SPRITE_SET_URSA_GREEN2:
-            st = SPRITE_URSA_GREEN2_BASE;
-            break;
-        case SPRITE_SET_URSA_GREEN3:
-            st = SPRITE_URSA_GREEN3_BASE;
-            break;
-        case SPRITE_SET_URSA_BLUE3:
-            st = SPRITE_URSA_BLUE3_BASE;
-            break;
-        case SPRITE_SET_URSA_MAGENTA:
-            st = SPRITE_URSA_MAGENTA_BASE;
-            break;
-        case SPRITE_SET_URSA_RED:
-            st = SPRITE_URSA_RED_BASE;
-            break;
-        case SPRITE_SET_URSA_ORANGE2:
-            st = SPRITE_URSA_ORANGE2_BASE;
-            break;
-        case SPRITE_SET_URSA_GREEN4:
-            st = SPRITE_URSA_GREEN4_BASE;
-            break;
-        case SPRITE_SET_URSA_ORANGE3:
-            st = SPRITE_URSA_ORANGE3_BASE;
-            break;
-
-        case SPRITE_SET_VEGA_BLUE:
-            st = SPRITE_VEGA_BLUE_BASE;
-            break;
-        case SPRITE_SET_VEGA_BLUE2:
-            st = SPRITE_VEGA_BLUE2_BASE;
-            break;
-        case SPRITE_SET_VEGA_ORANGE:
-            st = SPRITE_VEGA_ORANGE_BASE;
-            break;
-        case SPRITE_SET_VEGA_ORANGE2:
-            st = SPRITE_VEGA_ORANGE2_BASE;
-            break;
-        case SPRITE_SET_VEGA_ORANGE3:
-            st = SPRITE_VEGA_ORANGE3_BASE;
-            break;
-        case SPRITE_SET_VEGA_ORANGE4:
-            st = SPRITE_VEGA_ORANGE4_BASE;
-            break;
-        case SPRITE_SET_VEGA_PURPLE:
-            st = SPRITE_VEGA_PURPLE_BASE;
-            break;
-        case SPRITE_SET_VEGA_PURPLE2:
-            st = SPRITE_VEGA_PURPLE2_BASE;
-            break;
-        case SPRITE_SET_VEGA_GREEN:
-            st = SPRITE_VEGA_GREEN_BASE;
-            break;
-        case SPRITE_SET_VEGA_GREEN2:
-            st = SPRITE_VEGA_GREEN2_BASE;
-            break;
-        case SPRITE_SET_VEGA_BROWN:
-            st = SPRITE_VEGA_BROWN_BASE;
-            break;
-        case SPRITE_SET_VEGA_RED:
-            st = SPRITE_VEGA_RED_BASE;
-            break;
-        case SPRITE_SET_VEGA_RED2:
-            st = SPRITE_VEGA_RED2_BASE;
-            break;
-        case SPRITE_SET_VEGA_BLACK:
-            st = SPRITE_VEGA_BLACK_BASE;
-            break;
-        case SPRITE_SET_VEGA_YELLOW:
-            st = SPRITE_VEGA_YELLOW_BASE;
-            break;
-        case SPRITE_SET_VEGA_GREY:
-            st = SPRITE_VEGA_GREY_BASE;
-            break;
-
-        default:
-            NOT_IMPLEMENTED();
+    for (uint i = 0; i < ARRAYSIZE(spriteMappingTable); i++) {
+        if (spriteMappingTable[i].ss == ss) {
+            st = spriteMappingTable[i].base;
+            break;
+        }
     }
 
     if (st == SPRITE_INVALID) {
@@ -1192,28 +1040,9 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
         }
     }
 
-    if (ss >= SPRITE_SET_ALTAIR_PURPLE &&
-        ss <= SPRITE_SET_ALTAIR_BLUE3) {
-        ASSERT(MOB_TYPE_BASE == 1);
-        ASSERT(MOB_TYPE_FIGHTER == 2);
-        ASSERT(MOB_TYPE_MISSILE == 3);
-        ASSERT(MOB_TYPE_POWER_CORE == 4);
-        ASSERT(t >= 1 && t <= 4);
-        return st + (t - 1);
-    }
-
-    if (ss >= SPRITE_SET_URSA_BLUE &&
-        ss <= SPRITE_SET_URSA_ORANGE3) {
-        ASSERT(MOB_TYPE_BASE == 1);
-        ASSERT(MOB_TYPE_FIGHTER == 2);
-        ASSERT(MOB_TYPE_MISSILE == 3);
-        ASSERT(MOB_TYPE_POWER_CORE == 4);
-        ASSERT(t >= 1 && t <= 4);
-        return st + (t - 1);
-    }
-
-    if (ss >= SPRITE_SET_VEGA_BLUE &&
-        ss <= SPRITE_SET_VEGA_GREY) {
+    if ((ss >= SPRITE_SET_ALTAIR_PURPLE && ss <= SPRITE_SET_ALTAIR_BLUE3) ||
+        (ss >= SPRITE_SET_URSA_BLUE && ss <= SPRITE_SET_URSA_ORANGE3) ||
+        (ss >= SPRITE_SET_VEGA_BLUE && ss <= SPRITE_SET_VEGA_GREY)) {
         ASSERT(MOB_TYPE_BASE == 1);
         ASSERT(MOB_TYPE_FIGHTER == 2);
         ASSERT(MOB_TYPE_MISSILE == 3);
