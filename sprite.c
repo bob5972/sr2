@@ -549,6 +549,63 @@ static const SpriteSpec gSpecs[] = {
     { SPRITE_VEGA_GREY_POWER_CORE,      SPRITE_SOURCE_VEGA14, 123, 1, 5, 5, },
 };
 
+struct {
+    FleetAIType aiType;
+    SpriteSet spriteSet;
+    uint32 color;
+} spriteFleetTable[] = {
+        //{ FLEET_AI_INVALID,     SPRITE_SET_SPACE_WHITE,   0x000000, }, // 0x(AA)RRGGBB
+        { FLEET_AI_NEUTRAL,     SPRITE_SET_SPACE_WHITE,     0x888888, }, // GRAY
+        { FLEET_AI_DUMMY,       SPRITE_SET_NAJU_WHITE,      0xFFFFFF, }, // WHITE
+        { FLEET_AI_SIMPLE,      SPRITE_SET_NAJU_RED,        0xFF0000, }, // RED
+        { FLEET_AI_GATHER,      SPRITE_SET_NAJU_GREEN,      0x00FF00, }, // GREEN
+        { FLEET_AI_CLOUD,       SPRITE_SET_NAJU_BLUE,       0x0000FF, }, // BLUE
+        { FLEET_AI_MAPPER,      SPRITE_SET_NAJU_YELLOW,     0x808000, }, // YELLOW
+        { FLEET_AI_CIRCLE,      SPRITE_SET_NAJU_BLUE2,      0x048488, }, // TEAL-ish
+        { FLEET_AI_RUNAWAY,     SPRITE_SET_NAJU_PURPLE2,    0x800080, }, // PURPLE
+        { FLEET_AI_COWARD,      SPRITE_SET_NAJU_TURQUOISE,  0x008080, }, // TEAL
+        { FLEET_AI_BASIC,       SPRITE_SET_NAJU_YELLOW3,    0x808080, }, // DARK GRAY
+        { FLEET_AI_HOLD,        SPRITE_SET_NAJU_PURPLE,     0xF00080, }, // PURPLE
+        { FLEET_AI_META,        SPRITE_SET_SPACE_BLUE,      0x80F080, }, // GREENISH-YELLOW
+        { FLEET_AI_FLOCK1,      SPRITE_SET_SPACE_RED,       0xFF3322, }, // YELLOWISH-GRAY?
+        { FLEET_AI_FLOCK2,      SPRITE_SET_SPACE_RED2,      0xFF3388, }, // BLUEISH-GRAY?
+        { FLEET_AI_FLOCK3,      SPRITE_SET_SPACE_PURPLE2,   0xFF3366, }, // GRAYISH?
+        { FLEET_AI_FLOCK4,      SPRITE_SET_SPACE_PURPLE,    0xFFFF66, }, // GRAYISH?
+        { FLEET_AI_FLOCK5,      SPRITE_SET_SPACE_PURPLE3,   0x2FFF66, }, // GRAYISH?
+        { FLEET_AI_FLOCK6,      SPRITE_SET_SPACE_RED3,      0xFF2244, }, // YELLOWISH-GRAY?
+        { FLEET_AI_FLOCK7,      SPRITE_SET_SPACE_GREEN,     0x00FF66, }, // BLUEISH-GRAY?
+        { FLEET_AI_FLOCK8,      SPRITE_SET_SPACE_GREEN2,    0x101FFF, }, // GRAYISH?
+        { FLEET_AI_FLOCK9,      SPRITE_SET_SPACE_GREEN3,    0x123FFF, }, // GRAYISH?
+        { FLEET_AI_BUNDLE1,     SPRITE_SET_ALTAIR_PURPLE,   0x883333, },
+        { FLEET_AI_BUNDLE2,     SPRITE_SET_ALTAIR_PURPLE2,  0x448333, },
+        { FLEET_AI_BUNDLE3,     SPRITE_SET_ALTAIR_YELLOW,   0x443383, },
+        { FLEET_AI_BUNDLE4,     SPRITE_SET_ALTAIR_YELLOW2,  0x228383, },
+        { FLEET_AI_BUNDLE5,     SPRITE_SET_ALTAIR_RED2,     0x189333, },
+        { FLEET_AI_BUNDLE6,     SPRITE_SET_ALTAIR_RED,      0x1833A3, },
+        { FLEET_AI_BUNDLE7,     SPRITE_SET_ALTAIR_RED3,     0xA83333, },
+        { FLEET_AI_BUNDLE8,     SPRITE_SET_ALTAIR_GREEN,    0xA8F3F3, },
+        { FLEET_AI_BUNDLE9,     SPRITE_SET_ALTAIR_GREEN2,   0xC80303, }, // DARK PURPLE
+        { FLEET_AI_BUNDLE10,    SPRITE_SET_ALTAIR_GREEN3,   0xA803B3, },
+        { FLEET_AI_BUNDLE11,    SPRITE_SET_ALTAIR_BLUE,     0x48B303, },
+        { FLEET_AI_BUNDLE12,    SPRITE_SET_ALTAIR_BLUE2,    0xF000F0, }, // DARK PURPLE
+        { FLEET_AI_BUNDLE13,    SPRITE_SET_ALTAIR_MAGENTA,  0xF0F020, },
+        { FLEET_AI_BUNDLE14,    SPRITE_SET_ALTAIR_ORANGE,   0xF88144, }, // PURPLE
+        { FLEET_AI_BUNDLE15,    SPRITE_SET_ALTAIR_ORANGE2,  0xF881F4, },
+        { FLEET_AI_BUNDLE16,    SPRITE_SET_ALTAIR_BLUE3,    0x180144, },
+        { FLEET_AI_NEURAL1,     SPRITE_SET_URSA_BLUE,       0x4488FF, }, // GRAYISH-BLUE
+        { FLEET_AI_NEURAL2,     SPRITE_SET_URSA_PURPLE,     0xFF883F, },
+        { FLEET_AI_NEURAL3,     SPRITE_SET_URSA_PINK,       0xBEBD7F, },
+        { FLEET_AI_NEURAL4,     SPRITE_SET_URSA_ORANGE,     0x587246, },
+        { FLEET_AI_NEURAL5,     SPRITE_SET_URSA_GREEN,      0x308446, },
+        { FLEET_AI_NEURAL6,     SPRITE_SET_URSA_MAGENTA,    0x474A51, },
+        { FLEET_AI_NEURAL7,     SPRITE_SET_URSA_RED,        0xB32428, },
+        { FLEET_AI_NEURAL8,     SPRITE_SET_URSA_BLUE2,      0xEDFF21, },
+        { FLEET_AI_NEURAL9,     SPRITE_SET_URSA_PURPLE2,    0x47402E, },
+        { FLEET_AI_NEURAL10,    SPRITE_SET_URSA_PINK2,      0x063971, },
+        { FLEET_AI_NEURAL11,    SPRITE_SET_URSA_GREEN2,     0x6C4675, },
+        { FLEET_AI_NEURAL12,    SPRITE_SET_URSA_ORANGE2,    0x9C1175, },
+};
+
 typedef struct SpriteBacking {
     uint32 refCount;
 
@@ -1178,114 +1235,14 @@ static SpriteType SpriteGetMobSpriteType(MobType t,
         return SPRITE_INVALID;
     }
 
-    switch (aiType) {
-        case FLEET_AI_NEUTRAL:
-            //return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_GRAY);
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_WHITE);
-        case FLEET_AI_DUMMY:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_WHITE);
-        case FLEET_AI_SIMPLE:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_RED);
-        case FLEET_AI_GATHER:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_GREEN);
-        case FLEET_AI_CLOUD:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_BLUE);
-        case FLEET_AI_MAPPER:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_YELLOW);
-        case FLEET_AI_RUNAWAY:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_PURPLE2);
-        case FLEET_AI_COWARD:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_TURQUOISE);
-        case FLEET_AI_BASIC:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_YELLOW3);
-        case FLEET_AI_HOLD:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_PURPLE);
-        case FLEET_AI_CIRCLE:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_NAJU_BLUE2);
-
-        case FLEET_AI_FLOCK1:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED);
-        case FLEET_AI_FLOCK2:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED2);
-        case FLEET_AI_FLOCK3:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE2);
-        case FLEET_AI_FLOCK4:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE);
-        case FLEET_AI_FLOCK5:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_PURPLE3);
-        case FLEET_AI_FLOCK6:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_RED3);
-        case FLEET_AI_FLOCK7:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN);
-        case FLEET_AI_FLOCK8:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN2);
-        case FLEET_AI_FLOCK9:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_GREEN3);
-
-        case FLEET_AI_BUNDLE1:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_PURPLE);
-        case FLEET_AI_BUNDLE2:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_PURPLE2);
-        case FLEET_AI_BUNDLE3:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_YELLOW);
-        case FLEET_AI_BUNDLE4:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_YELLOW2);
-        case FLEET_AI_BUNDLE5:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_RED2);
-        case FLEET_AI_BUNDLE6:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_RED);
-        case FLEET_AI_BUNDLE7:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_RED3);
-        case FLEET_AI_BUNDLE8:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_GREEN);
-        case FLEET_AI_BUNDLE9:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_GREEN2);
-        case FLEET_AI_BUNDLE10:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_GREEN3);
-        case FLEET_AI_BUNDLE11:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_BLUE);
-        case FLEET_AI_BUNDLE12:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_BLUE2);
-        case FLEET_AI_BUNDLE13:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_MAGENTA);
-        case FLEET_AI_BUNDLE14:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_ORANGE);
-        case FLEET_AI_BUNDLE15:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_ORANGE2);
-        case FLEET_AI_BUNDLE16:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_ALTAIR_BLUE3);
-
-        case FLEET_AI_META:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_SPACE_BLUE);
-
-        case FLEET_AI_NEURAL1:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE);
-        case FLEET_AI_NEURAL2:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE);
-        case FLEET_AI_NEURAL3:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK);
-        case FLEET_AI_NEURAL4:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE);
-        case FLEET_AI_NEURAL5:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN);
-        case FLEET_AI_NEURAL6:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_MAGENTA);
-        case FLEET_AI_NEURAL7:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_RED);
-        case FLEET_AI_NEURAL8:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_BLUE2);
-        case FLEET_AI_NEURAL9:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PURPLE2);
-        case FLEET_AI_NEURAL10:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_PINK2);
-        case FLEET_AI_NEURAL11:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_GREEN2);
-        case FLEET_AI_NEURAL12:
-            return SpriteGetMobSpriteTypeFromSet(t, SPRITE_SET_URSA_ORANGE2);
-
-        default:
-            return SPRITE_INVALID;
+    for (uint i = 0; i < ARRAYSIZE(spriteFleetTable); i++) {
+        if (spriteFleetTable[i].aiType == aiType) {
+            SpriteSet set = spriteFleetTable[i].spriteSet;
+            return SpriteGetMobSpriteTypeFromSet(t, set);
+        }
     }
+
+    return SPRITE_INVALID;
 }
 
 void Sprite_Free(Sprite *s)
@@ -1585,59 +1542,6 @@ void Sprite_PrepareTexture(Sprite *sprite, SDL_Renderer *r)
 
 uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
 {
-    struct {
-        FleetAIType aiType;
-        uint32 color;
-    } colors[] = {
-        { FLEET_AI_INVALID,     0x000000, }, // 0x(AA)RRGGBB
-        { FLEET_AI_NEUTRAL,     0x888888, }, // GRAY
-        { FLEET_AI_DUMMY,       0xFFFFFF, }, // WHITE
-        { FLEET_AI_SIMPLE,      0xFF0000, }, // RED
-        { FLEET_AI_GATHER,      0x00FF00, }, // GREEN
-        { FLEET_AI_CLOUD,       0x0000FF, }, // BLUE
-        { FLEET_AI_MAPPER,      0x808000, }, // YELLOW
-        { FLEET_AI_CIRCLE,      0x048488, }, // TEAL-ish
-        { FLEET_AI_RUNAWAY,     0x800080, }, // PURPLE
-        { FLEET_AI_COWARD,      0x008080, }, // TEAL
-        { FLEET_AI_BASIC,       0x808080, }, // DARK GRAY
-        { FLEET_AI_HOLD,        0xF00080, }, // PURPLE
-        { FLEET_AI_META,        0x80F080, }, // GREENISH-YELLOW
-        { FLEET_AI_FLOCK1,      0xFF3322, }, // YELLOWISH-GRAY?
-        { FLEET_AI_FLOCK2,      0xFF3388, }, // BLUEISH-GRAY?
-        { FLEET_AI_FLOCK3,      0xFF3366, }, // GRAYISH?
-        { FLEET_AI_FLOCK4,      0xFFFF66, }, // GRAYISH?
-        { FLEET_AI_FLOCK5,      0x2FFF66, }, // GRAYISH?
-        { FLEET_AI_FLOCK6,      0xFF2244, }, // YELLOWISH-GRAY?
-        { FLEET_AI_FLOCK7,      0x00FF66, }, // BLUEISH-GRAY?
-        { FLEET_AI_FLOCK8,      0x101FFF, }, // GRAYISH?
-        { FLEET_AI_FLOCK9,      0x123FFF, }, // GRAYISH?
-        { FLEET_AI_BUNDLE1,     0x883333, },
-        { FLEET_AI_BUNDLE2,     0x448333, },
-        { FLEET_AI_BUNDLE3,     0x443383, },
-        { FLEET_AI_BUNDLE4,     0x228383, },
-        { FLEET_AI_BUNDLE5,     0x189333, },
-        { FLEET_AI_BUNDLE6,     0x1833A3, },
-        { FLEET_AI_BUNDLE7,     0xA83333, },
-        { FLEET_AI_BUNDLE8,     0xA8F3F3, },
-        { FLEET_AI_BUNDLE9,     0xC80303, }, // DARK PURPLE
-        { FLEET_AI_BUNDLE10,    0xA803B3, },
-        { FLEET_AI_BUNDLE11,    0x48B303, },
-        { FLEET_AI_BUNDLE12,    0xF000F0, }, // DARK PURPLE
-        { FLEET_AI_BUNDLE13,    0xF0F020, },
-        { FLEET_AI_BUNDLE14,    0xF88144, }, // PURPLE
-        { FLEET_AI_NEURAL1,     0x4488FF, }, // GRAYISH-BLUE
-        { FLEET_AI_NEURAL2,     0xFF883F, },
-        { FLEET_AI_NEURAL3,     0xBEBD7F, },
-        { FLEET_AI_NEURAL4,     0x587246, },
-        { FLEET_AI_NEURAL5,     0x308446, },
-        { FLEET_AI_NEURAL6,     0x474A51, },
-        { FLEET_AI_NEURAL7,     0xB32428, },
-        { FLEET_AI_NEURAL8,     0xEDFF21, },
-        { FLEET_AI_NEURAL9,     0x47402E, },
-        { FLEET_AI_NEURAL10,    0x063971, },
-        { FLEET_AI_NEURAL11,    0x6C4675, },
-    };
-
     ASSERT(repeatCount > 0);
 
     /*
@@ -1645,9 +1549,9 @@ uint32 Sprite_GetColor(FleetAIType aiType, uint repeatCount)
      */
     uint32 color = Random_Uint32();
     uint i = 0;
-    while (i < ARRAYSIZE(colors)) {
-        if (colors[i].aiType == aiType) {
-            color = colors[i].color;
+    while (i < ARRAYSIZE(spriteFleetTable)) {
+        if (spriteFleetTable[i].aiType == aiType) {
+            color = spriteFleetTable[i].color;
             break;
         }
         i++;
