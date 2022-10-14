@@ -728,3 +728,32 @@ float NeuralCrowd_GetValue(NeuralNetContext *nc,
         NOT_IMPLEMENTED();
     }
 }
+
+
+float NeuralTick_GetValue(NeuralNetContext *nc, NeuralTickDesc *desc)
+{
+    FleetAI *ai = nc->ai;
+
+    //XXX cache?
+
+    if (desc->waveType != NEURAL_WAVE_NONE &&
+        desc->frequency == 0.0f) {
+        return 0.0f;
+    }
+
+    float t = (float)ai->tick;
+
+    if (desc->waveType == NEURAL_WAVE_NONE) {
+        return t;
+    } else if (desc->waveType == NEURAL_WAVE_SINE) {
+        return sinf(t / desc->frequency);
+    } else if (desc->waveType == NEURAL_WAVE_UNIT_SINE) {
+        return 0.5f * sinf(t / desc->frequency) + 0.5f;
+    } else if (desc->waveType == NEURAL_WAVE_ABS_SINE) {
+        return fabsf(sinf(t / desc->frequency));
+    } else if (desc->waveType == NEURAL_WAVE_FMOD) {
+        return fmodf(t, desc->frequency);
+    } else {
+        NOT_IMPLEMENTED();
+    }
+}

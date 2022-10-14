@@ -6127,7 +6127,7 @@ public:
             case NEURAL_VALUE_CROWD:
                 return NeuralCrowd_GetValue(getNeuralNetContext(), mob, &desc->crowdDesc);
             case NEURAL_VALUE_TICK:
-                return getTickValue(&desc->tickDesc);
+                return NeuralTick_GetValue(getNeuralNetContext(), &desc->tickDesc);
             case NEURAL_VALUE_MOBID: {
                 RandomState lr;
                 uint64 seed = mob->mobid;
@@ -6152,33 +6152,6 @@ public:
         ASSERT(myNNC.sg != NULL);
         ASSERT(myNNC.ai != NULL);
         return &myNNC;
-    }
-
-    float getTickValue(NeuralTickDesc *desc) {
-        FleetAI *ai = myFleetAI;
-
-        //XXX cache?
-
-        if (desc->waveType != NEURAL_WAVE_NONE &&
-            desc->frequency == 0.0f) {
-            return 0.0f;
-        }
-
-        float t = (float)ai->tick;
-
-        if (desc->waveType == NEURAL_WAVE_NONE) {
-            return t;
-        } else if (desc->waveType == NEURAL_WAVE_SINE) {
-            return sinf(t / desc->frequency);
-        } else if (desc->waveType == NEURAL_WAVE_UNIT_SINE) {
-            return 0.5f * sinf(t / desc->frequency) + 0.5f;
-        } else if (desc->waveType == NEURAL_WAVE_ABS_SINE) {
-            return fabsf(sinf(t / desc->frequency));
-        } else if (desc->waveType == NEURAL_WAVE_FMOD) {
-            return fmodf(t, desc->frequency);
-        } else {
-            NOT_IMPLEMENTED();
-        }
     }
 
     void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce) {
