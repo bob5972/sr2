@@ -147,5 +147,7 @@ bool NeuralForce_GetForce(NeuralNetContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FRPoint *rForce);
 void NeuralForce_ApplyToMob(NeuralNetContext *nc, Mob *mob, FRPoint *rForce);
 
+float NeuralCrowd_GetValue(NeuralNetContext *nc, Mob *mob, NeuralCrowdDesc *desc);
+
 
 #endif // _NEURAL_NET_H_202210081813

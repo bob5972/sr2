@@ -6125,7 +6125,7 @@ public:
             case NEURAL_VALUE_FORCE:
                 return getRangeValue(mob, &desc->forceDesc);
             case NEURAL_VALUE_CROWD:
-                return getCrowdValue(mob, &desc->crowdDesc);
+                return NeuralCrowd_GetValue(getNeuralNetContext(), mob, &desc->crowdDesc);
             case NEURAL_VALUE_TICK:
                 return getTickValue(&desc->tickDesc);
             case NEURAL_VALUE_MOBID: {
@@ -6152,48 +6152,6 @@ public:
         ASSERT(myNNC.sg != NULL);
         ASSERT(myNNC.ai != NULL);
         return &myNNC;
-    }
-
-    float getCrowdValue(Mob *mob, NeuralCrowdDesc *desc) {
-        //XXX cache?
-        MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-
-        if (desc->radius <= 0.0f) {
-            return 0.0f;
-        }
-
-        if (desc->crowdType == NEURAL_CROWD_FRIEND_FIGHTER) {
-            return sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                         &mob->pos, desc->radius);
-        } else if (desc->crowdType == NEURAL_CROWD_ENEMY_SHIP) {
-            return sg->numTargetsInRange(MOB_FLAG_SHIP,
-                                         &mob->pos, desc->radius);
-        } else if (desc->crowdType == NEURAL_CROWD_CORES) {
-            return sg->numTargetsInRange(MOB_FLAG_POWER_CORE,
-                                         &mob->pos, desc->radius);
-        } else if  (desc->crowdType == NEURAL_CROWD_FRIEND_MISSILE) {
-            return sg->numFriendsInRange(MOB_FLAG_MISSILE,
-                                         &mob->pos, desc->radius);
-        } else if (desc->crowdType == NEURAL_CROWD_ENEMY_MISSILE) {
-            return sg->numTargetsInRange(MOB_FLAG_MISSILE,
-                                         &mob->pos, desc->radius);
-        } else if (desc->crowdType == NEURAL_CROWD_BASE_ENEMY_SHIP) {
-            Mob *base = sg->friendBase();
-            if (base != NULL) {
-                return sg->numTargetsInRange(MOB_FLAG_SHIP,
-                                             &base->pos, desc->radius);
-            }
-            return 0.0f;
-        } else if (desc->crowdType == NEURAL_CROWD_BASE_FRIEND_SHIP) {
-            Mob *base = sg->friendBase();
-            if (base != NULL) {
-                return sg->numFriendsInRange(MOB_FLAG_SHIP,
-                                             &base->pos, desc->radius);
-            }
-            return 0.0f;
-        } else {
-            NOT_IMPLEMENTED();
-        }
     }
 
     float getTickValue(NeuralTickDesc *desc) {

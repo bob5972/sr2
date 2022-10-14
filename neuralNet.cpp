@@ -672,3 +672,48 @@ void NeuralForce_ApplyToMob(NeuralNetContext *nc,
 
     FRPoint_ToFPoint(rForce, &mob->pos, &mob->cmd.target);
 }
+
+
+float NeuralCrowd_GetValue(NeuralNetContext *nc,
+                           Mob *mob, NeuralCrowdDesc *desc)
+{
+    //XXX cache?
+    MappingSensorGrid *sg = nc->sg;
+
+    if (desc->radius <= 0.0f) {
+        return 0.0f;
+    }
+
+    if (desc->crowdType == NEURAL_CROWD_FRIEND_FIGHTER) {
+        return sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                     &mob->pos, desc->radius);
+    } else if (desc->crowdType == NEURAL_CROWD_ENEMY_SHIP) {
+        return sg->numTargetsInRange(MOB_FLAG_SHIP,
+                                     &mob->pos, desc->radius);
+    } else if (desc->crowdType == NEURAL_CROWD_CORES) {
+        return sg->numTargetsInRange(MOB_FLAG_POWER_CORE,
+                                     &mob->pos, desc->radius);
+    } else if  (desc->crowdType == NEURAL_CROWD_FRIEND_MISSILE) {
+        return sg->numFriendsInRange(MOB_FLAG_MISSILE,
+                                     &mob->pos, desc->radius);
+    } else if (desc->crowdType == NEURAL_CROWD_ENEMY_MISSILE) {
+        return sg->numTargetsInRange(MOB_FLAG_MISSILE,
+                                     &mob->pos, desc->radius);
+    } else if (desc->crowdType == NEURAL_CROWD_BASE_ENEMY_SHIP) {
+        Mob *base = sg->friendBase();
+        if (base != NULL) {
+            return sg->numTargetsInRange(MOB_FLAG_SHIP,
+                                         &base->pos, desc->radius);
+        }
+        return 0.0f;
+    } else if (desc->crowdType == NEURAL_CROWD_BASE_FRIEND_SHIP) {
+        Mob *base = sg->friendBase();
+        if (base != NULL) {
+            return sg->numFriendsInRange(MOB_FLAG_SHIP,
+                                         &base->pos, desc->radius);
+        }
+        return 0.0f;
+    } else {
+        NOT_IMPLEMENTED();
+    }
+}
