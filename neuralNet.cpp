@@ -757,3 +757,44 @@ float NeuralTick_GetValue(NeuralNetContext *nc, NeuralTickDesc *desc)
         NOT_IMPLEMENTED();
     }
 }
+
+
+float NeuralValue_GetValue(NeuralNetContext *nc,
+                           Mob *mob, NeuralValueDesc *desc, uint i)
+{
+    FRPoint force;
+    RandomState *rs = nc->rs;
+    FleetAI *ai = nc->ai;
+    MappingSensorGrid *sg = nc->sg;
+
+    FRPoint_Zero(&force);
+
+    ASSERT(desc != NULL);
+    switch (desc->valueType) {
+        case NEURAL_VALUE_ZERO:
+        case NEURAL_VALUE_VOID:
+            return 0.0f;
+        case NEURAL_VALUE_FORCE:
+            return NeuralForce_GetRange(nc, mob, &desc->forceDesc);
+        case NEURAL_VALUE_CROWD:
+            return NeuralCrowd_GetValue(nc, mob, &desc->crowdDesc);
+        case NEURAL_VALUE_TICK:
+            return NeuralTick_GetValue(nc, &desc->tickDesc);
+        case NEURAL_VALUE_MOBID: {
+            RandomState lr;
+            uint64 seed = mob->mobid;
+            seed = (seed << 32) | i;
+            RandomState_CreateWithSeed(&lr, seed);
+            return RandomState_UnitFloat(&lr);
+        }
+        case NEURAL_VALUE_RANDOM_UNIT:
+            return RandomState_UnitFloat(rs);
+        case NEURAL_VALUE_CREDITS:
+            return (float)ai->credits;
+        case NEURAL_VALUE_FRIEND_SHIPS:
+            return (float)sg->numFriends(MOB_FLAG_SHIP);
+
+        default:
+            NOT_IMPLEMENTED();
+    }
+}

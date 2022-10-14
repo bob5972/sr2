@@ -6109,44 +6109,6 @@ public:
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
-    float getNeuralValue(Mob *mob, NeuralValueDesc *desc, uint i) {
-        FRPoint force;
-        RandomState *rs = &myRandomState;
-        FleetAI *ai = myFleetAI;
-        MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
-
-        FRPoint_Zero(&force);
-
-        ASSERT(desc != NULL);
-        switch (desc->valueType) {
-            case NEURAL_VALUE_ZERO:
-            case NEURAL_VALUE_VOID:
-                return 0.0f;
-            case NEURAL_VALUE_FORCE:
-                return NeuralForce_GetRange(getNeuralNetContext(), mob, &desc->forceDesc);
-            case NEURAL_VALUE_CROWD:
-                return NeuralCrowd_GetValue(getNeuralNetContext(), mob, &desc->crowdDesc);
-            case NEURAL_VALUE_TICK:
-                return NeuralTick_GetValue(getNeuralNetContext(), &desc->tickDesc);
-            case NEURAL_VALUE_MOBID: {
-                RandomState lr;
-                uint64 seed = mob->mobid;
-                seed = (seed << 32) | i;
-                RandomState_CreateWithSeed(&lr, seed);
-                return RandomState_UnitFloat(&lr);
-            }
-            case NEURAL_VALUE_RANDOM_UNIT:
-                return RandomState_UnitFloat(rs);
-            case NEURAL_VALUE_CREDITS:
-                return (float)ai->credits;
-            case NEURAL_VALUE_FRIEND_SHIPS:
-                return (float)sg->numFriends(MOB_FLAG_SHIP);
-
-            default:
-                NOT_IMPLEMENTED();
-        }
-    }
-
     NeuralNetContext *getNeuralNetContext(void) {
         ASSERT(myNNC.rs != NULL);
         ASSERT(myNNC.sg != NULL);
@@ -6157,11 +6119,12 @@ public:
     void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce) {
         uint x;
         float maxV = (1.0f / MICRON);
+        NeuralNetContext *nc = getNeuralNetContext();
 
         ASSERT(myInputs.size() == myInputDescs.size());
 
         for (uint i = 0; i < myInputDescs.size(); i++) {
-            myInputs[i] = getNeuralValue(mob, &myInputDescs[i], i);
+            myInputs[i] = NeuralValue_GetValue(nc, mob, &myInputDescs[i], i);
         }
 
         ASSERT(myOutputs.size() == myOutputDescs.size());
