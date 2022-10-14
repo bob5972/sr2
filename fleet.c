@@ -355,6 +355,14 @@ bool Fleet_IsNeuralFleet(FleetAIType aiType)
     return FALSE;
 }
 
+bool Fleet_IsBineuralFleet(FleetAIType aiType)
+{
+    if (aiType >= FLEET_AI_BINEURAL1 && aiType <= FLEET_AI_BINEURAL1) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
 {
     struct {
@@ -383,16 +391,16 @@ void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         FlockFleet_GetOps(aiType, ops);
         ops->aiType = aiType;
         return;
-    }
-
-    if (Fleet_IsBundleFleet(aiType)) {
+    } else if (Fleet_IsBundleFleet(aiType)) {
         BundleFleet_GetOps(aiType, ops);
         ops->aiType = aiType;
         return;
-    }
-
-    if (Fleet_IsNeuralFleet(aiType)) {
+    } else if (Fleet_IsNeuralFleet(aiType)) {
         NeuralFleet_GetOps(aiType, ops);
+        ops->aiType = aiType;
+        return;
+    } else if (Fleet_IsBineuralFleet(aiType)) {
+        BineuralFleet_GetOps(aiType, ops);
         ops->aiType = aiType;
         return;
     }

@@ -219,6 +219,9 @@ void MainLoadDefaultPlayers(void)
         mainData.players[p].aiType = FLEET_AI_NEURAL11;
         p++;
 
+        mainData.players[p].aiType = FLEET_AI_BINEURAL1;
+        p++;
+
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;
         //mainData.players[p].mreg = MBRegistry_Alloc();
@@ -503,7 +506,6 @@ MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-
         targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL11;
         targetPlayers[tpIndex].playerName = "NeuralFleet11.Test";
         tpIndex++;
