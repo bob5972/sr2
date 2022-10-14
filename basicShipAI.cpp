@@ -55,9 +55,9 @@ void BasicAIGovernor::doSpawn(Mob *mob)
                 i++;
                 if (i >= 10 * 1000) {
                     /*
-                        * If the min/max radius are set wrong,
-                        * we could otherwise loop here forever.
-                        */
+                     * If the min/max radius are set wrong,
+                     * we could otherwise loop here forever.
+                     */
                     mob->cmd.target = mob->pos;
                     keepGoing = FALSE;
                 }
@@ -66,7 +66,7 @@ void BasicAIGovernor::doSpawn(Mob *mob)
                      FPoint_Clamp(&mob->cmd.target, 0.0f, ai->bp.width,
                                   0.0f, ai->bp.height));
         } while (keepGoing &&
-                    p.radius < myConfig.startingMinRadius);
+                 p.radius < myConfig.startingMinRadius);
     }
 }
 

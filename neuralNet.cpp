@@ -36,12 +36,15 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_ZERO),                     },
     { TMENTRY(NEURAL_FORCE_HEADING),                  },
     { TMENTRY(NEURAL_FORCE_ALIGN),                    },
+    { TMENTRY(NEURAL_FORCE_ALIGN2),                   },
     { TMENTRY(NEURAL_FORCE_COHERE),                   },
     { TMENTRY(NEURAL_FORCE_SEPARATE),                 },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),           },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),   },
     { TMENTRY(NEURAL_FORCE_EDGES),                    },
+    { TMENTRY(NEURAL_FORCE_NEAREST_EDGE),             },
     { TMENTRY(NEURAL_FORCE_CORNERS),                  },
+    { TMENTRY(NEURAL_FORCE_NEAREST_CORNER),           },
     { TMENTRY(NEURAL_FORCE_CENTER),                   },
     { TMENTRY(NEURAL_FORCE_BASE),                     },
     { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),             },
@@ -418,7 +421,6 @@ static void NeuralForceGetRepulseFocus(NeuralNetContext *nc,
     f.radius = 1.0f / (f.radius * f.radius);
     FRPoint_Add(force, &f, force);
 }
-
 static void NeuralForceGetEdgeFocus(NeuralNetContext *nc,
                                     Mob *self, NeuralForceDesc *desc,
                                     FPoint *focusPoint)
@@ -460,6 +462,62 @@ static void NeuralForceGetEdgeFocus(NeuralNetContext *nc,
 }
 
 
+static bool NeuralForceGetCloseEdgeFocus(NeuralNetContext *nc,
+                                         Mob *self, NeuralForceDesc *desc,
+                                         FPoint *focusPoint,
+                                         bool nearest)
+{
+    FPoint edgePoints[4];
+    float edgeDistances[4];
+
+    /*
+     * Left Edge
+     */
+    edgePoints[0] = self->pos;
+    edgePoints[0].x = 0.0f;
+    edgeDistances[0] = fabs(self->pos.x);
+
+    /*
+     * Right Edge
+     */
+    edgePoints[1] = self->pos;
+    edgePoints[1].x = nc->ai->bp.width;
+    edgeDistances[1] = FPoint_Distance(&self->pos, &edgePoints[1]);
+
+    /*
+     * Top Edge
+     */
+    edgePoints[2] = self->pos;
+    edgePoints[2].y = 0.0f;
+    edgeDistances[2] = fabs(self->pos.y);
+
+    /*
+     * Bottom edge
+     */
+    edgePoints[3] = self->pos;
+    edgePoints[3].y = nc->ai->bp.height;
+    edgeDistances[3] = FPoint_Distance(&self->pos, &edgePoints[3]);
+
+    uint minI = ARRAYSIZE(edgePoints);
+    for (uint i = 0; i < ARRAYSIZE(edgePoints); i++) {
+        if (edgeDistances[i] <= desc->radius) {
+            if (minI >= ARRAYSIZE(edgePoints) ||
+                (nearest && edgeDistances[i] < edgeDistances[minI]) ||
+                (!nearest && edgeDistances[i] > edgeDistances[minI])) {
+                minI = i;
+            }
+        }
+    }
+
+    if (minI < ARRAYSIZE(edgePoints)) {
+        *focusPoint = edgePoints[minI];
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
+
 void NeuralForceGetCornersFocus(NeuralNetContext *nc,
                                 Mob *self, NeuralForceDesc *desc,
                                 FPoint *focusPoint) {
@@ -485,6 +543,48 @@ void NeuralForceGetCornersFocus(NeuralNetContext *nc,
     NeuralForceGetRepulseFocus(nc, &self->pos, &cornerPoint, &force);
 
     FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+}
+
+bool NeuralForceGetCloseCornerFocus(NeuralNetContext *nc,
+                                    Mob *self, NeuralForceDesc *desc,
+                                    FPoint *focusPoint,
+                                    bool nearest) {
+    FPoint cornerPoints[4];
+    float cornerDistances[4];
+
+    cornerPoints[0].x = 0.0f;
+    cornerPoints[0].y = 0.0f;
+    cornerDistances[0] = FPoint_Distance(&self->pos, &cornerPoints[0]);
+
+    cornerPoints[1].x = nc->ai->bp.width;
+    cornerPoints[1].y = 0.0f;
+    cornerDistances[1] = FPoint_Distance(&self->pos, &cornerPoints[1]);
+
+    cornerPoints[2].x = 0.0f;
+    cornerPoints[2].y = nc->ai->bp.height;
+    cornerDistances[2] = FPoint_Distance(&self->pos, &cornerPoints[2]);
+
+    cornerPoints[3].x = nc->ai->bp.width;
+    cornerPoints[3].y = nc->ai->bp.height;
+    cornerDistances[3] = FPoint_Distance(&self->pos, &cornerPoints[3]);
+
+    uint minI = ARRAYSIZE(cornerPoints);
+    for (uint i = 0; i < ARRAYSIZE(cornerPoints); i++) {
+        if (cornerDistances[i] <= desc->radius) {
+            if (minI >= ARRAYSIZE(cornerPoints) ||
+                (nearest && cornerDistances[i] < cornerDistances[minI]) ||
+                (!nearest && cornerDistances[i] > cornerDistances[minI])) {
+                minI = i;
+            }
+        }
+    }
+
+    if (minI < ARRAYSIZE(cornerPoints)) {
+        *focusPoint = cornerPoints[minI];
+        return TRUE;
+    } else {
+        return FALSE;
+    }
 }
 
 /*
@@ -523,6 +623,18 @@ bool NeuralForce_GetFocus(NeuralNetContext *nc,
             *focusPoint = avgVel;
             return TRUE;
         }
+        case NEURAL_FORCE_ALIGN2: {
+            FPoint avgVel;
+            nc->sg->friendAvgVelocity(&avgVel, &mob->pos, desc->radius,
+                                      MOB_FLAG_FIGHTER);
+            if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
+                avgVel.x += mob->pos.x;
+                avgVel.y += mob->pos.y;
+                *focusPoint = avgVel;
+                return TRUE;
+            }
+            return FALSE;
+        }
         case NEURAL_FORCE_COHERE: {
             FPoint avgPos;
             nc->sg->friendAvgPos(&avgPos, &mob->pos, desc->radius,
@@ -553,9 +665,21 @@ bool NeuralForce_GetFocus(NeuralNetContext *nc,
             NeuralForceGetEdgeFocus(nc, mob, desc, focusPoint);
             return TRUE;
         }
+        case NEURAL_FORCE_NEAREST_EDGE: {
+            return NeuralForceGetCloseEdgeFocus(nc, mob, desc, focusPoint, TRUE);
+        }
+        case NEURAL_FORCE_FARTHEST_EDGE: {
+            return NeuralForceGetCloseEdgeFocus(nc, mob, desc, focusPoint, FALSE);
+        }
         case NEURAL_FORCE_CORNERS: {
             NeuralForceGetCornersFocus(nc, mob, desc, focusPoint);
             return TRUE;
+        }
+        case NEURAL_FORCE_NEAREST_CORNER: {
+            return NeuralForceGetCloseCornerFocus(nc, mob, desc, focusPoint, TRUE);
+        }
+        case NEURAL_FORCE_FARTHEST_CORNER: {
+            return NeuralForceGetCloseCornerFocus(nc, mob, desc, focusPoint, FALSE);
         }
         case NEURAL_FORCE_CENTER: {
             focusPoint->x = nc->ai->bp.width / 2;
