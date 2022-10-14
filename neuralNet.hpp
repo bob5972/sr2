@@ -145,6 +145,7 @@ bool NeuralForce_GetFocus(NeuralNetContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FPoint *focusPoint);
 bool NeuralForce_GetForce(NeuralNetContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FRPoint *rForce);
+float NeuralForce_GetRange(NeuralNetContext *nc, Mob *mob, NeuralForceDesc *desc);
 void NeuralForce_ApplyToMob(NeuralNetContext *nc, Mob *mob, FRPoint *rForce);
 
 float NeuralCrowd_GetValue(NeuralNetContext *nc, Mob *mob, NeuralCrowdDesc *desc);

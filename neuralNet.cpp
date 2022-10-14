@@ -647,6 +647,17 @@ bool NeuralForce_GetForce(NeuralNetContext *nc,
 }
 
 
+float NeuralForce_GetRange(NeuralNetContext *nc,
+                           Mob *mob, NeuralForceDesc *desc) {
+    FPoint focusPoint;
+    if (NeuralForce_GetFocus(nc, mob, desc, &focusPoint)) {
+        return FPoint_Distance(&mob->pos, &focusPoint);
+    } else {
+        return 0.0f;
+    }
+}
+
+
 /*
  * NeuralForce_ApplyToMob --
  *   Applies a force to a mob, taking speed into account.

@@ -6123,7 +6123,7 @@ public:
             case NEURAL_VALUE_VOID:
                 return 0.0f;
             case NEURAL_VALUE_FORCE:
-                return getRangeValue(mob, &desc->forceDesc);
+                return NeuralForce_GetRange(getNeuralNetContext(), mob, &desc->forceDesc);
             case NEURAL_VALUE_CROWD:
                 return NeuralCrowd_GetValue(getNeuralNetContext(), mob, &desc->crowdDesc);
             case NEURAL_VALUE_TICK:
@@ -6178,16 +6178,6 @@ public:
             return fmodf(t, desc->frequency);
         } else {
             NOT_IMPLEMENTED();
-        }
-    }
-
-    float getRangeValue(Mob *mob, NeuralForceDesc *desc) {
-        FPoint focusPoint;
-        if (NeuralForce_GetFocus(getNeuralNetContext(),
-                                 mob, desc, &focusPoint)) {
-            return FPoint_Distance(&mob->pos, &focusPoint);
-        } else {
-            return 0.0f;
         }
     }
 
