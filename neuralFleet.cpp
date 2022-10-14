@@ -6279,27 +6279,6 @@ public:
         ASSERT(x <= myOutputs.size());
     }
 
-    void applyForceToMob(Mob *mob, FRPoint *rForce) {
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-
-        if (rForce->radius < MICRON) {
-            /*
-             * Continue on the current heading if we didn't get a strong-enough
-             * force.
-             */
-            NeuralForceDesc desc;
-            MBUtil_Zero(&desc, sizeof(desc));
-            desc.forceType = NEURAL_FORCE_HEADING;
-            desc.useTangent = FALSE;
-            desc.radius = speed;
-            NeuralForce_GetForce(getNeuralNetContext(), mob, &desc, rForce);
-        }
-        FRPoint_SetSpeed(rForce, speed);
-
-        FRPoint_ToFPoint(rForce, &mob->pos, &mob->cmd.target);
-    }
-
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
         if (myUseAttackForces) {
             NeuralShipAI *ship = (NeuralShipAI *)mob->aiMobHandle;
@@ -6313,7 +6292,7 @@ public:
 
             FRPoint rForce;
             doForces(mob, ship->state, &rForce);
-            applyForceToMob(mob, &rForce);
+            NeuralForce_ApplyToMob(getNeuralNetContext(), mob, &rForce);
         } else {
             BasicAIGovernor::doAttack(mob, enemyTarget);
         }
@@ -6335,7 +6314,7 @@ public:
 
         FRPoint rForce;
         doForces(mob, ship->state, &rForce);
-        applyForceToMob(mob, &rForce);
+        NeuralForce_ApplyToMob(getNeuralNetContext(), mob, &rForce);
 
         ASSERT(!isnanf(mob->cmd.target.x));
         ASSERT(!isnanf(mob->cmd.target.y));

@@ -145,6 +145,7 @@ bool NeuralForce_GetFocus(NeuralNetContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FPoint *focusPoint);
 bool NeuralForce_GetForce(NeuralNetContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FRPoint *rForce);
+void NeuralForce_ApplyToMob(NeuralNetContext *nc, Mob *mob, FRPoint *rForce);
 
 
 #endif // _NEURAL_NET_H_202210081813

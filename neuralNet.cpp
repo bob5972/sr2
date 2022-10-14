@@ -645,3 +645,30 @@ bool NeuralForce_GetForce(NeuralNetContext *nc,
         return FALSE;
     }
 }
+
+
+/*
+ * NeuralForce_ApplyToMob --
+ *   Applies a force to a mob, taking speed into account.
+ */
+void NeuralForce_ApplyToMob(NeuralNetContext *nc,
+                            Mob *mob, FRPoint *rForce) {
+    float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+
+    if (rForce->radius < MICRON) {
+        /*
+         * Continue on the current heading if we didn't get a strong-enough
+         * force.
+         */
+        NeuralForceDesc desc;
+        MBUtil_Zero(&desc, sizeof(desc));
+        desc.forceType = NEURAL_FORCE_HEADING;
+        desc.useTangent = FALSE;
+        desc.radius = speed;
+        NeuralForce_GetForce(nc, mob, &desc, rForce);
+    }
+    FRPoint_SetSpeed(rForce, speed);
+
+    FRPoint_ToFPoint(rForce, &mob->pos, &mob->cmd.target);
+}
