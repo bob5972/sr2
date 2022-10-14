@@ -6154,30 +6154,6 @@ public:
         return &myNNC;
     }
 
-    /*
-     * getNeuralForce --
-     *    Calculate the specified force.
-     *    returns TRUE iff the force is valid.
-     */
-    bool getNeuralForce(Mob *mob,
-                        NeuralForceDesc *desc,
-                        FRPoint *rForce) {
-        FPoint focusPoint;
-
-        if (NeuralForce_GetFocus(getNeuralNetContext(), mob, desc, &focusPoint)) {
-            FPoint_ToFRPoint(&focusPoint, &mob->pos, rForce);
-            FRPoint_SetSpeed(rForce, 1.0f);
-
-            if (desc->useTangent) {
-                rForce->theta += (float)M_PI/2;
-            }
-            return TRUE;
-        } else {
-            FRPoint_Zero(rForce);
-            return FALSE;
-        }
-    }
-
     float getCrowdValue(Mob *mob, NeuralCrowdDesc *desc) {
         //XXX cache?
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
@@ -6292,8 +6268,8 @@ public:
             ASSERT(myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
             if (myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_VOID &&
                 myOutputs[x] != 0.0f &&
-                getNeuralForce(mob, &myOutputDescs[i].forceDesc,
-                               &force)) {
+                NeuralForce_GetForce(getNeuralNetContext(), mob,
+                                     &myOutputDescs[i].forceDesc, &force)) {
                 FRPoint_SetSpeed(&force, myOutputs[x]);
                 FRPoint_Add(&force, outputForce, outputForce);
             }
@@ -6317,7 +6293,7 @@ public:
             desc.forceType = NEURAL_FORCE_HEADING;
             desc.useTangent = FALSE;
             desc.radius = speed;
-            getNeuralForce(mob, &desc, rForce);
+            NeuralForce_GetForce(getNeuralNetContext(), mob, &desc, rForce);
         }
         FRPoint_SetSpeed(rForce, speed);
 

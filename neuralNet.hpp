@@ -143,6 +143,8 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
 
 bool NeuralForce_GetFocus(NeuralNetContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FPoint *focusPoint);
+bool NeuralForce_GetForce(NeuralNetContext *nc, Mob *mob,
+                          NeuralForceDesc *desc, FRPoint *rForce);
 
 
 #endif // _NEURAL_NET_H_202210081813

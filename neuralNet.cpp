@@ -619,3 +619,29 @@ static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint)
     }
     return FALSE;
 }
+
+/*
+ * NeuralForce_GetForce --
+ *    Calculate the specified force.
+ *    returns TRUE iff the force is valid.
+ */
+bool NeuralForce_GetForce(NeuralNetContext *nc,
+                          Mob *mob,
+                          NeuralForceDesc *desc,
+                          FRPoint *rForce)
+{
+    FPoint focusPoint;
+
+    if (NeuralForce_GetFocus(nc, mob, desc, &focusPoint)) {
+        FPoint_ToFRPoint(&focusPoint, &mob->pos, rForce);
+        FRPoint_SetSpeed(rForce, 1.0f);
+
+        if (desc->useTangent) {
+            rForce->theta += (float)M_PI/2;
+        }
+        return TRUE;
+    } else {
+        FRPoint_Zero(rForce);
+        return FALSE;
+    }
+}
