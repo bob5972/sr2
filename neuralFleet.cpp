@@ -120,8 +120,6 @@ public:
 
             { "startingMaxRadius",           "300"       },
             { "startingMinRadius",           "250"       },
-
-            { "useAttackForces",             "FALSE"     },
         };
 
         NeuralConfigValue configs1[] = {
@@ -5978,9 +5976,9 @@ public:
             { "startingMaxRadius", "1050.087036" },
             { "startingMinRadius", "521.772766" },
         };
-        NeuralConfigValue configs12[] = {
-            { "void", "void" },
-        };
+        // NeuralConfigValue configs12[] = {
+        //     { "void", "void" },
+        // };
 
         struct {
             NeuralConfigValue *values;
@@ -5998,12 +5996,12 @@ public:
             { configs9,  ARRAYSIZE(configs9), },
             { configs10, ARRAYSIZE(configs10), },
             { configs11, ARRAYSIZE(configs11), },
-            { configs12, ARRAYSIZE(configs12), },
+            //{ configs12, ARRAYSIZE(configs12), },
         };
 
         int neuralIndex = aiType - FLEET_AI_NEURAL1 + 1;
         VERIFY(aiType >= FLEET_AI_NEURAL1);
-        VERIFY(aiType <= FLEET_AI_NEURAL12);
+        VERIFY(aiType <= FLEET_AI_NEURAL11);
         VERIFY(neuralIndex >= 1 && neuralIndex < ARRAYSIZE(configs));
 
         int i = neuralIndex;
@@ -6046,8 +6044,6 @@ public:
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
-        myUseAttackForces = MBRegistry_GetBoolD(mreg, "useAttackForces", FALSE);
-
         if (MBRegistry_ContainsKey(mreg, "floatNet.numInputs") &&
             MBRegistry_GetUint(mreg, "floatNet.numInputs") > 0) {
             myNeuralNet.load(mreg, "floatNet.");
@@ -6132,10 +6128,10 @@ public:
 
         for (uint i = 0; i < myOutputs.size(); i++) {
             ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
-            if ((state == BSAI_STATE_IDLE && !myOutputDescs[i].forceDesc.doIdle) ||
-                (state == BSAI_STATE_ATTACK && !myOutputDescs[i].forceDesc.doAttack)) {
-                myOutputs[i] = 0.0f;
-            } else if (isnan(myOutputs[i])) {
+            ASSERT(myOutputDescs[i].forceDesc.doIdle);
+            ASSERT(!myOutputDescs[i].forceDesc.doAttack);
+
+            if (isnan(myOutputs[i])) {
                 myOutputs[i] = 0.0f;
             } else if (myOutputs[i] > maxV) {
                 myOutputs[i] = maxV;
@@ -6161,25 +6157,6 @@ public:
         }
         //XXX non-force outputs?
         ASSERT(x <= myOutputs.size());
-    }
-
-    virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-        if (myUseAttackForces) {
-            NeuralShipAI *ship = (NeuralShipAI *)mob->aiMobHandle;
-            ASSERT(ship == (NeuralShipAI *)getShip(mob->mobid));
-            ASSERT(ship != NULL);
-
-            FPoint origTarget = mob->cmd.target;
-            BasicAIGovernor::doAttack(mob, enemyTarget);
-
-            mob->cmd.target = origTarget;
-
-            FRPoint rForce;
-            doForces(mob, ship->state, &rForce);
-            NeuralForce_ApplyToMob(getNeuralNetContext(), mob, &rForce);
-        } else {
-            BasicAIGovernor::doAttack(mob, enemyTarget);
-        }
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
@@ -6276,8 +6253,6 @@ void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "NeuralFleet10";
     } else if (aiType == FLEET_AI_NEURAL11) {
         ops->aiName = "NeuralFleet11";
-    } else if (aiType == FLEET_AI_NEURAL12) {
-        ops->aiName = "NeuralFleet12";
     } else {
         NOT_IMPLEMENTED();
     }
@@ -6354,7 +6329,6 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "attackExtendedRange",         0.05f },
         { "rotateStartingAngle",         0.05f },
         { "gatherAbandonStale",          0.05f },
-        { "useAttackForces",             0.05f },
     };
 
     float rate = 0.12;
