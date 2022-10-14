@@ -260,7 +260,7 @@ void NeuralCrowd_Load(MBRegistry *mreg,
     s += "crowdType";
     v = MBRegistry_GetCStr(mreg, s.CStr());
     if (v == NULL) {
-        NeuralCrowd_ToString(NEURAL_CROWD_FRIEND_FIGHTER);
+        v = NeuralCrowd_ToString(NEURAL_CROWD_FRIEND_FIGHTER);
     }
     desc->crowdType = NeuralCrowd_FromString(v);
 }
