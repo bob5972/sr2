@@ -506,8 +506,8 @@ MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL11;
-        targetPlayers[tpIndex].playerName = "NeuralFleet11.Test";
+        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL12;
+        targetPlayers[tpIndex].playerName = "NeuralFleet12.Test";
         tpIndex++;
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();

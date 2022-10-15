@@ -69,6 +69,7 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE11,  // 67.4%
     FLEET_AI_NEURAL10,  // 69.1%
     FLEET_AI_NEURAL7,   // 71.9%
+    FLEET_AI_NEURAL12,  // 72.5%
     FLEET_AI_NEURAL9,   // 73.6%
     FLEET_AI_FLOCK6,    // 73.9%
     FLEET_AI_FLOCK7,    // 75.3%
@@ -80,7 +81,6 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE15,  // 81.7%
     FLEET_AI_BUNDLE14,  // 83.5%
     FLEET_AI_FLOCK9,    // 91.1%
-    FLEET_AI_NEURAL12,  // Unranked
     FLEET_AI_BINEURAL1, // In-Development
 };
 
