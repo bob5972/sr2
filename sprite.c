@@ -760,7 +760,8 @@ static SpriteType SpriteGetMobSpriteTypeFromSet(MobType t,
 
     if ((ss >= SPRITE_SET_ALTAIR_PURPLE && ss <= SPRITE_SET_ALTAIR_BLUE3) ||
         (ss >= SPRITE_SET_URSA_BLUE && ss <= SPRITE_SET_URSA_ORANGE3) ||
-        (ss >= SPRITE_SET_VEGA_BLUE && ss <= SPRITE_SET_VEGA_GREY)) {
+        (ss >= SPRITE_SET_VEGA_BLUE && ss <= SPRITE_SET_VEGA_GREY) ||
+        (ss >= SPRITE_SET_ARANEA_BLUE && ss <= SPRITE_SET_ARANEA_GREEN2)) {
         ASSERT(MOB_TYPE_BASE == 1);
         ASSERT(MOB_TYPE_FIGHTER == 2);
         ASSERT(MOB_TYPE_MISSILE == 3);
