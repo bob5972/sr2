@@ -42,6 +42,8 @@ extern "C" {
 
 #define BINEURAL_SCRAMBLE_KEY "bineuralFleet.scrambleMutation"
 
+#define ALLOW_ATTACK_FORCES FALSE
+
 typedef struct BineuralConfigValue {
     const char *key;
     const char *value;
@@ -822,6 +824,14 @@ public:
         return &myNNC;
     }
 
+    static bool isOutputActive(BasicShipAIState state,
+                               const NeuralValueDesc *outputDesc) {
+        ASSERT(!ALLOW_ATTACK_FORCES);
+        ASSERT((state == BSAI_STATE_IDLE && outputDesc->forceDesc.doIdle) ||
+               (state == BSAI_STATE_ATTACK && outputDesc->forceDesc.doAttack));
+        return TRUE;
+    }
+
     void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce) {
         uint x;
         float maxV = (1.0f / MICRON);
@@ -838,8 +848,7 @@ public:
 
         for (uint i = 0; i < myOutputs.size(); i++) {
             ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
-            if ((state == BSAI_STATE_IDLE && !myOutputDescs[i].forceDesc.doIdle) ||
-                (state == BSAI_STATE_ATTACK && !myOutputDescs[i].forceDesc.doAttack)) {
+            if (!isOutputActive(state, &myOutputDescs[i])) {
                 myOutputs[i] = 0.0f;
             } else if (isnan(myOutputs[i])) {
                 myOutputs[i] = 0.0f;
@@ -870,7 +879,9 @@ public:
     }
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-        if (myUseAttackForces) {
+        ASSERT(!myUseAttackForces);
+        ASSERT(!ALLOW_ATTACK_FORCES);
+        if (ALLOW_ATTACK_FORCES && myUseAttackForces) {
             BineuralShipAI *ship = (BineuralShipAI *)mob->aiMobHandle;
             ASSERT(ship == (BineuralShipAI *)getShip(mob->mobid));
             ASSERT(ship != NULL);
@@ -881,7 +892,8 @@ public:
             mob->cmd.target = origTarget;
 
             FRPoint rForce;
-            doForces(mob, ship->state, &rForce);
+            ASSERT(ship->state == BSAI_STATE_ATTACK);
+            doForces(mob, BSAI_STATE_ATTACK, &rForce);
             NeuralForce_ApplyToMob(getNeuralNetContext(), mob, &rForce);
         } else {
             BasicAIGovernor::doAttack(mob, enemyTarget);
@@ -903,7 +915,8 @@ public:
         }
 
         FRPoint rForce;
-        doForces(mob, ship->state, &rForce);
+        ASSERT(ship->state == BSAI_STATE_IDLE);
+        doForces(mob, BSAI_STATE_IDLE, &rForce);
         NeuralForce_ApplyToMob(getNeuralNetContext(), mob, &rForce);
 
         ASSERT(!isnanf(mob->cmd.target.x));

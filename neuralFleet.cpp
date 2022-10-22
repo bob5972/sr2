@@ -57,7 +57,6 @@ public:
     MBVector<float> myInputs;
     MBVector<float> myOutputs;
     uint myNumNodes;
-    bool myUseAttackForces;
     NeuralNetContext myNNC;
 
 public:
