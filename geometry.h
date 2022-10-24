@@ -65,6 +65,11 @@ Float_Compare(float lhs, float rhs, float tolerance)
     return FALSE;
 }
 
+/*
+ * Returns the speed in radians of the angle change of a point moving at the
+ * specified linear speed along the circumference of a circle of the specified
+ * radius.
+ */
 static inline float Float_AngularSpeed(float radius, float speed)
 {
     return speed / radius;
