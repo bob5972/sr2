@@ -54,26 +54,27 @@ C_SOURCES = main.c \
             gatherFleet.c \
             mapperFleet.c \
             mob.c \
-	    	mutate.c \
+            mutate.c \
             simpleFleet.c \
             sprite.c \
             workQueue.c
 CPP_SOURCES = 	basicFleet.cpp \
-              	basicShipAI.cpp \
-				bineuralFleet.cpp \
-				bundleFleet.cpp \
-              	circleFleet.cpp \
-              	cowardFleet.cpp \
-              	flockFleet.cpp \
-	      		floatNet.cpp \
-              	holdFleet.cpp \
-              	metaFleet.cpp \
-	      		ml.cpp \
-              	mobSet.cpp \
-	      		neuralFleet.cpp \
-	      		neuralNet.cpp \
-              	sensorGrid.cpp \
-	      		textDump.cpp
+                basicShipAI.cpp \
+		bineuralFleet.cpp \
+		bundleFleet.cpp \
+                circleFleet.cpp \
+                cowardFleet.cpp \
+                flockFleet.cpp \
+                floatNet.cpp \
+                holdFleet.cpp \
+                locus.cpp \
+                metaFleet.cpp \
+                ml.cpp \
+                mobSet.cpp \
+                neuralFleet.cpp \
+                neuralNet.cpp \
+                sensorGrid.cpp \
+                textDump.cpp
 
 ifeq ($(SR2_GUI), 1)
 	C_SOURCES += display.c
