@@ -721,6 +721,34 @@ bool NeuralForce_GetFocus(NeuralNetContext *nc,
             }
             return FALSE;
         }
+        case NEURAL_FORCE_ENEMY_BASE_GUESS_LAX: {
+            if (nc->sg->hasEnemyBaseGuess()) {
+                *focusPoint = nc->sg->getEnemyBaseGuess();
+                return TRUE;
+            }
+            return FALSE;
+        }
+        case NEURAL_FORCE_MIDWAY: {
+            if (nc->sg->hasMidway()) {
+                *focusPoint = nc->sg->getMidway();
+                return TRUE;
+            }
+            return FALSE;
+        }
+        case NEURAL_FORCE_MIDWAY_GUESS: {
+            if (!nc->sg->hasMidway() && nc->sg->hasMidwayGuess()) {
+                *focusPoint = nc->sg->getMidwayGuess();
+                return TRUE;
+            }
+            return FALSE;
+        }
+        case NEURAL_FORCE_MIDWAY_GUESS_LAX: {
+            if (nc->sg->hasMidwayGuess()) {
+                *focusPoint = nc->sg->getMidwayGuess();
+                return TRUE;
+            }
+            return FALSE;
+        }
 
         case NEURAL_FORCE_CORES: {
             Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);

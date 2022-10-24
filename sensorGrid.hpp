@@ -387,6 +387,37 @@ public:
         return myData.enemyBaseGuessPos;
     }
 
+    bool hasMidwayGuess() {
+        return friendBase() != NULL && hasEnemyBaseGuess();
+    }
+
+    FPoint getMidwayGuess() {
+        FPoint ebg = getEnemyBaseGuess();
+        Mob *base = friendBase();
+        FPoint result;
+
+        ASSERT(base != NULL);
+
+        FPoint_Midpoint(&result, &ebg, &base->pos);
+        return result;
+    }
+
+    bool hasMidway() {
+        return friendBase() != NULL && enemyBase() != NULL;
+    }
+
+    FPoint getMidway() {
+        Mob *enemy = enemyBase();
+        Mob *base = friendBase();
+        FPoint result;
+
+        ASSERT(base != NULL);
+        ASSERT(enemy != NULL);
+
+        FPoint_Midpoint(&result, &enemy->pos, &base->pos);
+        return result;
+    }
+
     void setSeed(uint64 seed) {
         RandomState_SetSeed(&myData.rs, seed);
     }
