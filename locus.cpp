@@ -79,9 +79,61 @@ void Locus_Init(AIContext *nc, LocusState *locus, LocusDesc *desc)
 }
 
 
+bool LocusGetPoint(AIContext *nc, LocusPoint pType,
+                   FPoint *focus)
+{
+    if (pType == LOCUS_POINT_BASE) {
+        FPoint *pos = nc->sg->friendBasePos();
+        if (pos != NULL) {
+            *focus = *pos;
+            return TRUE;
+        }
+        return FALSE;
+    } else if (pType == LOCUS_POINT_CENTER) {
+        focus->x = nc->ai->bp.width / 2;
+        focus->y = nc->ai->bp.height / 2;
+        return TRUE;
+    } else {
+        NOT_IMPLEMENTED();
+    }
+}
+
 void Locus_RunTick(AIContext *nc, LocusState *locus)
 {
+    FPoint focusPoint;
+    FPoint newPoint;
+    bool hasFocus;
+    FRPoint rp;
+
+    ASSERT(locus != NULL);
     ASSERT(locus->desc.type == LOCUS_TYPE_ORBIT);
 
-    NOT_IMPLEMENTED();
+    hasFocus = LocusGetPoint(nc, locus->desc.orbitDesc.focus, &focusPoint);
+
+    if (!hasFocus) {
+        locus->active = FALSE;
+        return;
+    }
+
+    if (!locus->active) {
+        rp.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
+    } else {
+        FPoint_ToFRPoint(&locus->pos, &focusPoint, &rp);
+    }
+    rp.radius = locus->desc.orbitDesc.radius;
+
+    rp.theta += M_PI * 2.0f / locus->desc.orbitDesc.period;
+    rp.theta = fmodf(rp.theta, M_PI * 2.0f);
+
+    FRPoint_ToFPoint(&rp, &focusPoint, &newPoint);
+
+    if (!locus->active) {
+        locus->active = TRUE;
+        locus->pos = newPoint;
+    } else if (!locus->desc.speedLimited ||
+               FPoint_Distance(&locus->pos, &newPoint) <= locus->desc.speed) {
+        locus->pos = newPoint;
+    } else {
+        FPoint_MoveToPointAtSpeed(&locus->pos, &newPoint, locus->desc.speed);
+    }
 }

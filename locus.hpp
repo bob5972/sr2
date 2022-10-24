@@ -44,9 +44,9 @@ typedef enum LocusPoint {
 } LocusPoint;
 
 typedef struct LocusOrbitDesc {
-    LocusPoint focusPoint;
+    LocusPoint focus;
     float radius;
-    float speed;
+    float period;
 } LocusOrbitDesc;
 
 typedef struct LocusDesc {

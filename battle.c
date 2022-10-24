@@ -253,8 +253,6 @@ static void BattleRunMobSpawn(Battle *battle, Mob *mob)
 
 static void BattleRunMobMove(Battle *battle, Mob *mob)
 {
-    FPoint origin;
-    float distance;
     float speed;
 
     ASSERT(mob->alive);
@@ -267,40 +265,11 @@ static void BattleRunMobMove(Battle *battle, Mob *mob)
         return;
     }
 
-    origin.x = mob->pos.x;
-    origin.y = mob->pos.y;
-    distance = FPoint_Distance(&origin, &mob->cmd.target);
-
     speed = Mob_GetSpeed(mob);
 
     mob->lastPos = mob->pos;
-    if (distance <= speed) {
-        mob->pos = mob->cmd.target;
-    } else {
-        float dx = mob->cmd.target.x - mob->pos.x;
-        float dy = mob->cmd.target.y - mob->pos.y;
-        float factor = speed / distance;
-        FPoint newPos;
-
-        newPos.x = mob->pos.x + dx * factor;
-        newPos.y = mob->pos.y + dy * factor;
-
-//         Warning("tPos(%f, %f) pos(%f, %f) newPos(%f, %f)\n",
-//                 mob->cmd.target.x, mob->cmd.target.y,
-//                 mob->pos.x, mob->pos.y,
-//                 newPos.x, newPos.y);
-//         Warning("diffPos(%f, %f)\n",
-//                 (newPos.x - mob->pos.x),
-//                 (newPos.y - mob->pos.y));
-//         Warning("distance=%f, speed+micron=%f, error=%f\n",
-//                 (float)FPoint_Distance(&newPos, &mob->pos),
-//                 (float)(speed + MICRON),
-//                 (float)(FPoint_Distance(&newPos, &mob->pos) - (speed + MICRON)));
-
-        //XXX: This ASSERT is hitting for resonable-seeming micron values...?
-        ASSERT(FPoint_Distance(&newPos, &origin) <= speed + MICRON);
-        mob->pos = newPos;
-    }
+    FPoint_MoveToPointAtSpeed(&mob->pos, &mob->cmd.target, speed);
+    ASSERT(FPoint_Distance(&mob->lastPos, &mob->pos) <= speed + MICRON);
     ASSERT(BattleCheckMobInvariants(battle, mob));
 }
 

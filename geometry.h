@@ -114,6 +114,23 @@ static inline float FPoint_Distance(const FPoint *a, const FPoint *b)
     return sqrtf(FPoint_DistanceSquared(a, b));
 }
 
+static inline void
+FPoint_MoveToPointAtSpeed(FPoint *pos, const FPoint *target, float speed)
+{
+    float distance = FPoint_Distance(pos, target);
+
+    if (distance <= speed) {
+        *pos = *target;
+    } else {
+        float dx = target->x - pos->x;
+        float dy = target->y - pos->y;
+        float factor = speed / distance;
+
+        pos->x = pos->x + dx * factor;
+        pos->y = pos->y + dy * factor;
+    }
+}
+
 static inline void FPoint_Midpoint(FPoint *m, const FPoint *a, const FPoint *b)
 {
     m->x = (a->x + b->x) / 2.0f;
