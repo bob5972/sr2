@@ -57,7 +57,7 @@ public:
     MBVector<float> myInputs;
     MBVector<float> myOutputs;
     uint myNumNodes;
-    NeuralNetContext myNNC;
+    AIContext myNNC;
 
 public:
     NeuralAIGovernor(FleetAI *ai, MappingSensorGrid *sg)
@@ -6675,7 +6675,7 @@ public:
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
-    NeuralNetContext *getNeuralNetContext(void) {
+    AIContext *getAIContext(void) {
         ASSERT(myNNC.rs != NULL);
         ASSERT(myNNC.sg != NULL);
         ASSERT(myNNC.ai != NULL);
@@ -6685,7 +6685,7 @@ public:
     void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce) {
         uint x;
         float maxV = (1.0f / MICRON);
-        NeuralNetContext *nc = getNeuralNetContext();
+        AIContext *nc = getAIContext();
 
         ASSERT(myInputs.size() == myInputDescs.size());
 
@@ -6718,7 +6718,7 @@ public:
             ASSERT(myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
             if (myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_VOID &&
                 myOutputs[x] != 0.0f &&
-                NeuralForce_GetForce(getNeuralNetContext(), mob,
+                NeuralForce_GetForce(getAIContext(), mob,
                                      &myOutputDescs[i].forceDesc, &force)) {
                 FRPoint_SetSpeed(&force, myOutputs[x]);
                 FRPoint_Add(&force, outputForce, outputForce);
@@ -6745,7 +6745,7 @@ public:
 
         FRPoint rForce;
         doForces(mob, ship->state, &rForce);
-        NeuralForce_ApplyToMob(getNeuralNetContext(), mob, &rForce);
+        NeuralForce_ApplyToMob(getAIContext(), mob, &rForce);
 
         ASSERT(!isnanf(mob->cmd.target.x));
         ASSERT(!isnanf(mob->cmd.target.y));

@@ -1,5 +1,5 @@
 /*
- * locus.hpp -- part of SpaceRobots2
+ * neuralNet.hpp -- part of SpaceRobots2
  * Copyright (C) 2022 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,34 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _LOCUS_HPP_202210231659
-#define _LOCUS_HPP_202210231659
+#ifndef _AI_TYPES_HPP_202210231753
+#define _AI_TYPES_HPP_202210231753
 
-#include "sensorGrid.hpp"
+/*
+ * Useful for some AI utility modules to interact with the FleetAI without
+ * defining a more complicated interface.
+ */
+typedef struct AIContext {
+    RandomState *rs;
+    MappingSensorGrid *sg;
+    FleetAI *ai;
+} AIContext;
 
-typedef enum LocusType {
-    LOCUS_TYPE_ORBIT,
-    // LOCUS_TYPE_PATROL_MAP,
-    // LOCUS_TYPE_PATROL_POINTS,
-} LocusType;
-
-typedef enum LocusPoint {
-    LOCUS_POINT_BASE,
-    LOCUS_POINT_CENTER,
-    // LOCUS_POINT_ENEMY_BASE,
-    // LOCUS_POINT_ENEMY_BASE_GUESS,
-    // LOCUS_POINT_MIDWAY,
-    // LOCUS_POINT_MIDWAY_GUESS,
-} LocusPoint;
-
-typedef struct Locus {
-    LocusType type;
-    LocusPoint focusPoint;
-
-    FPoint pos;
-    float speed;
-} Locus;
-
-//void Locus_RunTick(Locus *locus
-
-#endif // _LOCUS_HPP_202210231659
+#endif // _AI_TYPES_HPP_202210231753

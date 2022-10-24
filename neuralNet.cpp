@@ -27,7 +27,7 @@ extern "C" {
 #include "textDump.hpp"
 
 static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint);
-static void NeuralForceGetRepulseFocus(NeuralNetContext *nc,
+static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *selfPos,
                                        const FPoint *pos, FRPoint *force);
 
@@ -371,7 +371,7 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
     }
 }
 
-static bool NeuralForceGetSeparateFocus(NeuralNetContext *nc,
+static bool NeuralForceGetSeparateFocus(AIContext *nc,
                                         Mob *self, NeuralForceDesc *desc,
                                         FPoint *focusPoint)
 {
@@ -403,7 +403,7 @@ static bool NeuralForceGetSeparateFocus(NeuralNetContext *nc,
     return x > 0;
 }
 
-static void NeuralForceGetRepulseFocus(NeuralNetContext *nc,
+static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *selfPos,
                                        const FPoint *pos, FRPoint *force)
 {
@@ -423,7 +423,7 @@ static void NeuralForceGetRepulseFocus(NeuralNetContext *nc,
     f.radius = 1.0f / (f.radius * f.radius);
     FRPoint_Add(force, &f, force);
 }
-static void NeuralForceGetEdgeFocus(NeuralNetContext *nc,
+static void NeuralForceGetEdgeFocus(AIContext *nc,
                                     Mob *self, NeuralForceDesc *desc,
                                     FPoint *focusPoint)
 {
@@ -464,7 +464,7 @@ static void NeuralForceGetEdgeFocus(NeuralNetContext *nc,
 }
 
 
-static bool NeuralForceGetCloseEdgeFocus(NeuralNetContext *nc,
+static bool NeuralForceGetCloseEdgeFocus(AIContext *nc,
                                          Mob *self, NeuralForceDesc *desc,
                                          FPoint *focusPoint,
                                          bool nearest)
@@ -520,7 +520,7 @@ static bool NeuralForceGetCloseEdgeFocus(NeuralNetContext *nc,
 }
 
 
-void NeuralForceGetCornersFocus(NeuralNetContext *nc,
+void NeuralForceGetCornersFocus(AIContext *nc,
                                 Mob *self, NeuralForceDesc *desc,
                                 FPoint *focusPoint) {
     FPoint cornerPoint;
@@ -547,7 +547,7 @@ void NeuralForceGetCornersFocus(NeuralNetContext *nc,
     FRPoint_ToFPoint(&force, &self->pos, focusPoint);
 }
 
-bool NeuralForceGetCloseCornerFocus(NeuralNetContext *nc,
+bool NeuralForceGetCloseCornerFocus(AIContext *nc,
                                     Mob *self, NeuralForceDesc *desc,
                                     FPoint *focusPoint,
                                     bool nearest) {
@@ -595,7 +595,7 @@ bool NeuralForceGetCloseCornerFocus(NeuralNetContext *nc,
  *     Returns TRUE if the force is valid.
  *     Returns FALSE if the force is invalid.
  */
-bool NeuralForce_GetFocus(NeuralNetContext *nc,
+bool NeuralForce_GetFocus(AIContext *nc,
                           Mob *mob,
                           NeuralForceDesc *desc,
                           FPoint *focusPoint)
@@ -779,7 +779,7 @@ static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint)
  *    Calculate the specified force.
  *    returns TRUE iff the force is valid.
  */
-bool NeuralForce_GetForce(NeuralNetContext *nc,
+bool NeuralForce_GetForce(AIContext *nc,
                           Mob *mob,
                           NeuralForceDesc *desc,
                           FRPoint *rForce)
@@ -801,7 +801,7 @@ bool NeuralForce_GetForce(NeuralNetContext *nc,
 }
 
 
-float NeuralForce_GetRange(NeuralNetContext *nc,
+float NeuralForce_GetRange(AIContext *nc,
                            Mob *mob, NeuralForceDesc *desc) {
     FPoint focusPoint;
     if (NeuralForce_GetFocus(nc, mob, desc, &focusPoint)) {
@@ -816,7 +816,7 @@ float NeuralForce_GetRange(NeuralNetContext *nc,
  * NeuralForce_ApplyToMob --
  *   Applies a force to a mob, taking speed into account.
  */
-void NeuralForce_ApplyToMob(NeuralNetContext *nc,
+void NeuralForce_ApplyToMob(AIContext *nc,
                             Mob *mob, FRPoint *rForce) {
     float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
     ASSERT(mob->type == MOB_TYPE_FIGHTER);
@@ -839,7 +839,7 @@ void NeuralForce_ApplyToMob(NeuralNetContext *nc,
 }
 
 
-float NeuralCrowd_GetValue(NeuralNetContext *nc,
+float NeuralCrowd_GetValue(AIContext *nc,
                            Mob *mob, NeuralCrowdDesc *desc)
 {
     //XXX cache?
@@ -884,7 +884,7 @@ float NeuralCrowd_GetValue(NeuralNetContext *nc,
 }
 
 
-float NeuralTick_GetValue(NeuralNetContext *nc, NeuralTickDesc *desc)
+float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc)
 {
     FleetAI *ai = nc->ai;
 
@@ -913,7 +913,7 @@ float NeuralTick_GetValue(NeuralNetContext *nc, NeuralTickDesc *desc)
 }
 
 
-float NeuralValue_GetValue(NeuralNetContext *nc,
+float NeuralValue_GetValue(AIContext *nc,
                            Mob *mob, NeuralValueDesc *desc, uint i)
 {
     FRPoint force;

@@ -21,12 +21,7 @@
 
 #include "mob.h"
 #include "sensorGrid.hpp"
-
-typedef struct NeuralNetContext {
-    RandomState *rs;
-    MappingSensorGrid *sg;
-    FleetAI *ai;
-} NeuralNetContext;
+#include "aiTypes.hpp"
 
 typedef enum NeuralForceType {
     NEURAL_FORCE_VOID,
@@ -146,22 +141,22 @@ void NeuralCrowd_Load(MBRegistry *mreg,
 void NeuralTick_Load(MBRegistry *mreg,
                      NeuralTickDesc *desc, const char *prefix);
 
-float NeuralValue_GetValue(NeuralNetContext *nc, Mob *mob,
+float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
 void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
                         bool isOutput, float rate,
                         const char *prefix);
 
-bool NeuralForce_GetFocus(NeuralNetContext *nc, Mob *mob,
+bool NeuralForce_GetFocus(AIContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FPoint *focusPoint);
-bool NeuralForce_GetForce(NeuralNetContext *nc, Mob *mob,
+bool NeuralForce_GetForce(AIContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FRPoint *rForce);
-float NeuralForce_GetRange(NeuralNetContext *nc, Mob *mob, NeuralForceDesc *desc);
-void NeuralForce_ApplyToMob(NeuralNetContext *nc, Mob *mob, FRPoint *rForce);
+float NeuralForce_GetRange(AIContext *nc, Mob *mob, NeuralForceDesc *desc);
+void NeuralForce_ApplyToMob(AIContext *nc, Mob *mob, FRPoint *rForce);
 
-float NeuralCrowd_GetValue(NeuralNetContext *nc, Mob *mob, NeuralCrowdDesc *desc);
+float NeuralCrowd_GetValue(AIContext *nc, Mob *mob, NeuralCrowdDesc *desc);
 
-float NeuralTick_GetValue(NeuralNetContext *nc, NeuralTickDesc *desc);
+float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc);
 
 
 #endif // _NEURAL_NET_H_202210081813
