@@ -67,7 +67,10 @@ LocusPoint LocusPoint_Random()
     return (LocusPoint) tmLPoints[i].value;
 }
 
-void Locus_Load(MBRegistry *mreg, LocusDesc *desc, const char *prefix);
+void Locus_Load(MBRegistry *mreg, LocusDesc *desc, const char *prefix)
+{
+    NOT_IMPLEMENTED();
+}
 
 void Locus_Init(AIContext *nc, LocusState *locus, LocusDesc *desc)
 {

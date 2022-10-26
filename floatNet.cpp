@@ -246,6 +246,9 @@ uint FloatNet::minimize(CPBitVector *inputBV)
     CPBitVector nodesBV;
     nodesBV.resize(myNodes.size() + myNumInputs);
     nodesBV.resetAll();
+    for (uint i = 0; i < myValues.size(); i++) {
+        myValues[i] = 0.0f;
+    }
     for (uint i = 0; i < myNodes.size(); i++) {
         MLFloatNode *n = &myNodes[i];
         uint vindex = i + myNumInputs;
