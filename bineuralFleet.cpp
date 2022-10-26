@@ -42,8 +42,6 @@ extern "C" {
 
 #define BINEURAL_SCRAMBLE_KEY "bineuralFleet.scrambleMutation"
 
-#define ALLOW_ATTACK_FORCES FALSE
-
 typedef struct BineuralConfigValue {
     const char *key;
     const char *value;
@@ -826,7 +824,7 @@ public:
 
     static bool isOutputActive(BasicShipAIState state,
                                const NeuralValueDesc *outputDesc) {
-        ASSERT(!ALLOW_ATTACK_FORCES);
+        ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
         ASSERT((state == BSAI_STATE_IDLE && outputDesc->forceDesc.doIdle) ||
                (state == BSAI_STATE_ATTACK && outputDesc->forceDesc.doAttack));
         return TRUE;
@@ -880,8 +878,8 @@ public:
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
         ASSERT(!myUseAttackForces);
-        ASSERT(!ALLOW_ATTACK_FORCES);
-        if (ALLOW_ATTACK_FORCES && myUseAttackForces) {
+        ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
+        if (NEURAL_ALLOW_ATTACK_FORCES && myUseAttackForces) {
             BineuralShipAI *ship = (BineuralShipAI *)mob->aiMobHandle;
             ASSERT(ship == (BineuralShipAI *)getShip(mob->mobid));
             ASSERT(ship != NULL);

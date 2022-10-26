@@ -23,6 +23,8 @@
 #include "sensorGrid.hpp"
 #include "aiTypes.hpp"
 
+#define NEURAL_ALLOW_ATTACK_FORCES FALSE
+
 typedef enum NeuralForceType {
     NEURAL_FORCE_VOID,
     NEURAL_FORCE_ZERO,

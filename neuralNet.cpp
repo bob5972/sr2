@@ -239,13 +239,18 @@ void NeuralForce_Load(MBRegistry *mreg,
     s += "radius";
     desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
 
-    s = prefix;
-    s += "doIdle";
-    desc->doIdle = MBRegistry_GetBoolD(mreg, s.CStr(), TRUE);
+    if (NEURAL_ALLOW_ATTACK_FORCES) {
+        s = prefix;
+        s += "doIdle";
+        desc->doIdle = MBRegistry_GetBoolD(mreg, s.CStr(), TRUE);
 
-    s = prefix;
-    s += "doAttack";
-    desc->doAttack = MBRegistry_GetBoolD(mreg, s.CStr(), FALSE);
+        s = prefix;
+        s += "doAttack";
+        desc->doAttack = MBRegistry_GetBoolD(mreg, s.CStr(), FALSE);
+    } else {
+        desc->doIdle = TRUE;
+        desc->doAttack = FALSE;
+    }
 }
 
 void NeuralCrowd_Load(MBRegistry *mreg,
@@ -340,17 +345,19 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
         bf.flipRate = rate;
         Mutate_Bool(mreg, &bf, 1);
 
-        s = prefix;
-        s += "doIdle";
-        bf.key = s.CStr();
-        bf.flipRate = rate;
-        Mutate_Bool(mreg, &bf, 1);
+        if (NEURAL_ALLOW_ATTACK_FORCES) {
+            s = prefix;
+            s += "doIdle";
+            bf.key = s.CStr();
+            bf.flipRate = rate;
+            Mutate_Bool(mreg, &bf, 1);
 
-        s = prefix;
-        s += "doAttack";
-        bf.key = s.CStr();
-        bf.flipRate = rate;
-        Mutate_Bool(mreg, &bf, 1);
+            s = prefix;
+            s += "doAttack";
+            bf.key = s.CStr();
+            bf.flipRate = rate;
+            Mutate_Bool(mreg, &bf, 1);
+        }
     } else if (desc->valueType == NEURAL_VALUE_TICK) {
         MutationFloatParams vf;
 
