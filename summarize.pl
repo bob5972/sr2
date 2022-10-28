@@ -512,7 +512,7 @@ sub Main() {
         Console($s);
         Console("\n");
 
-        my $s = `grep op $gFile | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
+        $s = `grep op $gFile | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
     }
