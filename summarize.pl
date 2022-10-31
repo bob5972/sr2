@@ -508,10 +508,19 @@ sub Main() {
     }
 
     if ($OPTIONS->{'opSummary'}) {
-        my $s = `grep forceType $gFile | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
+        my $s;
+
+        Console("Inputs:\n");
+        $s = `grep forceType $gFile | grep input | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
+        Console("Outputs:\n");
+        $s = `grep forceType $gFile | grep output | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
+        Console($s);
+        Console("\n");
+
+        Console("Op Codes:\n");
         $s = `grep op $gFile | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
