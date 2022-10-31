@@ -520,7 +520,7 @@ sub Main() {
         Console($s);
         Console("\n");
 
-        Console("Op Codes:\n");
+        Console("OpCodes:\n");
         $s = `grep op $gFile | awk -F= '{print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
