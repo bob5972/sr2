@@ -51,11 +51,15 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE),                     },
     { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),             },
     { TMENTRY(NEURAL_FORCE_ENEMY),                    },
+    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),             },
     { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),            },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE),               },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),         },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS_LAX),     },
+    { TMENTRY(NEURAL_FORCE_MIDWAY),                   },
+    { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS),             },
+    { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),         },
     { TMENTRY(NEURAL_FORCE_CORES),                    },
-    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),             },
 };
 
 static TextMapEntry tmCrowds[] = {
