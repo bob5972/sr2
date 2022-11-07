@@ -9,4 +9,4 @@ OPTS="${OPTS} -H"
     echo &&
     echo build/sr2 $OPTS "$@" &&
     build/sr2 $OPTS "$@" &&
-    build/sr2 mutate -c 1 --usePopulation $POP --outputFile $POP
+    build/sr2 mutate -c 10 --usePopulation $POP --outputFile $POP
