@@ -72,7 +72,6 @@ typedef enum MLFloatOp {
     ML_FOP_1x1_QUADRATIC_UP,
     ML_FOP_1x1_QUADRATIC_DOWN,
     ML_FOP_1x1_FMOD,
-    ML_FOP_1x1_POW,
     ML_FOP_1x1_GTE,
     ML_FOP_1x1_LTE,
     ML_FOP_1x1_PRODUCT,
@@ -106,7 +105,11 @@ typedef enum MLFloatOp {
     ML_FOP_1x3_COS,
     ML_FOP_1x3_TAN,
 
+    ML_FOP_1x1_POW,
     ML_FOP_2x0_POW,
+    ML_FOP_1x2_POW,
+    ML_FOP_3x0_POW,
+
     ML_FOP_2x0_SUM,
     ML_FOP_2x0_SQUARE_SUM,
     ML_FOP_2x0_PRODUCT,

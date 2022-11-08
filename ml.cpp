@@ -76,7 +76,6 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x1_QUADRATIC_UP), },
     { TMENTRY(ML_FOP_1x1_QUADRATIC_DOWN), },
     { TMENTRY(ML_FOP_1x1_FMOD), },
-    { TMENTRY(ML_FOP_1x1_POW), },
     { TMENTRY(ML_FOP_1x1_GTE), },
     { TMENTRY(ML_FOP_1x1_LTE), },
     { TMENTRY(ML_FOP_1x1_PRODUCT), },
@@ -119,7 +118,11 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1xN_POLYNOMIAL), },
     { TMENTRY(ML_FOP_1xN_POLYNOMIAL_CLAMPED_UNIT), },
 
+    { TMENTRY(ML_FOP_1x1_POW), },
     { TMENTRY(ML_FOP_2x0_POW), },
+    { TMENTRY(ML_FOP_1x2_POW), },
+    { TMENTRY(ML_FOP_3x0_POW), },
+
     { TMENTRY(ML_FOP_2x0_SUM), },
     { TMENTRY(ML_FOP_2x0_SQUARE_SUM), },
     { TMENTRY(ML_FOP_2x0_PRODUCT), },
@@ -308,7 +311,7 @@ static float MLGaussian(float x, float mean, float stddev)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 147) {
+    if (mb_debug && ML_FOP_MAX != 149) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -407,9 +410,6 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
         case ML_FOP_1x1_FMOD:
             return fmodf(getInput(0), getParam(0));
-
-        case ML_FOP_1x1_POW:
-            return powf(getInput(0), getParam(0));
 
         case ML_FOP_1x1_GTE:
             return getInput(0) >= getParam(0) ? 1.0f : 0.0f;
@@ -637,8 +637,15 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return (i0 <= min || i0 >= max) ? p2 : p3;
         }
 
+        case ML_FOP_1x1_POW:
+            return powf(getInput(0), getParam(0));
         case ML_FOP_2x0_POW:
             return powf(getInput(0), getInput(1));
+        case ML_FOP_1x2_POW:
+            return getParam(1) * powf(getInput(0), getParam(0));
+        case ML_FOP_3x0_POW:
+            return getInput(2) * powf(getInput(0), getInput(1));
+
         case ML_FOP_2x0_SUM:
             return getInput(0) + getInput(1);
         case ML_FOP_2x0_SQUARE_SUM: {
@@ -1555,6 +1562,7 @@ void MLFloatNode::mutate(float rate,
             { MUTATION_TYPE_MOB_JITTER_SCALE,    0.01f },
             { MUTATION_TYPE_PROBABILITY,         0.10f },
             { MUTATION_TYPE_SCALE_POW,           0.05f },
+            { MUTATION_TYPE_SIMPLE_POW,          0.05f },
             { MUTATION_TYPE_INVERSE_PROBABILITY, 0.05f },
             { MUTATION_TYPE_RADIUS,              0.20f },
             { MUTATION_TYPE_PERIOD,              0.10f },
@@ -1647,7 +1655,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 147) {
+    if (mb_debug && ML_FOP_MAX != 149) {
         PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
     }
 
@@ -1777,6 +1785,16 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_2x0_SQUARE_SUM:
         case ML_FOP_2x0_PRODUCT:
             numInputs = 2;
+            numParams = 0;
+            break;
+
+        case ML_FOP_1x2_POW:
+            numInputs = 1;
+            numParams = 2;
+            break;
+
+        case ML_FOP_3x0_POW:
+            numInputs = 3;
             numParams = 0;
             break;
 
