@@ -37,8 +37,23 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_VOID), },
     { TMENTRY(ML_FOP_0x0_ZERO), },
     { TMENTRY(ML_FOP_0x0_ONE), },
+
     { TMENTRY(ML_FOP_0x1_CONSTANT), },
     { TMENTRY(ML_FOP_0x1_UNIT_CONSTANT), },
+    { TMENTRY(ML_FOP_0x3_CONSTANT_CLAMPED), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_0_10), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_0_100), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_0_1K), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_0_10K), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N10_0), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N100_0), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N1K_0), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N10K_0), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N10_10), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N100_100), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N1K_1K), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N10K_10K), },
+
     { TMENTRY(ML_FOP_1x0_IDENTITY), },
     { TMENTRY(ML_FOP_1x0_INVERSE), },
     { TMENTRY(ML_FOP_1x0_NEGATE), },
@@ -328,6 +343,86 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return getParam(0);
         case ML_FOP_0x1_UNIT_CONSTANT:
             return CLAMP_UNIT(getParam(0));
+        case ML_FOP_0x3_CONSTANT_CLAMPED: {
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float p2 = getParam(2);
+            float min = MIN(p1, p2);
+            float max = MAX(p1, p2);
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_0_10: {
+            float p0 = getParam(0);
+            float min = 0.0f;
+            float max = 10.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_0_100: {
+            float p0 = getParam(0);
+            float min = 0.0f;
+            float max = 100.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_0_1K: {
+            float p0 = getParam(0);
+            float min = 0.0f;
+            float max = 1000.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_0_10K: {
+            float p0 = getParam(0);
+            float min = 0.0f;
+            float max = 10000.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N10_0: {
+            float p0 = getParam(0);
+            float min = -10.0f;
+            float max = 0.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N100_0: {
+            float p0 = getParam(0);
+            float min = -100.0f;
+            float max = 0.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N1K_0: {
+            float p0 = getParam(0);
+            float min = -1000.0f;
+            float max = 0.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N10K_0: {
+            float p0 = getParam(0);
+            float min = -10000.0f;
+            float max = 0.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N10_10: {
+            float p0 = getParam(0);
+            float min = -10.0f;
+            float max = 10.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N100_100: {
+            float p0 = getParam(0);
+            float min = -100.0f;
+            float max = 100.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N1K_1K: {
+            float p0 = getParam(0);
+            float min = -1000.0f;
+            float max = 1000.0f;
+            return MIN(MAX(p0, min), max);
+        }
+        case ML_FOP_0x1_CONSTANT_N10K_10K: {
+            float p0 = getParam(0);
+            float min = -10000.0f;
+            float max = 10000.0f;
+            return MIN(MAX(p0, min), max);
+        }
 
         case ML_FOP_1x0_IDENTITY:
             return getInput(0);
@@ -1687,8 +1782,25 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
         case ML_FOP_0x1_CONSTANT:
         case ML_FOP_0x1_UNIT_CONSTANT:
+        case ML_FOP_0x1_CONSTANT_0_10:
+        case ML_FOP_0x1_CONSTANT_0_100:
+        case ML_FOP_0x1_CONSTANT_0_1K:
+        case ML_FOP_0x1_CONSTANT_0_10K:
+        case ML_FOP_0x1_CONSTANT_N10_0:
+        case ML_FOP_0x1_CONSTANT_N100_0:
+        case ML_FOP_0x1_CONSTANT_N1K_0:
+        case ML_FOP_0x1_CONSTANT_N10K_0:
+        case ML_FOP_0x1_CONSTANT_N10_10:
+        case ML_FOP_0x1_CONSTANT_N100_100:
+        case ML_FOP_0x1_CONSTANT_N1K_1K:
+        case ML_FOP_0x1_CONSTANT_N10K_10K:
             numInputs = 0;
             numParams = 1;
+            break;
+
+        case ML_FOP_0x3_CONSTANT_CLAMPED:
+            numInputs = 0;
+            numParams = 3;
             break;
 
         case ML_FOP_1x0_IDENTITY:
@@ -1999,8 +2111,31 @@ bool MLFloatNode::isConstant()
         case ML_FOP_0x0_ONE:
         case ML_FOP_0x1_CONSTANT:
         case ML_FOP_0x1_UNIT_CONSTANT:
+        case ML_FOP_0x3_CONSTANT_CLAMPED:
+        case ML_FOP_0x1_CONSTANT_0_10:
+        case ML_FOP_0x1_CONSTANT_0_100:
+        case ML_FOP_0x1_CONSTANT_0_1K:
+        case ML_FOP_0x1_CONSTANT_0_10K:
+        case ML_FOP_0x1_CONSTANT_N10_0:
+        case ML_FOP_0x1_CONSTANT_N100_0:
+        case ML_FOP_0x1_CONSTANT_N1K_0:
+        case ML_FOP_0x1_CONSTANT_N10K_0:
+        case ML_FOP_0x1_CONSTANT_N10_10:
+        case ML_FOP_0x1_CONSTANT_N100_100:
+        case ML_FOP_0x1_CONSTANT_N1K_1K:
+        case ML_FOP_0x1_CONSTANT_N10K_10K:
+            if (mb_debug) {
+                uint numIn, numP;
+                MLFloatOp_GetNumParams(op, &numIn, &numP);
+                ASSERT(numIn == 0);
+            }
             return TRUE;
         default:
+            if (mb_debug) {
+                uint numIn, numP;
+                MLFloatOp_GetNumParams(op, &numIn, &numP);
+                ASSERT(numIn > 0);
+            }
             return FALSE;
     }
 }
