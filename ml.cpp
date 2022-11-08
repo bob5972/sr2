@@ -203,6 +203,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_SELECT_GTE), },
     { TMENTRY(ML_FOP_NxN_SELECT_LTE), },
     { TMENTRY(ML_FOP_NxN_POW_SUM), },
+    { TMENTRY(ML_FOP_Nx1_POW_SUM), },
+    { TMENTRY(ML_FOP_Nx2N_WEIGHTED_POW_SUM), },
     { TMENTRY(ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_STEP), },
     { TMENTRY(ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_LERP), },
 };
@@ -311,9 +313,9 @@ static float MLGaussian(float x, float mean, float stddev)
 
 float MLFloatNode::computeWork(const MBVector<float> &values)
 {
-    if (mb_debug && ML_FOP_MAX != 149) {
-        PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
-    }
+    //if (mb_debug && ML_FOP_MAX != 149) {
+    //    PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
+    //}
 
     switch (op) {
         case ML_FOP_VOID:
@@ -1414,11 +1416,27 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             }
             return 0.0;
         }
-        case ML_FOP_NxN_POW_SUM: {
+        case ML_FOP_Nx1_POW_SUM: {
             float f = 0.0;
 
             for (uint i = 0; i < inputs.size(); i++) {
                 f += powf(getInput(i), getParam(0));
+            }
+            return f;
+        }
+        case ML_FOP_NxN_POW_SUM: {
+            float f = 0.0;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += powf(getInput(i), getParam(i));
+            }
+            return f;
+        }
+        case ML_FOP_Nx2N_WEIGHTED_POW_SUM: {
+            float f = 0.0;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                f += getParam(2*i + 1) * powf(getInput(i), getParam(2 * i));
             }
             return f;
         }
@@ -1655,9 +1673,9 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    if (mb_debug && ML_FOP_MAX != 149) {
-        PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
-    }
+    //if (mb_debug && ML_FOP_MAX != 151) {
+    //    PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
+    //}
 
     switch (op) {
         case ML_FOP_VOID:
@@ -1945,6 +1963,17 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numInputs = MIN(numInputsIn, numParamsIn);
             numInputs = MAX(1, numInputs);
             numParams = numInputs;
+            break;
+
+        case ML_FOP_Nx1_POW_SUM:
+            numInputs = MAX(1, numInputs);
+            numParams = 1;
+            break;
+
+        case ML_FOP_Nx2N_WEIGHTED_POW_SUM:
+            numInputs = MIN(numInputsIn, numParamsIn / 2);
+            numInputs = MAX(1, numInputs);
+            numParams = numInputs * 2;
             break;
 
         case ML_FOP_NxN_SELECT_UNIT_INTERVAL_WEIGHTED_STEP:
