@@ -52,6 +52,7 @@ C_SOURCES = main.c \
             fleet.c \
             fleetUtil.c \
             gatherFleet.c \
+            geometry.c \
             mapperFleet.c \
             mob.c \
             mutate.c \

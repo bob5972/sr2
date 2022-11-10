@@ -165,6 +165,10 @@ void MobSet::pushMobs(MBVector<Mob *>&v, const MobSetFilter &f) {
                 continue;
             }
         }
+        if (f.dirFilter.pos != NULL) {
+            ASSERT(f.dirFilter.dir != NULL);
+            NOT_IMPLEMENTED();
+        }
 
         v.push(m);
     }

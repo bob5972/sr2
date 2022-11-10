@@ -38,6 +38,16 @@ typedef struct MobSetFilter {
         const FPoint *pos;
         float range;
     } rangeFilter;
+
+    /*
+     * Filter for mobs forward/backwards from the specified center point
+     * and direction.
+     */
+    struct {
+        const FPoint *pos;
+        const FRPoint *dir;
+        bool forward;
+    } dirFilter;
 } MobSetFilter;
 
 class MobSet {
