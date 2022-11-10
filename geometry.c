@@ -18,6 +18,33 @@
 
 #include "geometry.h"
 
+bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
+                  float yMin, float yMax)
+{
+    bool clamped = FALSE;
+
+    ASSERT(xMin <= xMax);
+    ASSERT(yMin <= yMax);
+
+    if (isnan(p->x) || p->x < xMin) {
+        p->x = xMin;
+        clamped = TRUE;
+    } else if (p->x > xMax) {
+        p->x = xMax;
+        clamped = TRUE;
+    }
+
+    if (isnan(p->y) || p->y < yMin) {
+        p->y = yMin;
+        clamped = TRUE;
+    } else if (p->y > yMax) {
+        p->y = yMax;
+        clamped = TRUE;
+    }
+
+    return clamped;
+}
+
 void Geometry_UnitTest()
 {
     bool print = FALSE;
