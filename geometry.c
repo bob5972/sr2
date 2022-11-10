@@ -45,6 +45,28 @@ bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
     return clamped;
 }
 
+void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
+{
+    FPoint zero;
+
+    ASSERT(p != NULL);
+    ASSERT(rp != NULL);
+
+    if (c == NULL) {
+        FPoint_Zero(&zero);
+        c = &zero;
+    }
+
+    FPoint temp;
+
+    temp.x = rp->radius * cosf(rp->theta);
+    temp.y = rp->radius * sinf(rp->theta);
+    temp.x += c->x;
+    temp.y += c->y;
+
+    *p = temp;
+}
+
 void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
 {
     FPoint zero;

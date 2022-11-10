@@ -146,28 +146,7 @@ static inline void FRPoint_SetSpeed(FRPoint *p, float s)
 }
 
 void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp);
-
-static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
-{
-    FPoint zero;
-
-    ASSERT(p != NULL);
-    ASSERT(rp != NULL);
-
-    if (c == NULL) {
-        FPoint_Zero(&zero);
-        c = &zero;
-    }
-
-    FPoint temp;
-
-    temp.x = rp->radius * cosf(rp->theta);
-    temp.y = rp->radius * sinf(rp->theta);
-    temp.x += c->x;
-    temp.y += c->y;
-
-    *p = temp;
-}
+void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p);
 
 static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
                                FRPoint *result)
