@@ -31,7 +31,8 @@ typedef struct MobSetFilter {
     bool useFlags;
     MobTypeFlags flagsFilter;
 
-    bool (*fnFilter)(Mob *m);
+    void *cbData;
+    bool (*fnFilter)(void *cbData, Mob *m);
 
     struct {
         const FPoint *pos;

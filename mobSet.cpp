@@ -161,7 +161,7 @@ void MobSet::pushMobs(MBVector<Mob *>&v, const MobSetFilter &f) {
             }
         }
         if (f.fnFilter != NULL) {
-            if (!f.fnFilter(m)) {
+            if (!f.fnFilter(f.cbData, m)) {
                 continue;
             }
         }
