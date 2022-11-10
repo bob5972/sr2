@@ -88,6 +88,11 @@ public:
         int mobs = 0;
         int i;
 
+        // Most common case
+        if (filter == (1 << MOB_TYPE_FIGHTER)) {
+            return myTypeCounts.get(MOB_TYPE_FIGHTER);
+        }
+
         for (i = MOB_TYPE_MIN; i < MOB_TYPE_MAX; i++) {
             MobTypeFlags f = (1 << i);
             if ((f & filter) != 0) {
