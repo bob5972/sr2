@@ -27,6 +27,18 @@ extern "C" {
 #include "IntMap.hpp"
 #include "MBVector.hpp"
 
+typedef struct MobSetFilter {
+    bool useFlags;
+    MobTypeFlags flagsFilter;
+
+    bool (*fnFilter)(Mob *m);
+
+    struct {
+        const FPoint *pos;
+        float range;
+    } rangeFilter;
+} MobSetFilter;
+
 class MobSet {
 public:
     MobSet() {
@@ -146,6 +158,7 @@ public:
     void pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
                          const FPoint *pos, float range);
 
+    void pushMobs(MBVector<Mob *>&v, const MobSetFilter &f);
 
     class MobIt {
     public:

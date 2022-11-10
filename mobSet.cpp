@@ -127,17 +127,46 @@ void MobSet::pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
     v.sort(MBComparator<Mob *>(&comp));
 }
 
-void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
-                             const FPoint *pos, float range) {
-    ASSERT(range >= 0.0f);
+void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags flagsFilter,
+                             const FPoint *pos, float range)
+{
+    MobSetFilter filter;
+
+    MBUtil_Zero(&filter, sizeof(filter));
+    filter.useFlags = TRUE;
+    filter.flagsFilter = flagsFilter;
+    filter.fnFilter = NULL;
+    filter.rangeFilter.pos = pos;
+    filter.rangeFilter.range = range;
+
+    pushMobs(v, filter);
+}
+
+void MobSet::pushMobs(MBVector<Mob *>&v, const MobSetFilter &f) {
     v.ensureCapacity(v.size() + myMobs.size());
 
     for (uint i = 0; i < myMobs.size(); i++) {
         Mob *m = &myMobs[i];
-        if (((1 << m->type) & filter) != 0 &&
-            FPoint_DistanceSquared(pos, &m->pos) <= range) {
-            v.push(m);
+
+        if (f.useFlags) {
+            if (((1 << m->type) & f.flagsFilter) != 0) {
+                continue;
+            }
         }
+        if (f.rangeFilter.pos != NULL) {
+            ASSERT(f.rangeFilter.range >= 0.0f);
+            if (FPoint_DistanceSquared(f.rangeFilter.pos, &m->pos) >
+                f.rangeFilter.range) {
+                continue;
+            }
+        }
+        if (f.fnFilter != NULL) {
+            if (!f.fnFilter(m)) {
+                continue;
+            }
+        }
+
+        v.push(m);
     }
 }
 
