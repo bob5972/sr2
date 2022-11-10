@@ -120,6 +120,15 @@ void MobSet::pushMobs(MBVector<Mob *> &v, MobTypeFlags filter) {
 
 void MobSet::pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
                                     const FPoint *pos, float range) {
+    CMBComparator comp;
+    pushMobsInRange(v, filter, pos, range);
+
+    MobP_InitDistanceComparator(&comp, pos);
+    v.sort(MBComparator<Mob *>(&comp));
+}
+
+void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
+                             const FPoint *pos, float range) {
     ASSERT(range >= 0.0f);
     v.ensureCapacity(v.size() + myMobs.size());
 
@@ -130,10 +139,6 @@ void MobSet::pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
             v.push(m);
         }
     }
-
-    CMBComparator comp;
-    MobP_InitDistanceComparator(&comp, pos);
-    v.sort(MBComparator<Mob *>(&comp));
 }
 
 Mob *MobSet::findNthClosestMob(const FPoint *pos,

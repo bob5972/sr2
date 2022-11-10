@@ -143,6 +143,10 @@ public:
     void pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
                                 const FPoint *pos, float range);
 
+    void pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
+                         const FPoint *pos, float range);
+
+
     class MobIt {
     public:
         MobIt() {
