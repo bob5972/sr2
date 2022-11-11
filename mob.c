@@ -419,3 +419,36 @@ void MobP_InitDistanceComparator(CMBComparator *comp, const FPoint *pos)
     comp->itemSize = sizeof(Mob *);
 }
 
+
+bool Mob_Filter(Mob *m, const MobFilter *f)
+{
+    ASSERT(m != NULL);
+    ASSERT(f != NULL);
+
+    if (f->useFlags) {
+        if (((1 << m->type) & f->flagsFilter) != 0) {
+            return FALSE;
+        }
+    }
+    if (f->rangeFilter.pos != NULL) {
+        ASSERT(f->rangeFilter.range >= 0.0f);
+        if (FPoint_DistanceSquared(f->rangeFilter.pos, &m->pos) >
+            f->rangeFilter.range) {
+            return FALSE;
+        }
+    }
+    if (f->fnFilter != NULL) {
+        if (!f->fnFilter(f->cbData, m)) {
+            return FALSE;
+        }
+    }
+    if (f->dirFilter.pos != NULL) {
+        ASSERT(f->dirFilter.dir != NULL);
+        if (!FPoint_IsFacing(&m->pos, f->dirFilter.pos, f->dirFilter.dir,
+                                f->dirFilter.forward)) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}

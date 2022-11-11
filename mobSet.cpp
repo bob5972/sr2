@@ -130,7 +130,7 @@ void MobSet::pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
 void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags flagsFilter,
                              const FPoint *pos, float range)
 {
-    MobSetFilter filter;
+    MobFilter filter;
 
     MBUtil_Zero(&filter, sizeof(filter));
     filter.useFlags = TRUE;
@@ -139,38 +139,17 @@ void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags flagsFilter,
     filter.rangeFilter.pos = pos;
     filter.rangeFilter.range = range;
 
-    pushMobs(v, filter);
+    pushMobs(v, &filter);
 }
 
-void MobSet::pushMobs(MBVector<Mob *>&v, const MobSetFilter &f) {
+void MobSet::pushMobs(MBVector<Mob *>&v, const MobFilter *f) {
     v.ensureCapacity(v.size() + myMobs.size());
 
     for (uint i = 0; i < myMobs.size(); i++) {
         Mob *m = &myMobs[i];
 
-        if (f.useFlags) {
-            if (((1 << m->type) & f.flagsFilter) != 0) {
-                continue;
-            }
-        }
-        if (f.rangeFilter.pos != NULL) {
-            ASSERT(f.rangeFilter.range >= 0.0f);
-            if (FPoint_DistanceSquared(f.rangeFilter.pos, &m->pos) >
-                f.rangeFilter.range) {
-                continue;
-            }
-        }
-        if (f.fnFilter != NULL) {
-            if (!f.fnFilter(f.cbData, m)) {
-                continue;
-            }
-        }
-        if (f.dirFilter.pos != NULL) {
-            ASSERT(f.dirFilter.dir != NULL);
-            if (!FPoint_IsFacing(&m->pos, f.dirFilter.pos, f.dirFilter.dir,
-                                 f.dirFilter.forward)) {
-                continue;
-            }
+        if (Mob_Filter(m, f)) {
+            v.push(m);
         }
 
         v.push(m);
