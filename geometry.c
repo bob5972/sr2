@@ -105,6 +105,20 @@ void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
     ASSERT(rp->radius >= 0.0f);
 }
 
+bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
+                     bool forward)
+{
+    FPoint pv;
+    FPoint dv;
+
+    FPoint_Subtract(p, c, &pv);
+    FRPoint_ToFPoint(dir, c, &dv);
+
+    float dot = pv.x * dv.x + pv.y * pv.y;
+
+    return forward ? dot >= 0 : dot < 0;
+}
+
 void Geometry_UnitTest()
 {
     bool print = FALSE;

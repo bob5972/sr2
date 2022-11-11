@@ -167,7 +167,10 @@ void MobSet::pushMobs(MBVector<Mob *>&v, const MobSetFilter &f) {
         }
         if (f.dirFilter.pos != NULL) {
             ASSERT(f.dirFilter.dir != NULL);
-            NOT_IMPLEMENTED();
+            if (!FPoint_IsFacing(&m->pos, f.dirFilter.pos, f.dirFilter.dir,
+                                 f.dirFilter.forward)) {
+                continue;
+            }
         }
 
         v.push(m);

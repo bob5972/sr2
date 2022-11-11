@@ -148,6 +148,9 @@ static inline void FRPoint_SetSpeed(FRPoint *p, float s)
 void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp);
 void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p);
 
+bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
+                     bool forward);
+
 static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
                                FRPoint *result)
 {
