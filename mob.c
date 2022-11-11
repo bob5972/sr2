@@ -426,7 +426,7 @@ bool Mob_Filter(Mob *m, const MobFilter *f)
     ASSERT(f != NULL);
 
     if (f->useFlags) {
-        if (((1 << m->type) & f->flagsFilter) != 0) {
+        if (((1 << m->type) & f->flagsFilter) == 0) {
             return FALSE;
         }
     }
