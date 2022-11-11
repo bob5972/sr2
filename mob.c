@@ -431,9 +431,8 @@ bool Mob_Filter(Mob *m, const MobFilter *f)
         }
     }
     if (f->rangeFilter.pos != NULL) {
-        ASSERT(f->rangeFilter.range >= 0.0f);
         if (FPoint_DistanceSquared(f->rangeFilter.pos, &m->pos) >
-            f->rangeFilter.range) {
+            f->rangeFilter.radius * f->rangeFilter.radius) {
             return FALSE;
         }
     }
@@ -445,7 +444,7 @@ bool Mob_Filter(Mob *m, const MobFilter *f)
     if (f->dirFilter.pos != NULL) {
         ASSERT(f->dirFilter.dir != NULL);
         if (!FPoint_IsFacing(&m->pos, f->dirFilter.pos, f->dirFilter.dir,
-                                f->dirFilter.forward)) {
+                             f->dirFilter.forward)) {
             return FALSE;
         }
     }

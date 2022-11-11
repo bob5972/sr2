@@ -39,7 +39,7 @@ typedef struct MobFilter {
 
     struct {
         const FPoint *pos;
-        float range;
+        float radius;
     } rangeFilter;
 
     /*
@@ -101,6 +101,17 @@ void Mob_MaskForSensor(Mob *mob);
 void Mob_MaskForAI(Mob *mob);
 
 bool Mob_Filter(Mob *mob, const MobFilter *filter);
+
+static inline bool Mob_IsFilterEmpty(const MobFilter *filter) {
+    if (filter->useFlags && filter->flagsFilter == MOB_FLAG_NONE) {
+        return TRUE;
+    }
+    if (filter->rangeFilter.pos != NULL &&
+        filter->rangeFilter.radius <= 0.0f) {
+        return TRUE;
+    }
+    return FALSE;
+}
 
 static inline float Mob_GetRadius(const Mob *mob)
 {
