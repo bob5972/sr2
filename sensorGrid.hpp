@@ -269,65 +269,14 @@ public:
         return myTargetLastSeenMap.get(mobid);
     }
 
-    void avgFlock(FPoint *avgVel, FPoint *avgPos,
-                  const FPoint *p, float radius,
-                  MobTypeFlags filter,
-                  bool useFriends) {
-        uint n = 0;
-        MobSet::MobIt mit;
-        FPoint lAvgVel;
-        FPoint lAvgPos;
-
-        if (useFriends) {
-            mit = myFriends.iterator(filter);
-        } else {
-            mit = myTargets.iterator(filter);
-        }
-
-        lAvgVel.x = 0.0f;
-        lAvgVel.y = 0.0f;
-
-        lAvgPos.x = 0.0f;
-        lAvgPos.y = 0.0f;
-
-        while (radius > 0.0f && mit.hasNext()) {
-            Mob *f = mit.next();
-            ASSERT(f != NULL);
-
-            if (FPoint_DistanceSquared(&f->pos, p) <= radius * radius) {
-                n++;
-                lAvgVel.x += (f->pos.x - f->lastPos.x);
-                lAvgVel.y += (f->pos.y - f->lastPos.y);
-
-                lAvgPos.x += f->pos.x;
-                lAvgPos.y += f->pos.y;
-            }
-        }
-
-        if (n != 0) {
-            lAvgVel.x /= n;
-            lAvgVel.y /= n;
-
-            lAvgPos.x /= n;
-            lAvgPos.y /= n;
-        }
-
-        if (avgVel != NULL) {
-            *avgVel = lAvgVel;
-        }
-        if (avgPos != NULL) {
-            *avgPos = lAvgPos;
-        }
-    }
-
     void friendAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
                            MobTypeFlags filter) {
-        avgFlock(avgVel, NULL, p, radius, filter, TRUE);
+        avgVelocityHelper(avgVel, p, radius, filter, TRUE);
     }
 
     void friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
-        avgFlock(NULL, avgPos, p, radius, filter, TRUE);
+        avgPosHelper(avgPos, p, radius, filter, TRUE);
     }
 
     /*
@@ -337,10 +286,19 @@ public:
 
     void targetAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
-        avgFlock(NULL, avgPos, p, radius, filter, FALSE);
+        avgPosHelper(avgPos, p, radius, filter, FALSE);
     }
 
 private:
+    void avgVelocityHelper(FPoint *avgVel,
+                           const FPoint *p, float radius,
+                           MobTypeFlags filter,
+                           bool useFriends);
+    void avgPosHelper(FPoint *avgVel,
+                      const FPoint *p, float radius,
+                      MobTypeFlags filter,
+                      bool useFriends);
+
     int myEnemyBaseDestroyedCount;
     FPoint myFriendBasePos;
 
