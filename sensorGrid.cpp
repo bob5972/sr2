@@ -149,16 +149,16 @@ void SensorGrid::avgHelper(FPoint *avgVel, FPoint *avgPos,
     lAvgPos.y = 0.0f;
 
     while (radius > 0.0f && mit.hasNext()) {
-        Mob *f = mit.next();
-        ASSERT(f != NULL);
+        Mob *m = mit.next();
+        ASSERT(m != NULL);
 
-        if (FPoint_DistanceSquared(&f->pos, p) <= radius * radius) {
+        if (FPoint_DistanceSquared(&m->pos, p) <= radius * radius) {
             n++;
-            lAvgVel.x += (f->pos.x - f->lastPos.x);
-            lAvgVel.y += (f->pos.y - f->lastPos.y);
+            lAvgVel.x += (m->pos.x - m->lastPos.x);
+            lAvgVel.y += (m->pos.y - m->lastPos.y);
 
-            lAvgPos.x += f->pos.x;
-            lAvgPos.y += f->pos.y;
+            lAvgPos.x += m->pos.x;
+            lAvgPos.y += m->pos.y;
         }
     }
 
