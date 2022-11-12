@@ -149,14 +149,14 @@ void MobSet::pushMobs(MBVector<Mob *>&v, const MobSetFilter &f) {
         Mob *m = &myMobs[i];
 
         if (f.useFlags) {
-            if (((1 << m->type) & f.flagsFilter) != 0) {
+            if (((1 << m->type) & f.flagsFilter) == 0) {
                 continue;
             }
         }
         if (f.rangeFilter.pos != NULL) {
             ASSERT(f.rangeFilter.range >= 0.0f);
             if (FPoint_DistanceSquared(f.rangeFilter.pos, &m->pos) >
-                f.rangeFilter.range) {
+                f.rangeFilter.range * f.rangeFilter.range) {
                 continue;
             }
         }
