@@ -8,7 +8,7 @@ use MBBasic;
 use MBBuild;
 
 $MBBasic::PROGRAM_AUTHOR = "Michael Banack";
-$MBBasic::PROGRAM_COPYRIGHT_DATE = "2021";
+$MBBasic::PROGRAM_COPYRIGHT_DATE = "2022";
 
 my $gScriptOptions = {};
 

@@ -6,7 +6,7 @@ NOOB_POP=50
 TICK_LIMIT=40000
 SCENARIO=fast
 THREADS=14
-BUILDTYPE="release";
+BUILDTYPE="develperf";
 
 LOG_FILE="build/tmp/evolve.log";
 
