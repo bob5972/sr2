@@ -29,6 +29,30 @@
 #include "battleTypes.h"
 #include "MBCompare.h"
 
+
+typedef struct MobFilter {
+    bool useFlags;
+    MobTypeFlags flagsFilter;
+
+    void *cbData;
+    bool (*fnFilter)(void *cbData, Mob *m);
+
+    struct {
+        const FPoint *pos;
+        float radius;
+    } rangeFilter;
+
+    /*
+     * Filter for mobs forward/backwards from the specified center point
+     * and direction.
+     */
+    struct {
+        const FPoint *pos;
+        const FRPoint *dir;
+        bool forward;
+    } dirFilter;
+} MobFilter;
+
 #define MOB_FIGHTER_SENSOR_RADIUS (50.0f)
 
 float MobType_GetSpeed(MobType type);

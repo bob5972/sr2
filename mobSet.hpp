@@ -27,29 +27,6 @@ extern "C" {
 #include "IntMap.hpp"
 #include "MBVector.hpp"
 
-typedef struct MobSetFilter {
-    bool useFlags;
-    MobTypeFlags flagsFilter;
-
-    void *cbData;
-    bool (*fnFilter)(void *cbData, Mob *m);
-
-    struct {
-        const FPoint *pos;
-        float range;
-    } rangeFilter;
-
-    /*
-     * Filter for mobs forward/backwards from the specified center point
-     * and direction.
-     */
-    struct {
-        const FPoint *pos;
-        const FRPoint *dir;
-        bool forward;
-    } dirFilter;
-} MobSetFilter;
-
 class MobSet {
 public:
     MobSet() {
@@ -169,7 +146,7 @@ public:
     void pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
                          const FPoint *pos, float range);
 
-    void pushMobs(MBVector<Mob *>&v, const MobSetFilter &f);
+    void pushMobs(MBVector<Mob *>&v, const MobFilter &f);
 
     class MobIt {
     public:
