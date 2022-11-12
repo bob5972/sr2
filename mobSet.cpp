@@ -139,41 +139,18 @@ void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags flagsFilter,
     filter.rangeFilter.pos = pos;
     filter.rangeFilter.radius = range;
 
-    pushMobs(v, filter);
+    pushMobs(v, &filter);
 }
 
-void MobSet::pushMobs(MBVector<Mob *>&v, const MobFilter &f) {
+void MobSet::pushMobs(MBVector<Mob *>&v, const MobFilter *f) {
     v.ensureCapacity(v.size() + myMobs.size());
 
     for (uint i = 0; i < myMobs.size(); i++) {
         Mob *m = &myMobs[i];
 
-        if (f.useFlags) {
-            if (((1 << m->type) & f.flagsFilter) == 0) {
-                continue;
-            }
+        if (Mob_Filter(m, f)) {
+            v.push(m);
         }
-        if (f.rangeFilter.pos != NULL) {
-            ASSERT(f.rangeFilter.radius >= 0.0f);
-            if (FPoint_DistanceSquared(f.rangeFilter.pos, &m->pos) >
-                f.rangeFilter.radius * f.rangeFilter.radius) {
-                continue;
-            }
-        }
-        if (f.fnFilter != NULL) {
-            if (!f.fnFilter(f.cbData, m)) {
-                continue;
-            }
-        }
-        if (f.dirFilter.pos != NULL) {
-            ASSERT(f.dirFilter.dir != NULL);
-            if (!FPoint_IsFacing(&m->pos, f.dirFilter.pos, f.dirFilter.dir,
-                                 f.dirFilter.forward)) {
-                continue;
-            }
-        }
-
-        v.push(m);
     }
 }
 

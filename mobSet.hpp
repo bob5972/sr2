@@ -146,7 +146,7 @@ public:
     void pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
                          const FPoint *pos, float range);
 
-    void pushMobs(MBVector<Mob *>&v, const MobFilter &f);
+    void pushMobs(MBVector<Mob *>&v, const MobFilter *f);
 
     class MobIt {
     public:

@@ -35,7 +35,7 @@ typedef struct MobFilter {
     MobTypeFlags flagsFilter;
 
     void *cbData;
-    bool (*fnFilter)(void *cbData, Mob *m);
+    bool (*fnFilter)(void *cbData, const Mob *m);
 
     struct {
         const FPoint *pos;
@@ -99,6 +99,8 @@ void Mob_Init(Mob *mob, MobType t);
 
 void Mob_MaskForSensor(Mob *mob);
 void Mob_MaskForAI(Mob *mob);
+
+bool Mob_Filter(const Mob *m, const MobFilter *f);
 
 static inline float Mob_GetRadius(const Mob *mob)
 {
