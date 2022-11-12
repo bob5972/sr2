@@ -1,6 +1,6 @@
 /*
  * geometry.h -- part of SpaceRobots2
- * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2022 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -145,65 +145,8 @@ static inline void FRPoint_SetSpeed(FRPoint *p, float s)
     }
 }
 
-static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
-{
-    FPoint zero;
-
-    ASSERT(p != NULL);
-    ASSERT(rp != NULL);
-
-    if (c == NULL) {
-        FPoint_Zero(&zero);
-        c = &zero;
-    }
-
-    FPoint temp = *p;
-    temp.x -= c->x;
-    temp.y -= c->y;
-
-    rp->radius = sqrtf((temp.x * temp.x) + (temp.y * temp.y));
-
-    /*
-     * We could use atan2f here to have it deal with the signs,
-     * but then it gives negative angles.
-     */
-    rp->theta = atanf(temp.y / temp.x);
-
-    if (isnanf(rp->theta)) {
-        rp->theta = 0.0f;
-    } else if (temp.x < 0.0f) {
-        rp->theta += M_PI;
-    } else if (rp->theta < 0.0f) {
-        rp->theta += 2.0f * M_PI;
-    }
-
-    ASSERT(rp->theta <= 2.0f * (float)M_PI);
-    ASSERT(rp->theta >= -2.0f * (float)M_PI);
-    ASSERT(rp->theta >= 0.0f);
-    ASSERT(rp->radius >= 0.0f);
-}
-
-static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
-{
-    FPoint zero;
-
-    ASSERT(p != NULL);
-    ASSERT(rp != NULL);
-
-    if (c == NULL) {
-        FPoint_Zero(&zero);
-        c = &zero;
-    }
-
-    FPoint temp;
-
-    temp.x = rp->radius * cosf(rp->theta);
-    temp.y = rp->radius * sinf(rp->theta);
-    temp.x += c->x;
-    temp.y += c->y;
-
-    *p = temp;
-}
+void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp);
+void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p);
 
 static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
                                FRPoint *result)
