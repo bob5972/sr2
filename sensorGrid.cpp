@@ -149,17 +149,19 @@ bool SensorGrid::avgHelper(FPoint *avgVel, FPoint *avgPos,
     lAvgPos.x = 0.0f;
     lAvgPos.y = 0.0f;
 
-    while (mit.hasNext()) {
-        Mob *m = mit.next();
-        ASSERT(m != NULL);
+    if (!Mob_IsFilterEmpty(f)) {
+        while (mit.hasNext()) {
+            Mob *m = mit.next();
+            ASSERT(m != NULL);
 
-        if (Mob_Filter(m, f)) {
-            n++;
-            lAvgVel.x += (m->pos.x - m->lastPos.x);
-            lAvgVel.y += (m->pos.y - m->lastPos.y);
+            if (Mob_Filter(m, f)) {
+                n++;
+                lAvgVel.x += (m->pos.x - m->lastPos.x);
+                lAvgVel.y += (m->pos.y - m->lastPos.y);
 
-            lAvgPos.x += m->pos.x;
-            lAvgPos.y += m->pos.y;
+                lAvgPos.x += m->pos.x;
+                lAvgPos.y += m->pos.y;
+            }
         }
     }
 

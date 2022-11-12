@@ -102,6 +102,17 @@ void Mob_MaskForAI(Mob *mob);
 
 bool Mob_Filter(const Mob *m, const MobFilter *f);
 
+static inline bool Mob_IsFilterEmpty(const MobFilter *filter) {
+    if (filter->useFlags && filter->flagsFilter == MOB_FLAG_NONE) {
+        return TRUE;
+    }
+    if (filter->rangeFilter.pos != NULL &&
+        filter->rangeFilter.radius <= 0.0f) {
+        return TRUE;
+   }
+    return FALSE;
+}
+
 static inline float Mob_GetRadius(const Mob *mob)
 {
     ASSERT(mob != NULL);
