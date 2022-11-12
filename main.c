@@ -700,7 +700,7 @@ static void MainPrintWinnerData(MainWinnerData *wd)
     ASSERT(wd->battles >= 0);
     ASSERT(wd->wins + wd->losses + wd->draws == wd->battles);
 
-    Warning("\t%3d wins, %3d losses, %3d draws => %4.1f\% wins\n",
+    Warning("\t%3d wins, %3d losses, %3d draws => %4.1f%% wins\n",
             wins, losses, draws, percent);
 }
 
@@ -715,8 +715,7 @@ static void MainPrintWinners(void)
             Warning("Fleet %s:\n", mainData.players[p1].playerName);
             for (uint p2 = 0; p2 < mainData.numPlayers; p2++) {
                 if (mainData.winnerBreakdown[p1][p2].battles > 0) {
-                    Warning("\tvs %s:\n", mainData.players[p2].playerName,
-                            mainData.players[p2].playerName);
+                    Warning("\tvs %s:\n", mainData.players[p2].playerName);
                     MainPrintWinnerData(&mainData.winnerBreakdown[p1][p2]);
                 }
             }
