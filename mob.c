@@ -421,6 +421,9 @@ void MobP_InitDistanceComparator(CMBComparator *comp, const FPoint *pos)
 
 bool Mob_Filter(const Mob *m, const MobFilter *f)
 {
+    ASSERT(m != NULL);
+    ASSERT(f != NULL);
+
     if (f->useFlags) {
         if (((1 << m->type) & f->flagsFilter) == 0) {
             return FALSE;
@@ -447,4 +450,3 @@ bool Mob_Filter(const Mob *m, const MobFilter *f)
 
     return TRUE;
 }
-
