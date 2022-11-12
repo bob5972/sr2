@@ -271,12 +271,12 @@ public:
 
     void friendAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
                            MobTypeFlags filter) {
-        avgVelocityHelper(avgVel, p, radius, filter, TRUE);
+        avgHelper(avgVel, NULL, p, radius, filter, TRUE);
     }
 
     void friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
-        avgPosHelper(avgPos, p, radius, filter, TRUE);
+        avgHelper(NULL, avgPos, p, radius, filter, TRUE);
     }
 
     /*
@@ -286,18 +286,14 @@ public:
 
     void targetAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filter) {
-        avgPosHelper(avgPos, p, radius, filter, FALSE);
+        avgHelper(NULL, avgPos, p, radius, filter, FALSE);
     }
 
 private:
-    void avgVelocityHelper(FPoint *avgVel,
-                           const FPoint *p, float radius,
-                           MobTypeFlags filter,
-                           bool useFriends);
-    void avgPosHelper(FPoint *avgVel,
-                      const FPoint *p, float radius,
-                      MobTypeFlags filter,
-                      bool useFriends);
+    void avgHelper(FPoint *avgVel, FPoint *avgPos,
+                   const FPoint *p, float radius,
+                   MobTypeFlags filter,
+                   bool useFriends);
 
     int myEnemyBaseDestroyedCount;
     FPoint myFriendBasePos;
