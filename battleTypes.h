@@ -84,6 +84,8 @@ typedef struct Mob {
     FPoint pos;
     float radius;
     float sensorRadius;
+    int health;
+    FPoint lastPos;
 
     /*
      * Protected fields that are also used by the Fleet AIs.
@@ -92,12 +94,10 @@ typedef struct Mob {
     char protectedFields;
     void *aiMobHandle;
     int fuel;
-    int health;
     uint birthTick;
     uint lastSpawnTick;
     int rechargeTime;
     int powerCoreCredits;
-    FPoint lastPos;
     MobID parentMobid;
     MobCmd cmd;
 

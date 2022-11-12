@@ -24,11 +24,11 @@ float MobType_GetRadius(MobType type)
         MobType type;
         float radius;
     } v[] = {
-        { MOB_TYPE_INVALID,    0.0f, },
-        { MOB_TYPE_BASE,      50.0f, },
-        { MOB_TYPE_FIGHTER,    5.0f, },
-        { MOB_TYPE_MISSILE,    3.0f, },
-        { MOB_TYPE_POWER_CORE ,  2.0f, },
+        { MOB_TYPE_INVALID,     0.0f, },
+        { MOB_TYPE_BASE,       50.0f, },
+        { MOB_TYPE_FIGHTER,     5.0f, },
+        { MOB_TYPE_MISSILE,     3.0f, },
+        { MOB_TYPE_POWER_CORE,  2.0f, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -44,10 +44,10 @@ float MobType_GetSensorRadius(MobType type)
         MobType type;
         float sensorRadius;
     } v[] = {
-        { MOB_TYPE_INVALID,    0.0f, },
-        { MOB_TYPE_BASE,     250.0f, },
-        { MOB_TYPE_FIGHTER,   MOB_FIGHTER_SENSOR_RADIUS, },
-        { MOB_TYPE_MISSILE,   30.0f, },
+        { MOB_TYPE_INVALID,      0.0f, },
+        { MOB_TYPE_BASE,       250.0f, },
+        { MOB_TYPE_FIGHTER,    MOB_FIGHTER_SENSOR_RADIUS, },
+        { MOB_TYPE_MISSILE,     30.0f, },
         { MOB_TYPE_POWER_CORE ,  0.0f, },
     };
 
@@ -84,10 +84,10 @@ int MobType_GetCost(MobType type)
         MobType type;
         int cost;
     } v[] = {
-        { MOB_TYPE_INVALID,    -1, },
-        { MOB_TYPE_BASE,       -1, },
-        { MOB_TYPE_FIGHTER,   100, },
-        { MOB_TYPE_MISSILE,     5, },
+        { MOB_TYPE_INVALID,      -1, },
+        { MOB_TYPE_BASE,         -1, },
+        { MOB_TYPE_FIGHTER,     100, },
+        { MOB_TYPE_MISSILE,       5, },
         { MOB_TYPE_POWER_CORE ,  -1, },
     };
 
@@ -113,10 +113,10 @@ int MobType_GetMaxFuel(MobType type)
         MobType type;
         int fuel;
     } v[] = {
-        { MOB_TYPE_INVALID,      -1, },
-        { MOB_TYPE_BASE,         -1, },
-        { MOB_TYPE_FIGHTER,      -1, },
-        { MOB_TYPE_MISSILE,      14, },
+        { MOB_TYPE_INVALID,        -1, },
+        { MOB_TYPE_BASE,           -1, },
+        { MOB_TYPE_FIGHTER,        -1, },
+        { MOB_TYPE_MISSILE,        14, },
         { MOB_TYPE_POWER_CORE ,  4000, },
     };
 
@@ -138,7 +138,7 @@ int MobType_GetMaxHealth(MobType type)
         { MOB_TYPE_BASE,         50, },
         { MOB_TYPE_FIGHTER,       1, },
         { MOB_TYPE_MISSILE,       1, },
-        { MOB_TYPE_POWER_CORE ,     1, },
+        { MOB_TYPE_POWER_CORE ,   1, },
     };
 
     ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
@@ -190,7 +190,6 @@ void Mob_MaskForSensor(Mob *mob)
                 sizeof(*mob) - OFFSETOF(Mob, protectedFields));
 
     ASSERT(mob->fuel == 0);
-    ASSERT(mob->health == 0);
     ASSERT(mob->birthTick == 0);
     ASSERT(mob->rechargeTime == 0);
     ASSERT(mob->powerCoreCredits == 0);
