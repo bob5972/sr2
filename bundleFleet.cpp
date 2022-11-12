@@ -15600,7 +15600,7 @@ public:
         MappingSensorGrid *sg = (MappingSensorGrid *)mySensorGrid;
 
         float pRadius = getBundleValue(mob, &myConfig.align.push.range.radius);
-        sg->friendAvgVelocity(&avgVel, &mob->pos, pRadius, MOB_FLAG_FIGHTER);
+        sg->friendAvgVel(&avgVel, &mob->pos, pRadius, MOB_FLAG_FIGHTER);
         FPoint force = avgVel;
         force.x += mob->pos.x;
         force.y += mob->pos.y;
@@ -15609,7 +15609,7 @@ public:
         if (myConfig.align.useTangent) {
             float tRadius = getBundleValue(mob, &myConfig.align.tangent.range.radius);
             if (tRadius != pRadius) {
-                sg->friendAvgVelocity(&avgVel, &mob->pos, tRadius, MOB_FLAG_FIGHTER);
+                sg->friendAvgVel(&avgVel, &mob->pos, tRadius, MOB_FLAG_FIGHTER);
             }
             FPoint force = avgVel;
             force.x += mob->pos.x;

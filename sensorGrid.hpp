@@ -269,8 +269,8 @@ public:
         return myTargetLastSeenMap.get(mobid);
     }
 
-    bool friendAvgVelocity(FPoint *avgVel, const FPoint *p, float radius,
-                           MobTypeFlags filterFlags) {
+    bool friendAvgVel(FPoint *avgVel, const FPoint *p, float radius,
+                      MobTypeFlags filterFlags) {
         MobFilter f;
         MBUtil_Zero(&f, sizeof(f));
         f.rangeFilter.pos = p;
@@ -291,11 +291,6 @@ public:
         return avgHelper(NULL, avgPos, &f, TRUE);
     }
 
-    /*
-     * We don't get lastPos for targets, so we can't calculate
-     * velocity easily.
-     */
-
     bool targetAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filterFlags) {
         MobFilter f;
@@ -305,6 +300,17 @@ public:
         f.useFlags = TRUE;
         f.flagsFilter = filterFlags;
         return avgHelper(NULL, avgPos, &f, FALSE);
+    }
+
+    bool targetAvgVel(FPoint *avgVel, const FPoint *p, float radius,
+                      MobTypeFlags filterFlags) {
+        MobFilter f;
+        MBUtil_Zero(&f, sizeof(f));
+        f.rangeFilter.pos = p;
+        f.rangeFilter.radius = radius;
+        f.useFlags = TRUE;
+        f.flagsFilter = filterFlags;
+        return avgHelper(avgVel, NULL, &f, FALSE);
     }
 
 private:

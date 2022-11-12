@@ -52,6 +52,7 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),             },
     { TMENTRY(NEURAL_FORCE_BASE_SHELL),               },
     { TMENTRY(NEURAL_FORCE_ENEMY),                    },
+    { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),              },
     { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),             },
     { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),            },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE),               },
@@ -630,8 +631,8 @@ bool NeuralForce_GetFocus(AIContext *nc,
         }
         case NEURAL_FORCE_ALIGN: {
             FPoint avgVel;
-            nc->sg->friendAvgVelocity(&avgVel, &mob->pos, desc->radius,
-                                      MOB_FLAG_FIGHTER);
+            nc->sg->friendAvgVel(&avgVel, &mob->pos, desc->radius,
+                                 MOB_FLAG_FIGHTER);
             avgVel.x += mob->pos.x;
             avgVel.y += mob->pos.y;
             *focusPoint = avgVel;
@@ -639,8 +640,8 @@ bool NeuralForce_GetFocus(AIContext *nc,
         }
         case NEURAL_FORCE_ALIGN2: {
             FPoint avgVel;
-            nc->sg->friendAvgVelocity(&avgVel, &mob->pos, desc->radius,
-                                      MOB_FLAG_FIGHTER);
+            nc->sg->friendAvgVel(&avgVel, &mob->pos, desc->radius,
+                                 MOB_FLAG_FIGHTER);
             if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
                 avgVel.x += mob->pos.x;
                 avgVel.y += mob->pos.y;
@@ -662,6 +663,18 @@ bool NeuralForce_GetFocus(AIContext *nc,
                                  MOB_FLAG_SHIP);
             *focusPoint = avgPos;
             return TRUE;
+        }
+        case NEURAL_FORCE_ENEMY_ALIGN: {
+            FPoint avgVel;
+            nc->sg->targetAvgVel(&avgVel, &mob->pos, desc->radius,
+                                 MOB_FLAG_SHIP);
+            if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
+                avgVel.x += mob->pos.x;
+                avgVel.y += mob->pos.y;
+                *focusPoint = avgVel;
+                return TRUE;
+            }
+            return FALSE;
         }
         case NEURAL_FORCE_SEPARATE:
             return NeuralForceGetSeparateFocus(nc, mob, desc, focusPoint);
