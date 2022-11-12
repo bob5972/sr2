@@ -118,9 +118,10 @@ $(BUILDDIR)/$(TARGET): $(TARGET_OBJ)
 	${CXX} ${CFLAGS} $(TARGET_OBJ) $(LIBFLAGS) -o $(BUILDDIR)/$(TARGET)
 
 clean:
-	rm -f $(BUILDROOT)/debug
-	rm -f $(BUILDROOT)/develperf
-	rm -f $(BUILDROOT)/release
+	rm -rf $(BUILDROOT)/debug
+	rm -rf $(BUILDROOT)/develperf
+	rm -rf $(BUILDROOT)/release
+	rm  -f $(BUILDROOT)/$(TARGET)
 
 # after a distclean you'll need to run configure again
 dist-clean: distclean
