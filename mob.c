@@ -430,6 +430,9 @@ bool Mob_Filter(const Mob *m, const MobFilter *f)
         }
     }
     if (f->rangeFilter.pos != NULL) {
+        if (f->rangeFilter.radius <= 0.0f) {
+            return FALSE;
+        }
         if (FPoint_DistanceSquared(f->rangeFilter.pos, &m->pos) >
             f->rangeFilter.radius * f->rangeFilter.radius) {
             return FALSE;
