@@ -1,4 +1,5 @@
 #!/bin/bash
+## compile -- part of SpaceRobots2
 
 if [ "$1" == "debug" ]; then
     WANTDEBUG=1

@@ -1,6 +1,9 @@
 #!/usr/bin/perl
 ## configure -- part of SpaceRobots2
 
+use strict;
+use warnings;
+
 use FindBin qw($Bin);
 use lib "$Bin/MBLib/MBPerl";
 
@@ -17,23 +20,37 @@ sub Main() {
     MBBuild::Init();
 
     my $defines = {};
+    my $config = {};
+
+    my $bareOpts = $OPTIONS->{bareOptions};
+    ASSERT(!defined($bareOpts) || ref($bareOpts) eq 'ARRAY');
+    if (defined($bareOpts) && ArrayLen($bareOpts) > 0) {
+        VERIFY(ArrayLen($bareOpts) == 1, 'Too many bareOpts');
+        my $bare = $bareOpts->[0];
+
+        if ($bare =~ /^debug|develperf|release$/) {
+            $config->{'BUILDTYPE'} = $bare;
+        } else {
+            Panic("Unknown bare option: $bare\n");
+        }
+    }
 
     if (-f '/usr/lib64/libX11.so' ||
         -f '/usr/lib/x86_64-linux-gnu/libX11.so') {
-        Warning("libX11 detected: enabling GUI\n");
+        Console("libX11 detected: enabling GUI\n");
         $defines->{'SR2_GUI'} = TRUE;
         $defines->{'OPENGL'} = TRUE;
     } else {
-        Warning("libX11 NOT detected: disabling GUI\n");
+        Console("libX11 NOT detected: disabling GUI\n");
         $defines->{'SR2_GUI'} = FALSE;
         $defines->{'OPENGL'} = FALSE;
     }
 
     # Causes floating point differences between debug/non-debug builds
     # on gcc 11.3.0
-    $defines->{'PROJECT_CFLAGS'} = "-fno-expensive-optimizations";
+    $config->{'PROJECT_CFLAGS'} = "-fno-expensive-optimizations";
 
-    MBBuild::Configure($defines);
+    MBBuild::Configure($config, $defines);
     MBBuild::Exit();
 }
 
