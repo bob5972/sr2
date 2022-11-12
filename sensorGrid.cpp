@@ -126,7 +126,6 @@ void SensorGrid::updateTick(FleetAI *ai)
 }
 
 
-
 void SensorGrid::avgHelper(FPoint *avgVel, FPoint *avgPos,
                            const FPoint *p, float radius,
                            MobTypeFlags filter,
@@ -174,7 +173,6 @@ void SensorGrid::avgHelper(FPoint *avgVel, FPoint *avgPos,
     if (avgVel != NULL) {
         *avgVel = lAvgVel;
     }
-
     if (avgPos != NULL) {
         *avgPos = lAvgPos;
     }
@@ -328,4 +326,3 @@ void MappingSensorGrid::generateGuess()
     myData.hasEnemyBaseGuess = FALSE;
     myData.enemyBaseGuessIndex = -1;
 }
-
