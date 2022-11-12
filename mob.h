@@ -109,7 +109,7 @@ static inline bool Mob_IsFilterEmpty(const MobFilter *filter) {
     if (filter->rangeFilter.pos != NULL &&
         filter->rangeFilter.radius <= 0.0f) {
         return TRUE;
-   }
+    }
     return FALSE;
 }
 

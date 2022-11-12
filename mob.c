@@ -446,7 +446,7 @@ bool Mob_Filter(const Mob *m, const MobFilter *f)
     if (f->dirFilter.pos != NULL) {
         ASSERT(f->dirFilter.dir != NULL);
         if (!FPoint_IsFacing(&m->pos, f->dirFilter.pos, f->dirFilter.dir,
-                                f->dirFilter.forward)) {
+                             f->dirFilter.forward)) {
             return FALSE;
         }
     }

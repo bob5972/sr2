@@ -128,7 +128,7 @@ void MobSet::pushClosestMobsInRange(MBVector<Mob *> &v, MobTypeFlags filter,
 }
 
 void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags flagsFilter,
-                             const FPoint *pos, float range)
+                             const FPoint *pos, float radius)
 {
     MobFilter filter;
 
@@ -137,7 +137,7 @@ void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags flagsFilter,
     filter.flagsFilter = flagsFilter;
     filter.fnFilter = NULL;
     filter.rangeFilter.pos = pos;
-    filter.rangeFilter.radius = range;
+    filter.rangeFilter.radius = radius;
 
     pushMobs(v, &filter);
 }
