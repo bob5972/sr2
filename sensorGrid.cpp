@@ -126,6 +126,83 @@ void SensorGrid::updateTick(FleetAI *ai)
 }
 
 
+
+void SensorGrid::avgVelocityHelper(FPoint *avgVel,
+                                   const FPoint *p, float radius,
+                                   MobTypeFlags filter,
+                                   bool useFriends) {
+    uint n = 0;
+    MobSet::MobIt mit;
+    FPoint lAvgVel;
+
+    if (useFriends) {
+        mit = myFriends.iterator(filter);
+    } else {
+        mit = myTargets.iterator(filter);
+    }
+
+    lAvgVel.x = 0.0f;
+    lAvgVel.y = 0.0f;
+
+    while (radius > 0.0f && mit.hasNext()) {
+        Mob *f = mit.next();
+        ASSERT(f != NULL);
+
+        if (FPoint_DistanceSquared(&f->pos, p) <= radius * radius) {
+            n++;
+            lAvgVel.x += (f->pos.x - f->lastPos.x);
+            lAvgVel.y += (f->pos.y - f->lastPos.y);
+        }
+    }
+
+    if (n != 0) {
+        lAvgVel.x /= n;
+        lAvgVel.y /= n;
+    }
+
+    ASSERT(avgVel != NULL);
+    *avgVel = lAvgVel;
+}
+
+void SensorGrid::avgPosHelper(FPoint *avgPos,
+                              const FPoint *p, float radius,
+                              MobTypeFlags filter,
+                              bool useFriends) {
+    uint n = 0;
+    MobSet::MobIt mit;
+    FPoint lAvgPos;
+
+    if (useFriends) {
+        mit = myFriends.iterator(filter);
+    } else {
+        mit = myTargets.iterator(filter);
+    }
+
+    lAvgPos.x = 0.0f;
+    lAvgPos.y = 0.0f;
+
+    while (radius > 0.0f && mit.hasNext()) {
+        Mob *f = mit.next();
+        ASSERT(f != NULL);
+
+        if (FPoint_DistanceSquared(&f->pos, p) <= radius * radius) {
+            n++;
+
+            lAvgPos.x += f->pos.x;
+            lAvgPos.y += f->pos.y;
+        }
+    }
+
+    if (n != 0) {
+        lAvgPos.x /= n;
+        lAvgPos.y /= n;
+    }
+
+    ASSERT(avgPos != NULL);
+    *avgPos = lAvgPos;
+}
+
+
 void MappingSensorGrid::updateTick(FleetAI *ai)
 {
     /*
