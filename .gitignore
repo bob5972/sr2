@@ -1,7 +1,6 @@
 build/
 config.mk
 local.mk
-evolve.local
 gmon.out
 perf.data
 perf.data.old
@@ -12,3 +11,4 @@ local/
 .vscode/
 subprojects/
 !subprojects/*.wrap
+*.local

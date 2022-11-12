@@ -21,19 +21,7 @@ sub Main() {
 
     my $defines = {};
     my $config = {};
-
-    my $bareOpts = $OPTIONS->{bareOptions};
-    ASSERT(!defined($bareOpts) || ref($bareOpts) eq 'ARRAY');
-    if (defined($bareOpts) && ArrayLen($bareOpts) > 0) {
-        VERIFY(ArrayLen($bareOpts) == 1, 'Too many bareOpts');
-        my $bare = $bareOpts->[0];
-
-        if ($bare =~ /^debug|develperf|release$/) {
-            $config->{'BUILDTYPE'} = $bare;
-        } else {
-            Panic("Unknown bare option: $bare\n");
-        }
-    }
+    my $targets = [ 'sr2' ];
 
     if (-f '/usr/lib64/libX11.so' ||
         -f '/usr/lib/x86_64-linux-gnu/libX11.so') {
@@ -50,7 +38,7 @@ sub Main() {
     # on gcc 11.3.0
     $config->{'PROJECT_CFLAGS'} = "-fno-expensive-optimizations";
 
-    MBBuild::Configure($config, $defines);
+    MBBuild::Configure($targets, $OPTIONS->{bareOptions}, $config, $defines);
     MBBuild::Exit();
 }
 

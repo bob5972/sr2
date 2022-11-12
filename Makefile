@@ -9,14 +9,14 @@ SRCROOT=.
 INCLUDE_FLAGS=-I MBLib/public
 
 SRCDIR=$(SRCROOT)
-BUILDDIR=$(BUILDROOT)
+BUILDDIR=$(BUILDTYPE_ROOT)
 DEPDIR=$(DEPROOT)
 
 #Final binary
 TARGET=sr2
 
 #The BUILDROOT folder is included for config.h
-CFLAGS = ${DEFAULT_CFLAGS} -I $(BUILDROOT) $(INCLUDE_FLAGS)
+CFLAGS = ${DEFAULT_CFLAGS} -I $(BUILDDIR) $(INCLUDE_FLAGS)
 CPPFLAGS = ${CFLAGS}
 
 LIBFLAGS = -lm -lpng -lSDL2 -rdynamic
@@ -93,7 +93,7 @@ TARGET_OBJ = $(C_OBJ) $(CPP_OBJ) $(MBLIB_OBJ)
 .PHONY: all clean distclean dist docs $(TARGET)
 
 #The config check is to test if we've been configured
-all: config.mk $(BUILDROOT)/config.h $(TARGET)
+all: config.mk $(BUILDDIR)/config.h $(TARGET)
 
 docs: $(BUILDROOT)/tmp/docs.ts
 $(BUILDROOT)/tmp/docs.ts: config.doxygen *.* MBLib/* MBLib/public/*
@@ -112,27 +112,21 @@ $(MBLIB_OBJ): MBLib/* MBLib/public/*
 	$(MAKE) -f $(MBLIB_SRCDIR)/Makefile all
 	touch $(MBLIB_OBJ)
 
-$(TARGET): $(BUILDROOT)/$(TARGET)
+$(TARGET): $(BUILDDIR)/$(TARGET)
 
-$(BUILDROOT)/$(TARGET): $(TARGET_OBJ)
-	${CXX} ${CFLAGS} $(TARGET_OBJ) $(LIBFLAGS) -o $(BUILDROOT)/$(TARGET)
+$(BUILDDIR)/$(TARGET): $(TARGET_OBJ)
+	${CXX} ${CFLAGS} $(TARGET_OBJ) $(LIBFLAGS) -o $(BUILDDIR)/$(TARGET)
 
-# XXX: I don't yet have a way to auto create the build dirs before
-#      building...
-# clean leaves the dep files
 clean:
-	$(MAKE) -f $(MBLIB_SRCDIR)/Makefile clean
-	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/*.opp
-	rm -f $(BUILDROOT)/$(TARGET)
+	rm -f $(BUILDROOT)/debug
+	rm -f $(BUILDROOT)/develperf
+	rm -f $(BUILDROOT)/release
 
 # after a distclean you'll need to run configure again
 dist-clean: distclean
 distclean: clean
 	rm -rf $(BUILDROOT)/
 	rm -rf config.mk
-
-install: $(TARGET)
-	./install.sh
 
 #include the generated dependency files
 ifeq ($(CC), gcc)
