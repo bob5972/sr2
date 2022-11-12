@@ -31,9 +31,9 @@ sub Main() {
 
     # Causes floating point differences between debug/non-debug builds
     # on gcc 11.3.0
-    my $cflags = "-fno-expensive-optimizations";
+    $defines->{'PROJECT_CFLAGS'} = "-fno-expensive-optimizations";
 
-    MBBuild::Configure($defines, $cflags);
+    MBBuild::Configure($defines);
     MBBuild::Exit();
 }
 
