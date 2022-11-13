@@ -126,9 +126,8 @@ void SensorGrid::updateTick(FleetAI *ai)
 }
 
 
-bool SensorGrid::avgHelper(FPoint *avgVel, FPoint *avgPos,
-                           const MobFilter *f,
-                           bool useFriends)
+bool SensorGrid::avgFlock(FPoint *avgVel, FPoint *avgPos,
+                          const MobFilter *f, bool useFriends)
 {
     uint n = 0;
     MobSet::MobIt mit;

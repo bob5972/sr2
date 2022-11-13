@@ -277,10 +277,10 @@ public:
         f.rangeFilter.radius = radius;
         f.useFlags = TRUE;
         f.flagsFilter = filterFlags;
-        return avgHelper(avgVel, NULL, &f, TRUE);
+        return avgFlock(avgVel, NULL, &f, TRUE);
     }
     bool friendAvgVel(FPoint *avgVel, const MobFilter *f) {
-        return avgHelper(avgVel, NULL, f, TRUE);
+        return avgFlock(avgVel, NULL, f, TRUE);
     }
 
     bool friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
@@ -291,10 +291,10 @@ public:
         f.rangeFilter.radius = radius;
         f.useFlags = TRUE;
         f.flagsFilter = filterFlags;
-        return avgHelper(NULL, avgPos, &f, TRUE);
+        return avgFlock(NULL, avgPos, &f, TRUE);
     }
     bool friendAvgPos(FPoint *avgPos, const MobFilter *f) {
-        return avgHelper(NULL, avgPos, f, TRUE);
+        return avgFlock(NULL, avgPos, f, TRUE);
     }
 
     bool targetAvgPos(FPoint *avgPos, const FPoint *p, float radius,
@@ -305,7 +305,10 @@ public:
         f.rangeFilter.radius = radius;
         f.useFlags = TRUE;
         f.flagsFilter = filterFlags;
-        return avgHelper(NULL, avgPos, &f, FALSE);
+        return avgFlock(NULL, avgPos, &f, FALSE);
+    }
+    bool targetAvgPos(FPoint *avgPos, const MobFilter *f) {
+        return avgFlock(NULL, avgPos, f, FALSE);
     }
 
     bool targetAvgVel(FPoint *avgVel, const FPoint *p, float radius,
@@ -316,14 +319,16 @@ public:
         f.rangeFilter.radius = radius;
         f.useFlags = TRUE;
         f.flagsFilter = filterFlags;
-        return avgHelper(avgVel, NULL, &f, FALSE);
+        return avgFlock(avgVel, NULL, &f, FALSE);
+    }
+    bool targetAvgVel(FPoint *avgVel, const MobFilter *f) {
+        return avgFlock(avgVel, NULL, f, FALSE);
     }
 
-private:
-    bool avgHelper(FPoint *avgVel, FPoint *avgPos,
-                   const MobFilter *f,
-                   bool useFriends);
+    bool avgFlock(FPoint *avgVel, FPoint *avgPos,
+                  const MobFilter *f, bool useFriends);
 
+private:
     int myEnemyBaseDestroyedCount;
     FPoint myFriendBasePos;
 
