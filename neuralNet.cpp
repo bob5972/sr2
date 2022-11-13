@@ -32,36 +32,42 @@ static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *pos, FRPoint *force);
 
 static TextMapEntry tmForces[] = {
-    { TMENTRY(NEURAL_FORCE_VOID),                     },
-    { TMENTRY(NEURAL_FORCE_ZERO),                     },
-    { TMENTRY(NEURAL_FORCE_HEADING),                  },
-    { TMENTRY(NEURAL_FORCE_ALIGN),                    },
-    { TMENTRY(NEURAL_FORCE_ALIGN2),                   },
-    { TMENTRY(NEURAL_FORCE_COHERE),                   },
-    { TMENTRY(NEURAL_FORCE_SEPARATE),                 },
-    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),           },
-    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),   },
-    { TMENTRY(NEURAL_FORCE_EDGES),                    },
-    { TMENTRY(NEURAL_FORCE_NEAREST_EDGE),             },
-    { TMENTRY(NEURAL_FORCE_FARTHEST_EDGE),            },
-    { TMENTRY(NEURAL_FORCE_CORNERS),                  },
-    { TMENTRY(NEURAL_FORCE_NEAREST_CORNER),           },
-    { TMENTRY(NEURAL_FORCE_FARTHEST_CORNER),          },
-    { TMENTRY(NEURAL_FORCE_CENTER),                   },
-    { TMENTRY(NEURAL_FORCE_BASE),                     },
-    { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),             },
-    { TMENTRY(NEURAL_FORCE_BASE_SHELL),               },
-    { TMENTRY(NEURAL_FORCE_ENEMY),                    },
-    { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),              },
-    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),             },
-    { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),            },
-    { TMENTRY(NEURAL_FORCE_ENEMY_BASE),               },
-    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),         },
-    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS_LAX),     },
-    { TMENTRY(NEURAL_FORCE_MIDWAY),                   },
-    { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS),             },
-    { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),         },
-    { TMENTRY(NEURAL_FORCE_CORES),                    },
+    { TMENTRY(NEURAL_FORCE_VOID),                            },
+    { TMENTRY(NEURAL_FORCE_ZERO),                            },
+    { TMENTRY(NEURAL_FORCE_HEADING),                         },
+    { TMENTRY(NEURAL_FORCE_ALIGN),                           },
+    { TMENTRY(NEURAL_FORCE_ALIGN2),                          },
+    { TMENTRY(NEURAL_FORCE_FORWARD_ALIGN),                   },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_ALIGN),                  },
+    { TMENTRY(NEURAL_FORCE_COHERE),                          },
+    { TMENTRY(NEURAL_FORCE_FORWARD_COHERE),                  },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_COHERE),                 },
+    { TMENTRY(NEURAL_FORCE_SEPARATE),                        },
+    { TMENTRY(NEURAL_FORCE_FORWARD_SEPARATE),                },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_SEPARATE),               },
+    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),                  },
+    { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),          },
+    { TMENTRY(NEURAL_FORCE_EDGES),                           },
+    { TMENTRY(NEURAL_FORCE_NEAREST_EDGE),                    },
+    { TMENTRY(NEURAL_FORCE_FARTHEST_EDGE),                   },
+    { TMENTRY(NEURAL_FORCE_CORNERS),                         },
+    { TMENTRY(NEURAL_FORCE_NEAREST_CORNER),                  },
+    { TMENTRY(NEURAL_FORCE_FARTHEST_CORNER),                 },
+    { TMENTRY(NEURAL_FORCE_CENTER),                          },
+    { TMENTRY(NEURAL_FORCE_BASE),                            },
+    { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),                    },
+    { TMENTRY(NEURAL_FORCE_BASE_SHELL),                      },
+    { TMENTRY(NEURAL_FORCE_ENEMY),                           },
+    { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),                     },
+    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),                    },
+    { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),                   },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE),                      },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),                },
+    { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS_LAX),            },
+    { TMENTRY(NEURAL_FORCE_MIDWAY),                          },
+    { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS),                    },
+    { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),                },
+    { TMENTRY(NEURAL_FORCE_CORES),                           },
 };
 
 static TextMapEntry tmCrowds[] = {
@@ -391,24 +397,46 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
     FRPoint force;
     int x = 0;
     MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
-    float radiusSquared = desc->radius * desc->radius;
 
-    if (desc->radius <= 0.0f) {
-        return FALSE;
+    MobFilter f;
+    MBUtil_Zero(&f, sizeof(f));
+    f.rangeFilter.pos = &self->pos;
+    f.rangeFilter.radius = desc->radius;
+    f.useFlags = FALSE;
+
+    ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE ||
+           desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ||
+           desc->forceType == NEURAL_FORCE_BACKWARD_SEPARATE);
+
+    if (desc->forceType != NEURAL_FORCE_SEPARATE) {
+        FRPoint dir;
+        NeuralForceDesc headDesc;
+
+        MBUtil_Zero(&headDesc, sizeof(headDesc));
+        headDesc.forceType = NEURAL_FORCE_HEADING;
+        headDesc.useTangent = FALSE;
+        headDesc.radius = 1.0f;
+        NeuralForce_GetForce(nc, self, &headDesc, &dir);
+
+        f.dirFilter.pos = &self->pos;
+        f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ?
+                              TRUE : FALSE;
+        f.dirFilter.dir = &dir;
     }
 
     ASSERT(self->type == MOB_TYPE_FIGHTER);
 
     FRPoint_Zero(&force);
 
-    while (mit.hasNext()) {
-        Mob *m = mit.next();
-        ASSERT(m != NULL);
+    if (!Mob_IsFilterEmpty(&f)) {
+        while (mit.hasNext()) {
+            Mob *m = mit.next();
+            ASSERT(m != NULL);
 
-        if (m->mobid != self->mobid &&
-            FPoint_DistanceSquared(&self->pos, &m->pos) <= radiusSquared) {
-            NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
-            x++;
+            if (Mob_Filter(m, &f)) {
+                NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
+                x++;
+            }
         }
     }
 
@@ -638,24 +666,77 @@ bool NeuralForce_GetFocus(AIContext *nc,
             *focusPoint = avgVel;
             return TRUE;
         }
-        case NEURAL_FORCE_ALIGN2: {
+        case NEURAL_FORCE_ALIGN2:
+        case NEURAL_FORCE_FORWARD_ALIGN:
+        case NEURAL_FORCE_BACKWARD_ALIGN: {
             FPoint avgVel;
-            nc->sg->friendAvgVel(&avgVel, &mob->pos, desc->radius,
-                                 MOB_FLAG_FIGHTER);
-            if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
-                avgVel.x += mob->pos.x;
-                avgVel.y += mob->pos.y;
-                *focusPoint = avgVel;
-                return TRUE;
+            MobFilter f;
+
+            MBUtil_Zero(&f, sizeof(f));
+            f.rangeFilter.pos = &mob->pos;
+            f.rangeFilter.radius = desc->radius;
+            f.useFlags = TRUE;
+            f.flagsFilter = MOB_FLAG_FIGHTER;
+
+            if (desc->forceType != NEURAL_FORCE_ALIGN2) {
+                FRPoint dir;
+                NeuralForceDesc headDesc;
+
+                MBUtil_Zero(&headDesc, sizeof(headDesc));
+                headDesc.forceType = NEURAL_FORCE_HEADING;
+                headDesc.useTangent = FALSE;
+                headDesc.radius = 1.0f;
+                NeuralForce_GetForce(nc, mob, &headDesc, &dir);
+
+                f.dirFilter.pos = &mob->pos;
+                f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_ALIGN ?
+                                      TRUE : FALSE;
+                f.dirFilter.dir = &dir;
+            }
+
+            if (nc->sg->friendAvgVel(&avgVel, &f)) {
+                if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
+                    avgVel.x += mob->pos.x;
+                    avgVel.y += mob->pos.y;
+                    *focusPoint = avgVel;
+                    return TRUE;
+                }
             }
             return FALSE;
         }
-        case NEURAL_FORCE_COHERE: {
+        case NEURAL_FORCE_COHERE:
+        case NEURAL_FORCE_FORWARD_COHERE:
+        case NEURAL_FORCE_BACKWARD_COHERE: {
             FPoint avgPos;
-            nc->sg->friendAvgPos(&avgPos, &mob->pos, desc->radius,
-                                 MOB_FLAG_FIGHTER);
-            *focusPoint = avgPos;
-            return TRUE;
+            MobFilter f;
+
+            MBUtil_Zero(&f, sizeof(f));
+            f.rangeFilter.pos = &mob->pos;
+            f.rangeFilter.radius = desc->radius;
+            f.useFlags = TRUE;
+            f.flagsFilter = MOB_FLAG_FIGHTER;
+
+            if (desc->forceType != NEURAL_FORCE_COHERE) {
+                FRPoint dir;
+                NeuralForceDesc headDesc;
+
+                MBUtil_Zero(&headDesc, sizeof(headDesc));
+                headDesc.forceType = NEURAL_FORCE_HEADING;
+                headDesc.useTangent = FALSE;
+                headDesc.radius = 1.0f;
+                NeuralForce_GetForce(nc, mob, &headDesc, &dir);
+
+                f.dirFilter.pos = &mob->pos;
+                f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_COHERE ?
+                                      TRUE : FALSE;
+                f.dirFilter.dir = &dir;
+            }
+
+            if (nc->sg->friendAvgPos(&avgPos, &f)) {
+                *focusPoint = avgPos;
+                return TRUE;
+            }
+            return FALSE;
         }
         case NEURAL_FORCE_ENEMY_COHERE: {
             FPoint avgPos;
@@ -677,6 +758,8 @@ bool NeuralForce_GetFocus(AIContext *nc,
             return FALSE;
         }
         case NEURAL_FORCE_SEPARATE:
+        case NEURAL_FORCE_FORWARD_SEPARATE:
+        case NEURAL_FORCE_BACKWARD_SEPARATE:
             return NeuralForceGetSeparateFocus(nc, mob, desc, focusPoint);
 
         case NEURAL_FORCE_NEAREST_FRIEND: {
