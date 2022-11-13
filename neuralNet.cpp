@@ -397,38 +397,6 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
     FRPoint force;
     int x = 0;
     MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
-    float radiusSquared = desc->radius * desc->radius;
-
-    if (desc->radius <= 0.0f) {
-        return FALSE;
-    }
-
-    ASSERT(self->type == MOB_TYPE_FIGHTER);
-
-    FRPoint_Zero(&force);
-
-    while (mit.hasNext()) {
-        Mob *m = mit.next();
-        ASSERT(m != NULL);
-
-        if (m->mobid != self->mobid &&
-            FPoint_DistanceSquared(&self->pos, &m->pos) <= radiusSquared) {
-            NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
-            x++;
-        }
-    }
-
-    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
-    return x > 0;
-}
-
-static bool NeuralForceGetSeparateFocusNew(AIContext *nc,
-                                           Mob *self, NeuralForceDesc *desc,
-                                           FPoint *focusPoint)
-{
-    FRPoint force;
-    int x = 0;
-    MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
 
     MobFilter f;
     MBUtil_Zero(&f, sizeof(f));
@@ -465,7 +433,7 @@ static bool NeuralForceGetSeparateFocusNew(AIContext *nc,
             Mob *m = mit.next();
             ASSERT(m != NULL);
 
-            if (Mob_Filter(m, &f)) {
+            if (m->mobid != self->mobid && Mob_Filter(m, &f)) {
                 NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
                 x++;
             }
@@ -790,10 +758,9 @@ bool NeuralForce_GetFocus(AIContext *nc,
             return FALSE;
         }
         case NEURAL_FORCE_SEPARATE:
-            return NeuralForceGetSeparateFocus(nc, mob, desc, focusPoint);
         case NEURAL_FORCE_FORWARD_SEPARATE:
         case NEURAL_FORCE_BACKWARD_SEPARATE:
-            return NeuralForceGetSeparateFocusNew(nc, mob, desc, focusPoint);
+            return NeuralForceGetSeparateFocus(nc, mob, desc, focusPoint);
 
         case NEURAL_FORCE_NEAREST_FRIEND: {
             Mob *m = nc->sg->findClosestFriend(mob, MOB_FLAG_FIGHTER);
