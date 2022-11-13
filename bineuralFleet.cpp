@@ -57,8 +57,8 @@ public:
     MBVector<float> myInputs;
     MBVector<float> myOutputs;
     uint myNumNodes;
-    bool myUseAttackForces;
     AIContext myNNC;
+    bool myUseAttackForces;
 
 public:
     BineuralAIGovernor(FleetAI *ai, MappingSensorGrid *sg)

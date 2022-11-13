@@ -126,6 +126,23 @@ typedef struct NeuralValueDesc {
     };
 } NeuralValueDesc;
 
+class NeuralNet {
+public:
+    // Members
+    FloatNet floatNet;
+    MBVector<NeuralValueDesc> inputDescs;
+    MBVector<NeuralValueDesc> outputDescs;
+    MBVector<float> inputs;
+    MBVector<float> outputs;
+    uint numNodes;
+    AIContext aic;
+
+    NeuralNet() {
+        MBUtil_Zero(&aic, sizeof(aic));
+        numNodes = 0;
+    }
+
+} NeuralNet;
 
 const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);
@@ -150,6 +167,7 @@ void NeuralCrowd_Load(MBRegistry *mreg,
                       NeuralCrowdDesc *desc, const char *prefix);
 void NeuralTick_Load(MBRegistry *mreg,
                      NeuralTickDesc *desc, const char *prefix);
+void NeuralNet_Load(MBRegistry *mreg, FloatNet *net, const char *prefix);
 
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
