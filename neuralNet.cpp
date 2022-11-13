@@ -62,6 +62,7 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_ALIGN),             },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_ALIGN),            },
     { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),                    },
+    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE2),                   },
     { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_COHERE),            },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_COHERE),           },
     { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),                   },
@@ -460,7 +461,7 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
             align = TRUE;
             enemy = TRUE;
             break;
-        case NEURAL_FORCE_ENEMY_COHERE:
+        case NEURAL_FORCE_ENEMY_COHERE2:
             align = FALSE;
             enemy = TRUE;
             break;
@@ -522,6 +523,7 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
 
     NOT_REACHED();
 }
+
 
 static bool NeuralForceGetSeparateFocus(AIContext *nc,
                                         Mob *self, NeuralForceDesc *desc,
@@ -802,16 +804,23 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_ALIGN2:
         case NEURAL_FORCE_FORWARD_ALIGN:
         case NEURAL_FORCE_BACKWARD_ALIGN:
-        case NEURAL_FORCE_ENEMY_ALIGN:
-        case NEURAL_FORCE_FORWARD_ENEMY_ALIGN:
-        case NEURAL_FORCE_BACKWARD_ENEMY_ALIGN:
         case NEURAL_FORCE_COHERE:
         case NEURAL_FORCE_FORWARD_COHERE:
         case NEURAL_FORCE_BACKWARD_COHERE:
-        case NEURAL_FORCE_ENEMY_COHERE:
+        case NEURAL_FORCE_ENEMY_ALIGN:
+        case NEURAL_FORCE_FORWARD_ENEMY_ALIGN:
+        case NEURAL_FORCE_BACKWARD_ENEMY_ALIGN:
+        case NEURAL_FORCE_ENEMY_COHERE2:
         case NEURAL_FORCE_FORWARD_ENEMY_COHERE:
         case NEURAL_FORCE_BACKWARD_ENEMY_COHERE: {
             return NeuralForceGetFlockFocus(nc, mob, desc, focusPoint);
+        }
+        case NEURAL_FORCE_ENEMY_COHERE: {
+            FPoint avgPos;
+            nc->sg->targetAvgPos(&avgPos, &mob->pos, desc->radius,
+                                 MOB_FLAG_SHIP);
+            *focusPoint = avgPos;
+            return TRUE;
         }
         case NEURAL_FORCE_SEPARATE:
         case NEURAL_FORCE_FORWARD_SEPARATE:
