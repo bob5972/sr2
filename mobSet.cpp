@@ -107,6 +107,29 @@ Mob *MobSet::findClosestMob(const FPoint *pos,
     return best;
 }
 
+Mob *MobSet::findFarthestMob(const FPoint *pos,
+                             MobTypeFlags filter)
+{
+    Mob *best = NULL;
+    float bestDistance;
+    uint32 size = myMobs.size();
+
+    ASSERT(filter != 0);
+
+    for (uint i = 0; i < size; i++) {
+        Mob *m = &myMobs[i];
+        if (((1 << m->type) & filter) != 0) {
+            float curDistance = FPoint_DistanceSquared(pos, &m->pos);
+            if (best == NULL || curDistance > bestDistance) {
+                best = m;
+                bestDistance = curDistance;
+            }
+        }
+    }
+
+    return best;
+}
+
 void MobSet::pushMobs(MBVector<Mob *> &v, MobTypeFlags filter) {
     v.ensureCapacity(v.size() + myMobs.size());
 

@@ -57,6 +57,9 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE),                            },
     { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),                    },
     { TMENTRY(NEURAL_FORCE_BASE_SHELL),                      },
+    { TMENTRY(NEURAL_FORCE_BASE_FARTHEST_FRIEND),            },
+    { TMENTRY(NEURAL_FORCE_BASE_CONTROL_LIMIT),              },
+    { TMENTRY(NEURAL_FORCE_BASE_CONTROL_SHELL),              },
     { TMENTRY(NEURAL_FORCE_ENEMY),                           },
     { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),                     },
     { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_ALIGN),             },
@@ -765,6 +768,37 @@ bool NeuralForceGetCloseCornerFocus(AIContext *nc,
     }
 }
 
+bool NeuralForceGetBaseControlLimitFocus(AIContext *nc,
+                                         FPoint *focusPoint)
+{
+    Mob *nearestEnemy;
+    Mob *farthestFriend;
+
+    Mob *base = nc->sg->friendBase();
+    if (base == NULL) {
+        return FALSE;
+    }
+
+    nearestEnemy = nc->sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
+    farthestFriend = nc->sg->findFarthestFriend(&base->pos, MOB_FLAG_FIGHTER);
+
+    if (nearestEnemy == NULL) {
+        return NeuralForceGetFocusMobPosHelper(farthestFriend,
+                                                focusPoint);
+    } else if (farthestFriend == NULL) {
+        return NeuralForceGetFocusMobPosHelper(nearestEnemy,
+                                                focusPoint);
+    }
+
+    if (FPoint_DistanceSquared(&base->pos, &nearestEnemy->pos) <=
+        FPoint_DistanceSquared(&base->pos,&farthestFriend->pos)) {
+        return NeuralForceGetFocusMobPosHelper(nearestEnemy,
+                                                focusPoint);
+    }
+    return NeuralForceGetFocusMobPosHelper(farthestFriend,
+                                            focusPoint);
+}
+
 /*
  * NeuralForce_GetFocus --
  *     Get the focus point associated with the specified force.
@@ -875,6 +909,36 @@ bool NeuralForce_GetFocus(AIContext *nc,
             }
             return FALSE;
         }
+        case NEURAL_FORCE_BASE_FARTHEST_FRIEND: {
+            Mob *base = nc->sg->friendBase();
+            if (base != NULL) {
+                Mob *friendS = nc->sg->findFarthestFriend(&base->pos, MOB_FLAG_FIGHTER);
+                return NeuralForceGetFocusMobPosHelper(friendS, focusPoint);
+            }
+            return FALSE;
+        }
+        case NEURAL_FORCE_BASE_CONTROL_LIMIT:
+            return NeuralForceGetBaseControlLimitFocus(nc, focusPoint);
+        case NEURAL_FORCE_BASE_CONTROL_SHELL: {
+            FRPoint rPoint;
+            Mob *base = nc->sg->friendBase();
+            float limitDistance;
+
+            if (base == NULL) {
+                return FALSE;
+            }
+
+            if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
+                return FALSE;
+            }
+
+            limitDistance = FPoint_Distance(focusPoint, &base->pos);
+
+            FPoint_ToFRPoint(&mob->pos, &base->pos, &rPoint);
+            rPoint.radius = limitDistance;
+            FRPoint_ToFPoint(&rPoint, &base->pos, focusPoint);
+            return TRUE;
+        }
         case NEURAL_FORCE_BASE_SHELL: {
             FRPoint rPoint;
             if (!NeuralForceGetFocusMobPosHelper(nc->sg->friendBase(),
@@ -882,7 +946,7 @@ bool NeuralForce_GetFocus(AIContext *nc,
                 return FALSE;
             }
             FPoint_ToFRPoint(&mob->pos, focusPoint, &rPoint);
-            FRPoint_SetSpeed(&rPoint, desc->radius);
+            rPoint.radius = desc->radius;
             FRPoint_ToFPoint(&rPoint, focusPoint, focusPoint);
             return TRUE;
         }

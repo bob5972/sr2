@@ -116,6 +116,9 @@ public:
     Mob *findClosestFriend(const FPoint *pos, MobTypeFlags filter) {
         return findNthClosestFriend(pos, filter, 0);
     }
+    Mob *findFarthestFriend(const FPoint *pos, MobTypeFlags filter) {
+        return myFriends.findFarthestMob(pos, filter);
+    }
 
     /**
      * Find the friendly mob closest to the specified point, that's

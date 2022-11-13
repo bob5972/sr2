@@ -133,6 +133,7 @@ public:
      */
     Mob *findNthClosestMob(const FPoint *pos, MobTypeFlags filter, int n);
     Mob *findClosestMob(const FPoint *pos, MobTypeFlags filter);
+    Mob *findFarthestMob(const FPoint *pos, MobTypeFlags filter);
 
     void pushMobs(MBVector<Mob *> &v, MobTypeFlags filter);
 
