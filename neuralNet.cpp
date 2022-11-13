@@ -43,6 +43,8 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_FORWARD_COHERE),                  },
     { TMENTRY(NEURAL_FORCE_BACKWARD_COHERE),                 },
     { TMENTRY(NEURAL_FORCE_SEPARATE),                        },
+    { TMENTRY(NEURAL_FORCE_FORWARD_SEPARATE),                },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_SEPARATE),               },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),                  },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),          },
     { TMENTRY(NEURAL_FORCE_EDGES),                           },
@@ -420,6 +422,60 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
     return x > 0;
 }
 
+static bool NeuralForceGetSeparateFocusNew(AIContext *nc,
+                                           Mob *self, NeuralForceDesc *desc,
+                                           FPoint *focusPoint)
+{
+    FRPoint force;
+    int x = 0;
+    MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
+
+    MobFilter f;
+    MBUtil_Zero(&f, sizeof(f));
+    f.rangeFilter.pos = &self->pos;
+    f.rangeFilter.radius = desc->radius;
+    f.useFlags = FALSE;
+
+    ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE ||
+           desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ||
+           desc->forceType == NEURAL_FORCE_BACKWARD_SEPARATE);
+
+    if (desc->forceType != NEURAL_FORCE_SEPARATE) {
+        FRPoint dir;
+        NeuralForceDesc headDesc;
+
+        MBUtil_Zero(&headDesc, sizeof(headDesc));
+        headDesc.forceType = NEURAL_FORCE_HEADING;
+        headDesc.useTangent = FALSE;
+        headDesc.radius = 1.0f;
+        NeuralForce_GetForce(nc, self, &headDesc, &dir);
+
+        f.dirFilter.pos = &self->pos;
+        f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ?
+                              TRUE : FALSE;
+        f.dirFilter.dir = &dir;
+    }
+
+        ASSERT(self->type == MOB_TYPE_FIGHTER);
+
+     FRPoint_Zero(&force);
+
+    if (!Mob_IsFilterEmpty(&f)) {
+        while (mit.hasNext()) {
+            Mob *m = mit.next();
+            ASSERT(m != NULL);
+
+            if (Mob_Filter(m, &f)) {
+                NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
+                x++;
+            }
+         }
+     }
+
+    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+    return x > 0;
+}
+
 static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *selfPos,
                                        const FPoint *pos, FRPoint *force)
@@ -735,6 +791,9 @@ bool NeuralForce_GetFocus(AIContext *nc,
         }
         case NEURAL_FORCE_SEPARATE:
             return NeuralForceGetSeparateFocus(nc, mob, desc, focusPoint);
+        case NEURAL_FORCE_FORWARD_SEPARATE:
+        case NEURAL_FORCE_BACKWARD_SEPARATE:
+            return NeuralForceGetSeparateFocusNew(nc, mob, desc, focusPoint);
 
         case NEURAL_FORCE_NEAREST_FRIEND: {
             Mob *m = nc->sg->findClosestFriend(mob, MOB_FLAG_FIGHTER);
