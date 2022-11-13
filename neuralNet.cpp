@@ -40,6 +40,8 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_FORWARD_ALIGN),                   },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ALIGN),                  },
     { TMENTRY(NEURAL_FORCE_COHERE),                          },
+    { TMENTRY(NEURAL_FORCE_FORWARD_COHERE),                  },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_COHERE),                 },
     { TMENTRY(NEURAL_FORCE_SEPARATE),                        },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),                  },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),          },
@@ -684,6 +686,40 @@ bool NeuralForce_GetFocus(AIContext *nc,
                                  MOB_FLAG_FIGHTER);
             *focusPoint = avgPos;
             return TRUE;
+        }
+        //case NEURAL_FORCE_COHERE:
+        case NEURAL_FORCE_FORWARD_COHERE:
+        case NEURAL_FORCE_BACKWARD_COHERE: {
+             FPoint avgPos;
+            MobFilter f;
+
+            MBUtil_Zero(&f, sizeof(f));
+            f.rangeFilter.pos = &mob->pos;
+            f.rangeFilter.radius = desc->radius;
+            f.useFlags = TRUE;
+            f.flagsFilter = MOB_FLAG_FIGHTER;
+
+            if (desc->forceType != NEURAL_FORCE_COHERE) {
+                FRPoint dir;
+                NeuralForceDesc headDesc;
+
+                MBUtil_Zero(&headDesc, sizeof(headDesc));
+                headDesc.forceType = NEURAL_FORCE_HEADING;
+                headDesc.useTangent = FALSE;
+                headDesc.radius = 1.0f;
+                NeuralForce_GetForce(nc, mob, &headDesc, &dir);
+
+                f.dirFilter.pos = &mob->pos;
+                f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_COHERE ?
+                                      TRUE : FALSE;
+                f.dirFilter.dir = &dir;
+            }
+
+            if (nc->sg->friendAvgPos(&avgPos, &f)) {
+                *focusPoint = avgPos;
+                return TRUE;
+            }
+            return FALSE;
         }
         case NEURAL_FORCE_ENEMY_COHERE: {
             FPoint avgPos;
