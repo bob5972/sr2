@@ -680,14 +680,7 @@ bool NeuralForce_GetFocus(AIContext *nc,
              }
              return FALSE;
          }
-        case NEURAL_FORCE_COHERE: {
-            FPoint avgPos;
-            nc->sg->friendAvgPos(&avgPos, &mob->pos, desc->radius,
-                                 MOB_FLAG_FIGHTER);
-            *focusPoint = avgPos;
-            return TRUE;
-        }
-        //case NEURAL_FORCE_COHERE:
+        case NEURAL_FORCE_COHERE:
         case NEURAL_FORCE_FORWARD_COHERE:
         case NEURAL_FORCE_BACKWARD_COHERE: {
              FPoint avgPos;
