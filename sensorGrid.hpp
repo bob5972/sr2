@@ -279,6 +279,9 @@ public:
         f.flagsFilter = filterFlags;
         return avgHelper(avgVel, NULL, &f, TRUE);
     }
+    bool friendAvgVel(FPoint *avgVel, const MobFilter *f) {
+        return avgHelper(avgVel, NULL, f, TRUE);
+    }
 
     bool friendAvgPos(FPoint *avgPos, const FPoint *p, float radius,
                       MobTypeFlags filterFlags) {
@@ -289,6 +292,9 @@ public:
         f.useFlags = TRUE;
         f.flagsFilter = filterFlags;
         return avgHelper(NULL, avgPos, &f, TRUE);
+    }
+    bool friendAvgPos(FPoint *avgPos, const MobFilter *f) {
+        return avgHelper(NULL, avgPos, f, TRUE);
     }
 
     bool targetAvgPos(FPoint *avgPos, const FPoint *p, float radius,
