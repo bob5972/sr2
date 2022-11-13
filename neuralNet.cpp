@@ -640,18 +640,7 @@ bool NeuralForce_GetFocus(AIContext *nc,
             *focusPoint = avgVel;
             return TRUE;
         }
-        case NEURAL_FORCE_ALIGN2: {
-            FPoint avgVel;
-            nc->sg->friendAvgVel(&avgVel, &mob->pos, desc->radius,
-                                 MOB_FLAG_FIGHTER);
-            if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
-                avgVel.x += mob->pos.x;
-                avgVel.y += mob->pos.y;
-                *focusPoint = avgVel;
-                return TRUE;
-            }
-            return FALSE;
-        }
+        case NEURAL_FORCE_ALIGN2:
         case NEURAL_FORCE_FORWARD_ALIGN:
         case NEURAL_FORCE_BACKWARD_ALIGN: {
             FPoint avgVel;
