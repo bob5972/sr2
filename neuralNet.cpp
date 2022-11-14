@@ -57,9 +57,17 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE),                            },
     { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),                    },
     { TMENTRY(NEURAL_FORCE_BASE_SHELL),                      },
+    { TMENTRY(NEURAL_FORCE_BASE_FARTHEST_FRIEND),            },
+    { TMENTRY(NEURAL_FORCE_BASE_CONTROL_LIMIT),              },
+    { TMENTRY(NEURAL_FORCE_BASE_CONTROL_SHELL),              },
     { TMENTRY(NEURAL_FORCE_ENEMY),                           },
     { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),                     },
+    { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_ALIGN),             },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_ALIGN),            },
     { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),                    },
+    { TMENTRY(NEURAL_FORCE_ENEMY_COHERE2),                   },
+    { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_COHERE),            },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_COHERE),           },
     { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),                   },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE),                      },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),                },
@@ -463,6 +471,136 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
     }
 }
 
+static bool NeuralForceGetFlockFocus(AIContext *nc,
+                                     Mob *self, NeuralForceDesc *desc,
+                                     FPoint *focusPoint)
+{
+    MobFilter f;
+    NeuralForceType forceType = desc->forceType;
+    bool useDir = FALSE;
+    bool useFriends;
+    FPoint vel, pos;
+    bool align;
+    bool enemy;
+
+    MBUtil_Zero(&f, sizeof(f));
+    f.rangeFilter.pos = &self->pos;
+    f.rangeFilter.radius = desc->radius;
+    f.useFlags = TRUE;
+
+    switch (forceType) {
+        case NEURAL_FORCE_ALIGN2:
+            align = TRUE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_FORWARD_ALIGN:
+            f.dirFilter.forward = TRUE;
+            useDir = TRUE;
+            align = TRUE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_BACKWARD_ALIGN:
+            f.dirFilter.forward = TRUE;
+            useDir = TRUE;
+            align = TRUE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_COHERE:
+            align = FALSE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_FORWARD_COHERE:
+            f.dirFilter.forward = TRUE;
+            useDir = TRUE;
+            align = FALSE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_BACKWARD_COHERE:
+            f.dirFilter.forward = TRUE;
+            useDir = TRUE;
+            align = FALSE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_ENEMY_ALIGN:
+            align = TRUE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_FORWARD_ENEMY_ALIGN:
+            f.dirFilter.forward = TRUE;
+            useDir = TRUE;
+            align = TRUE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_BACKWARD_ENEMY_ALIGN:
+            f.dirFilter.forward = FALSE;
+            useDir = TRUE;
+            align = TRUE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_ENEMY_COHERE2:
+            align = FALSE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_FORWARD_ENEMY_COHERE:
+            f.dirFilter.forward = TRUE;
+            useDir = TRUE;
+            align = FALSE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_BACKWARD_ENEMY_COHERE:
+            f.dirFilter.forward = FALSE;
+            useDir = TRUE;
+            align = FALSE;
+            enemy = TRUE;
+            break;
+        default:
+            NOT_IMPLEMENTED();
+    }
+
+    if (enemy) {
+        f.flagsFilter = MOB_FLAG_SHIP;
+        useFriends = FALSE;
+    } else {
+        f.flagsFilter = MOB_FLAG_FIGHTER;
+        useFriends = TRUE;
+    }
+
+
+    if (useDir) {
+        FRPoint dir;
+        NeuralForceDesc headDesc;
+
+        MBUtil_Zero(&headDesc, sizeof(headDesc));
+        headDesc.forceType = NEURAL_FORCE_HEADING;
+        headDesc.useTangent = FALSE;
+        headDesc.radius = 1.0f;
+        NeuralForce_GetForce(nc, self, &headDesc, &dir);
+
+        f.dirFilter.pos = &self->pos;
+        f.dirFilter.dir = &dir;
+    }
+
+    if (!nc->sg->avgFlock(&vel, &pos, &f, useFriends)) {
+        return FALSE;
+    }
+
+    if (align) {
+        if (vel.x >= MICRON || vel.y >= MICRON) {
+            vel.x += self->pos.x;
+            vel.y += self->pos.y;
+            *focusPoint = vel;
+            return TRUE;
+        }
+        return FALSE;
+    } else {
+        *focusPoint = pos;
+        return TRUE;
+    }
+
+    NOT_REACHED();
+}
+
+
 static bool NeuralForceGetSeparateFocus(AIContext *nc,
                                         Mob *self, NeuralForceDesc *desc,
                                         FPoint *focusPoint)
@@ -703,6 +841,37 @@ bool NeuralForceGetCloseCornerFocus(AIContext *nc,
     }
 }
 
+bool NeuralForceGetBaseControlLimitFocus(AIContext *nc,
+                                         FPoint *focusPoint)
+{
+    Mob *nearestEnemy;
+    Mob *farthestFriend;
+
+    Mob *base = nc->sg->friendBase();
+    if (base == NULL) {
+        return FALSE;
+    }
+
+    nearestEnemy = nc->sg->findClosestTarget(&base->pos, MOB_FLAG_SHIP);
+    farthestFriend = nc->sg->findFarthestFriend(&base->pos, MOB_FLAG_FIGHTER);
+
+    if (nearestEnemy == NULL) {
+        return NeuralForceGetFocusMobPosHelper(farthestFriend,
+                                                focusPoint);
+    } else if (farthestFriend == NULL) {
+        return NeuralForceGetFocusMobPosHelper(nearestEnemy,
+                                                focusPoint);
+    }
+
+    if (FPoint_DistanceSquared(&base->pos, &nearestEnemy->pos) <=
+        FPoint_DistanceSquared(&base->pos,&farthestFriend->pos)) {
+        return NeuralForceGetFocusMobPosHelper(nearestEnemy,
+                                                focusPoint);
+    }
+    return NeuralForceGetFocusMobPosHelper(farthestFriend,
+                                            focusPoint);
+}
+
 /*
  * NeuralForce_GetFocus --
  *     Get the focus point associated with the specified force.
@@ -741,75 +910,17 @@ bool NeuralForce_GetFocus(AIContext *nc,
         }
         case NEURAL_FORCE_ALIGN2:
         case NEURAL_FORCE_FORWARD_ALIGN:
-        case NEURAL_FORCE_BACKWARD_ALIGN: {
-            FPoint avgVel;
-            MobFilter f;
-
-            MBUtil_Zero(&f, sizeof(f));
-            f.rangeFilter.pos = &mob->pos;
-            f.rangeFilter.radius = desc->radius;
-            f.useFlags = TRUE;
-            f.flagsFilter = MOB_FLAG_FIGHTER;
-
-            if (desc->forceType != NEURAL_FORCE_ALIGN2) {
-                FRPoint dir;
-                NeuralForceDesc headDesc;
-
-                MBUtil_Zero(&headDesc, sizeof(headDesc));
-                headDesc.forceType = NEURAL_FORCE_HEADING;
-                headDesc.useTangent = FALSE;
-                headDesc.radius = 1.0f;
-                NeuralForce_GetForce(nc, mob, &headDesc, &dir);
-
-                f.dirFilter.pos = &mob->pos;
-                f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_ALIGN ?
-                                      TRUE : FALSE;
-                f.dirFilter.dir = &dir;
-            }
-
-            if (nc->sg->friendAvgVel(&avgVel, &f)) {
-                if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
-                    avgVel.x += mob->pos.x;
-                    avgVel.y += mob->pos.y;
-                    *focusPoint = avgVel;
-                    return TRUE;
-                }
-            }
-            return FALSE;
-        }
+        case NEURAL_FORCE_BACKWARD_ALIGN:
         case NEURAL_FORCE_COHERE:
         case NEURAL_FORCE_FORWARD_COHERE:
-        case NEURAL_FORCE_BACKWARD_COHERE: {
-            FPoint avgPos;
-            MobFilter f;
-
-            MBUtil_Zero(&f, sizeof(f));
-            f.rangeFilter.pos = &mob->pos;
-            f.rangeFilter.radius = desc->radius;
-            f.useFlags = TRUE;
-            f.flagsFilter = MOB_FLAG_FIGHTER;
-
-            if (desc->forceType != NEURAL_FORCE_COHERE) {
-                FRPoint dir;
-                NeuralForceDesc headDesc;
-
-                MBUtil_Zero(&headDesc, sizeof(headDesc));
-                headDesc.forceType = NEURAL_FORCE_HEADING;
-                headDesc.useTangent = FALSE;
-                headDesc.radius = 1.0f;
-                NeuralForce_GetForce(nc, mob, &headDesc, &dir);
-
-                f.dirFilter.pos = &mob->pos;
-                f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_COHERE ?
-                                      TRUE : FALSE;
-                f.dirFilter.dir = &dir;
-            }
-
-            if (nc->sg->friendAvgPos(&avgPos, &f)) {
-                *focusPoint = avgPos;
-                return TRUE;
-            }
-            return FALSE;
+        case NEURAL_FORCE_BACKWARD_COHERE:
+        case NEURAL_FORCE_ENEMY_ALIGN:
+        case NEURAL_FORCE_FORWARD_ENEMY_ALIGN:
+        case NEURAL_FORCE_BACKWARD_ENEMY_ALIGN:
+        case NEURAL_FORCE_ENEMY_COHERE2:
+        case NEURAL_FORCE_FORWARD_ENEMY_COHERE:
+        case NEURAL_FORCE_BACKWARD_ENEMY_COHERE: {
+            return NeuralForceGetFlockFocus(nc, mob, desc, focusPoint);
         }
         case NEURAL_FORCE_ENEMY_COHERE: {
             FPoint avgPos;
@@ -817,18 +928,6 @@ bool NeuralForce_GetFocus(AIContext *nc,
                                  MOB_FLAG_SHIP);
             *focusPoint = avgPos;
             return TRUE;
-        }
-        case NEURAL_FORCE_ENEMY_ALIGN: {
-            FPoint avgVel;
-            nc->sg->targetAvgVel(&avgVel, &mob->pos, desc->radius,
-                                 MOB_FLAG_SHIP);
-            if (avgVel.x >= MICRON || avgVel.y >= MICRON) {
-                avgVel.x += mob->pos.x;
-                avgVel.y += mob->pos.y;
-                *focusPoint = avgVel;
-                return TRUE;
-            }
-            return FALSE;
         }
         case NEURAL_FORCE_SEPARATE:
         case NEURAL_FORCE_FORWARD_SEPARATE:
@@ -883,6 +982,36 @@ bool NeuralForce_GetFocus(AIContext *nc,
             }
             return FALSE;
         }
+        case NEURAL_FORCE_BASE_FARTHEST_FRIEND: {
+            Mob *base = nc->sg->friendBase();
+            if (base != NULL) {
+                Mob *friendS = nc->sg->findFarthestFriend(&base->pos, MOB_FLAG_FIGHTER);
+                return NeuralForceGetFocusMobPosHelper(friendS, focusPoint);
+            }
+            return FALSE;
+        }
+        case NEURAL_FORCE_BASE_CONTROL_LIMIT:
+            return NeuralForceGetBaseControlLimitFocus(nc, focusPoint);
+        case NEURAL_FORCE_BASE_CONTROL_SHELL: {
+            FRPoint rPoint;
+            Mob *base = nc->sg->friendBase();
+            float limitDistance;
+
+            if (base == NULL) {
+                return FALSE;
+            }
+
+            if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
+                return FALSE;
+            }
+
+            limitDistance = FPoint_Distance(focusPoint, &base->pos);
+
+            FPoint_ToFRPoint(&mob->pos, &base->pos, &rPoint);
+            rPoint.radius = limitDistance;
+            FRPoint_ToFPoint(&rPoint, &base->pos, focusPoint);
+            return TRUE;
+        }
         case NEURAL_FORCE_BASE_SHELL: {
             FRPoint rPoint;
             if (!NeuralForceGetFocusMobPosHelper(nc->sg->friendBase(),
@@ -890,7 +1019,7 @@ bool NeuralForce_GetFocus(AIContext *nc,
                 return FALSE;
             }
             FPoint_ToFRPoint(&mob->pos, focusPoint, &rPoint);
-            FRPoint_SetSpeed(&rPoint, desc->radius);
+            rPoint.radius = desc->radius;
             FRPoint_ToFPoint(&rPoint, focusPoint, focusPoint);
             return TRUE;
         }
