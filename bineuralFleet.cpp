@@ -876,7 +876,7 @@ static void BineuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
     BineuralFleet *sf = (BineuralFleet *)aiHandle;
     MBRegistry_PutAll(mreg, sf->mreg, "");
     sf->gov.dumpSanitizedParams(mreg);
-    sf->gov.myShipNet.dumpSanitizedParams(mreg, "myShipNet");
+    sf->gov.myShipNet.dumpSanitizedParams(mreg, "shipNet.");
     NOT_IMPLEMENTED();
 }
 

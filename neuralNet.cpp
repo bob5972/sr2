@@ -1213,7 +1213,7 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix)
 
     str = prefix;
     str += "numInputs";
-    cstr = MBRegistry_GetCStr(mreg, str.CStr());
+    cstr = str.CStr();
     if (MBRegistry_ContainsKey(mreg, cstr) &&
         MBRegistry_GetUint(mreg, cstr) > 0) {
         floatNet.load(mreg, prefix);
