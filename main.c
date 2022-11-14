@@ -873,9 +873,12 @@ static void MainUsePopulation(const char *file,
     ASSERT(file != NULL);
     MBRegistry_Load(popReg, file);
 
-    numFleets = MBRegistry_GetInt(popReg, "numFleets");
-    if (numFleets <= 0) {
-        PANIC("Missing key: numFleets\n");
+    if (!MBRegistry_ContainsKey(popReg, "numFleets")) {
+        PANIC("Missing key: numFleets (file=%s)\n", file);
+    }
+    numFleets = MBRegistry_GetUint(popReg, "numFleets");
+    if (numFleets == 0) {
+        PANIC("Bad value for numFleets=%d (file=%s)\n", numFleets, file);
     }
 
     /*
