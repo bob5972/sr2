@@ -21,6 +21,14 @@
 
 #include "shipAI.hpp"
 
+typedef enum BasicShipAIState {
+    BSAI_STATE_IDLE,
+    BSAI_STATE_GATHER,
+    BSAI_STATE_ATTACK,
+    BSAI_STATE_EVADE,
+    BSAI_STATE_HOLD,
+} BasicShipAIState;
+
 class BasicAIGovernor : public ShipAIGovernor
 {
 public:
@@ -134,14 +142,6 @@ public:
     virtual void doSpawn(Mob *mob);
 
 protected:
-    typedef enum BasicShipAIState {
-        BSAI_STATE_IDLE,
-        BSAI_STATE_GATHER,
-        BSAI_STATE_ATTACK,
-        BSAI_STATE_EVADE,
-        BSAI_STATE_HOLD,
-    } BasicShipAIState;
-
     class BasicShipAI : public ShipAI
     {
         public:

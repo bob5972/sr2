@@ -22,6 +22,8 @@
 #include "mob.h"
 #include "sensorGrid.hpp"
 #include "aiTypes.hpp"
+#include "floatNet.hpp"
+#include "basicShipAI.hpp"
 
 #define NEURAL_ALLOW_ATTACK_FORCES FALSE
 
@@ -134,24 +136,6 @@ typedef struct NeuralValueDesc {
     };
 } NeuralValueDesc;
 
-class NeuralNet {
-public:
-    // Members
-    FloatNet floatNet;
-    MBVector<NeuralValueDesc> inputDescs;
-    MBVector<NeuralValueDesc> outputDescs;
-    MBVector<float> inputs;
-    MBVector<float> outputs;
-    uint numNodes;
-    AIContext aic;
-
-    NeuralNet() {
-        MBUtil_Zero(&aic, sizeof(aic));
-        numNodes = 0;
-    }
-
-} NeuralNet;
-
 const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);
 const char *NeuralWave_ToString(NeuralWaveType nwt);
@@ -175,7 +159,6 @@ void NeuralCrowd_Load(MBRegistry *mreg,
                       NeuralCrowdDesc *desc, const char *prefix);
 void NeuralTick_Load(MBRegistry *mreg,
                      NeuralTickDesc *desc, const char *prefix);
-void NeuralNet_Load(MBRegistry *mreg, FloatNet *net, const char *prefix);
 
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
@@ -194,5 +177,46 @@ float NeuralCrowd_GetValue(AIContext *nc, Mob *mob, NeuralCrowdDesc *desc);
 
 float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc);
 
+class NeuralNet {
+public:
+    // Members
+    FloatNet floatNet;
+    MBVector<NeuralValueDesc> inputDescs;
+    MBVector<NeuralValueDesc> outputDescs;
+    MBVector<float> inputs;
+    MBVector<float> outputs;
+    uint numNodes;
+    AIContext aic;
+
+    NeuralNet() {
+        MBUtil_Zero(&aic, sizeof(aic));
+        numNodes = 0;
+    }
+
+    void save(MBRegistry *mreg, const char *prefix) {
+        floatNet.save(mreg, prefix);
+    }
+
+    void dumpSanitizedParams(MBRegistry *mreg, const char *prefix);
+
+    void load(MBRegistry *mreg, const char *prefix);
+    void mutate(MBRegistry *mreg);
+
+    void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce);
+
+
+    static bool isOutputActive(BasicShipAIState state,
+                               const NeuralValueDesc *outputDesc) {
+        ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
+        ASSERT((state == BSAI_STATE_IDLE && outputDesc->forceDesc.doIdle) ||
+               (state == BSAI_STATE_ATTACK && outputDesc->forceDesc.doAttack));
+        return TRUE;
+    }
+
+};
+
+void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
+                      uint maxInputs, uint maxOutputs, uint maxNodes,
+                      uint maxNodeDegree);
 
 #endif // _NEURAL_NET_H_202210081813

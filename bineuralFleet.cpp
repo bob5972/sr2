@@ -51,22 +51,19 @@ class BineuralAIGovernor : public BasicAIGovernor
 {
 public:
     // Members
-    FloatNet myShipNet;
-    MBVector<NeuralValueDesc> myInputDescs;
-    MBVector<NeuralValueDesc> myOutputDescs;
-    MBVector<float> myInputs;
-    MBVector<float> myOutputs;
-    uint myNumNodes;
-    AIContext myNNC;
+    AIContext myAIC;
+    NeuralNet myShipNet;
     bool myUseAttackForces;
 
 public:
     BineuralAIGovernor(FleetAI *ai, MappingSensorGrid *sg)
     :BasicAIGovernor(ai, sg)
     {
-        myNNC.rs = &myRandomState;
-        myNNC.sg = sg;
-        myNNC.ai = myFleetAI;
+        myAIC.rs = &myRandomState;
+        myAIC.sg = sg;
+        myAIC.ai = myFleetAI;
+
+        myShipNet.aic = myAIC;
     }
 
     virtual ~BineuralAIGovernor() { }
@@ -438,259 +435,259 @@ public:
             { "gatherAbandonStale", "TRUE" },
             { "gatherRange", "53.190826" },
             { "guardRange", "87.259979" },
-            { "input[0].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
-            { "input[0].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
-            { "input[0].radius", "0.000000" },
-            { "input[0].useTangent", "FALSE" },
-            { "input[0].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
-            { "input[10].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[10].forceType", "NEURAL_FORCE_ALIGN2" },
-            { "input[10].radius", "157.201385" },
-            { "input[10].useTangent", "FALSE" },
-            { "input[10].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[11].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
-            { "input[11].forceType", "NEURAL_FORCE_BASE" },
-            { "input[11].radius", "157.342880" },
-            { "input[11].useTangent", "TRUE" },
-            { "input[11].valueType", "NEURAL_VALUE_FORCE" },
-            { "input[11].waveType", "NEURAL_WAVE_UNIT_SINE" },
-            { "input[12].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
-            { "input[12].forceType", "NEURAL_FORCE_CORES" },
-            { "input[12].frequency", "0.000000" },
-            { "input[12].radius", "0.000000" },
-            { "input[12].useTangent", "TRUE" },
-            { "input[12].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
-            { "input[12].waveType", "NEURAL_WAVE_SINE" },
-            { "input[13].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
-            { "input[13].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
-            { "input[13].frequency", "0.000000" },
-            { "input[13].radius", "0.000000" },
-            { "input[13].useTangent", "TRUE" },
-            { "input[13].valueType", "NEURAL_VALUE_FORCE" },
-            { "input[13].waveType", "NEURAL_WAVE_SINE" },
-            { "input[14].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
-            { "input[14].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
-            { "input[14].frequency", "0.000000" },
-            { "input[14].radius", "164.939926" },
-            { "input[14].useTangent", "FALSE" },
-            { "input[14].valueType", "NEURAL_VALUE_FORCE" },
-            { "input[14].waveType", "NEURAL_WAVE_FMOD" },
-            { "input[15].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[15].forceType", "NEURAL_FORCE_COHERE" },
-            { "input[15].radius", "156.087997" },
-            { "input[15].useTangent", "FALSE" },
-            { "input[15].valueType", "NEURAL_VALUE_FORCE" },
-            { "input[16].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
-            { "input[16].forceType", "NEURAL_FORCE_CENTER" },
-            { "input[16].frequency", "0.000000" },
-            { "input[16].radius", "0.000000" },
-            { "input[16].useTangent", "FALSE" },
-            { "input[16].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
-            { "input[17].crowdType", "NEURAL_CROWD_CORES" },
-            { "input[17].forceType", "NEURAL_FORCE_BASE" },
-            { "input[17].frequency", "4093.644043" },
-            { "input[17].radius", "0.000000" },
-            { "input[17].useTangent", "FALSE" },
-            { "input[17].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[17].waveType", "NEURAL_WAVE_FMOD" },
-            { "input[18].crowdType", "NEURAL_CROWD_ENEMY_MISSILE" },
-            { "input[18].forceType", "NEURAL_FORCE_NEAREST_FRIEND_MISSILE" },
-            { "input[18].frequency", "0.000000" },
-            { "input[18].radius", "147.504044" },
-            { "input[18].useTangent", "FALSE" },
-            { "input[18].valueType", "NEURAL_VALUE_MOBID" },
-            { "input[18].waveType", "NEURAL_WAVE_FMOD" },
-            { "input[19].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
-            { "input[19].forceType", "NEURAL_FORCE_ZERO" },
-            { "input[19].frequency", "0.000000" },
-            { "input[19].radius", "144.802826" },
-            { "input[19].useTangent", "FALSE" },
-            { "input[19].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[19].waveType", "NEURAL_WAVE_UNIT_SINE" },
-            { "input[1].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[1].forceType", "NEURAL_FORCE_ENEMY_BASE" },
-            { "input[1].radius", "301.750824" },
-            { "input[1].useTangent", "TRUE" },
-            { "input[1].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
-            { "input[20].crowdType", "NEURAL_CROWD_ENEMY_MISSILE" },
-            { "input[20].forceType", "NEURAL_FORCE_ENEMY_BASE" },
-            { "input[20].radius", "0.000000" },
-            { "input[20].useTangent", "FALSE" },
-            { "input[20].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
-            { "input[20].waveType", "NEURAL_WAVE_FMOD" },
-            { "input[21].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
-            { "input[21].forceType", "NEURAL_FORCE_ENEMY" },
-            { "input[21].frequency", "0.000000" },
-            { "input[21].radius", "-1.000000" },
-            { "input[21].useTangent", "TRUE" },
-            { "input[21].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[22].crowdType", "NEURAL_CROWD_CORES" },
-            { "input[22].forceType", "NEURAL_FORCE_ALIGN2" },
-            { "input[22].radius", "6.802381" },
-            { "input[22].useTangent", "FALSE" },
-            { "input[22].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
-            { "input[22].waveType", "NEURAL_WAVE_NONE" },
-            { "input[23].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
-            { "input[23].forceType", "NEURAL_FORCE_CENTER" },
-            { "input[23].frequency", "0.000000" },
-            { "input[23].radius", "-1.000000" },
-            { "input[23].useTangent", "FALSE" },
-            { "input[23].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[23].waveType", "NEURAL_WAVE_NONE" },
-            { "input[24].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
-            { "input[24].forceType", "NEURAL_FORCE_SEPARATE" },
-            { "input[24].frequency", "0.000000" },
-            { "input[24].radius", "1086.721436" },
-            { "input[24].useTangent", "TRUE" },
-            { "input[24].valueType", "NEURAL_VALUE_FORCE" },
-            { "input[2].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[2].forceType", "NEURAL_FORCE_CORES" },
-            { "input[2].radius", "148.709793" },
-            { "input[2].useTangent", "FALSE" },
-            { "input[2].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[3].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
-            { "input[3].forceType", "NEURAL_FORCE_BASE" },
-            { "input[3].radius", "-1.000000" },
-            { "input[3].useTangent", "FALSE" },
-            { "input[3].valueType", "NEURAL_VALUE_CREDITS" },
-            { "input[4].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[4].forceType", "NEURAL_FORCE_NEAREST_EDGE" },
-            { "input[4].frequency", "5622.903809" },
-            { "input[4].radius", "0.000000" },
-            { "input[4].useTangent", "FALSE" },
-            { "input[4].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
-            { "input[4].waveType", "NEURAL_WAVE_ABS_SINE" },
-            { "input[5].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
-            { "input[5].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
-            { "input[5].frequency", "0.000000" },
-            { "input[5].radius", "0.000000" },
-            { "input[5].useTangent", "TRUE" },
-            { "input[5].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
-            { "input[5].waveType", "NEURAL_WAVE_SINE" },
-            { "input[6].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[6].forceType", "NEURAL_FORCE_HEADING" },
-            { "input[6].frequency", "0.000000" },
-            { "input[6].radius", "-0.950000" },
-            { "input[6].useTangent", "FALSE" },
-            { "input[6].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[6].waveType", "NEURAL_WAVE_NONE" },
-            { "input[7].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
-            { "input[7].forceType", "NEURAL_FORCE_BASE_DEFENSE" },
-            { "input[7].radius", "4.193549" },
-            { "input[7].useTangent", "TRUE" },
-            { "input[7].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
-            { "input[8].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
-            { "input[8].forceType", "NEURAL_FORCE_ENEMY_BASE_GUESS" },
-            { "input[8].frequency", "0.000000" },
-            { "input[8].radius", "0.000000" },
-            { "input[8].useTangent", "FALSE" },
-            { "input[8].valueType", "NEURAL_VALUE_CROWD" },
-            { "input[8].waveType", "NEURAL_WAVE_ABS_SINE" },
-            { "input[9].crowdType", "NEURAL_CROWD_FRIEND_MISSILE" },
-            { "input[9].forceType", "NEURAL_FORCE_HEADING" },
-            { "input[9].radius", "154.979477" },
-            { "input[9].useTangent", "TRUE" },
-            { "input[9].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[100].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
-            { "output[100].radius", "529.224609" },
-            { "output[100].useTangent", "TRUE" },
-            { "output[100].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[101].forceType", "NEURAL_FORCE_ZERO" },
-            { "output[101].radius", "1351.212036" },
-            { "output[101].useTangent", "FALSE" },
-            { "output[101].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[102].forceType", "NEURAL_FORCE_SEPARATE" },
-            { "output[102].radius", "167.162323" },
-            { "output[102].useTangent", "FALSE" },
-            { "output[102].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[103].forceType", "NEURAL_FORCE_NEAREST_CORNER" },
-            { "output[103].radius", "-1.000000" },
-            { "output[103].useTangent", "FALSE" },
-            { "output[103].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[104].forceType", "NEURAL_FORCE_ENEMY" },
-            { "output[104].radius", "1729.684937" },
-            { "output[104].useTangent", "FALSE" },
-            { "output[104].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[105].forceType", "NEURAL_FORCE_NEAREST_FRIEND_MISSILE" },
-            { "output[105].radius", "278.047913" },
-            { "output[105].useTangent", "FALSE" },
-            { "output[105].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[106].forceType", "NEURAL_FORCE_ALIGN2" },
-            { "output[106].radius", "2541.187500" },
-            { "output[106].useTangent", "FALSE" },
-            { "output[106].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[107].forceType", "NEURAL_FORCE_BASE_DEFENSE" },
-            { "output[107].radius", "-1.000000" },
-            { "output[107].useTangent", "TRUE" },
-            { "output[107].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[108].forceType", "NEURAL_FORCE_ALIGN2" },
-            { "output[108].radius", "-0.950000" },
-            { "output[108].useTangent", "FALSE" },
-            { "output[108].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[109].forceType", "NEURAL_FORCE_HEADING" },
-            { "output[109].radius", "1411.446289" },
-            { "output[109].useTangent", "FALSE" },
-            { "output[109].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[110].forceType", "NEURAL_FORCE_COHERE" },
-            { "output[110].radius", "2590.880371" },
-            { "output[110].useTangent", "FALSE" },
-            { "output[110].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[111].forceType", "NEURAL_FORCE_ALIGN2" },
-            { "output[111].radius", "151.967468" },
-            { "output[111].useTangent", "TRUE" },
-            { "output[111].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[112].forceType", "NEURAL_FORCE_HEADING" },
-            { "output[112].radius", "296.518951" },
-            { "output[112].useTangent", "FALSE" },
-            { "output[112].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[113].forceType", "NEURAL_FORCE_ZERO" },
-            { "output[113].radius", "-1.000000" },
-            { "output[113].useTangent", "TRUE" },
-            { "output[113].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[114].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
-            { "output[114].radius", "322.285767" },
-            { "output[114].useTangent", "FALSE" },
-            { "output[114].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[115].forceType", "NEURAL_FORCE_HEADING" },
-            { "output[115].radius", "-1.000000" },
-            { "output[115].useTangent", "FALSE" },
-            { "output[115].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[116].forceType", "NEURAL_FORCE_CORES" },
-            { "output[116].radius", "0.000000" },
-            { "output[116].useTangent", "TRUE" },
-            { "output[116].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[117].forceType", "NEURAL_FORCE_COHERE" },
-            { "output[117].radius", "1002.034180" },
-            { "output[117].useTangent", "TRUE" },
-            { "output[117].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[118].forceType", "NEURAL_FORCE_ENEMY_MISSILE" },
-            { "output[118].radius", "298.878693" },
-            { "output[118].useTangent", "FALSE" },
-            { "output[118].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[119].forceType", "NEURAL_FORCE_ALIGN2" },
-            { "output[119].radius", "2850.000000" },
-            { "output[119].useTangent", "FALSE" },
-            { "output[119].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[120].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
-            { "output[120].radius", "2963.549072" },
-            { "output[120].useTangent", "FALSE" },
-            { "output[120].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[121].forceType", "NEURAL_FORCE_ENEMY" },
-            { "output[121].radius", "-1.000000" },
-            { "output[121].useTangent", "FALSE" },
-            { "output[121].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[122].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
-            { "output[122].radius", "1693.586426" },
-            { "output[122].useTangent", "FALSE" },
-            { "output[122].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[123].forceType", "NEURAL_FORCE_BASE_DEFENSE" },
-            { "output[123].radius", "1030.571045" },
-            { "output[123].useTangent", "FALSE" },
-            { "output[123].valueType", "NEURAL_VALUE_FORCE" },
-            { "output[124].forceType", "NEURAL_FORCE_ALIGN2" },
-            { "output[124].radius", "-1.000000" },
-            { "output[124].useTangent", "FALSE" },
-            { "output[124].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.input[0].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
+            { "shipNet.input[0].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
+            { "shipNet.input[0].radius", "0.000000" },
+            { "shipNet.input[0].useTangent", "FALSE" },
+            { "shipNet.input[0].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
+            { "shipNet.input[10].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
+            { "shipNet.input[10].forceType", "NEURAL_FORCE_ALIGN2" },
+            { "shipNet.input[10].radius", "157.201385" },
+            { "shipNet.input[10].useTangent", "FALSE" },
+            { "shipNet.input[10].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[11].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
+            { "shipNet.input[11].forceType", "NEURAL_FORCE_BASE" },
+            { "shipNet.input[11].radius", "157.342880" },
+            { "shipNet.input[11].useTangent", "TRUE" },
+            { "shipNet.input[11].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.input[11].waveType", "NEURAL_WAVE_UNIT_SINE" },
+            { "shipNet.input[12].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
+            { "shipNet.input[12].forceType", "NEURAL_FORCE_CORES" },
+            { "shipNet.input[12].frequency", "0.000000" },
+            { "shipNet.input[12].radius", "0.000000" },
+            { "shipNet.input[12].useTangent", "TRUE" },
+            { "shipNet.input[12].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
+            { "shipNet.input[12].waveType", "NEURAL_WAVE_SINE" },
+            { "shipNet.input[13].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
+            { "shipNet.input[13].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
+            { "shipNet.input[13].frequency", "0.000000" },
+            { "shipNet.input[13].radius", "0.000000" },
+            { "shipNet.input[13].useTangent", "TRUE" },
+            { "shipNet.input[13].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.input[13].waveType", "NEURAL_WAVE_SINE" },
+            { "shipNet.input[14].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
+            { "shipNet.input[14].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
+            { "shipNet.input[14].frequency", "0.000000" },
+            { "shipNet.input[14].radius", "164.939926" },
+            { "shipNet.input[14].useTangent", "FALSE" },
+            { "shipNet.input[14].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.input[14].waveType", "NEURAL_WAVE_FMOD" },
+            { "shipNet.input[15].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
+            { "shipNet.input[15].forceType", "NEURAL_FORCE_COHERE" },
+            { "shipNet.input[15].radius", "156.087997" },
+            { "shipNet.input[15].useTangent", "FALSE" },
+            { "shipNet.input[15].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.input[16].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
+            { "shipNet.input[16].forceType", "NEURAL_FORCE_CENTER" },
+            { "shipNet.input[16].frequency", "0.000000" },
+            { "shipNet.input[16].radius", "0.000000" },
+            { "shipNet.input[16].useTangent", "FALSE" },
+            { "shipNet.input[16].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
+            { "shipNet.input[17].crowdType", "NEURAL_CROWD_CORES" },
+            { "shipNet.input[17].forceType", "NEURAL_FORCE_BASE" },
+            { "shipNet.input[17].frequency", "4093.644043" },
+            { "shipNet.input[17].radius", "0.000000" },
+            { "shipNet.input[17].useTangent", "FALSE" },
+            { "shipNet.input[17].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[17].waveType", "NEURAL_WAVE_FMOD" },
+            { "shipNet.input[18].crowdType", "NEURAL_CROWD_ENEMY_MISSILE" },
+            { "shipNet.input[18].forceType", "NEURAL_FORCE_NEAREST_FRIEND_MISSILE" },
+            { "shipNet.input[18].frequency", "0.000000" },
+            { "shipNet.input[18].radius", "147.504044" },
+            { "shipNet.input[18].useTangent", "FALSE" },
+            { "shipNet.input[18].valueType", "NEURAL_VALUE_MOBID" },
+            { "shipNet.input[18].waveType", "NEURAL_WAVE_FMOD" },
+            { "shipNet.input[19].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
+            { "shipNet.input[19].forceType", "NEURAL_FORCE_ZERO" },
+            { "shipNet.input[19].frequency", "0.000000" },
+            { "shipNet.input[19].radius", "144.802826" },
+            { "shipNet.input[19].useTangent", "FALSE" },
+            { "shipNet.input[19].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[19].waveType", "NEURAL_WAVE_UNIT_SINE" },
+            { "shipNet.input[1].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
+            { "shipNet.input[1].forceType", "NEURAL_FORCE_ENEMY_BASE" },
+            { "shipNet.input[1].radius", "301.750824" },
+            { "shipNet.input[1].useTangent", "TRUE" },
+            { "shipNet.input[1].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
+            { "shipNet.input[20].crowdType", "NEURAL_CROWD_ENEMY_MISSILE" },
+            { "shipNet.input[20].forceType", "NEURAL_FORCE_ENEMY_BASE" },
+            { "shipNet.input[20].radius", "0.000000" },
+            { "shipNet.input[20].useTangent", "FALSE" },
+            { "shipNet.input[20].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
+            { "shipNet.input[20].waveType", "NEURAL_WAVE_FMOD" },
+            { "shipNet.input[21].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
+            { "shipNet.input[21].forceType", "NEURAL_FORCE_ENEMY" },
+            { "shipNet.input[21].frequency", "0.000000" },
+            { "shipNet.input[21].radius", "-1.000000" },
+            { "shipNet.input[21].useTangent", "TRUE" },
+            { "shipNet.input[21].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[22].crowdType", "NEURAL_CROWD_CORES" },
+            { "shipNet.input[22].forceType", "NEURAL_FORCE_ALIGN2" },
+            { "shipNet.input[22].radius", "6.802381" },
+            { "shipNet.input[22].useTangent", "FALSE" },
+            { "shipNet.input[22].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
+            { "shipNet.input[22].waveType", "NEURAL_WAVE_NONE" },
+            { "shipNet.input[23].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
+            { "shipNet.input[23].forceType", "NEURAL_FORCE_CENTER" },
+            { "shipNet.input[23].frequency", "0.000000" },
+            { "shipNet.input[23].radius", "-1.000000" },
+            { "shipNet.input[23].useTangent", "FALSE" },
+            { "shipNet.input[23].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[23].waveType", "NEURAL_WAVE_NONE" },
+            { "shipNet.input[24].crowdType", "NEURAL_CROWD_ENEMY_SHIP" },
+            { "shipNet.input[24].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "shipNet.input[24].frequency", "0.000000" },
+            { "shipNet.input[24].radius", "1086.721436" },
+            { "shipNet.input[24].useTangent", "TRUE" },
+            { "shipNet.input[24].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.input[2].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
+            { "shipNet.input[2].forceType", "NEURAL_FORCE_CORES" },
+            { "shipNet.input[2].radius", "148.709793" },
+            { "shipNet.input[2].useTangent", "FALSE" },
+            { "shipNet.input[2].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[3].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
+            { "shipNet.input[3].forceType", "NEURAL_FORCE_BASE" },
+            { "shipNet.input[3].radius", "-1.000000" },
+            { "shipNet.input[3].useTangent", "FALSE" },
+            { "shipNet.input[3].valueType", "NEURAL_VALUE_CREDITS" },
+            { "shipNet.input[4].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
+            { "shipNet.input[4].forceType", "NEURAL_FORCE_NEAREST_EDGE" },
+            { "shipNet.input[4].frequency", "5622.903809" },
+            { "shipNet.input[4].radius", "0.000000" },
+            { "shipNet.input[4].useTangent", "FALSE" },
+            { "shipNet.input[4].valueType", "NEURAL_VALUE_RANDOM_UNIT" },
+            { "shipNet.input[4].waveType", "NEURAL_WAVE_ABS_SINE" },
+            { "shipNet.input[5].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
+            { "shipNet.input[5].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
+            { "shipNet.input[5].frequency", "0.000000" },
+            { "shipNet.input[5].radius", "0.000000" },
+            { "shipNet.input[5].useTangent", "TRUE" },
+            { "shipNet.input[5].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
+            { "shipNet.input[5].waveType", "NEURAL_WAVE_SINE" },
+            { "shipNet.input[6].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
+            { "shipNet.input[6].forceType", "NEURAL_FORCE_HEADING" },
+            { "shipNet.input[6].frequency", "0.000000" },
+            { "shipNet.input[6].radius", "-0.950000" },
+            { "shipNet.input[6].useTangent", "FALSE" },
+            { "shipNet.input[6].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[6].waveType", "NEURAL_WAVE_NONE" },
+            { "shipNet.input[7].crowdType", "NEURAL_CROWD_BASE_FRIEND_SHIP" },
+            { "shipNet.input[7].forceType", "NEURAL_FORCE_BASE_DEFENSE" },
+            { "shipNet.input[7].radius", "4.193549" },
+            { "shipNet.input[7].useTangent", "TRUE" },
+            { "shipNet.input[7].valueType", "NEURAL_VALUE_FRIEND_SHIPS" },
+            { "shipNet.input[8].crowdType", "NEURAL_CROWD_BASE_ENEMY_SHIP" },
+            { "shipNet.input[8].forceType", "NEURAL_FORCE_ENEMY_BASE_GUESS" },
+            { "shipNet.input[8].frequency", "0.000000" },
+            { "shipNet.input[8].radius", "0.000000" },
+            { "shipNet.input[8].useTangent", "FALSE" },
+            { "shipNet.input[8].valueType", "NEURAL_VALUE_CROWD" },
+            { "shipNet.input[8].waveType", "NEURAL_WAVE_ABS_SINE" },
+            { "shipNet.input[9].crowdType", "NEURAL_CROWD_FRIEND_MISSILE" },
+            { "shipNet.input[9].forceType", "NEURAL_FORCE_HEADING" },
+            { "shipNet.input[9].radius", "154.979477" },
+            { "shipNet.input[9].useTangent", "TRUE" },
+            { "shipNet.input[9].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[100].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
+            { "shipNet.output[100].radius", "529.224609" },
+            { "shipNet.output[100].useTangent", "TRUE" },
+            { "shipNet.output[100].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[101].forceType", "NEURAL_FORCE_ZERO" },
+            { "shipNet.output[101].radius", "1351.212036" },
+            { "shipNet.output[101].useTangent", "FALSE" },
+            { "shipNet.output[101].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[102].forceType", "NEURAL_FORCE_SEPARATE" },
+            { "shipNet.output[102].radius", "167.162323" },
+            { "shipNet.output[102].useTangent", "FALSE" },
+            { "shipNet.output[102].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[103].forceType", "NEURAL_FORCE_NEAREST_CORNER" },
+            { "shipNet.output[103].radius", "-1.000000" },
+            { "shipNet.output[103].useTangent", "FALSE" },
+            { "shipNet.output[103].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[104].forceType", "NEURAL_FORCE_ENEMY" },
+            { "shipNet.output[104].radius", "1729.684937" },
+            { "shipNet.output[104].useTangent", "FALSE" },
+            { "shipNet.output[104].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[105].forceType", "NEURAL_FORCE_NEAREST_FRIEND_MISSILE" },
+            { "shipNet.output[105].radius", "278.047913" },
+            { "shipNet.output[105].useTangent", "FALSE" },
+            { "shipNet.output[105].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[106].forceType", "NEURAL_FORCE_ALIGN2" },
+            { "shipNet.output[106].radius", "2541.187500" },
+            { "shipNet.output[106].useTangent", "FALSE" },
+            { "shipNet.output[106].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[107].forceType", "NEURAL_FORCE_BASE_DEFENSE" },
+            { "shipNet.output[107].radius", "-1.000000" },
+            { "shipNet.output[107].useTangent", "TRUE" },
+            { "shipNet.output[107].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[108].forceType", "NEURAL_FORCE_ALIGN2" },
+            { "shipNet.output[108].radius", "-0.950000" },
+            { "shipNet.output[108].useTangent", "FALSE" },
+            { "shipNet.output[108].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[109].forceType", "NEURAL_FORCE_HEADING" },
+            { "shipNet.output[109].radius", "1411.446289" },
+            { "shipNet.output[109].useTangent", "FALSE" },
+            { "shipNet.output[109].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[110].forceType", "NEURAL_FORCE_COHERE" },
+            { "shipNet.output[110].radius", "2590.880371" },
+            { "shipNet.output[110].useTangent", "FALSE" },
+            { "shipNet.output[110].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[111].forceType", "NEURAL_FORCE_ALIGN2" },
+            { "shipNet.output[111].radius", "151.967468" },
+            { "shipNet.output[111].useTangent", "TRUE" },
+            { "shipNet.output[111].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[112].forceType", "NEURAL_FORCE_HEADING" },
+            { "shipNet.output[112].radius", "296.518951" },
+            { "shipNet.output[112].useTangent", "FALSE" },
+            { "shipNet.output[112].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[113].forceType", "NEURAL_FORCE_ZERO" },
+            { "shipNet.output[113].radius", "-1.000000" },
+            { "shipNet.output[113].useTangent", "TRUE" },
+            { "shipNet.output[113].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[114].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
+            { "shipNet.output[114].radius", "322.285767" },
+            { "shipNet.output[114].useTangent", "FALSE" },
+            { "shipNet.output[114].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[115].forceType", "NEURAL_FORCE_HEADING" },
+            { "shipNet.output[115].radius", "-1.000000" },
+            { "shipNet.output[115].useTangent", "FALSE" },
+            { "shipNet.output[115].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[116].forceType", "NEURAL_FORCE_CORES" },
+            { "shipNet.output[116].radius", "0.000000" },
+            { "shipNet.output[116].useTangent", "TRUE" },
+            { "shipNet.output[116].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[117].forceType", "NEURAL_FORCE_COHERE" },
+            { "shipNet.output[117].radius", "1002.034180" },
+            { "shipNet.output[117].useTangent", "TRUE" },
+            { "shipNet.output[117].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[118].forceType", "NEURAL_FORCE_ENEMY_MISSILE" },
+            { "shipNet.output[118].radius", "298.878693" },
+            { "shipNet.output[118].useTangent", "FALSE" },
+            { "shipNet.output[118].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[119].forceType", "NEURAL_FORCE_ALIGN2" },
+            { "shipNet.output[119].radius", "2850.000000" },
+            { "shipNet.output[119].useTangent", "FALSE" },
+            { "shipNet.output[119].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[120].forceType", "NEURAL_FORCE_NEAREST_FRIEND" },
+            { "shipNet.output[120].radius", "2963.549072" },
+            { "shipNet.output[120].useTangent", "FALSE" },
+            { "shipNet.output[120].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[121].forceType", "NEURAL_FORCE_ENEMY" },
+            { "shipNet.output[121].radius", "-1.000000" },
+            { "shipNet.output[121].useTangent", "FALSE" },
+            { "shipNet.output[121].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[122].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
+            { "shipNet.output[122].radius", "1693.586426" },
+            { "shipNet.output[122].useTangent", "FALSE" },
+            { "shipNet.output[122].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[123].forceType", "NEURAL_FORCE_BASE_DEFENSE" },
+            { "shipNet.output[123].radius", "1030.571045" },
+            { "shipNet.output[123].useTangent", "FALSE" },
+            { "shipNet.output[123].valueType", "NEURAL_VALUE_FORCE" },
+            { "shipNet.output[124].forceType", "NEURAL_FORCE_ALIGN2" },
+            { "shipNet.output[124].radius", "-1.000000" },
+            { "shipNet.output[124].useTangent", "FALSE" },
+            { "shipNet.output[124].valueType", "NEURAL_VALUE_FORCE" },
             { "sensorGrid.staleCoreTime", "0.000000" },
             { "sensorGrid.staleFighterTime", "0.000000" },
         };
@@ -753,127 +750,15 @@ public:
 
     virtual void loadRegistry(MBRegistry *mreg) {
         myUseAttackForces = MBRegistry_GetBoolD(mreg, "useAttackForces", FALSE);
-
-        if (MBRegistry_ContainsKey(mreg, "shipNet.numInputs") &&
-            MBRegistry_GetUint(mreg, "shipNet.numInputs") > 0) {
-            myShipNet.load(mreg, "shipNet.");
-        } else {
-            myShipNet.initialize(1, 1, 1);
-            myShipNet.loadZeroNet();
-        }
-
-        uint numInputs = myShipNet.getNumInputs();
-        uint numOutputs = myShipNet.getNumOutputs();
-        myNumNodes = myShipNet.getNumNodes();
-
-        myInputs.resize(numInputs);
-        myOutputs.resize(numOutputs);
-
-        myInputDescs.resize(numInputs);
-        myOutputDescs.resize(numOutputs);
-
-        for (uint i = 0; i < myOutputDescs.size(); i++) {
-            char *str = NULL;
-            int ret = asprintf(&str, "output[%d].",
-                               i + myShipNet.getOutputOffset());
-            VERIFY(ret > 0);
-            NeuralValue_Load(mreg, &myOutputDescs[i], str);
-            free(str);
-
-            if (myOutputDescs[i].valueType != NEURAL_VALUE_FORCE) {
-                myOutputDescs[i].valueType = NEURAL_VALUE_FORCE;
-                myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
-                myOutputDescs[i].forceDesc.useTangent = FALSE;
-                myOutputDescs[i].forceDesc.radius = 0.0f;
-                myOutputDescs[i].forceDesc.doIdle = FALSE;
-                myOutputDescs[i].forceDesc.doAttack = FALSE;
-            }
-
-            if (myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
-                myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
-                myShipNet.voidOutputNode(i);
-                myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
-            }
-        }
-
-        CPBitVector inputBV;
-        inputBV.resize(numInputs);
-        myShipNet.minimize(&inputBV);
-
-        for (uint i = 0; i < myInputDescs.size(); i++) {
-            if (inputBV.get(i)) {
-                char *str = NULL;
-                int ret = asprintf(&str, "input[%d].", i);
-                VERIFY(ret > 0);
-                NeuralValue_Load(mreg, &myInputDescs[i], str);
-                free(str);
-            } else {
-                myInputDescs[i].valueType = NEURAL_VALUE_VOID;
-            }
-        }
-
+        myShipNet.load(mreg, "shipNet.");
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
     AIContext *getAIContext(void) {
-        ASSERT(myNNC.rs != NULL);
-        ASSERT(myNNC.sg != NULL);
-        ASSERT(myNNC.ai != NULL);
-        return &myNNC;
-    }
-
-    static bool isOutputActive(BasicShipAIState state,
-                               const NeuralValueDesc *outputDesc) {
-        ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
-        ASSERT((state == BSAI_STATE_IDLE && outputDesc->forceDesc.doIdle) ||
-               (state == BSAI_STATE_ATTACK && outputDesc->forceDesc.doAttack));
-        return TRUE;
-    }
-
-    void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce) {
-        uint x;
-        float maxV = (1.0f / MICRON);
-        AIContext *nc = getAIContext();
-
-        ASSERT(myInputs.size() == myInputDescs.size());
-
-        for (uint i = 0; i < myInputDescs.size(); i++) {
-            myInputs[i] = NeuralValue_GetValue(nc, mob, &myInputDescs[i], i);
-        }
-
-        ASSERT(myOutputs.size() == myOutputDescs.size());
-        myShipNet.compute(myInputs, myOutputs);
-
-        for (uint i = 0; i < myOutputs.size(); i++) {
-            ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
-            if (!isOutputActive(state, &myOutputDescs[i])) {
-                myOutputs[i] = 0.0f;
-            } else if (isnan(myOutputs[i])) {
-                myOutputs[i] = 0.0f;
-            } else if (myOutputs[i] > maxV) {
-                myOutputs[i] = maxV;
-            } else if (myOutputs[i] < -maxV) {
-                myOutputs[i] = -maxV;
-            }
-        }
-
-        x = 0;
-        FRPoint_Zero(outputForce);
-        for (uint i = 0; i < myOutputDescs.size(); i++) {
-            FRPoint force;
-            ASSERT(myOutputDescs[i].valueType == NEURAL_VALUE_FORCE);
-            ASSERT(myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
-            if (myOutputDescs[i].forceDesc.forceType != NEURAL_FORCE_VOID &&
-                myOutputs[x] != 0.0f &&
-                NeuralForce_GetForce(getAIContext(), mob,
-                                     &myOutputDescs[i].forceDesc, &force)) {
-                FRPoint_SetSpeed(&force, myOutputs[x]);
-                FRPoint_Add(&force, outputForce, outputForce);
-            }
-            x++;
-        }
-        //XXX non-force outputs?
-        ASSERT(x <= myOutputs.size());
+        ASSERT(myAIC.rs != NULL);
+        ASSERT(myAIC.sg != NULL);
+        ASSERT(myAIC.ai != NULL);
+        return &myAIC;
     }
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
@@ -891,7 +776,7 @@ public:
 
             FRPoint rForce;
             ASSERT(ship->state == BSAI_STATE_ATTACK);
-            doForces(mob, BSAI_STATE_ATTACK, &rForce);
+            myShipNet.doForces(mob, BSAI_STATE_ATTACK, &rForce);
             NeuralForce_ApplyToMob(getAIContext(), mob, &rForce);
         } else {
             BasicAIGovernor::doAttack(mob, enemyTarget);
@@ -899,8 +784,6 @@ public:
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
-        //RandomState *rs = &myRandomState;
-
         BineuralShipAI *ship = (BineuralShipAI *)mob->aiMobHandle;
         ASSERT(ship == (BineuralShipAI *)getShip(mob->mobid));
         ASSERT(ship != NULL);
@@ -914,7 +797,7 @@ public:
 
         FRPoint rForce;
         ASSERT(ship->state == BSAI_STATE_IDLE);
-        doForces(mob, BSAI_STATE_IDLE, &rForce);
+        myShipNet.doForces(mob, BSAI_STATE_IDLE, &rForce);
         NeuralForce_ApplyToMob(getAIContext(), mob, &rForce);
 
         ASSERT(!isnanf(mob->cmd.target.x));
@@ -993,34 +876,8 @@ static void BineuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
     BineuralFleet *sf = (BineuralFleet *)aiHandle;
     MBRegistry_PutAll(mreg, sf->mreg, "");
     sf->gov.dumpSanitizedParams(mreg);
-
-    /*
-     * If we voided out the inputs/outputs when the FloatNet was minimized,
-     * reflect that here.
-     */
-    for (uint i = 0; i < sf->gov.myInputDescs.size(); i++) {
-        if (sf->gov.myInputDescs[i].valueType == NEURAL_VALUE_VOID) {
-            char *str = NULL;
-            const char *value;
-            int ret = asprintf(&str, "input[%d].valueType", i);
-            VERIFY(ret > 0);
-            value = NeuralValue_ToString(sf->gov.myInputDescs[i].valueType);
-            MBRegistry_PutCopy(mreg, str, value);
-            free(str);
-        }
-    }
-    for (uint i = 0; i < sf->gov.myOutputDescs.size(); i++) {
-        if (sf->gov.myOutputDescs[i].valueType == NEURAL_VALUE_FORCE &&
-            sf->gov.myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
-            char *str = NULL;
-            const char *value;
-            int ret = asprintf(&str, "output[%d].forceType", i);
-            VERIFY(ret > 0);
-            value = NeuralForce_ToString(sf->gov.myOutputDescs[i].forceDesc.forceType);
-            MBRegistry_PutCopy(mreg, str, value);
-            free(str);
-        }
-    }
+    sf->gov.myShipNet.dumpSanitizedParams(mreg, "myShipNet");
+    NOT_IMPLEMENTED();
 }
 
 static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
@@ -1067,39 +924,9 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         rate = 1.0f;
     }
 
-    FloatNet fn;
-    if (MBRegistry_ContainsKey(mreg, "shipNet.numInputs") &&
-        MBRegistry_GetUint(mreg, "shipNet.numInputs") > 0 &&
-        !MBRegistry_GetBool(mreg, BINEURAL_SCRAMBLE_KEY)) {
-        fn.load(mreg, "shipNet.");
-    } else {
-        fn.initialize(BINEURAL_MAX_INPUTS, BINEURAL_MAX_OUTPUTS,
-                      BINEURAL_MAX_NODES);
-        fn.loadZeroNet();
-    }
-
-    fn.mutate(rate, BINEURAL_MAX_NODE_DEGREE, BINEURAL_MAX_NODES);
-    fn.save(mreg, "shipNet.");
-
-    for (uint i = 0; i < fn.getNumInputs(); i++) {
-        NeuralValueDesc desc;
-        char *str = NULL;
-        int ret = asprintf(&str, "input[%d].", i);
-        VERIFY(ret > 0);
-        NeuralValue_Load(mreg, &desc, str);
-        NeuralValue_Mutate(mreg, &desc, FALSE, rate, str);
-        free(str);
-    }
-
-    for (uint i = 0; i < fn.getNumOutputs(); i++) {
-        NeuralValueDesc desc;
-        char *str = NULL;
-        int ret = asprintf(&str, "output[%d].", i + fn.getOutputOffset());
-        VERIFY(ret > 0);
-        NeuralValue_Load(mreg, &desc, str);
-        NeuralValue_Mutate(mreg, &desc, TRUE, rate, str);
-        free(str);
-    }
+    NeuralNet_Mutate(mreg, "shipNet.", rate,
+                     BINEURAL_MAX_INPUTS, BINEURAL_MAX_OUTPUTS,
+                     BINEURAL_MAX_NODES, BINEURAL_MAX_NODE_DEGREE);
 
     Mutate_Float(mreg, vf, ARRAYSIZE(vf));
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));

@@ -192,79 +192,6 @@ NeuralCrowdType NeuralCrowd_Random()
     return (NeuralCrowdType) tmCrowds[i].value;
 }
 
-// void NeuralNet_Load(MBRegistry *mreg, FloatNet *net, const char *prefix)
-// {
-//     MBString str;
-//     const char *cstr;
-
-//     ASSERT(mreg != NULL);
-//     ASSERT(net != NULL);
-//     ASSERT(prefix != NULL);
-
-//     str = prefix;
-//     str += "numInputs";
-//     cstr = MBRegistry_GetCStr(mreg, str.CStr());
-//     if (MBRegistry_ContainsKey(mreg, cstr) &&
-//         MBRegistry_GetUint(mreg, cstr) > 0) {
-//         net->load(mreg, prefix);
-//     } else {
-//         net->initialize(1, 1, 1);
-//         net->loadZeroNet();
-//     }
-
-//     uint numInputs = net->getNumInputs();
-//     uint numOutputs = net->getNumOutputs();
-//     uint numNodes = net->getNumNodes();
-
-//     myInputs.resize(numInputs);
-//     myOutputs.resize(numOutputs);
-
-//     myInputDescs.resize(numInputs);
-//     myOutputDescs.resize(numOutputs);
-
-//     for (uint i = 0; i < myOutputDescs.size(); i++) {
-//         char *str = NULL;
-//         int ret = asprintf(&str, "output[%d].",
-//                             i + net->getOutputOffset());
-//         VERIFY(ret > 0);
-//         NeuralValue_Load(mreg, &myOutputDescs[i], str);
-//         free(str);
-
-//         if (myOutputDescs[i].valueType != NEURAL_VALUE_FORCE) {
-//             myOutputDescs[i].valueType = NEURAL_VALUE_FORCE;
-//             myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
-//             myOutputDescs[i].forceDesc.useTangent = FALSE;
-//             myOutputDescs[i].forceDesc.radius = 0.0f;
-//             myOutputDescs[i].forceDesc.doIdle = FALSE;
-//             myOutputDescs[i].forceDesc.doAttack = FALSE;
-//         }
-
-//         if (myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
-//             myOutputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
-//             net->voidOutputNode(i);
-//             myOutputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
-//         }
-//     }
-
-//     CPBitVector inputBV;
-//     inputBV.resize(numInputs);
-//     net->minimize(&inputBV);
-
-//     for (uint i = 0; i < myInputDescs.size(); i++) {
-//         if (inputBV.get(i)) {
-//             char *str = NULL;
-//             int ret = asprintf(&str, "input[%d].", i);
-//             VERIFY(ret > 0);
-//             NeuralValue_Load(mreg, &myInputDescs[i], str);
-//             free(str);
-//         } else {
-//             myInputDescs[i].valueType = NEURAL_VALUE_VOID;
-//         }
-//     }
-
-//     this->BasicAIGovernor::loadRegistry(mreg);
-// }
-
 void NeuralValue_Load(MBRegistry *mreg,
                       NeuralValueDesc *desc, const char *prefix)
 {
@@ -1273,4 +1200,199 @@ float NeuralValue_GetValue(AIContext *nc,
         default:
             NOT_IMPLEMENTED();
     }
+}
+
+
+void NeuralNet::load(MBRegistry *mreg, const char *prefix)
+{
+    MBString str;
+    const char *cstr;
+
+    ASSERT(mreg != NULL);
+    ASSERT(prefix != NULL);
+
+    str = prefix;
+    str += "numInputs";
+    cstr = MBRegistry_GetCStr(mreg, str.CStr());
+    if (MBRegistry_ContainsKey(mreg, cstr) &&
+        MBRegistry_GetUint(mreg, cstr) > 0) {
+        floatNet.load(mreg, prefix);
+    } else {
+        floatNet.initialize(1, 1, 1);
+        floatNet.loadZeroNet();
+    }
+
+    uint numInputs = floatNet.getNumInputs();
+    uint numOutputs = floatNet.getNumOutputs();
+    numNodes = floatNet.getNumNodes();
+
+    inputs.resize(numInputs);
+    outputs.resize(numOutputs);
+
+    inputDescs.resize(numInputs);
+    outputDescs.resize(numOutputs);
+
+    for (uint i = 0; i < outputDescs.size(); i++) {
+        char *lcstr = NULL;
+        int ret = asprintf(&lcstr, "%soutput[%d].", prefix,
+                            i + floatNet.getOutputOffset());
+        VERIFY(ret > 0);
+        NeuralValue_Load(mreg, &outputDescs[i], lcstr);
+        free(lcstr);
+
+        if (outputDescs[i].valueType != NEURAL_VALUE_FORCE) {
+            outputDescs[i].valueType = NEURAL_VALUE_FORCE;
+            outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
+            outputDescs[i].forceDesc.useTangent = FALSE;
+            outputDescs[i].forceDesc.radius = 0.0f;
+            outputDescs[i].forceDesc.doIdle = FALSE;
+            outputDescs[i].forceDesc.doAttack = FALSE;
+        }
+
+        if (outputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
+            outputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
+            floatNet.voidOutputNode(i);
+            outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
+        }
+    }
+
+    CPBitVector inputBV;
+    inputBV.resize(numInputs);
+    floatNet.minimize(&inputBV);
+
+    for (uint i = 0; i < inputDescs.size(); i++) {
+        if (inputBV.get(i)) {
+            char *lcstr = NULL;
+            int ret = asprintf(&lcstr, "%sinput[%d].", prefix, i);
+            VERIFY(ret > 0);
+            NeuralValue_Load(mreg, &inputDescs[i], lcstr);
+            free(lcstr);
+        } else {
+            inputDescs[i].valueType = NEURAL_VALUE_VOID;
+        }
+    }
+}
+
+void NeuralNet::dumpSanitizedParams(MBRegistry *mreg, const char *prefix)
+{
+    NOT_IMPLEMENTED();
+
+    /*
+    * If we voided out the inputs/outputs when the FloatNet was minimized,
+    * reflect that here.
+    */
+    for (uint i = 0; i < inputDescs.size(); i++) {
+        if (inputDescs[i].valueType == NEURAL_VALUE_VOID) {
+            char *str = NULL;
+            const char *value;
+            int ret = asprintf(&str, "input[%d].valueType", i);
+            VERIFY(ret > 0);
+            value = NeuralValue_ToString(inputDescs[i].valueType);
+            MBRegistry_PutCopy(mreg, str, value);
+            free(str);
+        }
+    }
+    for (uint i = 0; i < outputDescs.size(); i++) {
+        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE &&
+            outputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
+            char *str = NULL;
+            const char *value;
+            int ret = asprintf(&str, "output[%d].forceType", i);
+            VERIFY(ret > 0);
+            value = NeuralForce_ToString(outputDescs[i].forceDesc.forceType);
+            MBRegistry_PutCopy(mreg, str, value);
+            free(str);
+        }
+    }
+}
+
+
+void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
+                      uint maxInputs, uint maxOutputs, uint maxNodes,
+                      uint maxNodeDegree)
+{
+    FloatNet fn;
+    MBString str;
+    const char *cstr;
+
+    str = prefix;
+    str += "numInputs";
+    cstr = str.CStr();
+    if (MBRegistry_ContainsKey(mreg, cstr) &&
+        MBRegistry_GetUint(mreg, cstr) > 0 &&
+        rate >= 1.0f) {
+        fn.load(mreg, prefix);
+    } else {
+        fn.initialize(maxInputs, maxOutputs, maxNodes);
+        fn.loadZeroNet();
+    }
+
+    fn.mutate(rate, maxNodeDegree, maxNodes);
+    fn.save(mreg, prefix);
+
+    for (uint i = 0; i < fn.getNumInputs(); i++) {
+        NeuralValueDesc desc;
+        char *str = NULL;
+        int ret = asprintf(&str, "%sinput[%d].", prefix, i);
+        VERIFY(ret > 0);
+        NeuralValue_Load(mreg, &desc, str);
+        NeuralValue_Mutate(mreg, &desc, FALSE, rate, str);
+        free(str);
+    }
+
+    for (uint i = 0; i < fn.getNumOutputs(); i++) {
+        NeuralValueDesc desc;
+        char *str = NULL;
+        int ret = asprintf(&str, "%soutput[%d].", prefix, i + fn.getOutputOffset());
+        VERIFY(ret > 0);
+        NeuralValue_Load(mreg, &desc, str);
+        NeuralValue_Mutate(mreg, &desc, TRUE, rate, str);
+        free(str);
+    }
+}
+
+
+void NeuralNet::doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce)
+{
+    uint x;
+    float maxV = (1.0f / MICRON);
+
+    ASSERT(inputs.size() == inputDescs.size());
+
+    for (uint i = 0; i < inputDescs.size(); i++) {
+        inputs[i] = NeuralValue_GetValue(&aic, mob, &inputDescs[i], i);
+    }
+
+    ASSERT(outputs.size() == outputDescs.size());
+    floatNet.compute(inputs, outputs);
+
+    for (uint i = 0; i < outputs.size(); i++) {
+        ASSERT(outputDescs[i].valueType == NEURAL_VALUE_FORCE);
+        if (!isOutputActive(state, &outputDescs[i])) {
+            outputs[i] = 0.0f;
+        } else if (isnan(outputs[i])) {
+            outputs[i] = 0.0f;
+        } else if (outputs[i] > maxV) {
+            outputs[i] = maxV;
+        } else if (outputs[i] < -maxV) {
+            outputs[i] = -maxV;
+        }
+    }
+
+    x = 0;
+    FRPoint_Zero(outputForce);
+    for (uint i = 0; i < outputDescs.size(); i++) {
+        FRPoint force;
+        ASSERT(outputDescs[i].valueType == NEURAL_VALUE_FORCE);
+        ASSERT(outputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
+        if (outputDescs[i].forceDesc.forceType != NEURAL_FORCE_VOID &&
+            outputs[x] != 0.0f &&
+            NeuralForce_GetForce(&aic, mob, &outputDescs[i].forceDesc, &force)) {
+            FRPoint_SetSpeed(&force, outputs[x]);
+            FRPoint_Add(&force, outputForce, outputForce);
+        }
+        x++;
+    }
+    //XXX non-force outputs?
+    ASSERT(x <= outputs.size());
 }
