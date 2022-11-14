@@ -80,6 +80,7 @@ public:
 
     void dumpSanitizedParams(MBRegistry *mreg) {
         myShipNet.save(mreg, "shipNet.");
+        myShipNet.dumpSanitizedParams(mreg, "shipNet.");
     }
 
     virtual BineuralShipAI *newShip(MobID mobid) {
@@ -876,8 +877,6 @@ static void BineuralFleetDumpSanitizedParams(void *aiHandle, MBRegistry *mreg)
     BineuralFleet *sf = (BineuralFleet *)aiHandle;
     MBRegistry_PutAll(mreg, sf->mreg, "");
     sf->gov.dumpSanitizedParams(mreg);
-    sf->gov.myShipNet.dumpSanitizedParams(mreg, "shipNet.");
-    NOT_IMPLEMENTED();
 }
 
 static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)

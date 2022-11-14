@@ -1275,17 +1275,15 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix)
 
 void NeuralNet::dumpSanitizedParams(MBRegistry *mreg, const char *prefix)
 {
-    NOT_IMPLEMENTED();
-
     /*
-    * If we voided out the inputs/outputs when the FloatNet was minimized,
-    * reflect that here.
-    */
+     * If we voided out the inputs/outputs when the FloatNet was minimized,
+     * reflect that here.
+     */
     for (uint i = 0; i < inputDescs.size(); i++) {
         if (inputDescs[i].valueType == NEURAL_VALUE_VOID) {
             char *str = NULL;
             const char *value;
-            int ret = asprintf(&str, "input[%d].valueType", i);
+            int ret = asprintf(&str, "%sinput[%d].valueType", prefix, i);
             VERIFY(ret > 0);
             value = NeuralValue_ToString(inputDescs[i].valueType);
             MBRegistry_PutCopy(mreg, str, value);
@@ -1297,7 +1295,7 @@ void NeuralNet::dumpSanitizedParams(MBRegistry *mreg, const char *prefix)
             outputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
             char *str = NULL;
             const char *value;
-            int ret = asprintf(&str, "output[%d].forceType", i);
+            int ret = asprintf(&str, "%soutput[%d].forceType", prefix, i);
             VERIFY(ret > 0);
             value = NeuralForce_ToString(outputDescs[i].forceDesc.forceType);
             MBRegistry_PutCopy(mreg, str, value);
