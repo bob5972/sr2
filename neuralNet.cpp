@@ -1318,7 +1318,7 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
     cstr = str.CStr();
     if (MBRegistry_ContainsKey(mreg, cstr) &&
         MBRegistry_GetUint(mreg, cstr) > 0 &&
-        rate >= 1.0f) {
+        rate < 1.0f) {
         fn.load(mreg, prefix);
     } else {
         fn.initialize(maxInputs, maxOutputs, maxNodes);
