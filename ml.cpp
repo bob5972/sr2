@@ -2125,16 +2125,33 @@ bool MLFloatNode::isConstant()
         case ML_FOP_0x1_CONSTANT_N1K_1K:
         case ML_FOP_0x1_CONSTANT_N10K_10K:
             if (mb_debug) {
-                uint numIn, numP;
+                uint numIn = inputs.size();
+                uint numP = params.size();
                 MLFloatOp_GetNumParams(op, &numIn, &numP);
                 ASSERT(numIn == 0);
             }
             return TRUE;
+        case ML_FOP_Nx0_SUM:
+        case ML_FOP_Nx0_PRODUCT:
+        case ML_FOP_Nx0_ARITHMETIC_MEAN:
+        case ML_FOP_Nx0_GEOMETRIC_MEAN:
+        case ML_FOP_NxN_WEIGHTED_GEOMETRIC_MEAN:
+        case ML_FOP_NxN_ANCHORED_GEOMETRIC_MEAN: {
+            uint numIn = inputs.size();
+            uint numP = params.size();
+            MLFloatOp_GetNumParams(op, &numIn, &numP);
+            return numIn == 0;
+        }
         default:
             if (mb_debug) {
-                uint numIn, numP;
+                uint numIn = inputs.size();
+                uint numP = params.size();
                 MLFloatOp_GetNumParams(op, &numIn, &numP);
-                ASSERT(numIn > 0);
+
+                if (numIn <= 0) {
+                    PANIC("MLFloatOp %s(%d) is non-constant with no parameters\n",
+                          ML_FloatOpToString(op), op);
+                }
             }
             return FALSE;
     }
