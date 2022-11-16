@@ -2135,7 +2135,9 @@ bool MLFloatNode::isConstant()
         case ML_FOP_Nx0_PRODUCT:
         case ML_FOP_Nx0_ARITHMETIC_MEAN:
         case ML_FOP_Nx0_GEOMETRIC_MEAN:
+        case ML_FOP_NxN_WEIGHTED_ARITHMETIC_MEAN:
         case ML_FOP_NxN_WEIGHTED_GEOMETRIC_MEAN:
+        case ML_FOP_NxN_ANCHORED_ARITHMETIC_MEAN:
         case ML_FOP_NxN_ANCHORED_GEOMETRIC_MEAN: {
             uint numIn = inputs.size();
             uint numP = params.size();
