@@ -26,6 +26,12 @@ extern "C" {
 #include "neuralNet.hpp"
 #include "textDump.hpp"
 
+static bool NeuralForceGetAdvanceFocusHelper(AIContext *nc,
+                                             Mob *mob, FPoint *focusPoint,
+                                             bool advance);
+static bool NeuralForceGetForwardFocusHelper(AIContext *nc,
+                                             Mob *mob, FPoint *focusPoint,
+                                             bool forward);
 static bool NeuralForceGetBaseControlLimitFocus(AIContext *nc, FPoint *focusPoint);
 static void NeuralForceGetHeading(AIContext *nc, Mob *mob, FRPoint *heading);
 static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint);
@@ -930,29 +936,23 @@ bool NeuralForce_GetFocus(AIContext *nc,
             return NeuralForceGetBaseControlLimitFocus(nc, focusPoint);
         case NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT:
         case NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT: {
-            FRPoint dir;
             bool forward = desc->forceType == NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT;
 
             if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
                 return FALSE;
             }
 
-            NeuralForceGetHeading(nc, mob, &dir);
-            return FPoint_IsFacing(focusPoint, &mob->pos, &dir, forward);
+            return NeuralForceGetForwardFocusHelper(nc, mob, focusPoint, forward);
         }
         case NEURAL_FORCE_BASE_ADVANCE_CONTROL_LIMIT:
         case NEURAL_FORCE_BASE_RETREAT_CONTROL_LIMIT: {
-            FRPoint dir;
-            bool forward = desc->forceType == NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT;
-            Mob *base = nc->sg->friendBase();
+            bool advance = desc->forceType == NEURAL_FORCE_BASE_ADVANCE_CONTROL_LIMIT;
 
             if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
                 return FALSE;
             }
 
-            ASSERT(base != NULL);
-            FPoint_ToFRPoint(focusPoint, &base->pos, &dir);
-            return FPoint_IsFacing(focusPoint, &mob->pos, &dir, forward);
+            return NeuralForceGetAdvanceFocusHelper(nc, mob, focusPoint, advance);
         }
         case NEURAL_FORCE_BASE_CONTROL_SHELL: {
             FRPoint rPoint;
@@ -1056,6 +1056,34 @@ static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint)
         return TRUE;
     }
     return FALSE;
+}
+
+static bool NeuralForceGetForwardFocusHelper(AIContext *nc,
+                                             Mob *mob, FPoint *focusPoint,
+                                             bool forward)
+{
+    FRPoint dir;
+
+    ASSERT(mob != NULL);
+    ASSERT(focusPoint != NULL);
+
+    NeuralForceGetHeading(nc, mob, &dir);
+    return FPoint_IsFacing(focusPoint, &mob->pos, &dir, forward);
+}
+
+static bool NeuralForceGetAdvanceFocusHelper(AIContext *nc,
+                                             Mob *mob, FPoint *focusPoint,
+                                             bool advance)
+{
+    FRPoint dir;
+    Mob *base = nc->sg->friendBase();
+
+    if (base == NULL) {
+        return FALSE;
+    }
+
+    FPoint_ToFRPoint(focusPoint, &base->pos, &dir);
+    return FPoint_IsFacing(focusPoint, &mob->pos, &dir, advance);
 }
 
 /*
