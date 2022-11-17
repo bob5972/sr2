@@ -1082,7 +1082,7 @@ static bool NeuralForceGetAdvanceFocusHelper(AIContext *nc,
         return FALSE;
     }
 
-    FPoint_ToFRPoint(focusPoint, &base->pos, &dir);
+    FPoint_ToFRPoint(&mob->pos, &base->pos, &dir);
     return FPoint_IsFacing(focusPoint, &mob->pos, &dir, advance);
 }
 
