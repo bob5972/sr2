@@ -63,8 +63,8 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE_CONTROL_LIMIT),              },
     { TMENTRY(NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT),      },
     { TMENTRY(NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT),     },
-    //{ TMENTRY(NEURAL_FORCE_BASE_ADVANCE_CONTROL_LIMIT),      },
-    //{ TMENTRY(NEURAL_FORCE_BASE_RETREAT_CONTROL_LIMIT),      },
+    { TMENTRY(NEURAL_FORCE_BASE_ADVANCE_CONTROL_LIMIT),      },
+    { TMENTRY(NEURAL_FORCE_BASE_RETREAT_CONTROL_LIMIT),      },
     { TMENTRY(NEURAL_FORCE_BASE_CONTROL_SHELL),              },
     { TMENTRY(NEURAL_FORCE_ENEMY),                           },
     { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),                     },
@@ -938,6 +938,20 @@ bool NeuralForce_GetFocus(AIContext *nc,
             }
 
             NeuralForceGetHeading(nc, mob, &dir);
+            return FPoint_IsFacing(focusPoint, &mob->pos, &dir, forward);
+        }
+        case NEURAL_FORCE_BASE_ADVANCE_CONTROL_LIMIT:
+        case NEURAL_FORCE_BASE_RETREAT_CONTROL_LIMIT: {
+            FRPoint dir;
+            bool forward = desc->forceType == NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT;
+            Mob *base = nc->sg->friendBase();
+
+            if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
+                return FALSE;
+            }
+
+            ASSERT(base != NULL);
+            FPoint_ToFRPoint(focusPoint, &base->pos, &dir);
             return FPoint_IsFacing(focusPoint, &mob->pos, &dir, forward);
         }
         case NEURAL_FORCE_BASE_CONTROL_SHELL: {
