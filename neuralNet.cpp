@@ -61,8 +61,8 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE_SHELL),                      },
     { TMENTRY(NEURAL_FORCE_BASE_FARTHEST_FRIEND),            },
     { TMENTRY(NEURAL_FORCE_BASE_CONTROL_LIMIT),              },
-    // { TMENTRY(NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT),      },
-    // { TMENTRY(NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT),     },
+    { TMENTRY(NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT),      },
+    { TMENTRY(NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT),     },
     //{ TMENTRY(NEURAL_FORCE_BASE_ADVANCE_CONTROL_LIMIT),      },
     //{ TMENTRY(NEURAL_FORCE_BASE_RETREAT_CONTROL_LIMIT),      },
     { TMENTRY(NEURAL_FORCE_BASE_CONTROL_SHELL),              },
@@ -928,17 +928,18 @@ bool NeuralForce_GetFocus(AIContext *nc,
         }
         case NEURAL_FORCE_BASE_CONTROL_LIMIT:
             return NeuralForceGetBaseControlLimitFocus(nc, focusPoint);
-        // case NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT:
-        // case NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT: {
-        //     FRPoint dir;
+        case NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT:
+        case NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT: {
+            FRPoint dir;
+            bool forward = desc->forceType == NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT;
 
-        //     if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
-        //         return FALSE;
-        //     }
+            if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
+                return FALSE;
+            }
 
-        //     NeuralForceGetHeading(nc, mob, &dir);
-        //     return FPoint_IsFacing(focusPoint, &mob->pos, dir, forward);
-        // }
+            NeuralForceGetHeading(nc, mob, &dir);
+            return FPoint_IsFacing(focusPoint, &mob->pos, &dir, forward);
+        }
         case NEURAL_FORCE_BASE_CONTROL_SHELL: {
             FRPoint rPoint;
             Mob *base = nc->sg->friendBase();
