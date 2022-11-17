@@ -156,10 +156,10 @@ void MobSet::pushMobsInRange(MBVector<Mob *> &v, MobTypeFlags flagsFilter,
     MobFilter filter;
 
     MBUtil_Zero(&filter, sizeof(filter));
-    filter.useFlags = TRUE;
-    filter.flagsFilter = flagsFilter;
-    filter.fnFilter = NULL;
-    filter.rangeFilter.pos = pos;
+    filter.flagsFilter.useFlags = TRUE;
+    filter.flagsFilter.flags = flagsFilter;
+    filter.rangeFilter.useRange = TRUE;
+    filter.rangeFilter.pos = *pos;
     filter.rangeFilter.radius = radius;
 
     pushMobs(v, &filter);

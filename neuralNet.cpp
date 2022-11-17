@@ -26,6 +26,8 @@ extern "C" {
 #include "neuralNet.hpp"
 #include "textDump.hpp"
 
+static bool NeuralForceGetBaseControlLimitFocus(AIContext *nc, FPoint *focusPoint);
+static void NeuralForceGetHeading(AIContext *nc, Mob *mob, FRPoint *heading);
 static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint);
 static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *selfPos,
@@ -59,6 +61,10 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE_SHELL),                      },
     { TMENTRY(NEURAL_FORCE_BASE_FARTHEST_FRIEND),            },
     { TMENTRY(NEURAL_FORCE_BASE_CONTROL_LIMIT),              },
+    // { TMENTRY(NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT),      },
+    // { TMENTRY(NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT),     },
+    //{ TMENTRY(NEURAL_FORCE_BASE_ADVANCE_CONTROL_LIMIT),      },
+    //{ TMENTRY(NEURAL_FORCE_BASE_RETREAT_CONTROL_LIMIT),      },
     { TMENTRY(NEURAL_FORCE_BASE_CONTROL_SHELL),              },
     { TMENTRY(NEURAL_FORCE_ENEMY),                           },
     { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),                     },
@@ -411,9 +417,10 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     bool enemy;
 
     MBUtil_Zero(&f, sizeof(f));
-    f.rangeFilter.pos = &self->pos;
+    f.rangeFilter.useRange = TRUE;
+    f.rangeFilter.pos = self->pos;
     f.rangeFilter.radius = desc->radius;
-    f.useFlags = TRUE;
+    f.flagsFilter.useFlags = TRUE;
 
     switch (forceType) {
         case NEURAL_FORCE_ALIGN2:
@@ -485,26 +492,17 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     }
 
     if (enemy) {
-        f.flagsFilter = MOB_FLAG_SHIP;
+        f.flagsFilter.flags = MOB_FLAG_SHIP;
         useFriends = FALSE;
     } else {
-        f.flagsFilter = MOB_FLAG_FIGHTER;
+        f.flagsFilter.flags = MOB_FLAG_FIGHTER;
         useFriends = TRUE;
     }
 
 
     if (useDir) {
-        FRPoint dir;
-        NeuralForceDesc headDesc;
-
-        MBUtil_Zero(&headDesc, sizeof(headDesc));
-        headDesc.forceType = NEURAL_FORCE_HEADING;
-        headDesc.useTangent = FALSE;
-        headDesc.radius = 1.0f;
-        NeuralForce_GetForce(nc, self, &headDesc, &dir);
-
-        f.dirFilter.pos = &self->pos;
-        f.dirFilter.dir = &dir;
+        NeuralForceGetHeading(nc, self, &f.dirFilter.dir);
+        f.dirFilter.pos = self->pos;
     }
 
     if (!nc->sg->avgFlock(&vel, &pos, &f, useFriends)) {
@@ -538,28 +536,20 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
 
     MobFilter f;
     MBUtil_Zero(&f, sizeof(f));
-    f.rangeFilter.pos = &self->pos;
+    f.rangeFilter.useRange = TRUE;
+    f.rangeFilter.pos = self->pos;
     f.rangeFilter.radius = desc->radius;
-    f.useFlags = FALSE;
+    f.flagsFilter.useFlags = FALSE;
 
     ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE ||
            desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ||
            desc->forceType == NEURAL_FORCE_BACKWARD_SEPARATE);
 
     if (desc->forceType != NEURAL_FORCE_SEPARATE) {
-        FRPoint dir;
-        NeuralForceDesc headDesc;
-
-        MBUtil_Zero(&headDesc, sizeof(headDesc));
-        headDesc.forceType = NEURAL_FORCE_HEADING;
-        headDesc.useTangent = FALSE;
-        headDesc.radius = 1.0f;
-        NeuralForce_GetForce(nc, self, &headDesc, &dir);
-
-        f.dirFilter.pos = &self->pos;
+        NeuralForceGetHeading(nc, self, &f.dirFilter.dir);
+        f.dirFilter.pos = self->pos;
         f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ?
                               TRUE : FALSE;
-        f.dirFilter.dir = &dir;
     }
 
     ASSERT(self->type == MOB_TYPE_FIGHTER);
@@ -768,8 +758,9 @@ bool NeuralForceGetCloseCornerFocus(AIContext *nc,
     }
 }
 
-bool NeuralForceGetBaseControlLimitFocus(AIContext *nc,
-                                         FPoint *focusPoint)
+static bool
+NeuralForceGetBaseControlLimitFocus(AIContext *nc,
+                                    FPoint *focusPoint)
 {
     Mob *nearestEnemy;
     Mob *farthestFriend;
@@ -799,6 +790,29 @@ bool NeuralForceGetBaseControlLimitFocus(AIContext *nc,
                                             focusPoint);
 }
 
+static
+void NeuralForceGetHeading(AIContext *nc,
+                           Mob *mob,
+                           FRPoint *heading)
+{
+    FRPoint rPos;
+
+    ASSERT(nc != NULL);
+    ASSERT(mob != NULL);
+    ASSERT(heading != NULL);
+
+    FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+
+    if (rPos.radius < MICRON) {
+        rPos.radius = 1.0f;
+        rPos.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
+    }
+
+    FRPoint_SetSpeed(&rPos, 1.0f);
+
+    *heading = rPos;
+}
+
 /*
  * NeuralForce_GetFocus --
  *     Get the focus point associated with the specified force.
@@ -817,12 +831,7 @@ bool NeuralForce_GetFocus(AIContext *nc,
 
         case NEURAL_FORCE_HEADING: {
             FRPoint rPos;
-            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-
-            if (rPos.radius < MICRON) {
-                rPos.radius = 1.0f;
-                rPos.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
-            }
+            NeuralForceGetHeading(nc, mob, &rPos);
             FRPoint_ToFPoint(&rPos, &mob->pos, focusPoint);
             return TRUE;
         }
@@ -919,6 +928,17 @@ bool NeuralForce_GetFocus(AIContext *nc,
         }
         case NEURAL_FORCE_BASE_CONTROL_LIMIT:
             return NeuralForceGetBaseControlLimitFocus(nc, focusPoint);
+        // case NEURAL_FORCE_BASE_FORWARD_CONTROL_LIMIT:
+        // case NEURAL_FORCE_BASE_BACKWARD_CONTROL_LIMIT: {
+        //     FRPoint dir;
+
+        //     if (!NeuralForceGetBaseControlLimitFocus(nc, focusPoint)) {
+        //         return FALSE;
+        //     }
+
+        //     NeuralForceGetHeading(nc, mob, &dir);
+        //     return FPoint_IsFacing(focusPoint, &mob->pos, dir, forward);
+        // }
         case NEURAL_FORCE_BASE_CONTROL_SHELL: {
             FRPoint rPoint;
             Mob *base = nc->sg->friendBase();
@@ -1075,12 +1095,8 @@ void NeuralForce_ApplyToMob(AIContext *nc,
          * Continue on the current heading if we didn't get a strong-enough
          * force.
          */
-        NeuralForceDesc desc;
-        MBUtil_Zero(&desc, sizeof(desc));
-        desc.forceType = NEURAL_FORCE_HEADING;
-        desc.useTangent = FALSE;
-        desc.radius = speed;
-        NeuralForce_GetForce(nc, mob, &desc, rForce);
+
+        NeuralForceGetHeading(nc, mob, rForce);
     }
     FRPoint_SetSpeed(rForce, speed);
 

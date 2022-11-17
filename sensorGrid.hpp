@@ -276,10 +276,11 @@ public:
                       MobTypeFlags filterFlags) {
         MobFilter f;
         MBUtil_Zero(&f, sizeof(f));
-        f.rangeFilter.pos = p;
+        f.rangeFilter.useRange = TRUE;
+        f.rangeFilter.pos = *p;
         f.rangeFilter.radius = radius;
-        f.useFlags = TRUE;
-        f.flagsFilter = filterFlags;
+        f.flagsFilter.useFlags = TRUE;
+        f.flagsFilter.flags = filterFlags;
         return avgFlock(avgVel, NULL, &f, TRUE);
     }
     bool friendAvgVel(FPoint *avgVel, const MobFilter *f) {
@@ -290,10 +291,11 @@ public:
                       MobTypeFlags filterFlags) {
         MobFilter f;
         MBUtil_Zero(&f, sizeof(f));
-        f.rangeFilter.pos = p;
+        f.rangeFilter.useRange = TRUE;
+        f.rangeFilter.pos = *p;
         f.rangeFilter.radius = radius;
-        f.useFlags = TRUE;
-        f.flagsFilter = filterFlags;
+        f.flagsFilter.useFlags = TRUE;
+        f.flagsFilter.flags = filterFlags;
         return avgFlock(NULL, avgPos, &f, TRUE);
     }
     bool friendAvgPos(FPoint *avgPos, const MobFilter *f) {
@@ -304,10 +306,11 @@ public:
                       MobTypeFlags filterFlags) {
         MobFilter f;
         MBUtil_Zero(&f, sizeof(f));
-        f.rangeFilter.pos = p;
+        f.rangeFilter.useRange = TRUE;
+        f.rangeFilter.pos = *p;
         f.rangeFilter.radius = radius;
-        f.useFlags = TRUE;
-        f.flagsFilter = filterFlags;
+        f.flagsFilter.useFlags = TRUE;
+        f.flagsFilter.flags = filterFlags;
         return avgFlock(NULL, avgPos, &f, FALSE);
     }
     bool targetAvgPos(FPoint *avgPos, const MobFilter *f) {
@@ -318,10 +321,11 @@ public:
                       MobTypeFlags filterFlags) {
         MobFilter f;
         MBUtil_Zero(&f, sizeof(f));
-        f.rangeFilter.pos = p;
+        f.rangeFilter.useRange = TRUE;
+        f.rangeFilter.pos = *p;
         f.rangeFilter.radius = radius;
-        f.useFlags = TRUE;
-        f.flagsFilter = filterFlags;
+        f.flagsFilter.useFlags = TRUE;
+        f.flagsFilter.flags = filterFlags;
         return avgFlock(avgVel, NULL, &f, FALSE);
     }
     bool targetAvgVel(FPoint *avgVel, const MobFilter *f) {

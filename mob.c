@@ -423,28 +423,27 @@ bool Mob_Filter(const Mob *m, const MobFilter *f)
     ASSERT(m != NULL);
     ASSERT(f != NULL);
 
-    if (f->useFlags) {
-        if (((1 << m->type) & f->flagsFilter) == 0) {
+    if (f->flagsFilter.useFlags) {
+        if (((1 << m->type) & f->flagsFilter.flags) == 0) {
             return FALSE;
         }
     }
-    if (f->rangeFilter.pos != NULL) {
+    if (f->rangeFilter.useRange) {
         if (f->rangeFilter.radius <= 0.0f) {
             return FALSE;
         }
-        if (FPoint_DistanceSquared(f->rangeFilter.pos, &m->pos) >
+        if (FPoint_DistanceSquared(&f->rangeFilter.pos, &m->pos) >
             f->rangeFilter.radius * f->rangeFilter.radius) {
             return FALSE;
         }
     }
-    if (f->fnFilter != NULL) {
-        if (!f->fnFilter(f->cbData, m)) {
+    if (f->fnFilter.func != NULL) {
+        if (!f->fnFilter.func(f->fnFilter.cbData, m)) {
             return FALSE;
         }
     }
-    if (f->dirFilter.pos != NULL) {
-        ASSERT(f->dirFilter.dir != NULL);
-        if (!FPoint_IsFacing(&m->pos, f->dirFilter.pos, f->dirFilter.dir,
+    if (f->dirFilter.useDir) {
+        if (!FPoint_IsFacing(&m->pos, &f->dirFilter.pos, &f->dirFilter.dir,
                              f->dirFilter.forward)) {
             return FALSE;
         }

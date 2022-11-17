@@ -31,14 +31,19 @@
 
 
 typedef struct MobFilter {
-    bool useFlags;
-    MobTypeFlags flagsFilter;
-
-    void *cbData;
-    bool (*fnFilter)(void *cbData, const Mob *m);
+    struct {
+        bool useFlags;
+        MobTypeFlags flags;
+    } flagsFilter;
 
     struct {
-        const FPoint *pos;
+        void *cbData;
+        bool (*func)(void *cbData, const Mob *m);
+    } fnFilter;
+
+    struct {
+        bool useRange;
+        FPoint pos;
         float radius;
     } rangeFilter;
 
@@ -47,8 +52,9 @@ typedef struct MobFilter {
      * and direction.
      */
     struct {
-        const FPoint *pos;
-        const FRPoint *dir;
+        bool useDir;
+        FPoint pos;
+        FRPoint dir;
         bool forward;
     } dirFilter;
 } MobFilter;
@@ -103,10 +109,11 @@ void Mob_MaskForAI(Mob *mob);
 bool Mob_Filter(const Mob *m, const MobFilter *f);
 
 static inline bool Mob_IsFilterEmpty(const MobFilter *filter) {
-    if (filter->useFlags && filter->flagsFilter == MOB_FLAG_NONE) {
+    if (filter->flagsFilter.useFlags &&
+        filter->flagsFilter.flags == MOB_FLAG_NONE) {
         return TRUE;
     }
-    if (filter->rangeFilter.pos != NULL &&
+    if (filter->rangeFilter.useRange &&
         filter->rangeFilter.radius <= 0.0f) {
         return TRUE;
     }
