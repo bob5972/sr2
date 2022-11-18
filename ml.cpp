@@ -55,10 +55,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_0x1_CONSTANT_N10K_10K), },
 
     { TMENTRY(ML_FOP_1x0_IDENTITY), },
-    { TMENTRY(ML_FOP_1x0_INVERSE), },
     { TMENTRY(ML_FOP_1x0_NEGATE), },
     { TMENTRY(ML_FOP_1x0_SEEDED_RANDOM_UNIT), },
-    { TMENTRY(ML_FOP_1x0_SQUARE), },
     { TMENTRY(ML_FOP_1x0_SQRT), },
     { TMENTRY(ML_FOP_1x0_ARC_COSINE), },
     { TMENTRY(ML_FOP_1x0_ARC_SINE), },
@@ -76,6 +74,11 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_TAN), },
     { TMENTRY(ML_FOP_1x0_PROB_NOT), },
     { TMENTRY(ML_FOP_1x0_CLAMP_UNIT), },
+
+    { TMENTRY(ML_FOP_1x0_INVERSE), },
+    { TMENTRY(ML_FOP_1x0_SQUARE), },
+    { TMENTRY(ML_FOP_1x0_INVERSE_SQUARE), },
+    { TMENTRY(ML_FOP_1x1_WEIGHTED_INVERSE_SQUARE), },
 
     { TMENTRY(ML_FOP_1x0_CEIL), },
     { TMENTRY(ML_FOP_1x0_FLOOR), },
@@ -427,9 +430,6 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
         case ML_FOP_1x0_IDENTITY:
             return getInput(0);
 
-        case ML_FOP_1x0_INVERSE:
-            return 1.0f / getInput(0);
-
         case ML_FOP_1x0_NEGATE:
             return -1.0f * getInput(0);
 
@@ -444,9 +444,21 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return RandomState_UnitFloat(&lr);
         }
 
+
+        case ML_FOP_1x0_INVERSE:
+            return 1.0f / getInput(0);
         case ML_FOP_1x0_SQUARE: {
             float f = getInput(0);
             return f * f;
+        }
+        case ML_FOP_1x0_INVERSE_SQUARE: {
+            float f = getInput(0);
+            return 1.0f / (f * f);
+        }
+        case ML_FOP_1x1_WEIGHTED_INVERSE_SQUARE: {
+            float f = getInput(0);
+            float p = getParam(0);
+            return p / (f * f);
         }
 
         case ML_FOP_1x0_SQRT:
@@ -1808,6 +1820,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_1x0_NEGATE:
         case ML_FOP_1x0_SEEDED_RANDOM_UNIT:
         case ML_FOP_1x0_SQUARE:
+        case ML_FOP_1x0_INVERSE_SQUARE:
         case ML_FOP_1x0_SQRT:
         case ML_FOP_1x0_ARC_COSINE:
         case ML_FOP_1x0_ARC_SINE:
@@ -1831,6 +1844,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numParams = 0;
             break;
 
+        case ML_FOP_1x1_WEIGHTED_INVERSE_SQUARE:
         case ML_FOP_1x1_CEIL_STEP:
         case ML_FOP_1x1_FLOOR_STEP:
             numInputs = 1;
