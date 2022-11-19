@@ -74,6 +74,8 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BASE_RETREAT_CONTROL_LIMIT),      },
     { TMENTRY(NEURAL_FORCE_BASE_CONTROL_SHELL),              },
     { TMENTRY(NEURAL_FORCE_ENEMY),                           },
+    { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY),                   },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY),                  },
     { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),                     },
     { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_ALIGN),             },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_ALIGN),            },
@@ -1005,6 +1007,15 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_ENEMY: {
             Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
             return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+        case NEURAL_FORCE_FORWARD_ENEMY:
+        case NEURAL_FORCE_BACKWARD_ENEMY: {
+            bool forward = desc->forceType == NEURAL_FORCE_FORWARD_ENEMY;
+            Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
+            if (!NeuralForceGetFocusMobPosHelper(m, focusPoint)) {
+                return FALSE;
+            }
+            return NeuralForceGetForwardFocusHelper(nc, mob, focusPoint, forward);
         }
         case NEURAL_FORCE_ENEMY_MISSILE: {
             Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_MISSILE);
