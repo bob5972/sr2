@@ -191,6 +191,9 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_NxN_SCALED_DIV_SUM_SQUARED), },
     { TMENTRY(ML_FOP_NxN_ANCHORED_DIV_SUM_SQUARED), },
 
+    { TMENTRY(ML_FOP_Nx0_INVERSE_SQUARE_SUM), },
+    { TMENTRY(ML_FOP_NxN_WEIGHTED_INVERSE_SQUARE_SUM), },
+
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP), },
     { TMENTRY(ML_FOP_Nx1_ACTIVATE_THRESHOLD_DOWN), },
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_LINEAR_UP), },
@@ -213,6 +216,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_Nx0_ACTIVATE_GAUSSIAN_UP_PROB_INVERSE), },
     { TMENTRY(ML_FOP_Nx2_ACTIVATE_GAUSSIAN), },
     { TMENTRY(ML_FOP_Nx3_ACTIVATE_GAUSSIAN), },
+    { TMENTRY(ML_FOP_Nx0_ACTIVATE_INVERSE_SQUARE), },
+    { TMENTRY(ML_FOP_NxN_ACTIVATE_INVERSE_SQUARE), },
 
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION), },
     { TMENTRY(ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT), },
@@ -1085,6 +1090,28 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
             return s * s;
         }
 
+        case ML_FOP_Nx0_INVERSE_SQUARE_SUM: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                float in = getInput(i);
+                f += 1.0f / (in * in);
+            }
+
+            return f;
+        }
+        case ML_FOP_NxN_WEIGHTED_INVERSE_SQUARE_SUM: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                float in = getInput(i);
+                float p = getParam(i);
+                f += p / (in * in);
+            }
+
+            return f;
+        }
+
         case ML_FOP_Nx1_ACTIVATE_THRESHOLD_UP: {
             float f = 0.0f;
             float t = getParam(0);
@@ -1329,6 +1356,28 @@ float MLFloatNode::computeWork(const MBVector<float> &values)
 
             f -= shift;
             return CLAMP_UNIT(MLGaussian(f, mean, stddev));
+        }
+
+        case ML_FOP_Nx0_ACTIVATE_INVERSE_SQUARE: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                float in = getInput(i);
+                f += 1.0f / (in * in);
+            }
+
+            return CLAMP_UNIT(f);
+        }
+        case ML_FOP_NxN_ACTIVATE_INVERSE_SQUARE: {
+            float f = 0.0f;
+
+            for (uint i = 0; i < inputs.size(); i++) {
+                float in = getInput(i);
+                float p = getParam(i);
+                f += p / (in * in);
+            }
+
+            return CLAMP_UNIT(f);
         }
 
         case ML_FOP_Nx0_SELECT_UNIT_INTERVAL_STEP: {
@@ -2007,8 +2056,14 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
         case ML_FOP_NxN_ANCHORED_DIV_SUM:
         case ML_FOP_NxN_ANCHORED_DIV_SUM_SQUARED:
+        case ML_FOP_NxN_WEIGHTED_INVERSE_SQUARE_SUM:
             numInputs = MAX(1, numInputsIn);
             numParams = MAX(1, numParamsIn);
+            break;
+
+        case ML_FOP_Nx0_INVERSE_SQUARE_SUM:
+            numInputs = MAX(1, numInputsIn);
+            numParams = 0;
             break;
 
         case ML_FOP_Nx0_MIN:
@@ -2076,7 +2131,12 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numInputs = MAX(1, numInputsIn);
             numParams = 3;
             break;
+        case ML_FOP_Nx0_ACTIVATE_INVERSE_SQUARE:
+            numInputs = MAX(1, numInputsIn);
+            numParams = 0;
+            break;
 
+        case ML_FOP_NxN_ACTIVATE_INVERSE_SQUARE:
         case ML_FOP_NxN_LINEAR_COMBINATION:
         case ML_FOP_NxN_LINEAR_COMBINATION_CLAMPED_UNIT:
         case ML_FOP_NxN_SCALED_MIN:
