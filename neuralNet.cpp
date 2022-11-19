@@ -269,6 +269,22 @@ void NeuralForce_Load(MBRegistry *mreg,
     desc->useTangent = MBRegistry_GetBool(mreg, s.CStr());
 
     s = prefix;
+    s += "filterForward";
+    desc->filterForward = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
+    s += "filterBackward";
+    desc->filterBackward = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
+    s += "filterAdvance";
+    desc->filterAdvance = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
+    s += "filterRetreat";
+    desc->filterRetreat = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
     s += "radius";
     desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
 
@@ -372,11 +388,18 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
         }
 
         MutationBoolParams bf;
-        s = prefix;
-        s += "useTangent";
-        bf.key = s.CStr();
-        bf.flipRate = rate;
-        Mutate_Bool(mreg, &bf, 1);
+        const char *strs[] = {
+            "useTangent", "filterForward", "filterBackward",
+            "filterAdvance", "filterRetreat",
+        };
+
+        for (uint i = 0; i < ARRAYSIZE(strs); i++) {
+            s = prefix;
+            s += strs[i];
+            bf.key = s.CStr();
+            bf.flipRate = rate;
+            Mutate_Bool(mreg, &bf, 1);
+        }
 
         if (NEURAL_ALLOW_ATTACK_FORCES) {
             s = prefix;
@@ -1113,8 +1136,23 @@ bool NeuralForce_GetForce(AIContext *nc,
                           FRPoint *rForce)
 {
     FPoint focusPoint;
+    bool haveForce;
 
-    if (NeuralForce_GetFocus(nc, mob, desc, &focusPoint)) {
+    haveForce = NeuralForce_GetFocus(nc, mob, desc, &focusPoint);
+
+    ASSERT(!desc->filterForward || !desc->filterBackward);
+    ASSERT(!desc->filterAdvance || !desc->filterRetreat);
+
+    if (haveForce && (desc->filterForward || desc->filterBackward)) {
+        haveForce = NeuralForceGetForwardFocusHelper(nc, mob, &focusPoint,
+                                                     desc->filterForward);
+    }
+    if (haveForce && (desc->filterAdvance || desc->filterRetreat)) {
+        haveForce = NeuralForceGetAdvanceFocusHelper(nc, mob, &focusPoint,
+                                                     desc->filterAdvance);
+    }
+
+    if (haveForce) {
         FPoint_ToFRPoint(&focusPoint, &mob->pos, rForce);
         FRPoint_SetSpeed(rForce, 1.0f);
 
@@ -1308,6 +1346,7 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix)
     outputDescs.resize(numOutputs);
 
     for (uint i = 0; i < outputDescs.size(); i++) {
+        bool voidForce = FALSE;
         char *lcstr = NULL;
         int ret = asprintf(&lcstr, "%soutput[%d].", prefix,
                             i + floatNet.getOutputOffset());
@@ -1316,12 +1355,19 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix)
         free(lcstr);
 
         if (outputDescs[i].valueType != NEURAL_VALUE_FORCE) {
+            voidForce = TRUE;
+        } else if (outputDescs[i].forceDesc.filterForward &&
+                   outputDescs[i].forceDesc.filterBackward) {
+            voidForce = TRUE;
+        } else if (outputDescs[i].forceDesc.filterAdvance &&
+                   outputDescs[i].forceDesc.filterRetreat) {
+            voidForce = TRUE;
+        }
+
+        if (voidForce) {
+            MBUtil_Zero(&outputDescs[i], sizeof(outputDescs[i]));
             outputDescs[i].valueType = NEURAL_VALUE_FORCE;
             outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
-            outputDescs[i].forceDesc.useTangent = FALSE;
-            outputDescs[i].forceDesc.radius = 0.0f;
-            outputDescs[i].forceDesc.doIdle = FALSE;
-            outputDescs[i].forceDesc.doAttack = FALSE;
         }
 
         if (outputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
