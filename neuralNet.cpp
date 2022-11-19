@@ -45,6 +45,7 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_HEADING),                         },
     { TMENTRY(NEURAL_FORCE_ALIGN),                           },
     { TMENTRY(NEURAL_FORCE_ALIGN2),                          },
+    { TMENTRY(NEURAL_FORCE_ALIGN_BIAS_CENTER),               },
     { TMENTRY(NEURAL_FORCE_FORWARD_ALIGN),                   },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ALIGN),                  },
     { TMENTRY(NEURAL_FORCE_COHERE),                          },
@@ -848,6 +849,21 @@ bool NeuralForce_GetFocus(AIContext *nc,
             avgVel.x += mob->pos.x;
             avgVel.y += mob->pos.y;
             *focusPoint = avgVel;
+            return TRUE;
+        }
+        case NEURAL_FORCE_ALIGN_BIAS_CENTER: {
+            FPoint avgVel;
+            bool success;
+            success = nc->sg->friendAvgVel(&avgVel, &mob->pos, desc->radius,
+                                           MOB_FLAG_FIGHTER);
+            if (!success || (avgVel.x < MICRON && avgVel.y < MICRON)) {
+                focusPoint->x = nc->ai->bp.width / 2;
+                focusPoint->y = nc->ai->bp.height / 2;
+            } else {
+                avgVel.x += mob->pos.x;
+                avgVel.y += mob->pos.y;
+                *focusPoint = avgVel;
+            }
             return TRUE;
         }
         case NEURAL_FORCE_ALIGN2:
