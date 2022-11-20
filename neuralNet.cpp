@@ -296,6 +296,10 @@ void NeuralForce_Load(MBRegistry *mreg,
         desc->doIdle = TRUE;
         desc->doAttack = FALSE;
     }
+
+    ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
+    ASSERT(desc->doIdle);
+    ASSERT(!desc->doAttack);
 }
 
 void NeuralCrowd_Load(MBRegistry *mreg,

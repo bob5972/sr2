@@ -212,6 +212,22 @@ public:
 
     static bool isOutputActive(BasicShipAIState state,
                                const NeuralValueDesc *outputDesc) {
+        ASSERT(outputDesc->valueType == NEURAL_VALUE_FORCE ||
+               outputDesc->valueType == NEURAL_VALUE_VOID ||
+               outputDesc->valueType == NEURAL_VALUE_ZERO);
+
+        if  (outputDesc->valueType == NEURAL_VALUE_VOID ||
+             outputDesc->valueType == NEURAL_VALUE_ZERO) {
+            return FALSE;
+        }
+
+        ASSERT(outputDesc->valueType == NEURAL_VALUE_FORCE);
+
+        if (outputDesc->forceDesc.forceType == NEURAL_FORCE_VOID ||
+            outputDesc->forceDesc.forceType == NEURAL_FORCE_ZERO) {
+            return FALSE;
+        }
+
         ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
         ASSERT((state == BSAI_STATE_IDLE && outputDesc->forceDesc.doIdle) ||
                (state == BSAI_STATE_ATTACK && outputDesc->forceDesc.doAttack));
