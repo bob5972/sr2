@@ -615,8 +615,7 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
             return TRUE;
         }
         return FALSE;
-    } else {
-        ASSERT(cohere);
+    } else if (cohere) {
         *focusPoint = pos;
         return TRUE;
     }
