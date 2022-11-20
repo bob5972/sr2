@@ -1109,7 +1109,8 @@ static void MainMutateFleet(BattlePlayer *mainPlayers, uint32 mpSize,
         src != breeder &&
         breeder->aiType == src->aiType &&
         breeder->mreg != NULL) {
-        for (uint i = 0; i < MBRegistry_NumEntries(breeder->mreg); i++) {
+        uint size = MBRegistry_NumEntries(breeder->mreg);
+        for (uint i = 0; i < size; i++) {
             if (Random_Bit()) {
                 const char *key = MBRegistry_GetKeyAt(breeder->mreg, i);
                 const char *value = MBRegistry_GetValueAt(breeder->mreg, i);
