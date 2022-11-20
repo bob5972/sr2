@@ -48,12 +48,18 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_ALIGN_BIAS_CENTER),               },
     { TMENTRY(NEURAL_FORCE_FORWARD_ALIGN),                   },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ALIGN),                  },
+    { TMENTRY(NEURAL_FORCE_ADVANCE_ALIGN),                   },
+    { TMENTRY(NEURAL_FORCE_RETREAT_ALIGN),                   },
     { TMENTRY(NEURAL_FORCE_COHERE),                          },
     { TMENTRY(NEURAL_FORCE_FORWARD_COHERE),                  },
     { TMENTRY(NEURAL_FORCE_BACKWARD_COHERE),                 },
+    { TMENTRY(NEURAL_FORCE_ADVANCE_COHERE),                  },
+    { TMENTRY(NEURAL_FORCE_RETREAT_COHERE),                  },
     { TMENTRY(NEURAL_FORCE_SEPARATE),                        },
     { TMENTRY(NEURAL_FORCE_FORWARD_SEPARATE),                },
     { TMENTRY(NEURAL_FORCE_BACKWARD_SEPARATE),               },
+    { TMENTRY(NEURAL_FORCE_ADVANCE_SEPARATE),                },
+    { TMENTRY(NEURAL_FORCE_RETREAT_SEPARATE),                },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND),                  },
     { TMENTRY(NEURAL_FORCE_NEAREST_FRIEND_MISSILE),          },
     { TMENTRY(NEURAL_FORCE_EDGES),                           },
@@ -73,10 +79,14 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_ENEMY_ALIGN),                     },
     { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_ALIGN),             },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_ALIGN),            },
+    { TMENTRY(NEURAL_FORCE_ADVANCE_ENEMY_ALIGN),             },
+    { TMENTRY(NEURAL_FORCE_RETREAT_ENEMY_ALIGN),             },
     { TMENTRY(NEURAL_FORCE_ENEMY_COHERE),                    },
     { TMENTRY(NEURAL_FORCE_ENEMY_COHERE2),                   },
     { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_COHERE),            },
     { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_COHERE),           },
+    { TMENTRY(NEURAL_FORCE_ADVANCE_ENEMY_COHERE),            },
+    { TMENTRY(NEURAL_FORCE_RETREAT_ENEMY_COHERE),            },
     { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),                   },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE),                      },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),                },
@@ -440,11 +450,15 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
 {
     MobFilter f;
     NeuralForceType forceType = desc->forceType;
-    bool useDir = FALSE;
     bool useFriends;
     FPoint vel, pos;
-    bool align;
-    bool enemy;
+    bool align = FALSE;
+    bool cohere = FALSE;
+    bool enemy = FALSE;
+    bool advance = FALSE;
+    bool forward = FALSE;
+    bool backward = FALSE;
+    bool retreat = FALSE;
 
     MBUtil_Zero(&f, sizeof(f));
     f.rangeFilter.useRange = TRUE;
@@ -458,31 +472,47 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
             enemy = FALSE;
             break;
         case NEURAL_FORCE_FORWARD_ALIGN:
-            f.dirFilter.forward = TRUE;
-            useDir = TRUE;
+            forward = TRUE;
             align = TRUE;
             enemy = FALSE;
             break;
         case NEURAL_FORCE_BACKWARD_ALIGN:
-            f.dirFilter.forward = TRUE;
-            useDir = TRUE;
+            backward = TRUE;
+            align = TRUE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_ADVANCE_ALIGN:
+            advance = TRUE;
+            align = TRUE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_RETREAT_ALIGN:
+            retreat = TRUE;
             align = TRUE;
             enemy = FALSE;
             break;
         case NEURAL_FORCE_COHERE:
-            align = FALSE;
+            cohere = TRUE;
             enemy = FALSE;
             break;
         case NEURAL_FORCE_FORWARD_COHERE:
-            f.dirFilter.forward = TRUE;
-            useDir = TRUE;
-            align = FALSE;
+            forward = TRUE;
+            cohere = TRUE;
             enemy = FALSE;
             break;
         case NEURAL_FORCE_BACKWARD_COHERE:
-            f.dirFilter.forward = TRUE;
-            useDir = TRUE;
-            align = FALSE;
+            backward = TRUE;
+            cohere = TRUE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_ADVANCE_COHERE:
+            advance = TRUE;
+            cohere = TRUE;
+            enemy = FALSE;
+            break;
+        case NEURAL_FORCE_RETREAT_COHERE:
+            retreat = TRUE;
+            cohere = TRUE;
             enemy = FALSE;
             break;
         case NEURAL_FORCE_ENEMY_ALIGN:
@@ -490,31 +520,47 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
             enemy = TRUE;
             break;
         case NEURAL_FORCE_FORWARD_ENEMY_ALIGN:
-            f.dirFilter.forward = TRUE;
-            useDir = TRUE;
+            forward = TRUE;
             align = TRUE;
             enemy = TRUE;
             break;
         case NEURAL_FORCE_BACKWARD_ENEMY_ALIGN:
-            f.dirFilter.forward = FALSE;
-            useDir = TRUE;
+            backward = TRUE;
+            align = TRUE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_ADVANCE_ENEMY_ALIGN:
+            advance = TRUE;
+            align = TRUE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_RETREAT_ENEMY_ALIGN:
+            retreat = TRUE;
             align = TRUE;
             enemy = TRUE;
             break;
         case NEURAL_FORCE_ENEMY_COHERE2:
-            align = FALSE;
+            cohere = TRUE;
             enemy = TRUE;
             break;
         case NEURAL_FORCE_FORWARD_ENEMY_COHERE:
-            f.dirFilter.forward = TRUE;
-            useDir = TRUE;
-            align = FALSE;
+            forward = TRUE;
+            cohere = TRUE;
             enemy = TRUE;
             break;
         case NEURAL_FORCE_BACKWARD_ENEMY_COHERE:
-            f.dirFilter.forward = FALSE;
-            useDir = TRUE;
-            align = FALSE;
+            backward = TRUE;
+            cohere = TRUE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_ADVANCE_ENEMY_COHERE:
+            advance = TRUE;
+            cohere = TRUE;
+            enemy = TRUE;
+            break;
+        case NEURAL_FORCE_RETREAT_ENEMY_COHERE:
+            retreat = TRUE;
+            cohere = TRUE;
             enemy = TRUE;
             break;
         default:
@@ -530,8 +576,29 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     }
 
 
-    if (useDir) {
+    if (forward || backward) {
+        ASSERT(!forward || !backward);
+        ASSERT(!advance);
+        ASSERT(!retreat);
+        f.dirFilter.useDir = TRUE;
+        f.dirFilter.forward = forward;
         NeuralForceGetHeading(nc, self, &f.dirFilter.dir);
+        f.dirFilter.pos = self->pos;
+    }
+
+    if (advance || retreat) {
+        Mob *base = nc->sg->friendBase();
+        ASSERT(!advance || !retreat);
+        ASSERT(!forward);
+        ASSERT(!backward);
+
+        if (base == NULL) {
+            return FALSE;
+        }
+
+        f.dirFilter.useDir = TRUE;
+        f.dirFilter.forward = advance;
+        FPoint_ToFRPoint(&self->pos, &base->pos, &f.dirFilter.dir);
         f.dirFilter.pos = self->pos;
     }
 
@@ -540,6 +607,7 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     }
 
     if (align) {
+        ASSERT(!cohere);
         if (vel.x >= MICRON || vel.y >= MICRON) {
             vel.x += self->pos.x;
             vel.y += self->pos.y;
@@ -548,6 +616,7 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
         }
         return FALSE;
     } else {
+        ASSERT(cohere);
         *focusPoint = pos;
         return TRUE;
     }
@@ -571,15 +640,29 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
     f.rangeFilter.radius = desc->radius;
     f.flagsFilter.useFlags = FALSE;
 
-    ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE ||
-           desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ||
-           desc->forceType == NEURAL_FORCE_BACKWARD_SEPARATE);
-
-    if (desc->forceType != NEURAL_FORCE_SEPARATE) {
+    if (desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ||
+        desc->forceType == NEURAL_FORCE_BACKWARD_SEPARATE) {
+        f.dirFilter.useDir = TRUE;
         NeuralForceGetHeading(nc, self, &f.dirFilter.dir);
         f.dirFilter.pos = self->pos;
         f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ?
                               TRUE : FALSE;
+    } else if (desc->forceType == NEURAL_FORCE_ADVANCE_SEPARATE ||
+               desc->forceType == NEURAL_FORCE_RETREAT_SEPARATE) {
+        Mob *base = nc->sg->friendBase();
+
+        if (base == NULL) {
+            return FALSE;
+        }
+
+        f.dirFilter.useDir = TRUE;
+        FPoint_ToFRPoint(&self->pos, &base->pos, &f.dirFilter.dir);
+        f.dirFilter.pos = self->pos;
+
+        f.dirFilter.forward = desc->forceType == NEURAL_FORCE_ADVANCE_SEPARATE ?
+                              TRUE : FALSE;
+    } else {
+        ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE);
     }
 
     ASSERT(self->type == MOB_TYPE_FIGHTER);
@@ -892,15 +975,23 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_ALIGN2:
         case NEURAL_FORCE_FORWARD_ALIGN:
         case NEURAL_FORCE_BACKWARD_ALIGN:
+        case NEURAL_FORCE_ADVANCE_ALIGN:
+        case NEURAL_FORCE_RETREAT_ALIGN:
         case NEURAL_FORCE_COHERE:
         case NEURAL_FORCE_FORWARD_COHERE:
         case NEURAL_FORCE_BACKWARD_COHERE:
+        case NEURAL_FORCE_ADVANCE_COHERE:
+        case NEURAL_FORCE_RETREAT_COHERE:
         case NEURAL_FORCE_ENEMY_ALIGN:
         case NEURAL_FORCE_FORWARD_ENEMY_ALIGN:
         case NEURAL_FORCE_BACKWARD_ENEMY_ALIGN:
+        case NEURAL_FORCE_ADVANCE_ENEMY_ALIGN:
+        case NEURAL_FORCE_RETREAT_ENEMY_ALIGN:
         case NEURAL_FORCE_ENEMY_COHERE2:
         case NEURAL_FORCE_FORWARD_ENEMY_COHERE:
-        case NEURAL_FORCE_BACKWARD_ENEMY_COHERE: {
+        case NEURAL_FORCE_BACKWARD_ENEMY_COHERE:
+        case NEURAL_FORCE_ADVANCE_ENEMY_COHERE:
+        case NEURAL_FORCE_RETREAT_ENEMY_COHERE: {
             return NeuralForceGetFlockFocus(nc, mob, desc, focusPoint);
         }
         case NEURAL_FORCE_ENEMY_COHERE: {
@@ -913,6 +1004,8 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_SEPARATE:
         case NEURAL_FORCE_FORWARD_SEPARATE:
         case NEURAL_FORCE_BACKWARD_SEPARATE:
+        case NEURAL_FORCE_ADVANCE_SEPARATE:
+        case NEURAL_FORCE_RETREAT_SEPARATE:
             return NeuralForceGetSeparateFocus(nc, mob, desc, focusPoint);
 
         case NEURAL_FORCE_NEAREST_FRIEND: {
