@@ -23,7 +23,7 @@
 #include "Random.h"
 #include "mutate.h"
 
-static INLINE float MLClampUnit(float x) {
+static inline float MLClampUnit(float x) {
     if (isnan(x)) {
         return 0.0f;
     }

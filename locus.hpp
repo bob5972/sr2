@@ -83,7 +83,7 @@ void Locus_Init(AIContext *nc, LocusState *locus, LocusDesc *desc);
 void Locus_RunTick(AIContext *nc, LocusState *locus);
 
 
-static INLINE FPoint *
+static inline FPoint *
 Locus_GetPoint(LocusState *locus)
 {
     ASSERT(locus != NULL);

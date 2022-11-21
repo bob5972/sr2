@@ -237,13 +237,13 @@ extern "C" {
 
 void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP);
 
-static INLINE MLFloatOp& operator++(MLFloatOp &op)
+static inline MLFloatOp& operator++(MLFloatOp &op)
 {
     int i = static_cast<int>(op);
     return op = static_cast<MLFloatOp>(++i);
 }
 
-static INLINE MLFloatOp operator++(MLFloatOp &op, int) {
+static inline MLFloatOp operator++(MLFloatOp &op, int) {
     MLFloatOp tmp(op);
     ++op;
     return tmp;

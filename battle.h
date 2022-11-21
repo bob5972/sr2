@@ -34,7 +34,7 @@ void Battle_ReleaseMobs(Battle *battle);
 const BattleStatus *Battle_AcquireStatus(Battle *battle);
 void Battle_ReleaseStatus(Battle *battle);
 
-static INLINE const char *
+static inline const char *
 PlayerType_ToString(PlayerType type)
 {
     switch (type) {
@@ -51,7 +51,7 @@ PlayerType_ToString(PlayerType type)
     }
 }
 
-static INLINE PlayerType
+static inline PlayerType
 PlayerType_FromString(const char *str)
 {
     if (str == NULL ||

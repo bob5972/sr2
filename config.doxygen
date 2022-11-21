@@ -145,13 +145,13 @@ ABBREVIATE_BRIEF       = "The $name class" \
 
 ALWAYS_DETAILED_SEC    = NO
 
-# If the INLINE_INHERITED_MEMB tag is set to YES, doxygen will show all
+# If the inline_INHERITED_MEMB tag is set to YES, doxygen will show all
 # inherited members of a class in the documentation of that class as if those
 # members were ordinary class members. Constructors, destructors and assignment
 # operators of the base classes will not be shown.
 # The default value is: NO.
 
-INLINE_INHERITED_MEMB  = NO
+inline_INHERITED_MEMB  = NO
 
 # If the FULL_PATH_NAMES tag is set to YES, doxygen will prepend the full path
 # before files name in the file list and in the header files. If set to NO the
@@ -404,7 +404,7 @@ GROUP_NESTED_COMPOUNDS = NO
 
 SUBGROUPING            = YES
 
-# When the INLINE_GROUPED_CLASSES tag is set to YES, classes, structs and unions
+# When the inline_GROUPED_CLASSES tag is set to YES, classes, structs and unions
 # are shown inside the group in which they are included (e.g. using \ingroup)
 # instead of on a separate page (for HTML and Man pages) or section (for LaTeX
 # and RTF).
@@ -413,9 +413,9 @@ SUBGROUPING            = YES
 # SEPARATE_MEMBER_PAGES.
 # The default value is: NO.
 
-INLINE_GROUPED_CLASSES = NO
+inline_GROUPED_CLASSES = NO
 
-# When the INLINE_SIMPLE_STRUCTS tag is set to YES, structs, classes, and unions
+# When the inline_SIMPLE_STRUCTS tag is set to YES, structs, classes, and unions
 # with only public data fields or simple typedef fields will be shown inline in
 # the documentation of the scope in which they are defined (i.e. file,
 # namespace, or group documentation), provided this scope is documented. If set
@@ -423,7 +423,7 @@ INLINE_GROUPED_CLASSES = NO
 # Man pages) or section (for LaTeX and RTF).
 # The default value is: NO.
 
-INLINE_SIMPLE_STRUCTS  = NO
+inline_SIMPLE_STRUCTS  = NO
 
 # When TYPEDEF_HIDES_STRUCT tag is enabled, a typedef of a struct, union, or
 # enum is documented as struct, union, or enum with the name of the typedef. So
@@ -591,11 +591,11 @@ SHOW_GROUPED_MEMB_INC  = NO
 
 FORCE_LOCAL_INCLUDES   = NO
 
-# If the INLINE_INFO tag is set to YES then a tag [inline] is inserted in the
+# If the inline_INFO tag is set to YES then a tag [inline] is inserted in the
 # documentation for inline members.
 # The default value is: YES.
 
-INLINE_INFO            = YES
+inline_INFO            = YES
 
 # If the SORT_MEMBER_DOCS tag is set to YES then doxygen will sort the
 # (detailed) documentation of file and class members alphabetically by member
@@ -1035,11 +1035,11 @@ USE_MDFILE_AS_MAINPAGE =
 
 SOURCE_BROWSER         = NO
 
-# Setting the INLINE_SOURCES tag to YES will include the body of functions,
+# Setting the inline_SOURCES tag to YES will include the body of functions,
 # classes and enums directly into the documentation.
 # The default value is: NO.
 
-INLINE_SOURCES         = NO
+inline_SOURCES         = NO
 
 # Setting the STRIP_CODE_COMMENTS tag to YES will instruct doxygen to hide any
 # special comment blocks from generated source code fragments. Normal C, C++ and

@@ -57,40 +57,40 @@ void WorkQueue_MakeEmpty(WorkQueue *wq);
 /*
  * The following functions don't require the lock.
  */
-static INLINE int WorkQueue_QueueSize(WorkQueue *wq)
+static inline int WorkQueue_QueueSize(WorkQueue *wq)
 {
     return SDL_AtomicGet(&wq->numQueued);
 }
 
-static INLINE int WorkQueue_GetCount(WorkQueue *wq)
+static inline int WorkQueue_GetCount(WorkQueue *wq)
 {
     return SDL_AtomicGet(&wq->numQueued) +
            SDL_AtomicGet(&wq->numInProgress);
 }
 
-static INLINE bool WorkQueue_IsEmpty(WorkQueue *wq)
+static inline bool WorkQueue_IsEmpty(WorkQueue *wq)
 {
     return SDL_AtomicGet(&wq->numQueued) == 0;
 }
 
-static INLINE bool WorkQueue_IsIdle(WorkQueue *wq)
+static inline bool WorkQueue_IsIdle(WorkQueue *wq)
 {
     return SDL_AtomicGet(&wq->numQueued) == 0 &&
            SDL_AtomicGet(&wq->numInProgress) == 0;
 }
 
-static INLINE bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count)
+static inline bool WorkQueue_IsCountBelow(WorkQueue *wq, uint count)
 {
     return WorkQueue_GetCount(wq) < count;
 }
 
-static INLINE void WorkQueue_Lock(WorkQueue *wq)
+static inline void WorkQueue_Lock(WorkQueue *wq)
 {
     ASSERT(wq != NULL);
     MBLock_Lock(&wq->lock);
 }
 
-static INLINE void WorkQueue_Unlock(WorkQueue *wq)
+static inline void WorkQueue_Unlock(WorkQueue *wq)
 {
     ASSERT(wq != NULL);
     MBLock_Unlock(&wq->lock);
