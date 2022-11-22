@@ -188,6 +188,9 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
                         bool isOutput, float rate,
                         const char *prefix);
 
+bool NeuralForce_FocusToForce(AIContext *nc, Mob *mob,
+                              NeuralForceDesc *desc, FPoint *focusPoint,
+                              bool haveForce, FRPoint *rForce);
 bool NeuralForce_GetFocus(AIContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FPoint *focusPoint);
 bool NeuralForce_GetForce(AIContext *nc, Mob *mob,
@@ -227,6 +230,13 @@ public:
 
     void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce);
 
+    // bool getFocus(Mob *mob, NeuralForceDesc *desc, FPoint *focusPoint) {
+    //     return NeuralForce_GetFocus(&aic, mob, desc, focusPoint);
+    // }
+
+    // float getRange(Mob *mob, NeuralForceDesc *desc) {
+    //     return NeuralForce_GetRange(&aic, mob, desc);
+    // }
 
     static bool isOutputActive(BasicShipAIState state,
                                const NeuralValueDesc *outputDesc) {
@@ -252,6 +262,22 @@ public:
         return TRUE;
     }
 
+private:
+    // Helpers
+    float getInputValue(Mob *mob, uint index) {
+        return NeuralValue_GetValue(&aic, mob, &inputDescs[index], index);
+    }
+    bool getOutputForce(Mob *mob, uint index, FRPoint *rForce) {
+        NeuralValueDesc *desc = &outputDescs[index];
+        ASSERT(desc->valueType == NEURAL_VALUE_FORCE);
+        ASSERT(desc->forceDesc.forceType != NEURAL_FORCE_ZERO);
+
+        if (desc->forceDesc.forceType == NEURAL_FORCE_VOID) {
+            return FALSE;
+        }
+
+        return NeuralForce_GetForce(&aic, mob, &desc->forceDesc, rForce);
+    }
 };
 
 void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,

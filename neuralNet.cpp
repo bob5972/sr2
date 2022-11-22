@@ -1202,35 +1202,36 @@ static bool NeuralForceGetAdvanceFocusHelper(AIContext *nc,
     return FPoint_IsFacing(focusPoint, &mob->pos, &dir, advance);
 }
 
-/*
- * NeuralForce_GetForce --
- *    Calculate the specified force.
- *    returns TRUE iff the force is valid.
- */
-bool NeuralForce_GetForce(AIContext *nc,
-                          Mob *mob,
-                          NeuralForceDesc *desc,
-                          FRPoint *rForce)
-{
-    FPoint focusPoint;
-    bool haveForce;
 
-    haveForce = NeuralForce_GetFocus(nc, mob, desc, &focusPoint);
+/*
+ * NeuralForce_FocusToForce --
+ *    Convert a focus point to a force.
+ *    Returns TRUE iff the force is valid after conversion.
+ */
+bool NeuralForce_FocusToForce(AIContext *nc,
+                              Mob *mob,
+                              NeuralForceDesc *desc,
+                              FPoint *focusPoint,
+                              bool haveForce,
+                              FRPoint *rForce)
+{
+    ASSERT(rForce != NULL);
+    ASSERT(focusPoint != NULL);
 
     ASSERT(!desc->filterForward || !desc->filterBackward);
     ASSERT(!desc->filterAdvance || !desc->filterRetreat);
 
     if (haveForce && (desc->filterForward || desc->filterBackward)) {
-        haveForce = NeuralForceGetForwardFocusHelper(nc, mob, &focusPoint,
+        haveForce = NeuralForceGetForwardFocusHelper(nc, mob, focusPoint,
                                                      desc->filterForward);
     }
     if (haveForce && (desc->filterAdvance || desc->filterRetreat)) {
-        haveForce = NeuralForceGetAdvanceFocusHelper(nc, mob, &focusPoint,
+        haveForce = NeuralForceGetAdvanceFocusHelper(nc, mob, focusPoint,
                                                      desc->filterAdvance);
     }
 
     if (haveForce) {
-        FPoint_ToFRPoint(&focusPoint, &mob->pos, rForce);
+        FPoint_ToFRPoint(focusPoint, &mob->pos, rForce);
         FRPoint_SetSpeed(rForce, 1.0f);
 
         if (desc->useTangent) {
@@ -1241,6 +1242,23 @@ bool NeuralForce_GetForce(AIContext *nc,
         FRPoint_Zero(rForce);
         return FALSE;
     }
+}
+
+/*
+ * NeuralForce_GetForce --
+ *    Calculate the specified force.
+ *    Returns TRUE iff the force is valid.
+ */
+bool NeuralForce_GetForce(AIContext *nc,
+                          Mob *mob,
+                          NeuralForceDesc *desc,
+                          FRPoint *rForce)
+{
+    FPoint focusPoint;
+    bool haveForce;
+    haveForce = NeuralForce_GetFocus(nc, mob, desc, &focusPoint);
+    return NeuralForce_FocusToForce(nc, mob, desc, &focusPoint, haveForce,
+                                    rForce);
 }
 
 
@@ -1353,7 +1371,7 @@ float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc)
 
 
 float NeuralValue_GetValue(AIContext *nc,
-                           Mob *mob, NeuralValueDesc *desc, uint i)
+                           Mob *mob, NeuralValueDesc *desc, uint index)
 {
     FRPoint force;
     RandomState *rs = nc->rs;
@@ -1376,7 +1394,7 @@ float NeuralValue_GetValue(AIContext *nc,
         case NEURAL_VALUE_MOBID: {
             RandomState lr;
             uint64 seed = mob->mobid;
-            seed = (seed << 32) | i;
+            seed = (seed << 32) | index;
             RandomState_CreateWithSeed(&lr, seed);
             return RandomState_UnitFloat(&lr);
         }
@@ -1556,7 +1574,7 @@ void NeuralNet::doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce)
     ASSERT(inputs.size() == inputDescs.size());
 
     for (uint i = 0; i < inputDescs.size(); i++) {
-        inputs[i] = NeuralValue_GetValue(&aic, mob, &inputDescs[i], i);
+        inputs[i] = getInputValue(mob, i);
     }
 
     ASSERT(outputs.size() == outputDescs.size());
@@ -1581,9 +1599,8 @@ void NeuralNet::doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce)
         FRPoint force;
         ASSERT(outputDescs[i].valueType == NEURAL_VALUE_FORCE);
         ASSERT(outputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
-        if (outputDescs[i].forceDesc.forceType != NEURAL_FORCE_VOID &&
-            outputs[x] != 0.0f &&
-            NeuralForce_GetForce(&aic, mob, &outputDescs[i].forceDesc, &force)) {
+        if (outputs[x] != 0.0f &&
+            getOutputForce(mob, i, &force)) {
             FRPoint_SetSpeed(&force, outputs[x]);
             FRPoint_Add(&force, outputForce, outputForce);
         }
