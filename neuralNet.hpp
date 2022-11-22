@@ -83,7 +83,7 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_MIDWAY_GUESS,
     NEURAL_FORCE_MIDWAY_GUESS_LAX,
     NEURAL_FORCE_CORES,
-    // NEURAL_FORCE_LOCUS,
+    NEURAL_FORCE_LOCUS,
 
     NEURAL_FORCE_MAX,
 } NeuralForceType;
@@ -124,7 +124,7 @@ typedef enum NeuralValueType {
 typedef struct NeuralForceDesc {
     NeuralForceType forceType;
     float radius;
-    // int locusID;
+    int locusID;
     bool useTangent;
     bool filterForward;
     bool filterBackward;
@@ -153,10 +153,10 @@ typedef struct NeuralValueDesc {
     };
 } NeuralValueDesc;
 
-// typedef struct NeuralLocusState {
-//     bool active;
-//     FPoint pos;
-// } NeuralLocusState;
+typedef struct NeuralLocusState {
+    bool active;
+    FPoint pos;
+} NeuralLocusState;
 
 const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);
@@ -212,7 +212,7 @@ public:
     MBVector<float> outputs;
     uint numNodes;
     AIContext aic;
-    //MBVector<NeuralLocusState> loci;
+    MBVector<NeuralLocusState> loci;
 
     NeuralNet() {
         MBUtil_Zero(&aic, sizeof(aic));
@@ -229,14 +229,6 @@ public:
     void mutate(MBRegistry *mreg);
 
     void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce);
-
-    // bool getFocus(Mob *mob, NeuralForceDesc *desc, FPoint *focusPoint) {
-    //     return NeuralForce_GetFocus(&aic, mob, desc, focusPoint);
-    // }
-
-    // float getRange(Mob *mob, NeuralForceDesc *desc) {
-    //     return NeuralForce_GetRange(&aic, mob, desc);
-    // }
 
     static bool isOutputActive(BasicShipAIState state,
                                const NeuralValueDesc *outputDesc) {
@@ -265,7 +257,12 @@ public:
 private:
     // Helpers
     float getInputValue(Mob *mob, uint index) {
-        return NeuralValue_GetValue(&aic, mob, &inputDescs[index], index);
+        if (inputDescs[index].valueType == NEURAL_VALUE_FORCE &&
+            inputDescs[index].forceDesc.forceType == NEURAL_FORCE_LOCUS) {
+            NOT_IMPLEMENTED();//XXX bob5972
+        } else {
+            return NeuralValue_GetValue(&aic, mob, &inputDescs[index], index);
+        }
     }
     bool getOutputForce(Mob *mob, uint index, FRPoint *rForce) {
         NeuralValueDesc *desc = &outputDescs[index];
@@ -274,10 +271,28 @@ private:
 
         if (desc->forceDesc.forceType == NEURAL_FORCE_VOID) {
             return FALSE;
-        }
+        } else if (desc->forceDesc.forceType == NEURAL_FORCE_LOCUS) {
+            int locusID = desc->forceDesc.locusID;
+            if (locusID < 0 || locusID > loci.size()) {
+                return FALSE;
+            }
 
-        return NeuralForce_GetForce(&aic, mob, &desc->forceDesc, rForce);
+            return NeuralForce_FocusToForce(&aic, mob, &desc->forceDesc,
+                                            &loci[locusID].pos,
+                                            loci[locusID].active, rForce);
+        } else {
+            return NeuralForce_GetForce(&aic, mob, &desc->forceDesc, rForce);
+        }
     }
+
+
+    // bool getFocus(Mob *mob, NeuralForceDesc *desc, FPoint *focusPoint) {
+    //     return NeuralForce_GetFocus(&aic, mob, desc, focusPoint);
+    // }
+
+    // float getRange(Mob *mob, NeuralForceDesc *desc) {
+    //     return NeuralForce_GetRange(&aic, mob, desc);
+    // }
 };
 
 void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,

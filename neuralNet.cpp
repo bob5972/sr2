@@ -95,7 +95,7 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS),                    },
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),                },
     { TMENTRY(NEURAL_FORCE_CORES),                           },
-    // { TMENTRY(NEURAL_FORCE_LOCUS),                           },
+    { TMENTRY(NEURAL_FORCE_LOCUS),                           },
 };
 
 static TextMapEntry tmCrowds[] = {
@@ -1261,7 +1261,6 @@ bool NeuralForce_GetForce(AIContext *nc,
                                     rForce);
 }
 
-
 float NeuralForce_GetRange(AIContext *nc,
                            Mob *mob, NeuralForceDesc *desc) {
     FPoint focusPoint;
@@ -1599,8 +1598,7 @@ void NeuralNet::doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce)
         FRPoint force;
         ASSERT(outputDescs[i].valueType == NEURAL_VALUE_FORCE);
         ASSERT(outputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
-        if (outputs[x] != 0.0f &&
-            getOutputForce(mob, i, &force)) {
+        if (outputs[x] != 0.0f && getOutputForce(mob, i, &force)) {
             FRPoint_SetSpeed(&force, outputs[x]);
             FRPoint_Add(&force, outputForce, outputForce);
         }
