@@ -95,6 +95,7 @@ static TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS),                    },
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),                },
     { TMENTRY(NEURAL_FORCE_CORES),                           },
+    // { TMENTRY(NEURAL_FORCE_LOCUS),                           },
 };
 
 static TextMapEntry tmCrowds[] = {
@@ -1149,6 +1150,10 @@ bool NeuralForce_GetFocus(AIContext *nc,
             Mob *m = nc->sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
             return NeuralForceGetFocusMobPosHelper(m, focusPoint);
         }
+
+        // case NEURAL_FORCE_LOCUS: {
+        //     NOT_IMPLEMENTED();
+        // }
 
         default:
             PANIC("%s: Unhandled forceType: %d\n", __FUNCTION__,

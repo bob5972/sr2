@@ -83,6 +83,7 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_MIDWAY_GUESS,
     NEURAL_FORCE_MIDWAY_GUESS_LAX,
     NEURAL_FORCE_CORES,
+    // NEURAL_FORCE_LOCUS,
 
     NEURAL_FORCE_MAX,
 } NeuralForceType;
@@ -122,12 +123,13 @@ typedef enum NeuralValueType {
 
 typedef struct NeuralForceDesc {
     NeuralForceType forceType;
+    float radius;
+    // int locusID;
     bool useTangent;
     bool filterForward;
     bool filterBackward;
     bool filterAdvance;
     bool filterRetreat;
-    float radius;
     bool doIdle;
     bool doAttack;
 } NeuralForceDesc;
@@ -150,6 +152,11 @@ typedef struct NeuralValueDesc {
         NeuralTickDesc tickDesc;
     };
 } NeuralValueDesc;
+
+// typedef struct NeuralLocusState {
+//     bool active;
+//     FPoint pos;
+// } NeuralLocusState;
 
 const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);
@@ -202,6 +209,7 @@ public:
     MBVector<float> outputs;
     uint numNodes;
     AIContext aic;
+    //MBVector<NeuralLocusState> loci;
 
     NeuralNet() {
         MBUtil_Zero(&aic, sizeof(aic));
