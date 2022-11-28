@@ -191,6 +191,7 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
 bool NeuralForce_FocusToForce(AIContext *nc, Mob *mob,
                               NeuralForceDesc *desc, FPoint *focusPoint,
                               bool haveForce, FRPoint *rForce);
+float NeuralForce_FocusToRange(Mob *mob, FPoint *focusPoint, bool haveFocus);
 bool NeuralForce_GetFocus(AIContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FPoint *focusPoint);
 bool NeuralForce_GetForce(AIContext *nc, Mob *mob,
@@ -256,43 +257,54 @@ public:
 
 private:
     // Helpers
+    bool getFocus(Mob *mob, NeuralForceDesc *desc, FPoint *focusPoint) {
+        ASSERT(desc != NULL);
+        ASSERT(mob != NULL);
+        ASSERT(focusPoint != NULL);
+
+        if (desc->forceType == NEURAL_FORCE_VOID) {
+            return FALSE;
+        } else if (desc->forceType == NEURAL_FORCE_LOCUS) {
+            int locusID = desc->locusID;
+            if (locusID < 0 || locusID > loci.size()) {
+                return FALSE;
+            }
+
+            if (!loci[locusID].active) {
+                return FALSE;
+            }
+
+            *focusPoint = loci[locusID].pos;
+            return TRUE;
+        } else {
+            return NeuralForce_GetFocus(&aic, mob, desc, focusPoint);
+        }
+    }
+
     float getInputValue(Mob *mob, uint index) {
-        if (inputDescs[index].valueType == NEURAL_VALUE_FORCE &&
-            inputDescs[index].forceDesc.forceType == NEURAL_FORCE_LOCUS) {
-            NOT_IMPLEMENTED();//XXX bob5972
+        NeuralValueDesc *desc = &inputDescs[index];
+
+        if (desc->valueType == NEURAL_VALUE_FORCE &&
+            desc->forceDesc.forceType == NEURAL_FORCE_LOCUS) {
+            FPoint focus;
+            bool haveFocus = getFocus(mob, &desc->forceDesc, &focus);
+            return NeuralForce_FocusToRange(mob, &focus, haveFocus);
         } else {
             return NeuralValue_GetValue(&aic, mob, &inputDescs[index], index);
         }
     }
     bool getOutputForce(Mob *mob, uint index, FRPoint *rForce) {
         NeuralValueDesc *desc = &outputDescs[index];
+        FPoint focus;
+        bool haveForce;
+
         ASSERT(desc->valueType == NEURAL_VALUE_FORCE);
         ASSERT(desc->forceDesc.forceType != NEURAL_FORCE_ZERO);
 
-        if (desc->forceDesc.forceType == NEURAL_FORCE_VOID) {
-            return FALSE;
-        } else if (desc->forceDesc.forceType == NEURAL_FORCE_LOCUS) {
-            int locusID = desc->forceDesc.locusID;
-            if (locusID < 0 || locusID > loci.size()) {
-                return FALSE;
-            }
-
-            return NeuralForce_FocusToForce(&aic, mob, &desc->forceDesc,
-                                            &loci[locusID].pos,
-                                            loci[locusID].active, rForce);
-        } else {
-            return NeuralForce_GetForce(&aic, mob, &desc->forceDesc, rForce);
-        }
+        haveForce = getFocus(mob, &desc->forceDesc, &focus);
+        return NeuralForce_FocusToForce(&aic, mob, &desc->forceDesc,
+                                        &focus, haveForce, rForce);
     }
-
-
-    // bool getFocus(Mob *mob, NeuralForceDesc *desc, FPoint *focusPoint) {
-    //     return NeuralForce_GetFocus(&aic, mob, desc, focusPoint);
-    // }
-
-    // float getRange(Mob *mob, NeuralForceDesc *desc) {
-    //     return NeuralForce_GetRange(&aic, mob, desc);
-    // }
 };
 
 void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,

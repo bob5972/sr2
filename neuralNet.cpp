@@ -1261,14 +1261,26 @@ bool NeuralForce_GetForce(AIContext *nc,
                                     rForce);
 }
 
-float NeuralForce_GetRange(AIContext *nc,
-                           Mob *mob, NeuralForceDesc *desc) {
-    FPoint focusPoint;
-    if (NeuralForce_GetFocus(nc, mob, desc, &focusPoint)) {
-        return FPoint_Distance(&mob->pos, &focusPoint);
+float NeuralForce_FocusToRange(Mob *mob,
+                               FPoint *focusPoint,
+                               bool haveFocus)
+{
+    ASSERT(mob != NULL);
+    ASSERT(focusPoint != NULL);
+
+    if (haveFocus) {
+        return FPoint_Distance(&mob->pos, focusPoint);
     } else {
         return 0.0f;
     }
+}
+
+float NeuralForce_GetRange(AIContext *nc,
+                           Mob *mob, NeuralForceDesc *desc)
+{
+    FPoint focusPoint;
+    bool haveFocus = NeuralForce_GetFocus(nc, mob, desc, &focusPoint);
+    return NeuralForce_FocusToRange(mob, &focusPoint, haveFocus);
 }
 
 
