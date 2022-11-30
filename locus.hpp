@@ -31,22 +31,8 @@ typedef enum LocusType {
     LOCUS_TYPE_MAX,
 } LocusType;
 
-typedef enum LocusPoint {
-    LOCUS_POINT_INVALID,
-    LOCUS_POINT_BASE,
-    LOCUS_POINT_CENTER,
-    // LOCUS_POINT_ENEMY_BASE,
-    // LOCUS_POINT_ENEMY_BASE_GUESS,
-    // LOCUS_POINT_ENEMY_BASE_GUESS_LAX,
-    // LOCUS_POINT_MIDWAY,
-    // LOCUS_POINT_MIDWAY_GUESS,
-    // LOCUS_POINT_MIDWAY_GUESS_LAX,
-
-    LOCUS_POINT_MAX,
-} LocusPoint;
-
 typedef struct LocusOrbitDesc {
-    LocusPoint focus;
+    FPoint focus;
     float radius;
     float period;
 } LocusOrbitDesc;
