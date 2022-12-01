@@ -25,30 +25,14 @@ static TextMapEntry tmLTypes[] = {
     { TMENTRY(LOCUS_TYPE_ORBIT),                      },
 };
 
-static TextMapEntry tmLPoints[] = {
-    { TMENTRY(LOCUS_POINT_INVALID),                   },
-    { TMENTRY(LOCUS_POINT_BASE),                      },
-    { TMENTRY(LOCUS_POINT_CENTER),                    },
-};
-
 const char *LocusType_ToString(LocusType type)
 {
     return TextMap_ToString(type, tmLTypes, ARRAYSIZE(tmLTypes));
 }
 
-const char *LocusPoint_ToString(LocusPoint pType)
-{
-    return TextMap_ToString(pType, tmLPoints, ARRAYSIZE(tmLPoints));
-}
-
 LocusType LocusType_FromString(const char *str)
 {
     return (LocusType) TextMap_FromString(str, tmLTypes, ARRAYSIZE(tmLTypes));
-}
-
-LocusPoint LocusPoint_FromString(const char *str)
-{
-    return (LocusPoint) TextMap_FromString(str, tmLPoints, ARRAYSIZE(tmLPoints));
 }
 
 LocusType LocusType_Random()
@@ -57,14 +41,6 @@ LocusType LocusType_Random()
     ASSERT(ARRAYSIZE(tmLTypes) == LOCUS_TYPE_MAX);
     ASSERT(tmLTypes[0].value == LOCUS_TYPE_INVALID);
     return (LocusType) tmLTypes[i].value;
-}
-
-LocusPoint LocusPoint_Random()
-{
-    uint i = Random_Int(1, ARRAYSIZE(tmLPoints) - 1);
-    ASSERT(ARRAYSIZE(tmLPoints) == LOCUS_POINT_MAX);
-    ASSERT(tmLPoints[0].value == LOCUS_POINT_INVALID);
-    return (LocusPoint) tmLPoints[i].value;
 }
 
 void Locus_Load(MBRegistry *mreg, LocusDesc *desc, const char *prefix)
@@ -82,53 +58,25 @@ void Locus_Init(AIContext *nc, LocusState *locus, LocusDesc *desc)
 }
 
 
-bool LocusGetPoint(AIContext *nc, LocusPoint pType,
-                   FPoint *focus)
-{
-    if (pType == LOCUS_POINT_BASE) {
-        FPoint *pos = nc->sg->friendBasePos();
-        if (pos != NULL) {
-            *focus = *pos;
-            return TRUE;
-        }
-        return FALSE;
-    } else if (pType == LOCUS_POINT_CENTER) {
-        focus->x = nc->ai->bp.width / 2;
-        focus->y = nc->ai->bp.height / 2;
-        return TRUE;
-    } else {
-        NOT_IMPLEMENTED();
-    }
-}
-
 void Locus_RunTick(AIContext *nc, LocusState *locus)
 {
-    FPoint focusPoint;
     FPoint newPoint;
-    bool hasFocus;
     FRPoint rp;
 
     ASSERT(locus != NULL);
     ASSERT(locus->desc.type == LOCUS_TYPE_ORBIT);
 
-    hasFocus = LocusGetPoint(nc, locus->desc.orbitDesc.focus, &focusPoint);
-
-    if (!hasFocus) {
-        locus->active = FALSE;
-        return;
-    }
-
     if (!locus->active) {
         rp.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
     } else {
-        FPoint_ToFRPoint(&locus->pos, &focusPoint, &rp);
+        FPoint_ToFRPoint(&locus->pos, &locus->desc.orbitDesc.focus, &rp);
     }
     rp.radius = locus->desc.orbitDesc.radius;
 
     rp.theta += M_PI * 2.0f / locus->desc.orbitDesc.period;
     rp.theta = fmodf(rp.theta, M_PI * 2.0f);
 
-    FRPoint_ToFPoint(&rp, &focusPoint, &newPoint);
+    FRPoint_ToFPoint(&rp, &locus->desc.orbitDesc.focus, &newPoint);
 
     if (!locus->active) {
         locus->active = TRUE;

@@ -55,13 +55,10 @@ typedef struct LocusState {
 } LocusState;
 
 const char *LocusType_ToString(LocusType type);
-const char *LocusPoint_ToString(LocusPoint pType);
 
 LocusType LocusType_FromString(const char *str);
-LocusPoint LocusPoint_FromString(const char *str);
 
 LocusType LocusType_Random();
-LocusPoint LocusPoint_Random();
 
 void Locus_Load(MBRegistry *mreg, LocusDesc *desc, const char *prefix);
 
@@ -70,7 +67,7 @@ void Locus_RunTick(AIContext *nc, LocusState *locus);
 
 
 static inline FPoint *
-Locus_GetPoint(LocusState *locus)
+Locus_GetPos(LocusState *locus)
 {
     ASSERT(locus != NULL);
     if (locus->active) {
