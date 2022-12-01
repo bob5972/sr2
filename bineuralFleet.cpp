@@ -53,7 +53,7 @@ public:
     // Members
     AIContext myAIC;
     NeuralNet myShipNet;
-    bool myUseAttackForces;
+    NeuralNet myFleetNet;
 
 public:
     BineuralAIGovernor(FleetAI *ai, MappingSensorGrid *sg)
@@ -64,6 +64,7 @@ public:
         myAIC.ai = myFleetAI;
 
         myShipNet.aic = myAIC;
+        myFleetNet.aic = myAIC;
     }
 
     virtual ~BineuralAIGovernor() { }
@@ -81,6 +82,9 @@ public:
     void dumpSanitizedParams(MBRegistry *mreg) {
         myShipNet.save(mreg, "shipNet.");
         myShipNet.dumpSanitizedParams(mreg, "shipNet.");
+
+        myFleetNet.save(mreg, "fleetNet.");
+        myFleetNet.dumpSanitizedParams(mreg, "fleetNet.");
     }
 
     virtual BineuralShipAI *newShip(MobID mobid) {
@@ -750,8 +754,8 @@ public:
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
-        myUseAttackForces = MBRegistry_GetBoolD(mreg, "useAttackForces", FALSE);
-        myShipNet.load(mreg, "shipNet.");
+        myShipNet.load(mreg, "shipNet.", NN_TYPE_FORCES);
+        myFleetNet.load(mreg, "fleetNet.", NN_TYPE_SCALARS);
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
@@ -763,25 +767,7 @@ public:
     }
 
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
-        ASSERT(!myUseAttackForces);
-        ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
-        if (NEURAL_ALLOW_ATTACK_FORCES && myUseAttackForces) {
-            BineuralShipAI *ship = (BineuralShipAI *)mob->aiMobHandle;
-            ASSERT(ship == (BineuralShipAI *)getShip(mob->mobid));
-            ASSERT(ship != NULL);
-
-            FPoint origTarget = mob->cmd.target;
-            BasicAIGovernor::doAttack(mob, enemyTarget);
-
-            mob->cmd.target = origTarget;
-
-            FRPoint rForce;
-            ASSERT(ship->state == BSAI_STATE_ATTACK);
-            myShipNet.doForces(mob, BSAI_STATE_ATTACK, &rForce);
-            NeuralForce_ApplyToMob(getAIContext(), mob, &rForce);
-        } else {
-            BasicAIGovernor::doAttack(mob, enemyTarget);
-        }
+        BasicAIGovernor::doAttack(mob, enemyTarget);
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
@@ -797,8 +783,7 @@ public:
         }
 
         FRPoint rForce;
-        ASSERT(ship->state == BSAI_STATE_IDLE);
-        myShipNet.doForces(mob, BSAI_STATE_IDLE, &rForce);
+        myShipNet.doForces(mob, &rForce);
         NeuralForce_ApplyToMob(getAIContext(), mob, &rForce);
 
         ASSERT(!isnanf(mob->cmd.target.x));
@@ -806,6 +791,8 @@ public:
     }
 
     virtual void runTick() {
+        myFleetNet.doScalars();
+        myShipNet.pullScalars(myFleetNet);
         BasicAIGovernor::runTick();
     }
 
@@ -905,7 +892,6 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "attackExtendedRange",         0.05f },
         { "rotateStartingAngle",         0.05f },
         { "gatherAbandonStale",          0.05f },
-        { "useAttackForces",             0.05f },
     };
 
     float rate = 0.12;

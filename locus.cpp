@@ -86,7 +86,7 @@ bool LocusGetPoint(AIContext *nc, LocusPoint pType,
                    FPoint *focus)
 {
     if (pType == LOCUS_POINT_BASE) {
-        FPoint *pos = nc->sg->friendBasePos();
+        FPoint *pos = nc->sg->friendBaseShadowPos();
         if (pos != NULL) {
             *focus = *pos;
             return TRUE;

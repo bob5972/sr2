@@ -143,7 +143,7 @@ void BasicAIGovernor::runMob(Mob *mob)
 
     if (mob->type == MOB_TYPE_POWER_CORE) {
         float baseRadius = MobType_GetSensorRadius(MOB_TYPE_BASE);
-        FPoint *friendBasePos = sg->friendBasePos();
+        FPoint *friendBasePos = sg->friendBaseShadowPos();
         Mob *friendMob = sg->findClosestFriend(&mob->pos, MOB_FLAG_SHIP);
         float baseD = INFINITY;
         float friendD = INFINITY;
