@@ -429,9 +429,33 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
             desc->tickDesc.waveType = wi;
         }
     } else if (desc->valueType == NEURAL_VALUE_SCALAR) {
-        NOT_IMPLEMENTED();
+        /*
+         * scalarID's on outputs are ignored.
+         */
+        if (!isOutput && Random_Flip(rate)) {
+            char *v = NULL;
+            int x, ret;
+
+            s = prefix;
+            s += "scalarID";
+            x = MBRegistry_GetInt(mreg, s.CStr());
+            x = Random_Int(-1, x + 1);
+            ret = asprintf(&v, "%d", x);
+            VERIFY(ret > 0);
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            free(v);
+        }
+    } else if (desc->valueType == NEURAL_VALUE_ZERO ||
+               desc->valueType == NEURAL_VALUE_FRIEND_SHIPS ||
+               desc->valueType == NEURAL_VALUE_MOBID ||
+               desc->valueType == NEURAL_VALUE_CREDITS ||
+               desc->valueType == NEURAL_VALUE_RANDOM_UNIT) {
+        /*
+         * No parameters to mutate.
+         */
     } else {
-        NOT_IMPLEMENTED();
+        PANIC("Unknown NeuralValueType: %s (%d)\n",
+              NeuralValue_ToString(desc->valueType), desc->valueType);
     }
 }
 

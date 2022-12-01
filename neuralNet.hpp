@@ -228,15 +228,11 @@ public:
     //MBVector<NeuralLocusState> loci;
 
     NeuralNet() {
-        float zero = 0.0f;
         MBUtil_Zero(&aic, sizeof(aic));
         numNodes = 0;
-
-        inputs.fill(zero);
-        outputs.fill(zero);
-        scalarInputs.fill(zero);
     }
 
+    // XXX: Only saves the FloatNet.
     void save(MBRegistry *mreg, const char *prefix) {
         floatNet.save(mreg, prefix);
     }
@@ -252,7 +248,7 @@ public:
     void doForces(Mob *mob, FRPoint *outputForce);
 
     void pullScalars(const NeuralNet &nn) {
-        ASSERT(scalarInputs.size() == nn.outputs.size());
+        scalarInputs.resize(nn.outputs.size());
 
         for (uint i = 0; i < scalarInputs.size(); i++) {
             scalarInputs[i] = nn.outputs[i];
