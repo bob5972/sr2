@@ -756,6 +756,7 @@ public:
     virtual void loadRegistry(MBRegistry *mreg) {
         myShipNet.load(mreg, "shipNet.", NN_TYPE_FORCES);
         myFleetNet.load(mreg, "fleetNet.", NN_TYPE_SCALARS);
+        //XXX Minimize fleetNet=>shipNet?
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
@@ -910,6 +911,9 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     }
 
     NeuralNet_Mutate(mreg, "shipNet.", rate,
+                     BINEURAL_MAX_INPUTS, BINEURAL_MAX_OUTPUTS,
+                     BINEURAL_MAX_NODES, BINEURAL_MAX_NODE_DEGREE);
+    NeuralNet_Mutate(mreg, "fleetNet.", rate,
                      BINEURAL_MAX_INPUTS, BINEURAL_MAX_OUTPUTS,
                      BINEURAL_MAX_NODES, BINEURAL_MAX_NODE_DEGREE);
 

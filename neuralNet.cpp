@@ -1481,6 +1481,8 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
             voidNode = TRUE;
         }
 
+        //XXX VALUE_VOID vs FORCE_VOID ?
+
         if (voidNode) {
             MBUtil_Zero(&outputDescs[i], sizeof(outputDescs[i]));
 
