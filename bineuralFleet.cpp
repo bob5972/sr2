@@ -756,7 +756,7 @@ public:
     virtual void loadRegistry(MBRegistry *mreg) {
         myShipNet.load(mreg, "shipNet.", NN_TYPE_FORCES);
         myFleetNet.load(mreg, "fleetNet.", NN_TYPE_SCALARS);
-        //XXX Minimize fleetNet=>shipNet?
+        myFleetNet.minimizeScalars(myShipNet);
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 

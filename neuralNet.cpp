@@ -1481,41 +1481,72 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
             voidNode = TRUE;
         }
 
-        //XXX VALUE_VOID vs FORCE_VOID ?
-
-        if (voidNode) {
-            MBUtil_Zero(&outputDescs[i], sizeof(outputDescs[i]));
-
-            if (nnType == NN_TYPE_FORCES) {
-                outputDescs[i].valueType = NEURAL_VALUE_FORCE;
-                outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
-            } else {
-                outputDescs[i].valueType = NEURAL_VALUE_VOID;
+        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
+            if (outputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
+                outputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
+                voidNode = TRUE;
             }
+        } else if (outputDescs[i].valueType == NEURAL_VALUE_VOID) {
+            voidNode = TRUE;
         }
 
-        if (outputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
-            outputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
-            floatNet.voidOutputNode(i);
-            outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
+        if (voidNode) {
+            voidOutputNode(i);
         }
     }
 
+    for (uint i = 0; i < inputDescs.size(); i++) {
+        char *lcstr = NULL;
+        int ret = asprintf(&lcstr, "%sinput[%d].", prefix, i);
+        VERIFY(ret > 0);
+        NeuralValue_Load(mreg, &inputDescs[i], lcstr);
+        free(lcstr);
+    }
+
+    minimize();
+}
+
+void NeuralNet::minimize()
+{
     CPBitVector inputBV;
-    inputBV.resize(numInputs);
+    inputBV.resize(inputs.size());
     floatNet.minimize(&inputBV);
 
     for (uint i = 0; i < inputDescs.size(); i++) {
-        if (inputBV.get(i)) {
-            char *lcstr = NULL;
-            int ret = asprintf(&lcstr, "%sinput[%d].", prefix, i);
-            VERIFY(ret > 0);
-            NeuralValue_Load(mreg, &inputDescs[i], lcstr);
-            free(lcstr);
-        } else {
-            inputDescs[i].valueType = NEURAL_VALUE_VOID;
+        if (!inputBV.get(i)) {
+            voidInputNode(i);
         }
     }
+}
+
+void NeuralNet::minimizeScalars(NeuralNet &nnConsumer)
+{
+    CPBitVector outputBV;
+    outputBV.resize(outputs.size());
+    outputBV.resetAll();
+
+    ASSERT(nnType == NN_TYPE_SCALARS);
+    ASSERT(nnConsumer.nnType == NN_TYPE_FORCES);
+
+    for (uint i = 0; i < nnConsumer.inputDescs.size(); i++) {
+        NeuralValueDesc *inp = &nnConsumer.inputDescs[i];
+        if (inp->valueType == NEURAL_VALUE_SCALAR) {
+            if (inp->scalarDesc.scalarID > 0 &&
+                inp->scalarDesc.scalarID < outputs.size()) {
+                outputBV.set(inp->scalarDesc.scalarID);
+            } else {
+                nnConsumer.voidInputNode(i);
+            }
+        }
+    }
+
+    for (uint i = 0; i < outputs.size(); i++) {
+        if (!outputBV.get(i)) {
+            voidOutputNode(i);
+        }
+    }
+
+    minimize();
 }
 
 void NeuralNet::dumpSanitizedParams(MBRegistry *mreg, const char *prefix)

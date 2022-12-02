@@ -255,6 +255,22 @@ public:
         }
     }
 
+    void voidInputNode(uint i) {
+        inputDescs[i].valueType = NEURAL_VALUE_VOID;
+    }
+    void voidOutputNode(uint i) {
+        floatNet.voidOutputNode(i);
+        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
+            outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
+        } else {
+            outputDescs[i].valueType = NEURAL_VALUE_VOID;
+
+        }
+    }
+
+    void minimize();
+    void minimizeScalars(NeuralNet &nn);
+
     static bool isOutputActive(const NeuralValueDesc *outputDesc) {
         ASSERT(outputDesc->valueType == NEURAL_VALUE_FORCE ||
                outputDesc->valueType == NEURAL_VALUE_SCALAR ||
