@@ -22,7 +22,9 @@ my $gScriptOptions = {
     "dumpFleet|d=i" => { desc => "Dump the specified fleet",
                          default => undef, },
     "cFormat|c" => { desc => "Print fleet with C formatting",
-                         default => undef, },
+                     default => undef, },
+    "sanitizeFleet!" => { desc => "Sanitize the fleet before dumping",
+                          default => FALSE },
     "graph!" => { desc => "Print the fleet as graphviz source",
                   default => FALSE },
     "resetHistory|r!" => { desc => "Reset fleet history",
@@ -69,30 +71,45 @@ sub CompareRange($$)
     NOT_IMPLEMENTED();
 }
 
-sub GetFleet($;$) {
+sub GetFleet($;$$) {
     my $fn = shift;
     my $dropPrefix = shift;
+    my $sanitized = shift;
+
+    if (!defined($sanitized)) {
+        $sanitized = FALSE;
+    }
 
     if (!defined($dropPrefix)) {
         $dropPrefix = FALSE;
     }
 
-    my $oup = {};
-
-    my $prefix = "fleet$fn";
-
-    foreach my $k (keys %{$gPop}) {
-        if ($k =~ /^$prefix\./) {
-            my $v = $gPop->{$k};
-
-            if ($dropPrefix) {
-                $k =~ s/^$prefix\.//;
-            }
-            $oup->{$k} = $v;
+    if ($sanitized) {
+        if (-x "build/sr2") {
+            my @fleetLines = `build/sr2 sanitizeFleet -f $fn -U $gFile` or
+                Panic("Unable to sanitize fleet: build/sr2 error", $!);
+            return MBBasic::LoadMRegLines(\@fleetLines);
+        } else {
+            Panic("Unable to execute build/sr2");
         }
-    }
+    } else {
+        my $oup = {};
 
-    return $oup;
+        my $prefix = "fleet$fn";
+
+        foreach my $k (keys %{$gPop}) {
+            if ($k =~ /^$prefix\./) {
+                my $v = $gPop->{$k};
+
+                if ($dropPrefix) {
+                    $k =~ s/^$prefix\.//;
+                }
+                $oup->{$k} = $v;
+            }
+        }
+
+        return $oup;
+    }
 }
 
 sub DumpFleet($) {
@@ -101,11 +118,13 @@ sub DumpFleet($) {
     if ($OPTIONS->{'graph'}) {
         DumpGraph($fn);
     } else {
-        my $h = GetFleet($fn, FALSE);
+        my $h = GetFleet($fn, FALSE, $OPTIONS->{'sanitizeFleet'});
         my $prefix = "fleet$fn";
         foreach my $k (sort keys %{$h}) {
-            my $v = $gPop->{$k};
+            my $v = $h->{$k};
             if (!$OPTIONS->{'cFormat'}) {
+                ASSERT(defined($k));
+                ASSERT(defined($v));
                 Console("$k = $v\n");
             } else {
                 $k =~ s/^$prefix\.//;
@@ -118,15 +137,7 @@ sub DumpFleet($) {
 sub DumpGraph($) {
     my $fn = shift;
 
-    my $fleet;
-
-    if (-x "build/sr2") {
-        my @fleetLines = `build/sr2 sanitizeFleet -f $fn -U $gFile` or
-            Panic("Unable to sanitize fleet: build/sr2 error", $!);
-        $fleet = MBBasic::LoadMRegLines(\@fleetLines);
-    } else {
-        $fleet = GetFleet($fn, TRUE);
-    }
+    my $fleet = GetFleet($fn, TRUE, TRUE);
 
     Console("digraph G {\n");
 
@@ -135,7 +146,7 @@ sub DumpGraph($) {
     my $iNodes = {};
 
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^floatNet.node\[(\d+)\]\.op$/) {
+        if ($k =~ /^(?:floatNet|shipNet).node\[(\d+)\]\.op$/) {
             my $n = $1;
             my $op = $fleet->{$k};
             if ($op ne "ML_FOP_VOID") {
@@ -144,14 +155,20 @@ sub DumpGraph($) {
         }
     }
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^input\[(\d+)\]\.valueType/) {
-            my $n = $1;
+        if ($k =~ /^((?:floatNet|shipNet).input\[(\d+)\])\.valueType/) {
+            my $prefix = $1;
+            my $n = $2;
             my $type = $fleet->{$k};
 
+            ASSERT(defined($type));
+            ASSERT(defined($n));
+
             if ($type eq 'NEURAL_VALUE_FORCE') {
-                $type = $fleet->{"input[$n].forceType"};
+                $type = $fleet->{"$prefix.forceType"};
+                ASSERT(defined($type));
             } elsif ($type eq 'NEURAL_VALUE_CROWD') {
-                $type = $fleet->{"input[$n].crowdType"};
+                $type = $fleet->{"$prefix.crowdType"};
+                ASSERT(defined($type));
             }
 
             if ($type ne "NEURAL_VALUE_VOID") {
@@ -162,7 +179,7 @@ sub DumpGraph($) {
     }
 
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^output\[(\d+)\]\.forceType/) {
+        if ($k =~ /^(?:floatNet|shipNet).output\[(\d+)\]\.forceType/) {
             my $n = $1;
             my $type = $fleet->{$k};
             if ($type ne "NEURAL_FORCE_VOID") {
@@ -205,7 +222,7 @@ sub DumpGraph($) {
 
     # Dump Edges
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^floatNet.node\[(\d+)\]\.inputs$/) {
+        if ($k =~ /^(?:floatNet|shipNet).node\[(\d+)\]\.inputs$/) {
             my $n = $1;
             my $v = $fleet->{$k};
             $v =~ s/^\{//;
