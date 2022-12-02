@@ -303,16 +303,16 @@ private:
         if (desc->forceType == NEURAL_FORCE_VOID) {
             return FALSE;
         } else if (desc->forceType == NEURAL_FORCE_LOCUS) {
-            int locusID = desc->locusID;
-            if (locusID < 0 || locusID > loci.size()) {
+            int index = desc->index;
+            if (index < 0 || index > loci.size()) {
                 return FALSE;
             }
 
-            if (!loci[locusID].active) {
+            if (!loci[index].active) {
                 return FALSE;
             }
 
-            *focusPoint = loci[locusID].pos;
+            *focusPoint = loci[index].pos;
             return TRUE;
         } else {
             return NeuralForce_GetFocus(&aic, mob, desc, focusPoint);
