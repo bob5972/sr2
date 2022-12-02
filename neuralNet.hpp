@@ -273,24 +273,21 @@ public:
     void minimizeScalars(NeuralNet &nn);
 
     static bool isOutputActive(const NeuralValueDesc *outputDesc) {
-        ASSERT(outputDesc->valueType == NEURAL_VALUE_FORCE ||
-               outputDesc->valueType == NEURAL_VALUE_SCALAR ||
-               outputDesc->valueType == NEURAL_VALUE_VOID ||
-               outputDesc->valueType == NEURAL_VALUE_ZERO);
-
         if  (outputDesc->valueType == NEURAL_VALUE_VOID ||
              outputDesc->valueType == NEURAL_VALUE_ZERO) {
             return FALSE;
+        } else if (outputDesc->valueType == NEURAL_VALUE_SCALAR) {
+            return TRUE;
+        } else if (outputDesc->valueType == NEURAL_VALUE_FORCE) {
+            if (outputDesc->forceDesc.forceType == NEURAL_FORCE_VOID ||
+                outputDesc->forceDesc.forceType == NEURAL_FORCE_ZERO) {
+                return FALSE;
+            }
+
+            return TRUE;
+        } else {
+            NOT_IMPLEMENTED();
         }
-
-        ASSERT(outputDesc->valueType == NEURAL_VALUE_FORCE);
-
-        if (outputDesc->forceDesc.forceType == NEURAL_FORCE_VOID ||
-            outputDesc->forceDesc.forceType == NEURAL_FORCE_ZERO) {
-            return FALSE;
-        }
-
-        return TRUE;
     }
 
 private:
