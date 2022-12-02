@@ -352,7 +352,7 @@ void NeuralScalar_Load(MBRegistry *mreg,
 }
 
 void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
-                        bool isOutput, float rate,
+                        float rate, bool isOutput, NeuralNetType nnType,
                         const char *prefix)
 {
     MBString s;
@@ -361,7 +361,12 @@ void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
     s += "valueType";
 
     if (isOutput) {
-        desc->valueType = NEURAL_VALUE_FORCE;
+        if (nnType == NN_TYPE_FORCES) {
+            desc->valueType = NEURAL_VALUE_FORCE;
+        } else {
+            ASSERT(nnType == NN_TYPE_SCALARS);
+            desc->valueType = NEURAL_VALUE_SCALAR;
+        }
     } else if (Random_Flip(rate)) {
         desc->valueType = NeuralValue_Random();
     }
@@ -1593,6 +1598,7 @@ void NeuralNet::dumpSanitizedParams(MBRegistry *mreg, const char *prefix)
 
 
 void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
+                      NeuralNetType nnType,
                       uint maxInputs, uint maxOutputs, uint maxNodes,
                       uint maxNodeDegree)
 {
@@ -1621,7 +1627,7 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
         int ret = asprintf(&str, "%sinput[%d].", prefix, i);
         VERIFY(ret > 0);
         NeuralValue_Load(mreg, &desc, str);
-        NeuralValue_Mutate(mreg, &desc, FALSE, rate, str);
+        NeuralValue_Mutate(mreg, &desc, rate, FALSE, nnType, str);
         free(str);
     }
 
@@ -1631,7 +1637,7 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
         int ret = asprintf(&str, "%soutput[%d].", prefix, i + fn.getOutputOffset());
         VERIFY(ret > 0);
         NeuralValue_Load(mreg, &desc, str);
-        NeuralValue_Mutate(mreg, &desc, TRUE, rate, str);
+        NeuralValue_Mutate(mreg, &desc, rate, TRUE, nnType, str);
         free(str);
     }
 }
@@ -1674,12 +1680,20 @@ void NeuralNet::compute()
 
 void NeuralNet::doScalars()
 {
+    ASSERT(nnType == NN_TYPE_SCALARS);
+
     fillInputs(NULL);
     compute();
 
     for (uint i = 0; i < outputs.size(); i++) {
-        ASSERT(outputDescs[i].valueType == NEURAL_VALUE_SCALAR ||
-               outputDescs[i].valueType == NEURAL_VALUE_VOID);
+        if (mb_debug) {
+            if (outputDescs[i].valueType != NEURAL_VALUE_SCALAR &&
+                outputDescs[i].valueType != NEURAL_VALUE_VOID) {
+                PANIC("Bad outputDesc valueType=%s(%d)\n",
+                      NeuralValue_ToString(outputDescs[i].valueType),
+                      outputDescs[i].valueType);
+            }
+        }
     }
 }
 
@@ -1687,6 +1701,8 @@ void NeuralNet::doScalars()
 
 void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
 {
+    ASSERT(nnType == NN_TYPE_FORCES);
+
     fillInputs(mob);
     compute();
 

@@ -134,6 +134,9 @@ public:
             { "evadeRange", "-1.000000" },
             { "evadeStrictDistance", "112.614983" },
             { "evadeUseStrictDistance", "FALSE" },
+            { "fleetNet.numInputs", "30" },
+            { "fleetNet.numNodes", "130" },
+            { "fleetNet.numOutputs", "30" },
             { "shipNet.input[0].crowdType", "NEURAL_CROWD_FRIEND_FIGHTER" },
             { "shipNet.input[0].forceType", "NEURAL_FORCE_ENEMY_COHERE" },
             { "shipNet.input[0].radius", "0.000000" },
@@ -1041,9 +1044,11 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     }
 
     NeuralNet_Mutate(mreg, "shipNet.", rate,
+                     NN_TYPE_FORCES,
                      BINEURAL_MAX_INPUTS, BINEURAL_MAX_OUTPUTS,
                      BINEURAL_MAX_NODES, BINEURAL_MAX_NODE_DEGREE);
     NeuralNet_Mutate(mreg, "fleetNet.", rate,
+                     NN_TYPE_SCALARS,
                      BINEURAL_MAX_INPUTS, BINEURAL_MAX_OUTPUTS,
                      BINEURAL_MAX_NODES, BINEURAL_MAX_NODE_DEGREE);
 

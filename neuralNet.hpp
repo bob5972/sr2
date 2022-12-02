@@ -196,7 +196,7 @@ void NeuralScalar_Load(MBRegistry *mreg,
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
 void NeuralValue_Mutate(MBRegistry *mreg, NeuralValueDesc *desc,
-                        bool isOutput, float rate,
+                        float rate, bool isOutput, NeuralNetType nnType,
                         const char *prefix);
 
 bool NeuralForce_FocusToForce(AIContext *nc, Mob *mob,
@@ -353,6 +353,7 @@ private:
 };
 
 void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
+                      NeuralNetType nnType,
                       uint maxInputs, uint maxOutputs, uint maxNodes,
                       uint maxNodeDegree);
 

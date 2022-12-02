@@ -6787,6 +6787,7 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     }
 
     NeuralNet_Mutate(mreg, "floatNet.", rate,
+                     NN_TYPE_FORCES,
                      NEURAL_MAX_INPUTS, NEURAL_MAX_OUTPUTS,
                      NEURAL_MAX_NODES, NEURAL_MAX_NODE_DEGREE);
 
