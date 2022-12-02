@@ -36,9 +36,9 @@ extern "C" {
 #include "neuralNet.hpp"
 
 #define BINEURAL_MAX_NODE_DEGREE  8
-#define BINEURAL_MAX_INPUTS      25
-#define BINEURAL_MAX_OUTPUTS     25
-#define BINEURAL_MAX_NODES       100
+#define BINEURAL_MAX_INPUTS      30
+#define BINEURAL_MAX_OUTPUTS     30
+#define BINEURAL_MAX_NODES       130
 
 #define BINEURAL_SCRAMBLE_KEY "bineuralFleet.scrambleMutation"
 
