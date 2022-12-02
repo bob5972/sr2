@@ -6612,7 +6612,7 @@ public:
     }
 
     virtual void loadRegistry(MBRegistry *mreg) {
-        myShipNet.load(mreg, "floatNet.");
+        myShipNet.load(mreg, "floatNet.", NN_TYPE_FORCES);
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
@@ -6638,7 +6638,7 @@ public:
         }
 
         FRPoint rForce;
-        myShipNet.doForces(mob, ship->state, &rForce);
+        myShipNet.doForces(mob, &rForce);
         NeuralForce_ApplyToMob(getAIContext(), mob, &rForce);
 
         ASSERT(!isnanf(mob->cmd.target.x));

@@ -25,7 +25,12 @@
 #include "floatNet.hpp"
 #include "basicShipAI.hpp"
 
-#define NEURAL_ALLOW_ATTACK_FORCES FALSE
+typedef enum NeuralNetType {
+    NN_TYPE_INVALID,
+    NN_TYPE_FORCES,
+    NN_TYPE_SCALARS,
+    NN_TYPE_MAX,
+} NeuralNetType;
 
 typedef enum NeuralForceType {
     NEURAL_FORCE_VOID,
@@ -118,20 +123,19 @@ typedef enum NeuralValueType {
     NEURAL_VALUE_RANDOM_UNIT,
     NEURAL_VALUE_CREDITS,
     NEURAL_VALUE_FRIEND_SHIPS,
+    NEURAL_VALUE_SCALAR,
     NEURAL_VALUE_MAX,
 } NeuralValueType;
 
 typedef struct NeuralForceDesc {
     NeuralForceType forceType;
     float radius;
-    int locusID;
+    int index;
     bool useTangent;
     bool filterForward;
     bool filterBackward;
     bool filterAdvance;
     bool filterRetreat;
-    bool doIdle;
-    bool doAttack;
 } NeuralForceDesc;
 
 typedef struct NeuralTickDesc {
@@ -144,12 +148,17 @@ typedef struct NeuralCrowdDesc {
     float radius;
 } NeuralCrowdDesc;
 
+typedef struct NeuralScalarDesc {
+    int scalarID;
+} NeuralScalarDesc;
+
 typedef struct NeuralValueDesc {
     NeuralValueType valueType;
     union {
         NeuralForceDesc forceDesc;
         NeuralCrowdDesc crowdDesc;
         NeuralTickDesc tickDesc;
+        NeuralScalarDesc scalarDesc;
     };
 } NeuralValueDesc;
 
@@ -181,6 +190,8 @@ void NeuralCrowd_Load(MBRegistry *mreg,
                       NeuralCrowdDesc *desc, const char *prefix);
 void NeuralTick_Load(MBRegistry *mreg,
                      NeuralTickDesc *desc, const char *prefix);
+void NeuralScalar_Load(MBRegistry *mreg,
+                       NeuralScalarDesc *desc, const char *prefix);
 
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
@@ -206,6 +217,7 @@ float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc);
 class NeuralNet {
 public:
     // Members
+    NeuralNetType nnType;
     FloatNet floatNet;
     MBVector<NeuralValueDesc> inputDescs;
     MBVector<NeuralValueDesc> outputDescs;
@@ -213,6 +225,7 @@ public:
     MBVector<float> outputs;
     uint numNodes;
     AIContext aic;
+    MBVector<float> scalarInputs;
     MBVector<NeuralLocusState> loci;
 
     NeuralNet() {
@@ -220,20 +233,48 @@ public:
         numNodes = 0;
     }
 
+    // XXX: Only saves the FloatNet.
     void save(MBRegistry *mreg, const char *prefix) {
         floatNet.save(mreg, prefix);
     }
 
     void dumpSanitizedParams(MBRegistry *mreg, const char *prefix);
 
-    void load(MBRegistry *mreg, const char *prefix);
+    void load(MBRegistry *mreg, const char *prefix, NeuralNetType nnType);
     void mutate(MBRegistry *mreg);
 
-    void doForces(Mob *mob, BasicShipAIState state, FRPoint *outputForce);
+    void fillInputs(Mob *mob);
+    void compute();
+    void doScalars();
+    void doForces(Mob *mob, FRPoint *outputForce);
 
-    static bool isOutputActive(BasicShipAIState state,
-                               const NeuralValueDesc *outputDesc) {
+    void pullScalars(const NeuralNet &nn) {
+        scalarInputs.resize(nn.outputs.size());
+
+        for (uint i = 0; i < scalarInputs.size(); i++) {
+            scalarInputs[i] = nn.outputs[i];
+        }
+    }
+
+    void voidInputNode(uint i) {
+        inputDescs[i].valueType = NEURAL_VALUE_VOID;
+    }
+    void voidOutputNode(uint i) {
+        floatNet.voidOutputNode(i);
+        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
+            outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
+        } else {
+            outputDescs[i].valueType = NEURAL_VALUE_VOID;
+
+        }
+    }
+
+    void minimize();
+    void minimizeScalars(NeuralNet &nn);
+
+    static bool isOutputActive(const NeuralValueDesc *outputDesc) {
         ASSERT(outputDesc->valueType == NEURAL_VALUE_FORCE ||
+               outputDesc->valueType == NEURAL_VALUE_SCALAR ||
                outputDesc->valueType == NEURAL_VALUE_VOID ||
                outputDesc->valueType == NEURAL_VALUE_ZERO);
 
@@ -249,9 +290,6 @@ public:
             return FALSE;
         }
 
-        ASSERT(!NEURAL_ALLOW_ATTACK_FORCES);
-        ASSERT((state == BSAI_STATE_IDLE && outputDesc->forceDesc.doIdle) ||
-               (state == BSAI_STATE_ATTACK && outputDesc->forceDesc.doAttack));
         return TRUE;
     }
 
@@ -289,6 +327,13 @@ private:
             FPoint focus;
             bool haveFocus = getFocus(mob, &desc->forceDesc, &focus);
             return NeuralForce_FocusToRange(mob, &focus, haveFocus);
+        } else if (desc->valueType == NEURAL_VALUE_SCALAR) {
+            if (desc->scalarDesc.scalarID < 0 ||
+                desc->scalarDesc.scalarID >= scalarInputs.size()) {
+                return 0.0f;
+            }
+
+            return scalarInputs[desc->scalarDesc.scalarID];
         } else {
             return NeuralValue_GetValue(&aic, mob, &inputDescs[index], index);
         }

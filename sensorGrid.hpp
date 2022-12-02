@@ -45,8 +45,12 @@ public:
 
         myEnemyBaseDestroyedCount = 0;
 
-        myFriendBasePos.x = 0.0f;
-        myFriendBasePos.y = 0.0f;
+        Mob_Init(&myFriendBaseShadow, MOB_TYPE_BASE);
+        myFriendBaseShadow.pos.x = 0.0f;
+        myFriendBaseShadow.pos.y = 0.0f;
+        myFriendBaseShadow.type = MOB_TYPE_BASE;
+        myFriendBaseShadow.alive = FALSE;
+        myFriendBaseShadow.health = 0;
 
         myStaleCoreTime = SG_STALE_CORE_DEFAULT;
         myStaleFighterTime = SG_STALE_FIGHTER_DEFAULT;
@@ -228,14 +232,19 @@ public:
         return myFriends.getBase();
     }
 
-    FPoint *friendBasePos() {
+    Mob *friendBaseShadow() {
         Mob *fbase = friendBase();
 
         if (fbase != NULL) {
-            myFriendBasePos = fbase->pos;
+            myFriendBaseShadow = *fbase;
         }
 
-        return &myFriendBasePos;
+        return &myFriendBaseShadow;
+    }
+
+    FPoint *friendBaseShadowPos() {
+        Mob *shadow = friendBaseShadow();
+        return &shadow->pos;
     }
 
     MobSet::MobIt friendsIterator(MobTypeFlags filter) {
@@ -337,7 +346,7 @@ public:
 
 private:
     int myEnemyBaseDestroyedCount;
-    FPoint myFriendBasePos;
+    Mob myFriendBaseShadow;
 
     uint myLastTick;
     IntMap myTargetLastSeenMap;
