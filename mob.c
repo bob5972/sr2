@@ -20,7 +20,7 @@
 
 float MobType_GetRadius(MobType type)
 {
-    static struct {
+    static const struct {
         MobType type;
         float radius;
     } v[] = {
@@ -40,7 +40,7 @@ float MobType_GetRadius(MobType type)
 
 float MobType_GetSensorRadius(MobType type)
 {
-    static struct {
+    static const struct {
         MobType type;
         float sensorRadius;
     } v[] = {
@@ -60,7 +60,7 @@ float MobType_GetSensorRadius(MobType type)
 
 float MobType_GetSpeed(MobType type)
 {
-    static struct {
+    static const struct {
         MobType type;
         float speed;
     } v[] = {
@@ -80,7 +80,7 @@ float MobType_GetSpeed(MobType type)
 
 int MobType_GetCost(MobType type)
 {
-    static struct {
+    static const struct {
         MobType type;
         int cost;
     } v[] = {
@@ -109,7 +109,7 @@ int MobType_GetRechargeTicks(MobType type)
 
 int MobType_GetMaxFuel(MobType type)
 {
-    static struct {
+    static const struct {
         MobType type;
         int fuel;
     } v[] = {
@@ -130,7 +130,7 @@ int MobType_GetMaxFuel(MobType type)
 
 int MobType_GetMaxHealth(MobType type)
 {
-    static struct {
+    static const struct {
         MobType type;
         int health;
     } v[] = {
