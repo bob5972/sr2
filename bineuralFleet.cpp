@@ -16,12 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-extern "C" {
-#include "fleet.h"
-#include "Random.h"
 #include "battle.h"
-}
-
+#include "Random.h"
+#include "fleet.h"
 #include "mutate.h"
 #include "MBUtil.h"
 

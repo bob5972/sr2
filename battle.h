@@ -23,6 +23,10 @@
 #include "fleet.h"
 #include "battleTypes.h"
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 struct Battle;
 typedef struct Battle Battle;
 
@@ -67,5 +71,9 @@ PlayerType_FromString(const char *str)
         NOT_IMPLEMENTED();
     }
 }
+
+#ifdef __cplusplus
+    }
+#endif
 
 #endif // _BATTLE_H_202005310644

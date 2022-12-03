@@ -23,6 +23,10 @@
 #include "battleTypes.h"
 #include "Random.h"
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 struct Fleet;
 typedef struct Fleet Fleet;
 
@@ -95,5 +99,9 @@ static inline void Fleet_Mutate(FleetAIType aiType, MBRegistry *mreg)
         ops.mutateParams(aiType, mreg);
     }
 }
+
+#ifdef __cplusplus
+    }
+#endif
 
 #endif // _FLEET_H_202005311442
