@@ -79,6 +79,7 @@ public:
         virtual ~BineuralShipAI() {}
     };
 
+    //XXX Only saves some of the state.
     void dumpSanitizedParams(MBRegistry *mreg) {
         myShipNet.save(mreg, "shipNet.");
         myShipNet.dumpSanitizedParams(mreg, "shipNet.");
@@ -890,6 +891,7 @@ public:
         myShipNet.load(mreg, "shipNet.", NN_TYPE_FORCES);
         myFleetNet.load(mreg, "fleetNet.", NN_TYPE_SCALARS);
         myFleetNet.minimizeScalars(myShipNet);
+
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 

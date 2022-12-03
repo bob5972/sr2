@@ -22,6 +22,10 @@
 #include <math.h>
 #include "MBAssert.h"
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
 typedef struct UPoint {
     uint x;
     uint y;
@@ -250,5 +254,9 @@ static inline void FCircle_CenterToIPoint(const FCircle *c, IPoint *p)
 }
 
 void Geometry_UnitTest();
+
+#ifdef __cplusplus
+    }
+#endif
 
 #endif // _GEOMETRY_H_202005310649

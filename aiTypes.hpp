@@ -19,6 +19,10 @@
 #ifndef _AI_TYPES_HPP_202210231753
 #define _AI_TYPES_HPP_202210231753
 
+#include "Random.h"
+#include "sensorGrid.hpp"
+#include "battleTypes.h"
+
 /*
  * Useful for some AI utility modules to interact with the FleetAI without
  * defining a more complicated interface.
