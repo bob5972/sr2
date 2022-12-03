@@ -301,7 +301,7 @@ private:
             return FALSE;
         } else if (desc->forceType == NEURAL_FORCE_LOCUS) {
             int index = desc->index;
-            if (index < 0 || index > loci.size()) {
+            if (index < 0 || index >= loci.size()) {
                 return FALSE;
             }
 
