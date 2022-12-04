@@ -80,8 +80,13 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     uint numNodes = MBRegistry_GetUint(mreg, p.CStr());
 
     VERIFY(myNumInputs > 0);
-    VERIFY(myNumOutputs > 0);
-    VERIFY(myNumOutputs <= numNodes);
+    if (myNumOutputs <= 0) {
+        PANIC("Not enough outputs: myNumOutputs=%d\n", myNumOutputs);
+    }
+    if (myNumOutputs > numNodes) {
+        PANIC("Too many outputs: myNumOutputs=%d, numNodes=%d\n",
+              myNumOutputs, numNodes);
+    }
 
     initialize(myNumInputs, myNumOutputs, numNodes);
     ASSERT(myNodes.size() == numNodes);

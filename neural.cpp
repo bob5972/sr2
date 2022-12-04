@@ -1587,9 +1587,13 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
     }
 
     ASSERT(desc->locusType == NEURAL_LOCUS_ORBIT);
+    if (desc->orbitDesc.radius < MICRON ||
+        desc->orbitDesc.period < MICRON) {
+        lpos->active = FALSE;
+        return;
+    }
 
     base = aic->sg->friendBaseShadow();
-
     lpos->active = NeuralForce_GetFocus(aic, base, &desc->orbitDesc.focus,
                                         &focusPoint);
 

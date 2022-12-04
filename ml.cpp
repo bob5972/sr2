@@ -2057,9 +2057,14 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
         case ML_FOP_NxN_ANCHORED_DIV_SUM:
         case ML_FOP_NxN_ANCHORED_DIV_SUM_SQUARED:
+            numInputs = MAX(1, numInputsIn);
+            numInputs = MAX(1, numParamsIn);
+            break;
+
         case ML_FOP_NxN_WEIGHTED_INVERSE_SQUARE_SUM:
             numInputs = MAX(1, numInputsIn);
-            numParams = MAX(1, numParamsIn);
+            numInputs = MIN(numInputsIn, numParamsIn);
+            numParams = numInputs;
             break;
 
         case ML_FOP_Nx0_INVERSE_SQUARE_SUM:
