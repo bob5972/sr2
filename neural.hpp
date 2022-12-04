@@ -222,8 +222,7 @@ void NeuralValue_Mutate(MBRegistry *mreg, float rate, bool isOutput,
                         NeuralNetType nnType,
                         const char *prefix);
 void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix);
-void NeuralLocus_Mutate(MBRegistry *mreg, NeuralLocusDesc *desc,
-                        float rate, const char *prefix);
+void NeuralLocus_Mutate(MBRegistry *mreg, float rate, const char *prefix);
 
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
@@ -241,6 +240,7 @@ bool NeuralForce_GetForce(AIContext *nc, Mob *mob,
 float NeuralForce_GetRange(AIContext *nc, Mob *mob, NeuralForceDesc *desc);
 void NeuralForce_ApplyToMob(AIContext *nc, Mob *mob, FRPoint *rForce);
 
+void NeuralLocus_RunTick(AIContext *nc, NeuralLocusDesc *desc, NeuralLocusPosition *pos);
 
 
 #endif // _NEURAL_H_202212021721

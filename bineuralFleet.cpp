@@ -32,10 +32,12 @@
 
 #include "neuralNet.hpp"
 
-#define BINEURAL_MAX_NODE_DEGREE  8
-#define BINEURAL_MAX_INPUTS      30
-#define BINEURAL_MAX_OUTPUTS     30
+#define BINEURAL_MAX_NODE_DEGREE   8
+#define BINEURAL_MAX_INPUTS       30
+#define BINEURAL_MAX_OUTPUTS      30
 #define BINEURAL_MAX_NODES       130
+
+#define BINEURAL_MAX_LOCUS         8
 
 #define BINEURAL_SCRAMBLE_KEY "bineuralFleet.scrambleMutation"
 
@@ -44,6 +46,11 @@ typedef struct BineuralConfigValue {
     const char *value;
 } BineuralConfigValue;
 
+typedef struct BineuralLocus {
+    NeuralLocusDesc desc;
+    NeuralLocusPosition pos;
+} BineuralLocus;
+
 class BineuralAIGovernor : public BasicAIGovernor
 {
 public:
@@ -51,6 +58,7 @@ public:
     AIContext myAIC;
     NeuralNet myShipNet;
     NeuralNet myFleetNet;
+    BineuralLocus myLoci[BINEURAL_MAX_LOCUS];
 
 public:
     BineuralAIGovernor(FleetAI *ai, MappingSensorGrid *sg)
@@ -889,6 +897,24 @@ public:
         myFleetNet.load(mreg, "fleetNet.", NN_TYPE_SCALARS);
         myFleetNet.minimizeScalars(myShipNet);
 
+        uint numLoci = MBRegistry_GetUint(mreg, "numLoci");
+        VERIFY(numLoci <= ARRAYSIZE(myLoci));
+        for (uint i = 0; i < ARRAYSIZE(myLoci); i++) {
+            MBUtil_Zero(&myLoci[i], sizeof(myLoci[i]));
+
+            if (i < numLoci) {
+                char *k = NULL;
+                int ret;
+                ret = asprintf(&k, "locus[%d].", i);
+                VERIFY(ret > 0);
+                NeuralLocus_Load(mreg, &myLoci[i].desc, k);
+                free(k);
+            } else {
+                myLoci[i].desc.locusType = NEURAL_LOCUS_VOID;
+            }
+
+        }
+
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
@@ -925,6 +951,11 @@ public:
 
     virtual void runTick() {
         myFleetNet.doScalars();
+
+        for (uint i = 0; i < ARRAYSIZE(myLoci); i++) {
+            NeuralLocus_RunTick(&myAIC, &myLoci[i].desc, &myLoci[i].pos);
+        }
+
         myShipNet.pullScalars(myFleetNet);
         BasicAIGovernor::runTick();
     }
@@ -1050,6 +1081,17 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
                      NN_TYPE_SCALARS,
                      BINEURAL_MAX_INPUTS, BINEURAL_MAX_OUTPUTS,
                      BINEURAL_MAX_NODES, BINEURAL_MAX_NODE_DEGREE);
+
+    ASSERT(BINEURAL_MAX_LOCUS == 8);
+    MBRegistry_PutCopy(mreg, "numLoci", "8");
+    for (uint i = 0; i < BINEURAL_MAX_LOCUS; i++) {
+        char *k = NULL;
+        int ret;
+        ret = asprintf(&k, "locus[%d].", i);
+        VERIFY(ret > 0);
+        NeuralLocus_Mutate(mreg, rate, k);
+        free(k);
+    }
 
     Mutate_Float(mreg, vf, ARRAYSIZE(vf));
     Mutate_Bool(mreg, vb, ARRAYSIZE(vb));

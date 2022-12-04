@@ -1569,33 +1569,52 @@ float NeuralValue_GetValue(AIContext *nc,
 }
 
 
-// void Locus_RunTick(AIContext *nc, LocusState *locus)
-// {
-//     FPoint newPoint;
-//     FRPoint rp;
-//
-//     ASSERT(locus != NULL);
-//     ASSERT(locus->desc.type == LOCUS_TYPE_ORBIT);
-//
-//     if (!locus->active) {
-//         rp.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
-//     } else {
-//         FPoint_ToFRPoint(&locus->pos, &locus->desc.orbitDesc.focus, &rp);
-//     }
-//     rp.radius = locus->desc.orbitDesc.radius;
-//
-//     rp.theta += M_PI * 2.0f / locus->desc.orbitDesc.period;
-//     rp.theta = fmodf(rp.theta, M_PI * 2.0f);
-//
-//     FRPoint_ToFPoint(&rp, &locus->desc.orbitDesc.focus, &newPoint);
-//
-//     if (!locus->active) {
-//         locus->active = TRUE;
-//         locus->pos = newPoint;
-//     } else if (!locus->desc.speedLimited ||
-//                FPoint_Distance(&locus->pos, &newPoint) <= locus->desc.speed) {
-//         locus->pos = newPoint;
-//     } else {
-//         FPoint_MoveToPointAtSpeed(&locus->pos, &newPoint, locus->desc.speed);
-//     }
-// }
+void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
+                         NeuralLocusPosition *lpos)
+{
+    FPoint newPoint;
+    FRPoint rp;
+    FPoint focusPoint;
+    bool wasActive = lpos->active;
+    Mob *base;
+
+    ASSERT(desc != NULL);
+    ASSERT(lpos != NULL);
+
+    if (desc->locusType == NEURAL_LOCUS_VOID) {
+        lpos->active = FALSE;
+        return;
+    }
+
+    ASSERT(desc->locusType == NEURAL_LOCUS_ORBIT);
+
+    base = aic->sg->friendBaseShadow();
+
+    lpos->active = NeuralForce_GetFocus(aic, base, &desc->orbitDesc.focus,
+                                        &focusPoint);
+
+    if (!lpos->active) {
+        return;
+    }
+
+    if (!wasActive) {
+        rp.theta = RandomState_Float(aic->rs, 0, M_PI * 2.0f);
+    } else {
+        FPoint_ToFRPoint(&lpos->pos, &focusPoint, &rp);
+    }
+    rp.radius = desc->orbitDesc.radius;
+
+    rp.theta += M_PI * 2.0f / desc->orbitDesc.period;
+    rp.theta = fmodf(rp.theta, M_PI * 2.0f);
+
+    FRPoint_ToFPoint(&rp, &focusPoint, &newPoint);
+
+    if (!wasActive) {
+        lpos->pos = newPoint;
+    } else if (!desc->speedLimited ||
+               FPoint_Distance(&lpos->pos, &newPoint) <= desc->speed) {
+        lpos->pos = newPoint;
+    } else {
+        FPoint_MoveToPointAtSpeed(&lpos->pos, &newPoint, desc->speed);
+    }
+}
