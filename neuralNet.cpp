@@ -207,22 +207,18 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
     fn.save(mreg, prefix);
 
     for (uint i = 0; i < fn.getNumInputs(); i++) {
-        NeuralValueDesc desc;
         char *str = NULL;
         int ret = asprintf(&str, "%sinput[%d].", prefix, i);
         VERIFY(ret > 0);
-        NeuralValue_Load(mreg, &desc, str);
-        NeuralValue_Mutate(mreg, &desc, rate, FALSE, nnType, str);
+        NeuralValue_Mutate(mreg, rate, FALSE, nnType, str);
         free(str);
     }
 
     for (uint i = 0; i < fn.getNumOutputs(); i++) {
-        NeuralValueDesc desc;
         char *str = NULL;
         int ret = asprintf(&str, "%soutput[%d].", prefix, i + fn.getOutputOffset());
         VERIFY(ret > 0);
-        NeuralValue_Load(mreg, &desc, str);
-        NeuralValue_Mutate(mreg, &desc, rate, TRUE, nnType, str);
+        NeuralValue_Mutate(mreg, rate, TRUE, nnType, str);
         free(str);
     }
 }
