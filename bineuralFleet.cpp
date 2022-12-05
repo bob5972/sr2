@@ -899,8 +899,10 @@ public:
 
         uint numLoci = MBRegistry_GetUint(mreg, "numLoci");
         VERIFY(numLoci <= ARRAYSIZE(myLoci));
+        myShipNet.loci.resize(ARRAYSIZE(myLoci));
         for (uint i = 0; i < ARRAYSIZE(myLoci); i++) {
             MBUtil_Zero(&myLoci[i], sizeof(myLoci[i]));
+            MBUtil_Zero(&myShipNet.loci[i], sizeof(myShipNet.loci[i]));
 
             if (i < numLoci) {
                 char *k = NULL;
@@ -913,7 +915,10 @@ public:
                 myLoci[i].desc.locusType = NEURAL_LOCUS_VOID;
             }
 
+
         }
+
+
 
         this->BasicAIGovernor::loadRegistry(mreg);
     }
@@ -952,8 +957,10 @@ public:
     virtual void runTick() {
         myFleetNet.doScalars();
 
+        ASSERT(myShipNet.loci.size() == ARRAYSIZE(myLoci));
         for (uint i = 0; i < ARRAYSIZE(myLoci); i++) {
             NeuralLocus_RunTick(&myAIC, &myLoci[i].desc, &myLoci[i].pos);
+            myShipNet.loci[i] = myLoci[i].pos;
         }
 
         myShipNet.pullScalars(myFleetNet);
