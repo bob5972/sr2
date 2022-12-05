@@ -127,6 +127,7 @@ static const TextMapEntry tmValues[] = {
 static const TextMapEntry tmLocus[] = {
     { TMENTRY(NEURAL_LOCUS_VOID),       },
     { TMENTRY(NEURAL_LOCUS_ORBIT),      },
+    { TMENTRY(NEURAL_LOCUS_PATROL_MAP), },
 };
 
 const char *NeuralForce_ToString(NeuralForceType nft)
@@ -395,6 +396,30 @@ void NeuralLocus_Load(MBRegistry *mreg,
         s = prefix;
         s += "focus.";
         NeuralForce_Load(mreg, &desc->orbitDesc.focus, s.CStr());
+    } else if (desc->locusType == NEURAL_LOCUS_PATROL_MAP) {
+        s = prefix;
+        s += "linearPeriod";
+        desc->patrolMapDesc.linearPeriod = MBRegistry_GetFloat(mreg, s.CStr());
+
+        s = prefix;
+        s += "linearXPeriodOffset";
+        desc->patrolMapDesc.linearXPeriodOffset = MBRegistry_GetFloat(mreg, s.CStr());
+
+        s = prefix;
+        s += "linearYPeriodOffset";
+        desc->patrolMapDesc.linearYPeriodOffset = MBRegistry_GetFloat(mreg, s.CStr());
+
+        s = prefix;
+        s += "linearWeight";
+        desc->patrolMapDesc.linearWeight = MBRegistry_GetFloat(mreg, s.CStr());
+
+        s = prefix;
+        s += "circularPeriod";
+        desc->patrolMapDesc.circularPeriod = MBRegistry_GetFloat(mreg, s.CStr());
+
+        s = prefix;
+        s += "circularWeight";
+        desc->patrolMapDesc.circularWeight = MBRegistry_GetFloat(mreg, s.CStr());
     } else {
         NOT_IMPLEMENTED();
     }
@@ -457,6 +482,42 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
         s = prefix;
         s += "focus.";
         NeuralForce_Mutate(mreg, rate, s.CStr());
+    } else if (desc.locusType == NEURAL_LOCUS_PATROL_MAP) {
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+        s = prefix;
+        s += "linearPeriod";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+        s = prefix;
+        s += "linearXPeriodOffset";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+        s = prefix;
+        s += "linearYPeriodOffset";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_WEIGHT);
+        s = prefix;
+        s += "linearWeight";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+        s = prefix;
+        s += "circularPeriod";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
+
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_WEIGHT);
+        s = prefix;
+        s += "circularWeight";
+        vf.key = s.CStr();
+        Mutate_Float(mreg, &vf, 1);
     } else {
         NOT_IMPLEMENTED();
     }
@@ -1573,52 +1634,133 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
                          NeuralLocusPosition *lpos)
 {
     FPoint newPoint;
-    FRPoint rp;
-    FPoint focusPoint;
     bool wasActive = lpos->active;
-    Mob *base;
+    Mob *base = aic->sg->friendBaseShadow();
 
     ASSERT(desc != NULL);
     ASSERT(lpos != NULL);
 
     if (desc->locusType == NEURAL_LOCUS_VOID) {
         lpos->active = FALSE;
-        return;
-    }
+    } else if (desc->locusType == NEURAL_LOCUS_ORBIT) {
+        FRPoint rp;
+        FPoint focusPoint;
 
-    ASSERT(desc->locusType == NEURAL_LOCUS_ORBIT);
-    if (desc->orbitDesc.radius < MICRON ||
-        desc->orbitDesc.period < MICRON) {
-        lpos->active = FALSE;
-        return;
-    }
+        if (desc->orbitDesc.radius < MICRON ||
+            desc->orbitDesc.period < MICRON) {
+            lpos->active = FALSE;
+            return;
+        }
 
-    base = aic->sg->friendBaseShadow();
-    lpos->active = NeuralForce_GetFocus(aic, base, &desc->orbitDesc.focus,
-                                        &focusPoint);
 
-    if (!lpos->active) {
-        return;
-    }
+        lpos->active = NeuralForce_GetFocus(aic, base, &desc->orbitDesc.focus,
+                                            &focusPoint);
 
-    if (!wasActive) {
-        rp.theta = RandomState_Float(aic->rs, 0, M_PI * 2.0f);
+        if (lpos->active) {
+            if (!wasActive) {
+                rp.theta = RandomState_Float(aic->rs, 0, M_PI * 2.0f);
+            } else {
+                FPoint_ToFRPoint(&lpos->pos, &focusPoint, &rp);
+            }
+            rp.radius = desc->orbitDesc.radius;
+
+            rp.theta += M_PI * 2.0f / desc->orbitDesc.period;
+            rp.theta = fmodf(rp.theta, M_PI * 2.0f);
+
+            FRPoint_ToFPoint(&rp, &focusPoint, &newPoint);
+        }
+    } else if (desc->locusType == NEURAL_LOCUS_PATROL_MAP) {
+        FPoint circular;
+        FPoint linear;
+        FPoint locus;
+        bool haveCircular = FALSE;
+        bool haveLinear = FALSE;
+        float width = aic->ai->bp.width;
+        float height = aic->ai->bp.height;
+
+        if (desc->patrolMapDesc.circularPeriod > 0.0f &&
+            desc->patrolMapDesc.circularWeight > 0.0f) {
+            float cwidth = width / 2;
+            float cheight = height / 2;
+            float ct = aic->ai->tick / desc->patrolMapDesc.circularPeriod;
+
+            /*
+             * This isn't actually the circumference of an ellipse,
+             * but it's a good approximation.
+             */
+            ct /= M_PI * (cwidth + cheight);
+
+            circular.x = cwidth + cwidth * cosf(ct);
+            circular.y = cheight + cheight * sinf(ct);
+            haveCircular = TRUE;
+        }
+
+        if (desc->patrolMapDesc.linearPeriod > 0.0f &&
+            desc->patrolMapDesc.linearWeight > 0.0f) {
+            float temp;
+            float xPeriod = desc->patrolMapDesc.linearPeriod +
+                            desc->patrolMapDesc.linearXPeriodOffset;
+            float ltx = aic->ai->tick / xPeriod;
+            ltx /= 2 * width;
+            linear.x = width * modff(ltx / width, &temp);
+            if (((uint)temp) % 2 == 1) {
+                /*
+                * Go backwards for the return trip.
+                */
+                linear.x = width - linear.x;
+            }
+
+            float yPeriod = desc->patrolMapDesc.linearPeriod +
+                            desc->patrolMapDesc.linearYPeriodOffset;
+            float lty = aic->ai->tick / yPeriod;
+            lty /= 2 * height;
+            linear.y = height * modff(lty / height, &temp);
+            if (((uint)temp) % 2 == 1) {
+                /*
+                * Go backwards for the return trip.
+                */
+                linear.y = height - linear.y;
+            }
+
+            haveLinear = TRUE;
+        }
+
+        if (haveLinear || haveCircular) {
+            float scale = 0.0f;
+            locus.x = 0.0f;
+            locus.y = 0.0f;
+            if (haveLinear) {
+                locus.x += desc->patrolMapDesc.linearWeight * linear.x;
+                locus.y += desc->patrolMapDesc.linearWeight * linear.y;
+                scale += desc->patrolMapDesc.linearWeight;
+            }
+            if (haveCircular) {
+                locus.x += desc->patrolMapDesc.circularWeight * circular.x;
+                locus.y += desc->patrolMapDesc.circularWeight * circular.y;
+                scale += desc->patrolMapDesc.circularWeight;
+            }
+
+            ASSERT(scale > 0.0f);
+            locus.x /= scale;
+            locus.y /= scale;
+
+            newPoint = locus;
+            lpos->active = TRUE;
+        } else {
+            lpos->active = FALSE;
+        }
     } else {
-        FPoint_ToFRPoint(&lpos->pos, &focusPoint, &rp);
+        NOT_IMPLEMENTED();
     }
-    rp.radius = desc->orbitDesc.radius;
 
-    rp.theta += M_PI * 2.0f / desc->orbitDesc.period;
-    rp.theta = fmodf(rp.theta, M_PI * 2.0f);
-
-    FRPoint_ToFPoint(&rp, &focusPoint, &newPoint);
-
-    if (!wasActive) {
-        lpos->pos = newPoint;
-    } else if (!desc->speedLimited ||
-               FPoint_Distance(&lpos->pos, &newPoint) <= desc->speed) {
-        lpos->pos = newPoint;
-    } else {
-        FPoint_MoveToPointAtSpeed(&lpos->pos, &newPoint, desc->speed);
+    if (lpos->active) {
+        if (!wasActive) {
+            lpos->pos = newPoint;
+        } else if (!desc->speedLimited ||
+                FPoint_Distance(&lpos->pos, &newPoint) <= desc->speed) {
+            lpos->pos = newPoint;
+        } else {
+            FPoint_MoveToPointAtSpeed(&lpos->pos, &newPoint, desc->speed);
+        }
     }
 }

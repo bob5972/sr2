@@ -128,6 +128,7 @@ typedef enum NeuralValueType {
 typedef enum NeuralLocusType {
     NEURAL_LOCUS_VOID,
     NEURAL_LOCUS_ORBIT,
+    NEURAL_LOCUS_PATROL_MAP,
     NEURAL_LOCUS_MAX,
 } NeuralLocusType;
 
@@ -172,6 +173,15 @@ typedef struct NeuralLocusOrbitDesc {
     float period;
 } NeuralLocusOrbitDesc;
 
+typedef struct NeuralLocusPatrolMapDesc {
+    float linearPeriod;
+    float linearXPeriodOffset;
+    float linearYPeriodOffset;
+    float linearWeight;
+    float circularPeriod;
+    float circularWeight;
+} NeuralLocusPatrolMapDesc;
+
 typedef struct NeuralLocusDesc {
     NeuralLocusType locusType;
     float speed;
@@ -179,6 +189,7 @@ typedef struct NeuralLocusDesc {
 
     union {
         NeuralLocusOrbitDesc orbitDesc;
+        NeuralLocusPatrolMapDesc patrolMapDesc;
     };
 } NeuralLocusDesc;
 
