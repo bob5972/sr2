@@ -489,13 +489,13 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
         vf.key = s.CStr();
         Mutate_Float(mreg, &vf, 1);
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD_OFFSET);
         s = prefix;
         s += "linearXPeriodOffset";
         vf.key = s.CStr();
         Mutate_Float(mreg, &vf, 1);
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD_OFFSET);
         s = prefix;
         s += "linearYPeriodOffset";
         vf.key = s.CStr();
