@@ -98,6 +98,7 @@ typedef struct MainEngineThreadData {
 struct MainData {
     bool headless;
     bool frameSkip;
+    uint targetFPS;
     uint displayFrames;
     int loop;
     uint tickLimit;
@@ -377,6 +378,8 @@ static void MainRunScenarios(void)
             PANIC("Multiple battles requires --headless\n");
         }
         Display_Init(&mainData.bscs[0]);
+        Display_SetFPS(mainData.targetFPS);
+
     }
 
     ASSERT(mainData.numBSCs > 0);
@@ -1373,7 +1376,6 @@ void MainParseCmdLine(int argc, char **argv)
         //{ "-h", "--help",              FALSE, "Print the help text"           },
         //{ "-v", "--version",           FALSE, "Print the version information" },
         { "-H", "--headless",          FALSE, "Run headless"                  },
-        { "-F", "--frameSkip",         FALSE, "Allow frame skipping"          },
         { "-l", "--loop",              TRUE,  "Loop <arg> times"              },
         { "-S", "--scenario",          TRUE,  "Scenario type"                 },
         { "-T", "--tournament",        FALSE, "Tournament mode"               },
@@ -1387,6 +1389,10 @@ void MainParseCmdLine(int argc, char **argv)
         { "-P", "--startPaused",       FALSE, "Start paused"                  },
     };
 
+    MBOption display_opts[] = {
+        { NULL, "--frameSkip",         FALSE, "Allow frame skipping"          },
+        { "-F", "--targetFPS",         TRUE,  "Target FPS for window"         },
+    };
     MBOption dumpPNG_opts[] = {
         { "-o", "--outputFile",        TRUE, "Output file for PNG"            },
     };
@@ -1414,6 +1420,7 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_SetProgram("sr2", NULL);
     MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
     MBOpt_LoadOptions("unitTests", NULL, 0);
+    MBOpt_LoadOptions("display", display_opts, ARRAYSIZE(display_opts));
     MBOpt_LoadOptions("dumpPNG", dumpPNG_opts, ARRAYSIZE(dumpPNG_opts));
     MBOpt_LoadOptions("sanitizeFleet",
                       sanitizeFleet_opts, ARRAYSIZE(sanitizeFleet_opts));
@@ -1424,12 +1431,21 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_LoadOptions("merge", merge_opts, ARRAYSIZE(merge_opts));
     MBOpt_Init(argc, argv);
 
-    mainData.headless = MBOpt_GetBool("headless");
-    if (!sr2_gui || MBOpt_GetCmd() != NULL) {
-        mainData.headless = TRUE;
+    const char *cmd = MBOpt_GetCmd();
+    mainData.headless = TRUE;
+    mainData.frameSkip = FALSE;
+    mainData.targetFPS = 101;
+    if (!sr2_gui) {
+        // Use default headless configuration.
+    } else if (cmd == NULL) {
+        mainData.headless = MBOpt_GetBool("headless");
+    } else if (strcmp(cmd, "display") == 0) {
+        mainData.headless = FALSE;
+        mainData.frameSkip = MBOpt_GetBool("frameSkip");
+        if (MBOpt_IsPresent("targetFPS")) {
+            mainData.targetFPS = MBOpt_GetUint("targetFPS");
+        }
     }
-
-    mainData.frameSkip = MBOpt_GetBool("frameSkip");
 
     if (MBOpt_IsPresent("loop")) {
         mainData.loop = MBOpt_GetInt("loop");
@@ -1921,9 +1937,11 @@ int main(int argc, char **argv)
         MainResetCmd();
     } else if (strcmp(cmd, "merge") == 0) {
         MainMergeCmd();
-    } else {
-        ASSERT(strcmp(cmd, "default") == 0);
+    } else if (strcmp(cmd, "display") == 0 ||
+               strcmp(cmd, "default") == 0) {
         MainDefaultCmd();
+    } else {
+        PANIC("Unknown command: %s\n", cmd);
     }
 
     RandomState_Destroy(&mainData.rs);

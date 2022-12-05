@@ -46,6 +46,8 @@ typedef struct DisplayGlobalData {
     uint32 width;
     uint32 height;
 
+    uint targetFPS;
+
     SDL_Window *sdlWindow;
     SDL_Renderer *sdlRenderer;
     bool paused;
@@ -76,6 +78,8 @@ void Display_Init(const BattleScenario *bsc)
 {
     const BattleParams *bp = &bsc->bp;
     ASSERT(MBUtil_IsZero(&display, sizeof(display)));
+
+    display.targetFPS = 101;
 
     display.width = bp->width;
     display.height = bp->height;
@@ -168,6 +172,11 @@ void Display_Exit()
     display.mainSignal = NULL;
 
     display.initialized = FALSE;
+}
+
+void Display_SetFPS(uint fps)
+{
+    display.targetFPS = fps;
 }
 
 
@@ -388,8 +397,7 @@ void Display_Main(bool startPaused)
     SDL_Event event;
     int done = 0;
 
-    uint32 targetFPS = 101;
-    uint64 targetUSPerFrame = (1000 * 1000) / targetFPS;
+    uint64 targetUSPerFrame = (1000 * 1000) / display.targetFPS;
     uint64 startTimeUS, endTimeUS;
 
     ASSERT(display.initialized);

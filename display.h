@@ -25,6 +25,7 @@
 
 #ifdef SR2_GUI
 void Display_Init(const BattleScenario *bsc);
+void Display_SetFPS(uint fps);
 void Display_Exit();
 Mob *Display_AcquireMobs(uint32 numMobs, bool frameSkip);
 void Display_ReleaseMobs();
