@@ -124,7 +124,14 @@ void Mutate_Str(MBRegistry *mreg, MutationStrParams *mpa, uint32 numParams,
 
 void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
 {
-    if (type == MUTATION_TYPE_WEIGHT) {
+    if (type == MUTATION_TYPE_ANY) {
+        /*
+         * Catch-all for unknown value.
+         */
+        ASSERT(MUTATION_TYPE_ANY == 0);
+        type = Random_Int(MUTATION_TYPE_ANY + 1, MUTATION_TYPE_MAX - 1);
+        Mutate_DefaultFloatParams(vf, type);
+    } else if (type == MUTATION_TYPE_WEIGHT) {
         vf->minValue = -10.0f;
         vf->maxValue = 10.0f;
         vf->magnitude = 0.05f;
@@ -196,4 +203,12 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
     } else {
         NOT_IMPLEMENTED();
     }
+}
+
+void Mutate_FloatType(MBRegistry *mreg, const char *key, MutationType type)
+{
+    MutationFloatParams mp;
+    Mutate_DefaultFloatParams(&mp, type);
+    mp.key = key;
+    Mutate_Float(mreg, &mp, 1);
 }

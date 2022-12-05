@@ -26,6 +26,7 @@
 #endif
 
 typedef enum MutationType {
+    MUTATION_TYPE_ANY,
     MUTATION_TYPE_WEIGHT,
     MUTATION_TYPE_RADIUS,
     MUTATION_TYPE_PERIOD,
@@ -64,6 +65,7 @@ typedef struct MutationStrParams {
 
 void Mutate_DefaultFloatParams(MutationFloatParams *mp, MutationType type);
 
+void Mutate_FloatType(MBRegistry *mreg, const char *key, MutationType type);
 void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mp, uint32 numParams);
 float Mutate_FloatRaw(float value, bool missing, MutationFloatParams *mp);
 void Mutate_Bool(MBRegistry *mreg, MutationBoolParams *mp, uint32 numParams);

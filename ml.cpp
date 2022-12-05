@@ -1728,35 +1728,16 @@ void MLFloatNode::mutate(float rate,
         params[i] = 0.0f;
     }
     for (uint i = 0; i < params.size(); i++) {
-        EnumDistribution mts[] = {
-            { MUTATION_TYPE_WEIGHT,              0.05f },
-            { MUTATION_TYPE_AMPLITUDE,           0.01f },
-            { MUTATION_TYPE_BOOL,                0.01f },
-            { MUTATION_TYPE_UNIT,                0.16f },
-            { MUTATION_TYPE_MOB_JITTER_SCALE,    0.01f },
-            { MUTATION_TYPE_PROBABILITY,         0.09f },
-            { MUTATION_TYPE_SCALE_POW,           0.02f },
-            { MUTATION_TYPE_SIMPLE_POW,          0.03f },
-            { MUTATION_TYPE_INVERSE_PROBABILITY, 0.05f },
-            { MUTATION_TYPE_RADIUS,              0.19f },
-            { MUTATION_TYPE_PERIOD,              0.09f },
-            { MUTATION_TYPE_TICKS,               0.05f },
-            { MUTATION_TYPE_COUNT,               0.19f },
-            { MUTATION_TYPE_SPEED,               0.05f },
-        };
-        ASSERT(ARRAYSIZE(mts) == MUTATION_TYPE_MAX);
-        int r = Random_Enum(mts, ARRAYSIZE(mts));
         int tries = 0;
         int maxTries = Random_Flip(0.1f) ? 0 : 8;
-        Mutate_DefaultFloatParams(&mp, (MutationType)r);
+        Mutate_DefaultFloatParams(&mp, MUTATION_TYPE_ANY);
         while (tries < maxTries &&
                (params[i] < mp.minValue || params[i] > mp.maxValue)) {
             /*
              * If the current value doesn't look like the picked mutation type,
              * give it more chances to pick something closer.
              */
-            r = Random_Enum(mts, ARRAYSIZE(mts));
-            Mutate_DefaultFloatParams(&mp, (MutationType)r);
+            Mutate_DefaultFloatParams(&mp, MUTATION_TYPE_ANY);
             tries++;
         }
 
