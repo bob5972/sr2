@@ -6543,9 +6543,6 @@ public:
             { "sensorGrid.staleCoreTime", "0.000000" },
             { "sensorGrid.staleFighterTime", "0.000000" },
         };
-        NeuralConfigValue configs13[] = {
-            { "void", "void" },
-        };
 
         struct {
             NeuralConfigValue *values;
@@ -6564,12 +6561,11 @@ public:
             { configs10, ARRAYSIZE(configs10), },
             { configs11, ARRAYSIZE(configs11), },
             { configs12, ARRAYSIZE(configs12), },
-            { configs13, ARRAYSIZE(configs13), },
         };
 
         int neuralIndex = aiType - FLEET_AI_NEURAL1 + 1;
         VERIFY(aiType >= FLEET_AI_NEURAL1);
-        VERIFY(aiType <= FLEET_AI_NEURAL13);
+        VERIFY(aiType <= FLEET_AI_NEURAL12);
         VERIFY(neuralIndex >= 1 && neuralIndex < ARRAYSIZE(configs));
 
         int i = neuralIndex;
@@ -6719,8 +6715,6 @@ void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "NeuralFleet11";
     } else if (aiType == FLEET_AI_NEURAL12) {
         ops->aiName = "NeuralFleet12";
-    } else if (aiType == FLEET_AI_NEURAL13) {
-        ops->aiName = "NeuralFleet13";
     } else {
         NOT_IMPLEMENTED();
     }

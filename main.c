@@ -103,7 +103,6 @@ struct MainData {
     int loop;
     uint tickLimit;
     bool tournament;
-    bool optimize;
     bool startPaused;
     const char *scenario;
 
@@ -137,8 +136,8 @@ static void MainRunBattle(MainEngineThreadData *tData,
                           MainEngineWorkUnit *wu);
 static void MainLoadScenario(MBRegistry *mreg, const char *scenario);
 
-static void MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
-                                      uint32 mpSize, uint32 *mpIndex);
+static void MainAddTargetPlayersForOptimize(BattlePlayer *mainPlayers,
+                                            uint32 mpSize, uint32 *mpIndex);
 static void MainUsePopulation(const char *file,
                               BattlePlayer *mainPlayers,
                               uint32 mpSize, uint *mpIndex,
@@ -181,9 +180,6 @@ void MainLoadDefaultPlayers(void)
         MainUsePopulation(MBOpt_GetCStr("usePopulation"),
                           &mainData.players[0],
                           ARRAYSIZE(mainData.players), &p, TRUE);
-    } else if (mainData.optimize) {
-        MainAddPlayersForOptimize(&mainData.players[0],
-                                  ARRAYSIZE(mainData.players), &p);
     } else if (mainData.tournament) {
         ASSERT(p == FLEET_AI_NEUTRAL);
 
@@ -478,8 +474,8 @@ static void MainRunScenarios(void)
 }
 
 static void
-MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
-                          uint32 mpSize, uint32 *mpIndex)
+MainAddTargetPlayersForOptimize(BattlePlayer *mainPlayers,
+                                uint32 mpSize, uint32 *mpIndex)
 {
     const int doSimple = 0;
     const int doTable = 1;
@@ -488,19 +484,6 @@ MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
     BattlePlayer targetPlayers[MAX_PLAYERS];
     uint32 tpIndex = 0;
 
-    BattlePlayer controlPlayers[MAX_PLAYERS];
-    uint cp = 0;
-
-    for (int i = 0; i < FLEET_AI_MAX; i++) {
-        FleetAIType aiType = Fleet_GetTypeFromRanking(i);
-        if (aiType != FLEET_AI_INVALID) {
-            ASSERT(Fleet_GetRanking(aiType) == i);
-            ASSERT(cp < ARRAYSIZE(controlPlayers));
-            controlPlayers[cp].aiType = aiType;
-            controlPlayers[cp].playerType = PLAYER_TYPE_CONTROL;
-            cp++;
-        }
-    }
     ASSERT(Fleet_GetTypeFromRanking(-1) == FLEET_AI_INVALID);
     ASSERT(Fleet_GetTypeFromRanking(FLEET_AI_MAX) == FLEET_AI_INVALID);
 
@@ -612,15 +595,11 @@ MainAddPlayersForOptimize(BattlePlayer *mainPlayers,
     }
 
     /*
-     * Copy over control/target players.
+     * Copy over target players.
      */
-    for (uint i = 0; i < cp; i++) {
-        ASSERT(*mpIndex < mpSize);
-        mainPlayers[*mpIndex] = controlPlayers[i];
-        (*mpIndex)++;
-    }
     for (uint i = 0; i < tpIndex; i++) {
         ASSERT(*mpIndex < mpSize);
+        targetPlayers[i].playerType = PLAYER_TYPE_TARGET;
         mainPlayers[*mpIndex] = targetPlayers[i];
         (*mpIndex)++;
     }
@@ -1379,7 +1358,6 @@ void MainParseCmdLine(int argc, char **argv)
         { "-l", "--loop",              TRUE,  "Loop <arg> times"              },
         { "-S", "--scenario",          TRUE,  "Scenario type"                 },
         { "-T", "--tournament",        FALSE, "Tournament mode"               },
-        { "-O", "--optimize",          FALSE, "Optimize mode"                 },
         { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
         { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
         { "-s", "--seed",              TRUE,  "Set random seed"               },
@@ -1413,6 +1391,9 @@ void MainParseCmdLine(int argc, char **argv)
     MBOption measure_opts[] = {
         { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
     };
+    MBOption optimize_opts[] = {
+        { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
+    };
     MBOption merge_opts[] = {
         { "-i", "--inputPopulation",   TRUE,  "Input file for extra population" },
     };
@@ -1427,6 +1408,7 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_LoadOptions("mutate", mutate_opts, ARRAYSIZE(mutate_opts));
     MBOpt_LoadOptions("kill", kill_opts, ARRAYSIZE(kill_opts));
     MBOpt_LoadOptions("measure", measure_opts, ARRAYSIZE(measure_opts));
+    MBOpt_LoadOptions("optimize", optimize_opts, ARRAYSIZE(optimize_opts));
     MBOpt_LoadOptions("reset", NULL, 0);
     MBOpt_LoadOptions("merge", merge_opts, ARRAYSIZE(merge_opts));
     MBOpt_Init(argc, argv);
@@ -1457,13 +1439,6 @@ void MainParseCmdLine(int argc, char **argv)
         mainData.tournament = TRUE;
     } else {
         mainData.tournament = FALSE;
-    }
-
-    if (MBOpt_IsPresent("optimize")) {
-        mainData.optimize = TRUE;
-        mainData.tournament = TRUE;
-    } else {
-        mainData.optimize = FALSE;
     }
 
     if (MBOpt_IsPresent("startPaused")) {
@@ -1632,9 +1607,7 @@ void MainDefaultCmd(void)
 {
     MainBattleType bt;
 
-    if (mainData.optimize) {
-        bt = MAIN_BT_OPTIMIZE;
-    } else if (mainData.tournament) {
+    if (mainData.tournament) {
         bt = MAIN_BT_TOURNAMENT;
     } else {
         bt = MAIN_BT_SINGLE;
@@ -1823,6 +1796,60 @@ static void MainMeasureCmd(void)
     MainCleanupPlayers();
 }
 
+static void MainOptimizeCmd(void)
+{
+    const char *file = MBOpt_GetCStr("usePopulation");
+    const char *controlFile = MBOpt_GetCStr("controlPopulation");
+
+    ASSERT(mainData.numPlayers == 0);
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+
+    if (controlFile == NULL) {
+        for (int i = 0; i < FLEET_AI_MAX; i++) {
+            FleetAIType aiType = Fleet_GetTypeFromRanking(i);
+            if (aiType != FLEET_AI_INVALID) {
+                ASSERT(Fleet_GetRanking(aiType) == i);
+                ASSERT(mainData.numPlayers < ARRAYSIZE(mainData.players));
+                mainData.players[mainData.numPlayers].aiType = aiType;
+                mainData.players[mainData.numPlayers].playerType = PLAYER_TYPE_CONTROL;
+                mainData.numPlayers++;
+            }
+        }
+    } else {
+        MainUsePopulation(controlFile, &mainData.players[0],
+                          ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                          FALSE);
+    }
+
+    VERIFY(mainData.numPlayers > 0);
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+    for (uint i = 1; i < mainData.numPlayers; i++) {
+        VERIFY(mainData.players[i].playerType == PLAYER_TYPE_CONTROL);
+    }
+    uint lastControl = mainData.numPlayers - 1;
+
+    if (file == NULL) {
+        MainAddTargetPlayersForOptimize(&mainData.players[0],
+                                        ARRAYSIZE(mainData.players),
+                                        &mainData.numPlayers);
+    } else {
+        MainUsePopulation(file, &mainData.players[0],
+                          ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                          TRUE);
+    }
+
+    VERIFY(mainData.numPlayers > 1);
+    for (uint i = lastControl + 1; i < mainData.numPlayers; i++) {
+        VERIFY(mainData.players[i].playerType == PLAYER_TYPE_TARGET);
+    }
+
+    MainConstructScenarios(FALSE, MAIN_BT_OPTIMIZE);
+    MainRunScenarios();
+    MainCleanupPlayers();
+}
+
 static void MainMergeCmd(void)
 {
     const char *file = MBOpt_GetCStr("usePopulation");
@@ -1937,6 +1964,8 @@ int main(int argc, char **argv)
         MainResetCmd();
     } else if (strcmp(cmd, "merge") == 0) {
         MainMergeCmd();
+    } else if (strcmp(cmd, "optimize") == 0) {
+        MainOptimizeCmd();
     } else if (strcmp(cmd, "display") == 0 ||
                strcmp(cmd, "default") == 0) {
         MainDefaultCmd();
