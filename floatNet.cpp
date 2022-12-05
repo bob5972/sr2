@@ -202,6 +202,10 @@ void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
     // }
 
     for (uint i = 0; i < myNodes.size(); i++) {
+        if (Random_Flip(rate / 10.0f)) {
+            uint n = Random_Int(0, i);
+            myNodes[i] = myNodes[n];
+        }
         myNodes[i].mutate(rate, maxNodeDegree, maxNodeDegree);
     }
 }
