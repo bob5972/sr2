@@ -198,9 +198,7 @@ static void MainLoadDefaultPlayers(void)
     /*
      * The NEUTRAL fleet always needs to be there.
      */
-    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
-    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
-    mainData.numPlayers++;
+    MainAddNeutralPlayer();
 
     if (MBOpt_IsPresent("usePopulation")) {
         MainUsePopulation(MBOpt_GetCStr("usePopulation"), TRUE);
