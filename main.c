@@ -1231,7 +1231,7 @@ static void MainProcessSingleResult(MainEngineResultUnit *ru)
     }
 }
 
-void MainLoadScenario(MBRegistry *mreg, const char *scenario)
+static void MainLoadScenario(MBRegistry *mreg, const char *scenario)
 {
     MBString filename;
     bool useDefault = FALSE;
@@ -1287,7 +1287,7 @@ void MainLoadScenario(MBRegistry *mreg, const char *scenario)
     }
 }
 
-void MainSanitizeFleetCmd()
+static void MainSanitizeFleetCmd()
 {
     /*
      * This is a hack-job, but it works well enough for now.
@@ -1470,7 +1470,7 @@ static void MainMutateCmd(void)
     MainCleanupPlayers();
 }
 
-void MainDefaultCmd(void)
+static void MainDefaultCmd(void)
 {
     MainBattleType bt = MAIN_BT_SINGLE;
 
@@ -1762,7 +1762,7 @@ static void MainResetCmd(void)
     MainCleanupPlayers();
 }
 
-void MainUnitTests()
+static void MainUnitTests()
 {
     if (mb_devel) {
         MBUnitTest_RunTests();
@@ -1775,7 +1775,7 @@ void MainUnitTests()
     }
 }
 
-void MainParseCmdLine(int argc, char **argv)
+static void MainParseCmdLine(int argc, char **argv)
 {
     MBOption opts[] = {
         //{ "-h", "--help",              FALSE, "Print the help text"           },
