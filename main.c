@@ -1337,129 +1337,6 @@ void MainSanitizeFleetCmd()
     MBString_Destroy(&tmp);
 }
 
-void MainUnitTests()
-{
-    if (mb_devel) {
-        MBUnitTest_RunTests();
-        Warning("Starting sr2 Unit Tests ...\n");
-        MobPSet_UnitTest();
-        Geometry_UnitTest();
-        ML_UnitTest();
-    } else {
-        Warning("Unit tests disabled on non-devel build.\n");
-    }
-}
-
-void MainParseCmdLine(int argc, char **argv)
-{
-    MBOption opts[] = {
-        //{ "-h", "--help",              FALSE, "Print the help text"           },
-        //{ "-v", "--version",           FALSE, "Print the version information" },
-        { "-H", "--headless",          FALSE, "Run headless"                  },
-        { "-l", "--loop",              TRUE,  "Loop <arg> times"              },
-        { "-S", "--scenario",          TRUE,  "Scenario type"                 },
-        { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
-        { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
-        { "-s", "--seed",              TRUE,  "Set random seed"               },
-        { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
-        { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
-        { "-R", "--reuseSeed",         FALSE, "Reuse the seed across battles" },
-        { "-P", "--startPaused",       FALSE, "Start paused"                  },
-    };
-
-    MBOption display_opts[] = {
-        { NULL, "--frameSkip",         FALSE, "Allow frame skipping"          },
-        { "-F", "--targetFPS",         TRUE,  "Target FPS for window"         },
-    };
-    MBOption dumpPNG_opts[] = {
-        { "-o", "--outputFile",        TRUE, "Output file for PNG"            },
-    };
-    MBOption sanitizeFleet_opts[] = {
-        { "-f", "--dumpFleet",         TRUE,  "Fleet number to dump"          },
-    };
-    MBOption mutate_opts[] = {
-        { "-o", "--outputFile",        TRUE,  "Output population file"        },
-        { "-c", "--mutationCount",     TRUE,  "Number of mutations"           },
-    };
-    MBOption kill_opts[] = {
-        { NULL, "--killRatio",         TRUE,  "Kill ratio for population"     },
-        { NULL, "--minPop",            TRUE,  "Minimum population"            },
-        { NULL, "--maxPop",            TRUE,  "Maximum population"            },
-        { NULL, "--defectiveLevel",    TRUE,  "Defective win ratio"           },
-        { NULL, "--resetAfter",        FALSE, "Reset after killing"           },
-    };
-    MBOption measure_opts[] = {
-        { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
-    };
-    MBOption optimize_opts[] = {
-        { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
-    };
-    MBOption merge_opts[] = {
-        { "-i", "--inputPopulation",   TRUE,  "Input file for extra population" },
-    };
-
-    MBOpt_SetProgram("sr2", NULL);
-    MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
-    MBOpt_LoadOptions("unitTests", NULL, 0);
-    MBOpt_LoadOptions("display", display_opts, ARRAYSIZE(display_opts));
-    MBOpt_LoadOptions("dumpPNG", dumpPNG_opts, ARRAYSIZE(dumpPNG_opts));
-    MBOpt_LoadOptions("sanitizeFleet",
-                      sanitizeFleet_opts, ARRAYSIZE(sanitizeFleet_opts));
-    MBOpt_LoadOptions("mutate", mutate_opts, ARRAYSIZE(mutate_opts));
-    MBOpt_LoadOptions("kill", kill_opts, ARRAYSIZE(kill_opts));
-    MBOpt_LoadOptions("measure", measure_opts, ARRAYSIZE(measure_opts));
-    MBOpt_LoadOptions("optimize", optimize_opts, ARRAYSIZE(optimize_opts));
-    MBOpt_LoadOptions("reset", NULL, 0);
-    MBOpt_LoadOptions("merge", merge_opts, ARRAYSIZE(merge_opts));
-    MBOpt_LoadOptions("tournament", NULL, 0);
-    MBOpt_Init(argc, argv);
-
-    const char *cmd = MBOpt_GetCmd();
-    mainData.headless = TRUE;
-    mainData.frameSkip = FALSE;
-    mainData.targetFPS = 101;
-    if (!sr2_gui) {
-        // Use default headless configuration.
-    } else if (cmd == NULL) {
-        mainData.headless = MBOpt_GetBool("headless");
-    } else if (strcmp(cmd, "display") == 0) {
-        mainData.headless = FALSE;
-        mainData.frameSkip = MBOpt_GetBool("frameSkip");
-        if (MBOpt_IsPresent("targetFPS")) {
-            mainData.targetFPS = MBOpt_GetUint("targetFPS");
-        }
-    }
-
-    if (MBOpt_IsPresent("loop")) {
-        mainData.loop = MBOpt_GetInt("loop");
-    } else {
-        mainData.loop = 1;
-    }
-
-    if (MBOpt_IsPresent("startPaused")) {
-        mainData.startPaused = TRUE;
-    } else {
-        mainData.startPaused = FALSE;
-    }
-
-    mainData.seed = MBOpt_GetUint64("seed");
-    mainData.reuseSeed = MBOpt_GetBool("reuseSeed");
-
-    mainData.tickLimit = MBOpt_GetInt("tickLimit");
-
-    if (MBOpt_IsPresent("numThreads")) {
-        mainData.numThreads = MBOpt_GetInt("numThreads");
-    } else {
-        mainData.numThreads = 1;
-    }
-    ASSERT(mainData.numThreads >= 1);
-
-    mainData.scenario = NULL;
-    if (MBOpt_IsPresent("scenario")) {
-        mainData.scenario = MBOpt_GetCStr("scenario");
-    }
-}
-
 static void MainThreadsInit(void)
 {
     WorkQueue_Create(&mainData.workQ, sizeof(MainEngineWorkUnit));
@@ -1924,6 +1801,130 @@ static void MainResetCmd(void)
     MainCleanupPlayers();
 }
 
+void MainUnitTests()
+{
+    if (mb_devel) {
+        MBUnitTest_RunTests();
+        Warning("Starting sr2 Unit Tests ...\n");
+        MobPSet_UnitTest();
+        Geometry_UnitTest();
+        ML_UnitTest();
+    } else {
+        Warning("Unit tests disabled on non-devel build.\n");
+    }
+}
+
+void MainParseCmdLine(int argc, char **argv)
+{
+    MBOption opts[] = {
+        //{ "-h", "--help",              FALSE, "Print the help text"           },
+        //{ "-v", "--version",           FALSE, "Print the version information" },
+        { "-H", "--headless",          FALSE, "Run headless"                  },
+        { "-l", "--loop",              TRUE,  "Loop <arg> times"              },
+        { "-S", "--scenario",          TRUE,  "Scenario type"                 },
+        { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
+        { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
+        { "-s", "--seed",              TRUE,  "Set random seed"               },
+        { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
+        { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
+        { "-R", "--reuseSeed",         FALSE, "Reuse the seed across battles" },
+        { "-P", "--startPaused",       FALSE, "Start paused"                  },
+    };
+
+    MBOption display_opts[] = {
+        { NULL, "--frameSkip",         FALSE, "Allow frame skipping"          },
+        { "-F", "--targetFPS",         TRUE,  "Target FPS for window"         },
+    };
+    MBOption dumpPNG_opts[] = {
+        { "-o", "--outputFile",        TRUE, "Output file for PNG"            },
+    };
+    MBOption sanitizeFleet_opts[] = {
+        { "-f", "--dumpFleet",         TRUE,  "Fleet number to dump"          },
+    };
+    MBOption mutate_opts[] = {
+        { "-o", "--outputFile",        TRUE,  "Output population file"        },
+        { "-c", "--mutationCount",     TRUE,  "Number of mutations"           },
+    };
+    MBOption kill_opts[] = {
+        { NULL, "--killRatio",         TRUE,  "Kill ratio for population"     },
+        { NULL, "--minPop",            TRUE,  "Minimum population"            },
+        { NULL, "--maxPop",            TRUE,  "Maximum population"            },
+        { NULL, "--defectiveLevel",    TRUE,  "Defective win ratio"           },
+        { NULL, "--resetAfter",        FALSE, "Reset after killing"           },
+    };
+    MBOption measure_opts[] = {
+        { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
+    };
+    MBOption optimize_opts[] = {
+        { "-C", "--controlPopulation", TRUE,  "Population file for control fleets" },
+    };
+    MBOption merge_opts[] = {
+        { "-i", "--inputPopulation",   TRUE,  "Input file for extra population" },
+    };
+
+    MBOpt_SetProgram("sr2", NULL);
+    MBOpt_LoadOptions(NULL, opts, ARRAYSIZE(opts));
+    MBOpt_LoadOptions("unitTests", NULL, 0);
+    MBOpt_LoadOptions("display", display_opts, ARRAYSIZE(display_opts));
+    MBOpt_LoadOptions("dumpPNG", dumpPNG_opts, ARRAYSIZE(dumpPNG_opts));
+    MBOpt_LoadOptions("sanitizeFleet",
+                      sanitizeFleet_opts, ARRAYSIZE(sanitizeFleet_opts));
+    MBOpt_LoadOptions("mutate", mutate_opts, ARRAYSIZE(mutate_opts));
+    MBOpt_LoadOptions("kill", kill_opts, ARRAYSIZE(kill_opts));
+    MBOpt_LoadOptions("measure", measure_opts, ARRAYSIZE(measure_opts));
+    MBOpt_LoadOptions("optimize", optimize_opts, ARRAYSIZE(optimize_opts));
+    MBOpt_LoadOptions("reset", NULL, 0);
+    MBOpt_LoadOptions("merge", merge_opts, ARRAYSIZE(merge_opts));
+    MBOpt_LoadOptions("tournament", NULL, 0);
+    MBOpt_LoadOptions("run", NULL, 0);
+    MBOpt_Init(argc, argv);
+
+    const char *cmd = MBOpt_GetCmd();
+    mainData.headless = TRUE;
+    mainData.frameSkip = FALSE;
+    mainData.targetFPS = 101;
+    if (!sr2_gui) {
+        // Use default headless configuration.
+    } else if (cmd == NULL) {
+        mainData.headless = MBOpt_GetBool("headless");
+    } else if (strcmp(cmd, "display") == 0) {
+        mainData.headless = FALSE;
+        mainData.frameSkip = MBOpt_GetBool("frameSkip");
+        if (MBOpt_IsPresent("targetFPS")) {
+            mainData.targetFPS = MBOpt_GetUint("targetFPS");
+        }
+    }
+
+    if (MBOpt_IsPresent("loop")) {
+        mainData.loop = MBOpt_GetInt("loop");
+    } else {
+        mainData.loop = 1;
+    }
+
+    if (MBOpt_IsPresent("startPaused")) {
+        mainData.startPaused = TRUE;
+    } else {
+        mainData.startPaused = FALSE;
+    }
+
+    mainData.seed = MBOpt_GetUint64("seed");
+    mainData.reuseSeed = MBOpt_GetBool("reuseSeed");
+
+    mainData.tickLimit = MBOpt_GetInt("tickLimit");
+
+    if (MBOpt_IsPresent("numThreads")) {
+        mainData.numThreads = MBOpt_GetInt("numThreads");
+    } else {
+        mainData.numThreads = 1;
+    }
+    ASSERT(mainData.numThreads >= 1);
+
+    mainData.scenario = NULL;
+    if (MBOpt_IsPresent("scenario")) {
+        mainData.scenario = MBOpt_GetCStr("scenario");
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *cmd;
@@ -1973,6 +1974,7 @@ int main(int argc, char **argv)
     } else if (strcmp(cmd, "tournament") == 0) {
         MainTournamentCmd();
     } else if (strcmp(cmd, "display") == 0 ||
+               strcmp(cmd, "run") == 0 ||
                strcmp(cmd, "default") == 0) {
         MainDefaultCmd();
     } else {
