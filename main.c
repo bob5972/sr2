@@ -102,7 +102,7 @@ struct MainData {
     uint displayFrames;
     int loop;
     uint tickLimit;
-    bool tournament;
+    bool printWinnerBreakdown;
     bool startPaused;
     const char *scenario;
 
@@ -166,40 +166,42 @@ static void MainThreadsExit(void);
 static void MainProcessSingleResult(MainEngineResultUnit *ru);
 static void MainPrintWinners(void);
 
+void MainLoadAllAsControlPlayers(void)
+{
+    ASSERT(mainData.numPlayers == 1);
+    ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+
+
+    /*
+     * Add everybody in order of rankings.
+     */
+    for (int i = 0; i < FLEET_AI_MAX; i++) {
+        FleetAIType aiType = Fleet_GetTypeFromRanking(i);
+        if (aiType != FLEET_AI_INVALID) {
+            ASSERT(Fleet_GetRanking(aiType) == i);
+            ASSERT(mainData.numPlayers < ARRAYSIZE(mainData.players));
+            mainData.players[mainData.numPlayers].aiType = aiType;
+            mainData.players[mainData.numPlayers].playerType = PLAYER_TYPE_CONTROL;
+            mainData.numPlayers++;
+        }
+    }
+}
+
 void MainLoadDefaultPlayers(void)
 {
     /*
      * The NEUTRAL fleet always needs to be there.
      */
-    uint p = 0;
-    mainData.players[p].aiType = FLEET_AI_NEUTRAL;
-    mainData.players[p].playerType = PLAYER_TYPE_NEUTRAL;
-    p++;
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
 
     if (MBOpt_IsPresent("usePopulation")) {
         MainUsePopulation(MBOpt_GetCStr("usePopulation"),
-                          &mainData.players[0],
-                          ARRAYSIZE(mainData.players), &p, TRUE);
-    } else if (mainData.tournament) {
-        ASSERT(p == FLEET_AI_NEUTRAL);
-
-        /*
-         * Add everybody in order of rankings.
-         */
-        for (uint i = 0; i < FLEET_AI_MAX; i++) {
-            FleetAIType aiType = Fleet_GetTypeFromRanking(i);
-            ASSERT(aiType != FLEET_AI_NEUTRAL);
-            if (aiType != FLEET_AI_INVALID) {
-                ASSERT(Fleet_GetRanking(aiType) == i);
-                ASSERT(p < ARRAYSIZE(mainData.players));
-                mainData.players[p].aiType = aiType;
-                mainData.players[p].playerType = PLAYER_TYPE_CONTROL;
-                p++;
-            }
-        }
-        ASSERT(Fleet_GetTypeFromRanking(-1) == FLEET_AI_INVALID);
-        ASSERT(Fleet_GetTypeFromRanking(FLEET_AI_MAX) == FLEET_AI_INVALID);
+                          &mainData.players[0], ARRAYSIZE(mainData.players),
+                          &mainData.numPlayers, TRUE);
     } else {
+        uint p = mainData.numPlayers;
         /*
          * See fleet.c::gRankings for a rough order of fleet strength.
          */
@@ -224,10 +226,10 @@ void MainLoadDefaultPlayers(void)
         //mainData.players[p].mreg = MBRegistry_Alloc();
         //MBRegistry_PutConst(mainData.players[p].mreg, "holdCount", "1");
         //p++;
-    }
 
-    ASSERT(p <= ARRAYSIZE(mainData.players));
-    mainData.numPlayers = p;
+        ASSERT(p <= ARRAYSIZE(mainData.players));
+        mainData.numPlayers = p;
+    }
 }
 
 void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
@@ -284,7 +286,6 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
     }
 
     if (bt == MAIN_BT_OPTIMIZE) {
-
         mainData.maxBscs = p * p + 1;
         ASSERT(mainData.maxBscs > p);
         ASSERT(mainData.maxBscs > p * p);
@@ -690,7 +691,7 @@ static void MainPrintWinners(void)
 {
     uint32 totalBattles = 0;
 
-    if (mainData.tournament) {
+    if (mainData.printWinnerBreakdown) {
         Warning("\n");
         Warning("Winner Breakdown:\n");
         for (uint p1 = 0; p1 < mainData.numPlayers; p1++) {
@@ -1357,7 +1358,6 @@ void MainParseCmdLine(int argc, char **argv)
         { "-H", "--headless",          FALSE, "Run headless"                  },
         { "-l", "--loop",              TRUE,  "Loop <arg> times"              },
         { "-S", "--scenario",          TRUE,  "Scenario type"                 },
-        { "-T", "--tournament",        FALSE, "Tournament mode"               },
         { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
         { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
         { "-s", "--seed",              TRUE,  "Set random seed"               },
@@ -1411,6 +1411,7 @@ void MainParseCmdLine(int argc, char **argv)
     MBOpt_LoadOptions("optimize", optimize_opts, ARRAYSIZE(optimize_opts));
     MBOpt_LoadOptions("reset", NULL, 0);
     MBOpt_LoadOptions("merge", merge_opts, ARRAYSIZE(merge_opts));
+    MBOpt_LoadOptions("tournament", NULL, 0);
     MBOpt_Init(argc, argv);
 
     const char *cmd = MBOpt_GetCmd();
@@ -1433,12 +1434,6 @@ void MainParseCmdLine(int argc, char **argv)
         mainData.loop = MBOpt_GetInt("loop");
     } else {
         mainData.loop = 1;
-    }
-
-    if (MBOpt_IsPresent("tournament")) {
-        mainData.tournament = TRUE;
-    } else {
-        mainData.tournament = FALSE;
     }
 
     if (MBOpt_IsPresent("startPaused")) {
@@ -1605,13 +1600,7 @@ void MainMutateCmd(void)
 
 void MainDefaultCmd(void)
 {
-    MainBattleType bt;
-
-    if (mainData.tournament) {
-        bt = MAIN_BT_TOURNAMENT;
-    } else {
-        bt = MAIN_BT_SINGLE;
-    }
+    MainBattleType bt = MAIN_BT_SINGLE;
 
     MainConstructScenarios(TRUE, bt);
     MainRunScenarios();
@@ -1807,16 +1796,7 @@ static void MainOptimizeCmd(void)
     mainData.numPlayers++;
 
     if (controlFile == NULL) {
-        for (int i = 0; i < FLEET_AI_MAX; i++) {
-            FleetAIType aiType = Fleet_GetTypeFromRanking(i);
-            if (aiType != FLEET_AI_INVALID) {
-                ASSERT(Fleet_GetRanking(aiType) == i);
-                ASSERT(mainData.numPlayers < ARRAYSIZE(mainData.players));
-                mainData.players[mainData.numPlayers].aiType = aiType;
-                mainData.players[mainData.numPlayers].playerType = PLAYER_TYPE_CONTROL;
-                mainData.numPlayers++;
-            }
-        }
+        MainLoadAllAsControlPlayers();
     } else {
         MainUsePopulation(controlFile, &mainData.players[0],
                           ARRAYSIZE(mainData.players), &mainData.numPlayers,
@@ -1846,6 +1826,30 @@ static void MainOptimizeCmd(void)
     }
 
     MainConstructScenarios(FALSE, MAIN_BT_OPTIMIZE);
+    MainRunScenarios();
+    MainCleanupPlayers();
+}
+
+static void MainTournamentCmd(void)
+{
+    const char *file = MBOpt_GetCStr("usePopulation");
+
+    mainData.printWinnerBreakdown = TRUE;
+
+    ASSERT(mainData.numPlayers == 0);
+    mainData.players[0].aiType = FLEET_AI_NEUTRAL;
+    mainData.players[0].playerType = PLAYER_TYPE_NEUTRAL;
+    mainData.numPlayers++;
+
+    if (file == NULL) {
+        MainLoadAllAsControlPlayers();
+    } else {
+        MainUsePopulation(file, &mainData.players[0],
+                          ARRAYSIZE(mainData.players), &mainData.numPlayers,
+                          TRUE);
+    }
+
+    MainConstructScenarios(FALSE, MAIN_BT_TOURNAMENT);
     MainRunScenarios();
     MainCleanupPlayers();
 }
@@ -1966,6 +1970,8 @@ int main(int argc, char **argv)
         MainMergeCmd();
     } else if (strcmp(cmd, "optimize") == 0) {
         MainOptimizeCmd();
+    } else if (strcmp(cmd, "tournament") == 0) {
+        MainTournamentCmd();
     } else if (strcmp(cmd, "display") == 0 ||
                strcmp(cmd, "default") == 0) {
         MainDefaultCmd();
