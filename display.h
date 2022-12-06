@@ -59,6 +59,11 @@ static inline void Display_DumpPNG(const char *fileName)
     NOT_IMPLEMENTED();
 }
 
+static inline void Display_SetFPS(uint fps)
+{
+    NOT_IMPLEMENTED();
+}
+
 #endif //NO_DISPLAY
 
 #endif // _DISPLAY_H_202005252017
