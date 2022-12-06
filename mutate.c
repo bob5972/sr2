@@ -219,3 +219,20 @@ void Mutate_FloatType(MBRegistry *mreg, const char *key, MutationType type)
     mp.key = key;
     Mutate_Float(mreg, &mp, 1);
 }
+
+void Mutate_Index(MBRegistry *mreg, const char *key, float rate)
+{
+    int x, ret;
+    char *v = NULL;
+
+    if (!Random_Flip(rate)) {
+        return;
+    }
+
+    x = MBRegistry_GetInt(mreg, key);
+    x = Random_Int(-1, x + 1);
+    ret = asprintf(&v, "%d", x);
+    VERIFY(ret > 0);
+    MBRegistry_PutCopy(mreg, key, v);
+    free(v);
+}

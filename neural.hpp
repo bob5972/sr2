@@ -138,7 +138,7 @@ typedef struct NeuralForceDesc {
     int index;
     bool useTangent;
     bool filterForward;
-bool filterBackward;
+    bool filterBackward;
     bool filterAdvance;
     bool filterRetreat;
 } NeuralForceDesc;

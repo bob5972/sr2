@@ -319,6 +319,10 @@ void NeuralForce_Load(MBRegistry *mreg,
     s = prefix;
     s += "radius";
     desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "index";
+    desc->index = MBRegistry_GetIntD(mreg, s.CStr(), -1);
 }
 
 void NeuralCrowd_Load(MBRegistry *mreg,
@@ -546,6 +550,10 @@ void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
         desc.forceType = ft;
     }
 
+    s = prefix;
+    s += "index";
+    Mutate_Index(mreg, s.CStr(), rate);
+
     MutationBoolParams bf;
     const char *strs[] = {
         "useTangent", "filterForward", "filterBackward",
@@ -626,18 +634,10 @@ void NeuralValue_Mutate(MBRegistry *mreg,
         /*
          * scalarID's on outputs are ignored.
          */
-        if (!isOutput && Random_Flip(rate)) {
-            char *v = NULL;
-            int x, ret;
-
+        if (!isOutput) {
             s = prefix;
             s += "scalarID";
-            x = MBRegistry_GetInt(mreg, s.CStr());
-            x = Random_Int(-1, x + 1);
-            ret = asprintf(&v, "%d", x);
-            VERIFY(ret > 0);
-            MBRegistry_PutCopy(mreg, s.CStr(), v);
-            free(v);
+            Mutate_Index(mreg, s.CStr(), rate);
         }
     } else if (desc.valueType == NEURAL_VALUE_ZERO ||
                desc.valueType == NEURAL_VALUE_FRIEND_SHIPS ||

@@ -70,6 +70,7 @@ void Mutate_DefaultFloatParams(MutationFloatParams *mp, MutationType type);
 void Mutate_FloatType(MBRegistry *mreg, const char *key, MutationType type);
 void Mutate_Float(MBRegistry *mreg, MutationFloatParams *mp, uint32 numParams);
 float Mutate_FloatRaw(float value, bool missing, MutationFloatParams *mp);
+void Mutate_Index(MBRegistry *mreg, const char *key, float rate);
 void Mutate_Bool(MBRegistry *mreg, MutationBoolParams *mp, uint32 numParams);
 void Mutate_Str(MBRegistry *mreg, MutationStrParams *mp, uint32 numParams,
                 const char **options, uint32 numOptions);
