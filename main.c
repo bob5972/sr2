@@ -1882,6 +1882,7 @@ void MainParseCmdLine(int argc, char **argv)
     const char *cmd = MBOpt_GetCmd();
     mainData.headless = TRUE;
     mainData.frameSkip = FALSE;
+    mainData.startPaused = FALSE;
     mainData.targetFPS = 101;
     if (!sr2_gui) {
         // Use default headless configuration.
@@ -1893,18 +1894,13 @@ void MainParseCmdLine(int argc, char **argv)
         if (MBOpt_IsPresent("targetFPS")) {
             mainData.targetFPS = MBOpt_GetUint("targetFPS");
         }
+        mainData.startPaused = MBOpt_IsPresent("startPaused");
     }
 
     if (MBOpt_IsPresent("loop")) {
         mainData.loop = MBOpt_GetInt("loop");
     } else {
         mainData.loop = 1;
-    }
-
-    if (!mainData.headless && MBOpt_IsPresent("startPaused")) {
-        mainData.startPaused = TRUE;
-    } else {
-        mainData.startPaused = FALSE;
     }
 
     mainData.seed = MBOpt_GetUint64("seed");
