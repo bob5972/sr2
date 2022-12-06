@@ -293,8 +293,6 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * mainData.maxBscs);
 
         mainData.numBSCs = 0;
-        ASSERT(mainData.numPlayers > 0);
-        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
 
         for (uint ti = 0; ti < p; ti++) {
             if (mainData.players[ti].playerType != PLAYER_TYPE_TARGET) {
@@ -326,8 +324,6 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
         mainData.bscs = malloc(sizeof(mainData.bscs[0]) * mainData.maxBscs);
 
         mainData.numBSCs = 0;
-        ASSERT(mainData.numPlayers > 0);
-        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
         for (uint x = 1; x < mainData.numPlayers; x++) {
 
             for (uint y = 1; y < mainData.numPlayers; y++) {
@@ -348,8 +344,6 @@ void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
         ASSERT(mainData.numBSCs <= mainData.maxBscs);
     } else {
         ASSERT(bt == MAIN_BT_SINGLE);
-        ASSERT(mainData.numPlayers > 0);
-        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
 
         mainData.numBSCs = 1;
         mainData.bscs = malloc(sizeof(mainData.bscs[0]));
