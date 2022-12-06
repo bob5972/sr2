@@ -1828,12 +1828,12 @@ void MainParseCmdLine(int argc, char **argv)
         { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
         { "-R", "--reuseSeed",         FALSE, "Reuse the seed across battles" },
-        { "-P", "--startPaused",       FALSE, "Start paused"                  },
     };
 
     MBOption display_opts[] = {
         { NULL, "--frameSkip",         FALSE, "Allow frame skipping"          },
         { "-F", "--targetFPS",         TRUE,  "Target FPS for window"         },
+        { "-P", "--startPaused",       FALSE, "Start paused"                  },
     };
     MBOption dumpPNG_opts[] = {
         { "-o", "--outputFile",        TRUE, "Output file for PNG"            },
@@ -1901,7 +1901,7 @@ void MainParseCmdLine(int argc, char **argv)
         mainData.loop = 1;
     }
 
-    if (MBOpt_IsPresent("startPaused")) {
+    if (!mainData.headless && MBOpt_IsPresent("startPaused")) {
         mainData.startPaused = TRUE;
     } else {
         mainData.startPaused = FALSE;
