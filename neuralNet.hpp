@@ -35,14 +35,12 @@ public:
     MBVector<NeuralValueDesc> outputDescs;
     MBVector<float> inputs;
     MBVector<float> outputs;
-    uint numNodes;
     AIContext aic;
     MBVector<float> scalarInputs;
     MBVector<NeuralLocusPosition> loci;
 
     NeuralNet() {
         MBUtil_Zero(&aic, sizeof(aic));
-        numNodes = 0;
     }
 
     // XXX: Only saves the FloatNet.

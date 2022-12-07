@@ -51,7 +51,6 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
 
     uint numInputs = floatNet.getNumInputs();
     uint numOutputs = floatNet.getNumOutputs();
-    numNodes = floatNet.getNumNodes();
 
     inputs.resize(numInputs);
     outputs.resize(numOutputs);
