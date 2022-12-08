@@ -228,8 +228,7 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 
     ASSERT(myNodes.size() >= myNumOutputs);
-
-    for (uint i = 0; i < myNumInputs; i++) {
+    for (uint i = 0; i < myNumOutputs; i++) {
         uint vi = i + myValues.size() - myNumOutputs;
         outputs[i] = myValues[vi];
     }
