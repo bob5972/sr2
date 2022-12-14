@@ -12,7 +12,7 @@ use MBBasic;
 
 my $gScriptOptions = {
     "file=s" => { desc => "MBRegistry file to use",
-                  default => "build/tmp/stable.zoo" },
+                  default => "zoo/stable.zoo" },
     "date!" => {desc => "Add a date line to the bottom",
                 default => FALSE },
     "opSummary!" => { desc => "Include an opcode summary",
@@ -500,7 +500,7 @@ sub Main() {
     MBBasic::LoadOptions($gScriptOptions, __PACKAGE__);
     MBBasic::Init();
 
-    my $evolveLog = "build/tmp/evolve.log";
+    my $evolveLog = "zoo/evolve.log";
     if ($OPTIONS->{'evolveLog'} && -f $evolveLog) {
         open(my $fh, '<', $evolveLog) or Panic($!);
         my @s = <$fh>;
