@@ -491,8 +491,8 @@ MainAddTargetPlayersForOptimize(void)
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[tpIndex].aiType = FLEET_AI_FLOCK9;
-        targetPlayers[tpIndex].playerName = "FlockFleet9.Test";
+        targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL1;
+        targetPlayers[tpIndex].playerName = "BineuralFleet1.Test";
         tpIndex++;
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();

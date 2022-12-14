@@ -80,8 +80,9 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE16,  // 81.5%
     FLEET_AI_BUNDLE15,  // 81.7%
     FLEET_AI_BUNDLE14,  // 83.5%
+    FLEET_AI_BINEURAL2, // 83.6%
+    FLEET_AI_BINEURAL1, // 83.7%
     FLEET_AI_FLOCK9,    // 90.5%
-    FLEET_AI_BINEURAL1, // In-Development
 };
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
