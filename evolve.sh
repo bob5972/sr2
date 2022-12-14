@@ -8,24 +8,24 @@ SCENARIO=fast
 THREADS=14
 BUILDTYPE="develperf";
 
-LOG_FILE="build/tmp/evolve.log";
+LOG_FILE="zoo/evolve.log";
 
-STABLE_FILE="build/tmp/stable.zoo";
-NOOB_FILE="build/tmp/noob.zoo";
+STABLE_FILE="zoo/stable.zoo";
+NOOB_FILE="zoo/noob.zoo";
 
-SCREEN1_FILE="build/tmp/screen1.zoo";
+SCREEN1_FILE="zoo/screen1.zoo";
 SCREEN1_ITERATIONS=3
 SCREEN1_DEFECTIVE=0.1
 
-SCREEN2_FILE="build/tmp/screen2.zoo";
+SCREEN2_FILE="zoo/screen2.zoo";
 SCREEN2_ITERATIONS=5
 SCREEN2_DEFECTIVE=0.1
 
-SCREEN3_FILE="build/tmp/screen3.zoo";
+SCREEN3_FILE="zoo/screen3.zoo";
 SCREEN3_ITERATIONS=10
 SCREEN3_DEFECTIVE=0.1
 
-SCREENS_FILE="build/tmp/screenS.zoo";
+SCREENS_FILE="zoo/screenS.zoo";
 SCREENS_DEFECTIVE=0.1
 SCREENS_NEW_ITERATIONS=20
 SCREENS_STALE_ITERATIONS=1
