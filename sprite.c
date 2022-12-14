@@ -367,6 +367,7 @@ static const struct {
         { FLEET_AI_NEURAL11,    SPRITE_SET_URSA_GREEN2,     0x6C4675, },
         { FLEET_AI_NEURAL12,    SPRITE_SET_URSA_ORANGE2,    0x3B3C36, },
         { FLEET_AI_BINEURAL1,   SPRITE_SET_VEGA_BLUE,       0x434B4D, },
+        { FLEET_AI_BINEURAL2,   SPRITE_SET_VEGA_ORANGE,     0x47402E, },
 };
 
 static const struct {
