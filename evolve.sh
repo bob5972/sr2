@@ -44,6 +44,19 @@ if [ $? != 0 ]; then exit $? ; fi;
 
 echo > $LOG_FILE
 
+echo 'sr2: measure screenS (stable)'
+build/sr2 measure $OPTS --usePopulation $STABLE_FILE \
+                        --controlPopulation $SCREENS_FILE \
+                        --loop $SCREENS_STALE_ITERATIONS
+if [ $? != 0 ]; then exit $? ; fi;
+
+echo 'sr2: kill screenS (stable)'
+build/sr2 kill $OPTS --usePopulation $STABLE_FILE \
+                     --defectiveLevel $SCREENS_DEFECTIVE \
+                     --minPop $STABLE_POP \
+                     --maxPop $STABLE_POP
+if [ $? != 0 ]; then exit $? ; fi;
+
 echo 'sr2: mutate'
 build/sr2 mutate $OPTS --usePopulation $STABLE_FILE \
                        --outputFile $NOOB_FILE \
@@ -96,7 +109,7 @@ if [ -f $SCREEN3_FILE ]; then
     grep numFleets $NOOB_FILE >> $LOG_FILE
 fi;
 
-# Final screen
+# Final screen (keep results)
 echo 'sr2: measure screenS (noob)'
 build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
                         --controlPopulation $SCREENS_FILE \
@@ -111,17 +124,4 @@ if [ $? != 0 ]; then exit $? ; fi;
 echo 'sr2: merge'
 build/sr2 merge $OPTS --usePopulation $STABLE_FILE \
                       --inputPopulation $NOOB_FILE
-if [ $? != 0 ]; then exit $? ; fi;
-
-echo 'sr2: measure screenS (stable)'
-build/sr2 measure $OPTS --usePopulation $STABLE_FILE \
-                        --controlPopulation $SCREENS_FILE \
-                        --loop $SCREENS_STALE_ITERATIONS
-if [ $? != 0 ]; then exit $? ; fi;
-
-echo 'sr2: kill screenS (stable)'
-build/sr2 kill $OPTS --usePopulation $STABLE_FILE \
-                     --defectiveLevel $SCREENS_DEFECTIVE \
-                     --minPop $STABLE_POP \
-                     --maxPop $STABLE_POP
 if [ $? != 0 ]; then exit $? ; fi;
