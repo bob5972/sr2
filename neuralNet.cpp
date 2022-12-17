@@ -109,9 +109,11 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
 void NeuralNet::minimize()
 {
     CPBitVector inputBV;
-    inputBV.resize(inputs.size());
-    floatNet.minimize(&inputBV);
 
+    floatNet.minimize();
+    floatNet.getUsedInputs(inputBV);
+
+    ASSERT(inputBV>size() == inputs.size());
     for (uint i = 0; i < inputDescs.size(); i++) {
         if (!inputBV.get(i)) {
             voidInputNode(i);

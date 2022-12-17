@@ -24,30 +24,47 @@
 #include "textDump.hpp"
 #include "Random.h"
 
-void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
+void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
 {
     ASSERT(!myInitialized);
     ASSERT(numInputs > 0);
     ASSERT(numOutputs > 0);
-    ASSERT(numNodes > 0);
-    ASSERT(numNodes >= numOutputs);
+    ASSERT(numInnerNodes > 0);
 
     myNumInputs = numInputs;
     myNumOutputs = numOutputs;
+    myNumNodes = myNumInputs + numInnerNodes;
 
-    myNodes.resize(numNodes);
-    myValues.resize(myNumInputs + numNodes);
+    myNodes.resize(myNumNodes);
+    myValues.resize(myNumNodes);
+    myUsedInputs.resize(myNumInputs);
+    myUsedOutputs.resize(myNumOutputs);
+
+    myUsedInputs.setAll();
+    myUsedOutputs.setAll();
+
+    for (uint i = 0; i < myNumInputs; i++) {
+        myNodes[i].op = ML_FOP_INPUT;
+    }
 
     for (uint i = 0; i < myNodes.size(); i++) {
-        myNodes[i].index = i + numInputs;
+        myNodes[i].index = i;
     }
 
     myInitialized = TRUE;
+
+    ASSERT(!myHaveOutputOrdering);
+
+    loadZeroNet();
 }
 
 void FloatNet::loadZeroNet()
 {
-    for (uint i = 0; i < myNodes.size(); i++) {
+    for (uint i = 0; i < myNumInputs; i++) {
+        ASSERT(myNodes[i].op == ML_FOP_INPUT);
+    }
+
+    for (uint i = myNumInputs; i < myNodes.size(); i++) {
         myNodes[i].op = ML_FOP_0x0_ZERO;
 
         for (uint k = 0; k < myNodes[i].params.size(); k++) {
@@ -66,36 +83,45 @@ void FloatNet::loadZeroNet()
 void FloatNet::load(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
+    int ret;
+    uint numInnerNodes;
 
     p = prefix;
     p += "numInputs";
     myNumInputs = MBRegistry_GetUint(mreg, p.CStr());
+    if (myNumInputs <= 0) {
+        PANIC("Not enough inputs: myNumInputs=%d\n", myNumInputs);
+    }
 
     p = prefix;
     p += "numOutputs";
     myNumOutputs = MBRegistry_GetUint(mreg, p.CStr());
-
-    p = prefix;
-    p += "numNodes";
-    uint numNodes = MBRegistry_GetUint(mreg, p.CStr());
-
-    VERIFY(myNumInputs > 0);
     if (myNumOutputs <= 0) {
         PANIC("Not enough outputs: myNumOutputs=%d\n", myNumOutputs);
     }
-    if (myNumOutputs > numNodes) {
-        PANIC("Too many outputs: myNumOutputs=%d, numNodes=%d\n",
-              myNumOutputs, numNodes);
+
+    p = prefix;
+    p += "numInnerNodes";
+    if (MBRegistry_ContainsKey(mreg, p.CStr())) {
+        numInnerNodes = MBRegistry_GetUint(mreg, p.CStr());
+        VERIFY(numInnerNodes > 1);
+        myNumNodes = myNumInputs + numInnerNodes;
+    } else {
+        p = prefix;
+        p += "numNodes";
+        uint numNodes = MBRegistry_GetUint(mreg, p.CStr());
+        VERIFY(numNodes >= myNumOutputs);
+        myNumNodes = myNumInputs + numNodes;
     }
 
-    initialize(myNumInputs, myNumOutputs, numNodes);
-    ASSERT(myNodes.size() == numNodes);
+    initialize(myNumInputs, myNumOutputs, myNumNodes - myNumInputs);
+    ASSERT(myNodes.size() == myNumNodes);
 
-    for (uint i = 0; i < myNodes.size(); i++) {
+    for (uint i = myNumInputs; i < myNodes.size(); i++) {
         char *strp;
 
         p = prefix;
-        int ret = asprintf(&strp, "node[%d].", i + myNumInputs);
+        int ret = asprintf(&strp, "node[%d].", i);
         VERIFY(ret > 0);
         p += strp;
         free(strp);
@@ -103,13 +129,32 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         myNodes[i].load(mreg, p.CStr());
     }
 
-    myValues.resize(myNumInputs + numNodes);
+    myValues.resize(myNumNodes);
+
+    p = prefix;
+    p += "haveOutputOrdering";
+    if (MBRegistry_GetBoolD(mreg, p.CStr(), FALSE)) {
+        for (uint i = 0; i < myNumOutputs; i++) {
+            char *k = NULL;
+
+            ret = asprintf(&k, "%soutput[%d]", prefix, i);
+            VERIFY(ret > 0);
+
+            myOutputOrdering[i] = MBRegistry_GetUint(mreg, k);
+            VERIFY(myOutputOrdering[i] < myNodes.size());
+
+            free(k);
+        }
+    } else {
+        myHaveOutputOrdering = FALSE;
+        VERIFY(myNumNodes >= myNumOutputs);
+    }
 }
 
 void FloatNet::save(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
-    char *v;
+    char *v = NULL;
     int ret;
 
     p = prefix;
@@ -118,6 +163,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
+    v = NULL;
 
     p = prefix;
     p += "numOutputs";
@@ -125,88 +171,82 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
+    v = NULL;
 
     p = prefix;
-    p += "numNodes";
-    ret = asprintf(&v, "%d", myNodes.size());
+    p += "numInnerNodes";
+    ASSERT(myNodes.size() > myNumInputs);
+    ret = asprintf(&v, "%d", myNodes.size() - myNumInputs);
     VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
+    v = NULL;
 
-    for (uint i = 0; i < myNodes.size(); i++) {
-        char *strp;
+    for (uint i = 0; i < myNumInputs; i++) {
+        ASSERT(myNodes[i].op == ML_FOP_INPUT);
+    }
 
-        /*
-         * Save the node ID offset by myNumInputs to it matches the
-         * ID used in the node input references.
-         */
+    for (uint i = myNumInputs; i < myNodes.size(); i++) {
+        char *strp = NULL;
+
         p = prefix;
-        ret = asprintf(&strp, "node[%d].", i + myNumInputs);
+        ret = asprintf(&strp, "node[%d].", i);
         VERIFY(ret > 0);
         p += strp;
         free(strp);
 
+        ASSERT(myNodes[i].index == i);
         myNodes[i].save(mreg, p.CStr());
+    }
+
+    if (myHaveOutputOrdering) {
+        p = prefix;
+        p += "haveOutputOrdering";
+        MBRegistry_PutCopy(mreg, p.CStr(), "TRUE");
+
+        for (uint i = 0; i < myNumOutputs; i++) {
+            char *k = NULL;
+
+            ret = asprintf(&k, "%soutput[%d]", prefix, i);
+            VERIFY(ret > 0);
+
+            ASSERT(myOutputOrdering[i] < myNodes.size());
+            ret = asprintf(&v, "%d", myOutputOrdering[i]);
+            VERIFY(ret > 0);
+
+            MBRegistry_PutCopy(mreg, k, v);
+
+            free(v);
+            free(k);
+        }
+    } else {
+        ASSERT(myNumNodes >= myNumOutputs);
     }
 }
 
-// void FloatNet::nodeShiftHelper(uint index, bool shiftUp)
-// {
-//     for (uint i = index; i < myNodes.size(); i++) {
-//         MLFloatNode *n = &myNodes[i];
-
-//         if (shiftUp) {
-//             n->index++;
-//         } else {
-//             n->index--;
-//         }
-
-//         for (uint ni = 0; ni < n->inputs.size(); ni++) {
-//             if (n->inputs[ni] >= index + myNumInputs) {
-//                 if (shiftUp) {
-//                     n->inputs[ni]++;
-//                 } else {
-//                     n->inputs[ni]--;
-//                 }
-//             }
-//         }
-//     }
-// }
-
 void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
 {
-    // if (Random_Flip(rate)) {
-    //     if (myNodes.size() < maxNodes) {
-    //         int i;
-    //         myNodes.resize(myNodes.size() + 1);
-    //         for (i = 0; i < myNumOutputs; i++) {
-    //             int n = myNodes.size() - i - 1;
-    //             myNodes[n] = myNodes[n - 1];
-    //         }
-    //         int index = myNodes.size() - myNumOutputs - 1;
-    //         myNodes[myNodes.size() - myNumOutputs - 1].makeZero();
-    //         nodeShiftHelper(index, TRUE);
-    //     }
-    // }
-
-    // if (Random_Flip(rate)) {
-    //     ASSERT(myNumInputs > 1);
-    //     if (myNodes.size() > 1 && myNodes.size() > myNumOutputs) {
-    //         int index = Random_Int(0, myNodes.size() - myNumOutputs - 1);
-    //         for (uint i = index; i < myNodes.size() - 1; i++) {
-    //             myNodes[i] = myNodes[i + 1];
-    //         }
-    //         myNodes.shrink();
-    //         nodeShiftHelper(index, FALSE);
-    //     }
-    // }
-
     for (uint i = 0; i < myNodes.size(); i++) {
         if (Random_Flip(rate / 10.0f)) {
             uint n = Random_Int(0, i);
             myNodes[i] = myNodes[n];
         }
         myNodes[i].mutate(rate, maxNodeDegree, maxNodeDegree);
+    }
+
+    if (!myHaveOutputOrdering) {
+        ASSERT(myNumNodes >= myNumOutputs);
+        myHaveOutputOrdering = TRUE;
+        myOutputOrdering.resize(myNumOutputs);
+        for (uint i = 0; i < myNumOutputs; i++) {
+            myOutputOrdering[i] = i + myNodes.size() - myNumOutputs;
+        }
+    }
+
+    for (uint i = 0; i < myNumOutputs; i++) {
+        if (Random_Flip(rate)) {
+            myOutputOrdering[i] = Random_Int(0, myNodes.size() - 1);
+        }
     }
 }
 
@@ -216,25 +256,35 @@ void FloatNet::compute(const MBVector<float> &inputs,
 {
     ASSERT(inputs.size() == myNumInputs);
     ASSERT(outputs.size() == myNumOutputs);
-    ASSERT(myValues.size() >= myNumInputs);
+    ASSERT(myValues.size() == myNodes.size());
 
     for (uint i = 0; i < myNumInputs; i++) {
+        ASSERT(myNodes[i].op == ML_FOP_INPUT);
         myValues[i] = inputs[i];
     }
 
-    for (uint i = 0; i < myNodes.size(); i++) {
-        uint vi = i + myNumInputs;
-        myValues[vi] = myNodes[i].compute(myValues);
+    for (uint i = myNumInputs; i < myNodes.size(); i++) {
+        myValues[i] = myNodes[i].compute(myValues);
     }
 
-    ASSERT(myNodes.size() >= myNumOutputs);
-    for (uint i = 0; i < myNumOutputs; i++) {
-        uint vi = i + myValues.size() - myNumOutputs;
-        outputs[i] = myValues[vi];
+    ASSERT(myNodes.size() == myValues.size());
+    if (!myHaveOutputOrdering) {
+        ASSERT(myNodes.size() >= myNumOutputs);
+        for (uint i = 0; i < myNumOutputs; i++) {
+            uint vi = i + myValues.size() - myNumOutputs;
+            outputs[i] = myValues[vi];
+        }
+    } else {
+        ASSERT(myOutputOrdering.size() == myNumOutputs);
+        for (uint i = 0; i < myNumOutputs; i++) {
+            uint vi = myOutputOrdering[i];
+            ASSERT(vi < myValues.size());
+            outputs[i] = myValues[vi];
+        }
     }
 }
 
-uint FloatNet::minimize(CPBitVector *inputBV)
+uint FloatNet::minimize()
 {
     CPBitVector bv;
     bool keepGoing = TRUE;
@@ -298,15 +348,31 @@ uint FloatNet::minimize(CPBitVector *inputBV)
         activeCount = 0;
         keepGoing = FALSE;
         bv.resetAll();
-        for (uint i = 0; i < myNodes.size(); i++) {
+
+        for (uint i = 0; i < myNumOutputs; i++) {
+            if (myUsedOutputs.get(i)) {
+                if (myHaveOutputOrdering) {
+                    ASSERT(myOutputOrdering.size() == myNumOutputs);
+                    bv.set(myOutputOrdering[i]);
+                } else {
+                    bv.set(i + myNodes.size() - myNumOutputs);
+                }
+            }
+        }
+
+        for (uint i = 0; i < myNumInputs; i++) {
+            ASSERT(myNodes[i].index == i);
+            ASSERT(myNodes[i].op == ML_FOP_INPUT);
+        }
+        for (uint i = myNumInputs; i < myNodes.size(); i++) {
             MLFloatNode *n = &myNodes[i];
-            ASSERT(myNodes[i].index == i + myNumInputs);
+            ASSERT(myNodes[i].index == i);
             if (n->isVoid()) {
                 /*
                  * Treat already voided nodes as "referenced" for now,
                  * because we don't need to void them again.
                  */
-                bv.set(i + myNumInputs);
+                bv.set(i);
             } else {
                 activeCount++;
                 for (uint in = 0; in < n->inputs.size(); in++) {
@@ -315,12 +381,9 @@ uint FloatNet::minimize(CPBitVector *inputBV)
             }
         }
 
-        uint numInnerNodes = myNodes.size() - myNumOutputs;
-        ASSERT(myNodes.size() >= myNumOutputs);
-        for (uint i = 0; i < numInnerNodes; i++) {
-            uint ni = i + myNumInputs;
-            ASSERT(myNodes[i].index == ni);
-            if (!bv.get(ni)) {
+        for (uint i = 0; i < myNodes.size(); i++) {
+            ASSERT(myNodes[i].index == i);
+            if (!bv.get(i)) {
                 myNodes[i].makeVoid();
                 keepGoing = TRUE;
             }
@@ -330,21 +393,15 @@ uint FloatNet::minimize(CPBitVector *inputBV)
         iterations++;
     }
 
-    /*
-     * Copy reachable nodes out to the caller.
-     */
-    if (inputBV != NULL) {
-        ASSERT(inputBV->size() == myNumInputs);
-
-        for (uint i = 0; i < myNumInputs; i++) {
-            inputBV->put(i, bv.get(i));
-        }
+    ASSERT(myUsedInputs.size() == myNumInputs);
+    for (uint i = 0; i < myNumInputs; i++) {
+        myUsedInputs.put(i, bv.get(i));
     }
-
-    return activeCount;
 
     /*
      * XXX TODO:
      *    Collapse zero nodes?
      */
+
+    return activeCount;
 }

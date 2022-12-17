@@ -32,13 +32,13 @@ class FloatNet
         :myInitialized(FALSE)
         {}
 
-        FloatNet(uint numInputs, uint numOutputs, uint numNodes)
+        FloatNet(uint numInputs, uint numOutputs, uint numInnerNodes)
         :myInitialized(FALSE)
         {
-            initialize(numInputs, numOutputs, numNodes);
+            initialize(numInputs, numOutputs, numInnerNodes);
         }
 
-        void initialize(uint numInputs, uint numOutputs, uint numNodes);
+        void initialize(uint numInputs, uint numOutputs, uint numInnerNodes);
 
         void compute(const MBVector<float> &inputs, MBVector<float> &outputs);
 
@@ -47,36 +47,43 @@ class FloatNet
         void mutate(float rate, uint maxNodeDegree, uint maxNodes);
         void save(MBRegistry *mreg, const char *prefix);
 
-        uint minimize(CPBitVector *inputBV);
+        uint minimize();
 
-        uint getNumInputs()  { return myNumInputs;    }
-        uint getNumOutputs() { return myNumOutputs;   }
-        uint getNumNodes()   { return myNodes.size(); }
+        void getUsedInputs(CPBitVector &inputBV) {
+            inputBV = myUsedInputs;
+        }
+        void getUsedOutputs(CPBitVector &outputBV) {
+            outputBV = myUsedOutputs;
+        }
+
+        uint getNumInputs()  { return myNumInputs;  }
+        uint getNumOutputs() { return myNumOutputs; }
+        uint getNumNodes()   { return myNumNodes;   }
 
         uint getOutputOffset() {
+            NOT_IMPLEMENTED();//XXX bob5972
             return myNumInputs + myNodes.size() - myNumOutputs;
         }
 
         void voidOutputNode(uint i) {
-            uint numNodes = myNodes.size();
-            ASSERT(numNodes >= myNumOutputs);
-            i = i + numNodes - myNumOutputs;
-            myNodes[i].makeVoid();
+            ASSERT(i >= 0 && i <= myNumOutputs);
+            myUsedOutputs.reset(i);
         }
 
     private:
         bool myInitialized;
+        bool myHaveOutputOrdering;
+
+        CPBitVector myUsedInputs;
+        CPBitVector myUsedOutputs;
+
         uint myNumInputs;
         uint myNumOutputs;
+        uint myNumNodes;
 
-        /*
-         * Inputs have values but not nodes.
-         * Inner nodes and Outputs have both.
-         */
         MBVector<MLFloatNode> myNodes;
+        MBVector<uint> myOutputOrdering;
         MBVector<float> myValues;
-
-        // void nodeShiftHelper(uint index, bool shiftUp);
 };
 
 #endif // _FLOATNET_H_202208121158

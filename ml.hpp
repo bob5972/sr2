@@ -28,9 +28,10 @@
 typedef enum MLFloatOp {
     ML_FOP_INVALID = 0,
     ML_FOP_VOID = 1,
+    ML_FOP_INPUT = 2,
 
-    ML_FOP_0x0_ZERO = 2,
-    ML_FOP_MIN = 2,
+    ML_FOP_0x0_ZERO = 3,
+    ML_FOP_MIN = 3,
     ML_FOP_0x0_ONE,
 
     ML_FOP_0x1_CONSTANT,
