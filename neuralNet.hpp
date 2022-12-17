@@ -51,7 +51,6 @@ public:
     void dumpSanitizedParams(MBRegistry *mreg, const char *prefix);
 
     void load(MBRegistry *mreg, const char *prefix, NeuralNetType nnType);
-    void mutate(MBRegistry *mreg);
 
     void fillInputs(Mob *mob);
     void compute();
