@@ -137,7 +137,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         for (uint i = 0; i < myNumOutputs; i++) {
             char *k = NULL;
 
-            ret = asprintf(&k, "%soutput[%d]", prefix, i);
+            ret = asprintf(&k, "%soutput[%d].node", prefix, i);
             VERIFY(ret > 0);
 
             myOutputOrdering[i] = MBRegistry_GetUint(mreg, k);
@@ -207,7 +207,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
         for (uint i = 0; i < myNumOutputs; i++) {
             char *k = NULL;
 
-            ret = asprintf(&k, "%soutput[%d]", prefix, i);
+            ret = asprintf(&k, "%soutput[%d].node", prefix, i);
             VERIFY(ret > 0);
 
             ASSERT(myOutputOrdering[i] < myNodes.size());
