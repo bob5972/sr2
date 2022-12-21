@@ -43,6 +43,7 @@ OPTS="${OPTS} -t $THREADS"
 if [ $? != 0 ]; then exit $? ; fi;
 
 echo > $LOG_FILE
+grep numFleets $STABLE_FILE >> $LOG_FILE
 
 echo 'sr2: measure screenS (stable)'
 build/sr2 measure $OPTS --usePopulation $STABLE_FILE \
@@ -125,3 +126,6 @@ echo 'sr2: merge'
 build/sr2 merge $OPTS --usePopulation $STABLE_FILE \
                       --inputPopulation $NOOB_FILE
 if [ $? != 0 ]; then exit $? ; fi;
+
+grep numFleets $STABLE_FILE >> $LOG_FILE
+
