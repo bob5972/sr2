@@ -25,6 +25,7 @@
 #include "floatNet.hpp"
 #include "basicShipAI.hpp"
 #include "neural.hpp"
+#include "MBString.hpp"
 
 class NeuralNet {
 public:
@@ -45,13 +46,14 @@ public:
 
     // XXX: Only saves the FloatNet.
     void save(MBRegistry *mreg, const char *prefix) {
-        floatNet.save(mreg, prefix);
+        MBString str = prefix;
+        str += "fn.";
+        floatNet.save(mreg, str.CStr());
     }
 
     void dumpSanitizedParams(MBRegistry *mreg, const char *prefix);
 
     void load(MBRegistry *mreg, const char *prefix, NeuralNetType nnType);
-    void mutate(MBRegistry *mreg);
 
     void fillInputs(Mob *mob);
     void compute();
