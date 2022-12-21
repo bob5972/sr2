@@ -39,11 +39,13 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
     nnType = nnTypeIn;
 
     str = prefix;
-    str += "numInputs";
+    str += "fn.numInputs";
     cstr = str.CStr();
     if (MBRegistry_ContainsKey(mreg, cstr) &&
         MBRegistry_GetUint(mreg, cstr) > 0) {
-        floatNet.load(mreg, prefix);
+        str = prefix;
+        str += "fn.";
+        floatNet.load(mreg, str.CStr());
     } else {
         floatNet.initialize(1, 1, 1);
         floatNet.loadZeroNet();
@@ -193,11 +195,13 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
     const char *cstr;
 
     str = prefix;
-    str += "numInputs";
+    str += "fn.numInputs";
     cstr = str.CStr();
     if (MBRegistry_ContainsKey(mreg, cstr) &&
         MBRegistry_GetUint(mreg, cstr) > 0 &&
         rate < 1.0f) {
+        str = prefix;
+        str += "fn.";
         fn.load(mreg, prefix);
     } else {
         fn.initialize(maxInputs, maxOutputs, maxNodes);
@@ -205,7 +209,10 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
     }
 
     fn.mutate(rate, maxNodeDegree, maxNodes);
-    fn.save(mreg, prefix);
+
+    str = prefix;
+    str += "fn.";
+    fn.save(mreg, str.CStr());
 
     for (uint i = 0; i < fn.getNumInputs(); i++) {
         char *str = NULL;
