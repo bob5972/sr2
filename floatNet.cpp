@@ -24,17 +24,17 @@
 #include "textDump.hpp"
 #include "Random.h"
 
-void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
+void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
 {
     ASSERT(!myInitialized);
     ASSERT(numInputs > 0);
     ASSERT(numOutputs > 0);
-    ASSERT(numNodes > 0);
-    ASSERT(numNodes >= numOutputs);
+    ASSERT(numInnerNodes > 0);
+    ASSERT(numInnerNodes >= numOutputs);
 
     myNumInputs = numInputs;
     myNumOutputs = numOutputs;
-    myNumNodes = numNodes;
+    myNumNodes = numInnerNodes;
 
     myNodes.resize(myNumNodes);
     myValues.resize(myNumInputs + myNumNodes);

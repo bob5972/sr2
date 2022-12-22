@@ -32,13 +32,13 @@ class FloatNet
         :myInitialized(FALSE),myHaveOutputOrdering(FALSE)
         {}
 
-        FloatNet(uint numInputs, uint numOutputs, uint numNodes)
+        FloatNet(uint numInputs, uint numOutputs, uint numInnerNodes)
         :myInitialized(FALSE),myHaveOutputOrdering(FALSE)
         {
-            initialize(numInputs, numOutputs, numNodes);
+            initialize(numInputs, numOutputs, numInnerNodes);
         }
 
-        void initialize(uint numInputs, uint numOutputs, uint numNodes);
+        void initialize(uint numInputs, uint numOutputs, uint numInnerNodes);
 
         void compute(const MBVector<float> &inputs, MBVector<float> &outputs);
 
