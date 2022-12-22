@@ -29,11 +29,11 @@ class FloatNet
 {
     public:
         FloatNet()
-        :myInitialized(FALSE)
+        :myInitialized(FALSE),myHaveOutputOrdering(FALSE)
         {}
 
         FloatNet(uint numInputs, uint numOutputs, uint numInnerNodes)
-        :myInitialized(FALSE)
+        :myInitialized(FALSE),myHaveOutputOrdering(FALSE)
         {
             initialize(numInputs, numOutputs, numInnerNodes);
         }
@@ -60,9 +60,19 @@ class FloatNet
         uint getNumOutputs() { return myNumOutputs; }
         uint getNumNodes()   { return myNumNodes;   }
 
-        uint getOutputOffset() {
-            NOT_IMPLEMENTED();//XXX bob5972
-            return myNumInputs + myNodes.size() - myNumOutputs;
+        void checkInvariants() {
+            ASSERT(myNodes.size() == myNumNodes);
+            ASSERT(myNumInputs <= myNumNodes);
+            for (uint i = 0; i < myNodes.size(); i++) {
+                ASSERT(myNodes[i].index == i);
+
+                if (i < myNumInputs) {
+                    ASSERT(myNodes[i].op == ML_FOP_INPUT ||
+                           myNodes[i].op == ML_FOP_VOID);
+                } else {
+                    ASSERT(myNodes[i].op != ML_FOP_INPUT);
+                }
+            }
         }
 
         void voidOutputNode(uint i) {

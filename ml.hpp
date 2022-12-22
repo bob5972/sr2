@@ -273,6 +273,7 @@ class MLFloatNode {
         bool isVoid() { return op == ML_FOP_VOID; }
 
         bool isConstant();
+        bool isInput() { return op == ML_FOP_INPUT; }
         void makeConstant(float f) {
             op = ML_FOP_0x1_CONSTANT;
             inputs.resize(0);

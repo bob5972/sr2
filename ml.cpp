@@ -35,6 +35,7 @@ static inline float MLClampUnit(float x) {
 static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_INVALID), },
     { TMENTRY(ML_FOP_VOID), },
+    { TMENTRY(ML_FOP_INPUT), },
     { TMENTRY(ML_FOP_0x0_ZERO), },
     { TMENTRY(ML_FOP_0x0_ONE), },
 
@@ -1637,6 +1638,11 @@ void MLFloatNode::mutate(float rate,
     uint oldSize;
     uint newSize;
 
+    if (op == ML_FOP_INPUT) {
+        // This was probably not intended.
+        NOT_IMPLEMENTED();
+    }
+
     if (!Random_Flip(rate)) {
         return;
     }
@@ -1811,11 +1817,8 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
     uint numInputs = 0;
     uint numParams = 0;
 
-    //if (mb_debug && ML_FOP_MAX != 151) {
-    //    PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
-    //}
-
     switch (op) {
+        case ML_FOP_INPUT:
         case ML_FOP_VOID:
         case ML_FOP_0x0_ZERO:
         case ML_FOP_0x0_ONE:
@@ -2167,6 +2170,9 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 bool MLFloatNode::isConstant()
 {
   switch (op) {
+        case ML_FOP_INPUT:
+            return FALSE;
+
         case ML_FOP_VOID:
         case ML_FOP_0x0_ZERO:
         case ML_FOP_0x0_ONE:
@@ -2305,6 +2311,9 @@ void ML_UnitTest()
         }
 
         n.minimize();
-        n.compute(v);
+
+        if (op != ML_FOP_INPUT) {
+            n.compute(v);
+        }
     }
 }

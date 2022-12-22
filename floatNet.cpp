@@ -46,7 +46,6 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
     for (uint i = 0; i < myNumInputs; i++) {
         myNodes[i].op = ML_FOP_INPUT;
     }
-
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].index = i;
     }
@@ -56,6 +55,7 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
     ASSERT(!myHaveOutputOrdering);
 
     loadZeroNet();
+    checkInvariants();
 }
 
 void FloatNet::loadZeroNet()
@@ -115,7 +115,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     }
 
     initialize(myNumInputs, myNumOutputs, myNumNodes - myNumInputs);
-    ASSERT(myNodes.size() == myNumNodes);
+    checkInvariants();
 
     for (uint i = myNumInputs; i < myNodes.size(); i++) {
         char *strp;
@@ -149,6 +149,8 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         myHaveOutputOrdering = FALSE;
         VERIFY(myNumNodes >= myNumOutputs);
     }
+
+    checkInvariants();
 }
 
 void FloatNet::save(MBRegistry *mreg, const char *prefix)
@@ -156,6 +158,8 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     MBString p;
     char *v = NULL;
     int ret;
+
+    checkInvariants();
 
     p = prefix;
     p += "numInputs";
@@ -182,9 +186,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     free(v);
     v = NULL;
 
-    for (uint i = 0; i < myNumInputs; i++) {
-        ASSERT(myNodes[i].op == ML_FOP_INPUT);
-    }
+    checkInvariants();
 
     for (uint i = myNumInputs; i < myNodes.size(); i++) {
         char *strp = NULL;
@@ -226,13 +228,30 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
 
 void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
 {
+    checkInvariants();
+
     for (uint i = 0; i < myNodes.size(); i++) {
-        if (Random_Flip(rate / 10.0f)) {
-            uint n = Random_Int(0, i);
-            myNodes[i] = myNodes[n];
+        if (i < myNumInputs) {
+            ASSERT(myNodes[i].op == ML_FOP_INPUT ||
+                   myNodes[i].op == ML_FOP_VOID);
+        } else {
+            ASSERT(myNodes[i].op != ML_FOP_INPUT);
+
+            if (Random_Flip(rate / 10.0f)) {
+                uint n = Random_Int(0, i);
+                if (n >= myNumInputs) {
+                    myNodes[i].op = myNodes[n].op;
+                    myNodes[i].params = myNodes[n].params;
+                    myNodes[i].inputs = myNodes[n].inputs;
+                }
+            }
+            myNodes[i].mutate(rate, maxNodeDegree, maxNodeDegree);
         }
-        myNodes[i].mutate(rate, maxNodeDegree, maxNodeDegree);
+
+        checkInvariants();
     }
+
+    checkInvariants();
 
     if (!myHaveOutputOrdering) {
         ASSERT(myNumNodes >= myNumOutputs);
@@ -243,11 +262,15 @@ void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
         }
     }
 
+    checkInvariants();
+
     for (uint i = 0; i < myNumOutputs; i++) {
         if (Random_Flip(rate)) {
             myOutputOrdering[i] = Random_Int(0, myNodes.size() - 1);
         }
     }
+
+    checkInvariants();
 }
 
 
@@ -259,7 +282,8 @@ void FloatNet::compute(const MBVector<float> &inputs,
     ASSERT(myValues.size() == myNodes.size());
 
     for (uint i = 0; i < myNumInputs; i++) {
-        ASSERT(myNodes[i].op == ML_FOP_INPUT);
+        ASSERT(myNodes[i].op == ML_FOP_INPUT ||
+               myNodes[i].op == ML_FOP_VOID);
         myValues[i] = inputs[i];
     }
 
@@ -291,6 +315,8 @@ uint FloatNet::minimize()
     uint activeCount;
     uint iterations = 0;
 
+    checkInvariants();
+
     /*
      * Handle all simple reductions.
      */
@@ -302,23 +328,27 @@ uint FloatNet::minimize()
      * Constant folding.
      */
     CPBitVector nodesBV;
-    nodesBV.resize(myNodes.size() + myNumInputs);
+    nodesBV.resize(myNodes.size());
     nodesBV.resetAll();
     for (uint i = 0; i < myValues.size(); i++) {
         myValues[i] = 0.0f;
     }
-    for (uint i = 0; i < myNodes.size(); i++) {
+    for (uint i = myNumInputs; i < myNodes.size(); i++) {
         MLFloatNode *n = &myNodes[i];
-        uint vindex = i + myNumInputs;
-        ASSERT(myNodes[i].index == vindex);
+        ASSERT(myNodes[i].index == i);
 
-        bool allConstant = TRUE;
-        if (!n->isConstant()) {
+        bool allConstant;
+        if (n->isInput()) {
+            allConstant = FALSE;
+        } else if (n->isConstant()) {
+            allConstant = TRUE;
+        } else {
+            allConstant = TRUE;
             for (uint ii = 0; ii < n->inputs.size(); ii++) {
                 if (n->inputs[ii] >= myNumInputs) {
-                    uint indexi = n->inputs[ii] - myNumInputs;
+                    uint indexi = n->inputs[ii];
                     MLFloatNode *ni = &myNodes[indexi];
-                    ASSERT(ni->index == indexi + myNumInputs);
+                    ASSERT(ni->index == indexi);
                     if (!nodesBV.get(n->inputs[ii])) {
                         ASSERT(!ni->isConstant());
                         allConstant = FALSE;
@@ -334,11 +364,14 @@ uint FloatNet::minimize()
         }
 
         if (allConstant) {
-            myValues[vindex] = n->compute(myValues);
-            n->makeConstant(myValues[vindex]);
-            nodesBV.set(vindex);
+            ASSERT(myNodes[i].op != ML_FOP_INPUT);
+            myValues[i] = n->compute(myValues);
+            n->makeConstant(myValues[i]);
+            nodesBV.set(i);
         }
     }
+
+    checkInvariants();
 
     /*
      * Compute reachable nodes.
@@ -360,11 +393,9 @@ uint FloatNet::minimize()
             }
         }
 
-        for (uint i = 0; i < myNumInputs; i++) {
-            ASSERT(myNodes[i].index == i);
-            ASSERT(myNodes[i].op == ML_FOP_INPUT);
-        }
-        for (uint i = myNumInputs; i < myNodes.size(); i++) {
+        checkInvariants();
+
+        for (uint i = 0; i < myNodes.size(); i++) {
             MLFloatNode *n = &myNodes[i];
             ASSERT(myNodes[i].index == i);
             if (n->isVoid()) {
@@ -389,14 +420,18 @@ uint FloatNet::minimize()
             }
         }
 
-        VERIFY(iterations < 1 + myNumInputs + myNodes.size());
+        VERIFY(iterations < 1 + myNodes.size());
         iterations++;
     }
+
+    checkInvariants();
 
     ASSERT(myUsedInputs.size() == myNumInputs);
     for (uint i = 0; i < myNumInputs; i++) {
         myUsedInputs.put(i, bv.get(i));
     }
+
+    checkInvariants();
 
     /*
      * XXX TODO:

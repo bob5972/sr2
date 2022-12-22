@@ -63,8 +63,7 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
     for (uint i = 0; i < outputDescs.size(); i++) {
         bool voidNode = FALSE;
         char *lcstr = NULL;
-        int ret = asprintf(&lcstr, "%soutput[%d].", prefix,
-                            i + floatNet.getOutputOffset());
+        int ret = asprintf(&lcstr, "%soutput[%d].", prefix, i);
         VERIFY(ret > 0);
         NeuralValue_Load(mreg, &outputDescs[i], lcstr);
         free(lcstr);
@@ -115,7 +114,7 @@ void NeuralNet::minimize()
     floatNet.minimize();
     floatNet.getUsedInputs(inputBV);
 
-    ASSERT(inputBV>size() == inputs.size());
+    ASSERT(inputBV.size() == inputs.size());
     for (uint i = 0; i < inputDescs.size(); i++) {
         if (!inputBV.get(i)) {
             voidInputNode(i);
@@ -224,7 +223,7 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
 
     for (uint i = 0; i < fn.getNumOutputs(); i++) {
         char *str = NULL;
-        int ret = asprintf(&str, "%soutput[%d].", prefix, i + fn.getOutputOffset());
+        int ret = asprintf(&str, "%soutput[%d].", prefix, i);
         VERIFY(ret > 0);
         NeuralValue_Mutate(mreg, rate, TRUE, nnType, str);
         free(str);
@@ -299,12 +298,15 @@ void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
     ASSERT(outputs.size() == outputDescs.size());
     for (uint i = 0; i < outputDescs.size(); i++) {
         FRPoint force;
-        ASSERT(outputDescs[i].valueType == NEURAL_VALUE_FORCE);
-        ASSERT(outputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
-        if (outputs[i] != 0.0f &&
-            getOutputForce(mob, i, &force)) {
-            FRPoint_SetSpeed(&force, outputs[i]);
-            FRPoint_Add(&force, outputForce, outputForce);
+        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
+            ASSERT(outputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
+            if (outputs[i] != 0.0f &&
+                getOutputForce(mob, i, &force)) {
+                FRPoint_SetSpeed(&force, outputs[i]);
+                FRPoint_Add(&force, outputForce, outputForce);
+            }
+        } else {
+            ASSERT(outputDescs[i].valueType == NEURAL_VALUE_VOID);
         }
     }
 }
