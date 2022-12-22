@@ -873,8 +873,6 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
         ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE);
     }
 
-    ASSERT(self->type == MOB_TYPE_FIGHTER);
-
     FRPoint_Zero(&force);
 
     if (!Mob_IsFilterEmpty(&f)) {
