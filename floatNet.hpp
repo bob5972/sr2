@@ -47,7 +47,7 @@ class FloatNet
         void mutate(float rate, uint maxNodeDegree, uint maxNodes);
         void save(MBRegistry *mreg, const char *prefix);
 
-        void minimize(CPBitVector *inputBV);
+        void minimize();
 
         void getUsedInputs(CPBitVector &inputBV) {
             inputBV = myUsedInputs;
