@@ -208,20 +208,20 @@ static void MainLoadDefaultPlayers(void)
          * See fleet.c::gRankings for a rough order of fleet strength.
          */
 
-        mainData.players[p].aiType = FLEET_AI_HOLD;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_HOLD;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_FLOCK9;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BUNDLE15;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_BUNDLE15;
+        // p++;
 
         mainData.players[p].aiType = FLEET_AI_NEURAL12;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BINEURAL2;
-        p++;
+        // mainData.players[p].aiType = FLEET_AI_BINEURAL2;
+        // p++;
 
         //mainData.players[p].playerName = "HoldMod";
         //mainData.players[p].aiType = FLEET_AI_HOLD;

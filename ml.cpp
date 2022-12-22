@@ -2169,7 +2169,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
 bool MLFloatNode::isConstant()
 {
-  switch (op) {
+    switch (op) {
         case ML_FOP_INPUT:
             return FALSE;
 
