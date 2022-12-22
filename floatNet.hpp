@@ -53,6 +53,12 @@ class FloatNet
         uint getNumOutputs() { return myNumOutputs;   }
         uint getNumNodes()   { return myNodes.size(); }
 
+        void checkInvariants() {
+            for (uint i = 0; i < myNodes.size(); i++) {
+                ASSERT(myNodes[i].op != ML_FOP_INPUT);
+            }
+        }
+
         void voidOutputNode(uint i) {
             uint numNodes = myNodes.size();
             ASSERT(numNodes >= myNumOutputs);

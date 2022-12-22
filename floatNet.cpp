@@ -43,10 +43,14 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
     }
 
     myInitialized = TRUE;
+
+    checkInvariants();
 }
 
 void FloatNet::loadZeroNet()
 {
+    checkInvariants();
+
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].op = ML_FOP_0x0_ZERO;
 
@@ -61,6 +65,8 @@ void FloatNet::loadZeroNet()
     for (uint i = 0; i < myValues.size(); i++) {
         myValues[i] = 0.0f;
     }
+
+    checkInvariants();
 }
 
 void FloatNet::load(MBRegistry *mreg, const char *prefix)
@@ -89,7 +95,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     }
 
     initialize(myNumInputs, myNumOutputs, numNodes);
-    ASSERT(myNodes.size() == numNodes);
+    checkInvariants();
 
     for (uint i = 0; i < myNodes.size(); i++) {
         char *strp;
@@ -104,6 +110,8 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     }
 
     myValues.resize(myNumInputs + numNodes);
+
+    checkInvariants();
 }
 
 void FloatNet::save(MBRegistry *mreg, const char *prefix)
@@ -111,6 +119,8 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     MBString p;
     char *v;
     int ret;
+
+    checkInvariants();
 
     p = prefix;
     p += "numInputs";
@@ -148,10 +158,14 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
 
         myNodes[i].save(mreg, p.CStr());
     }
+
+    checkInvariants();
 }
 
 void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
 {
+    checkInvariants();
+
     for (uint i = 0; i < myNodes.size(); i++) {
         if (Random_Flip(rate / 10.0f)) {
             uint n = Random_Int(0, i);
@@ -159,6 +173,8 @@ void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
         }
         myNodes[i].mutate(rate, maxNodeDegree, maxNodeDegree);
     }
+
+    checkInvariants();
 }
 
 
@@ -191,12 +207,16 @@ void FloatNet::minimize(CPBitVector *inputBV)
     bool keepGoing = TRUE;
     uint iterations = 0;
 
+    checkInvariants();
+
     /*
      * Handle all simple reductions.
      */
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].minimize();
     }
+
+    checkInvariants();
 
     /*
      * Constant folding.
@@ -240,6 +260,8 @@ void FloatNet::minimize(CPBitVector *inputBV)
         }
     }
 
+    checkInvariants();
+
     /*
      * Compute reachable nodes.
      */
@@ -278,6 +300,8 @@ void FloatNet::minimize(CPBitVector *inputBV)
         iterations++;
     }
 
+    checkInvariants();
+
     /*
      * Copy reachable nodes out to the caller.
      */
@@ -288,6 +312,8 @@ void FloatNet::minimize(CPBitVector *inputBV)
             inputBV->put(i, bv.get(i));
         }
     }
+
+    checkInvariants();
 
     /*
      * XXX TODO:
