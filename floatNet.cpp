@@ -112,7 +112,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         p += "numNodes";
         myNumNodes = MBRegistry_GetUint(mreg, p.CStr());
         VERIFY(myNumNodes > 0);
-        myNumInputs += myNumInputs;
+        myNumNodes += myNumInputs;
         VERIFY(myNumNodes >= myNumOutputs);
     }
 
