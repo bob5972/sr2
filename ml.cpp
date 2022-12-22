@@ -2166,7 +2166,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
 bool MLFloatNode::isConstant()
 {
-  switch (op) {
+    switch (op) {
         case ML_FOP_VOID:
         case ML_FOP_0x0_ZERO:
         case ML_FOP_0x0_ONE:

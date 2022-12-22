@@ -264,6 +264,7 @@ uint FloatNet::minimize(CPBitVector *inputBV)
 
         bool allConstant = TRUE;
         if (!n->isConstant()) {
+            ASSERT(n->inputs.size() > 0);
             for (uint ii = 0; ii < n->inputs.size(); ii++) {
                 if (n->inputs[ii] >= myNumInputs) {
                     uint indexi = n->inputs[ii] - myNumInputs;
