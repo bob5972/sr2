@@ -47,7 +47,7 @@ class FloatNet
         void mutate(float rate, uint maxNodeDegree, uint maxNodes);
         void save(MBRegistry *mreg, const char *prefix);
 
-        uint minimize(CPBitVector *inputBV);
+        void minimize(CPBitVector *inputBV);
 
         uint getNumInputs()  { return myNumInputs;    }
         uint getNumOutputs() { return myNumOutputs;   }
