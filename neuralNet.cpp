@@ -202,7 +202,7 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
         rate < 1.0f) {
         str = prefix;
         str += "fn.";
-        fn.load(mreg, prefix);
+        fn.load(mreg, str.CStr());
     } else {
         fn.initialize(maxInputs, maxOutputs, maxNodes);
         fn.loadZeroNet();
