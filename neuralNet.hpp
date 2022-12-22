@@ -39,7 +39,6 @@ public:
     AIContext aic;
     MBVector<float> scalarInputs;
     MBVector<NeuralLocusPosition> loci;
-    //bool useSimpleOutputNumbers;
 
     NeuralNet() {
         MBUtil_Zero(&aic, sizeof(aic));
