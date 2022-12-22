@@ -60,9 +60,7 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
 
 void FloatNet::loadZeroNet()
 {
-    for (uint i = 0; i < myNumInputs; i++) {
-        ASSERT(myNodes[i].op == ML_FOP_INPUT);
-    }
+    checkInvariants();
 
     for (uint i = myNumInputs; i < myNodes.size(); i++) {
         myNodes[i].op = ML_FOP_0x0_ZERO;
@@ -308,11 +306,10 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 }
 
-uint FloatNet::minimize()
+void FloatNet::minimize()
 {
     CPBitVector bv;
     bool keepGoing = TRUE;
-    uint activeCount;
     uint iterations = 0;
 
     checkInvariants();
@@ -378,7 +375,6 @@ uint FloatNet::minimize()
      */
     bv.resize(myNumInputs + myNodes.size());
     while (keepGoing) {
-        activeCount = 0;
         keepGoing = FALSE;
         bv.resetAll();
 
@@ -405,7 +401,6 @@ uint FloatNet::minimize()
                  */
                 bv.set(i);
             } else {
-                activeCount++;
                 for (uint in = 0; in < n->inputs.size(); in++) {
                     bv.set(n->inputs[in]);
                 }
@@ -437,6 +432,4 @@ uint FloatNet::minimize()
      * XXX TODO:
      *    Collapse zero nodes?
      */
-
-    return activeCount;
 }
