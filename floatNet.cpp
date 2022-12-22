@@ -433,3 +433,4 @@ void FloatNet::minimize()
      *    Collapse zero nodes?
      */
 }
+
