@@ -51,18 +51,23 @@ class FloatNet
 
         uint getNumInputs()  { return myNumInputs;    }
         uint getNumOutputs() { return myNumOutputs;   }
-        uint getNumNodes()   { return myNodes.size(); }
+        uint getNumNodes()   {
+            ASSERT(myNumNodes == myNodes.size());
+            return myNumNodes;
+        }
 
         void checkInvariants() {
+            ASSERT(myNumNodes == myNodes.size());
+
             for (uint i = 0; i < myNodes.size(); i++) {
                 ASSERT(myNodes[i].op != ML_FOP_INPUT);
             }
         }
 
         void voidOutputNode(uint i) {
-            uint numNodes = myNodes.size();
-            ASSERT(numNodes >= myNumOutputs);
-            i = i + numNodes - myNumOutputs;
+            ASSERT(myNumNodes = myNodes.size());
+            ASSERT(myNumNodes >= myNumOutputs);
+            i = i + myNumNodes - myNumOutputs;
             myNodes[i].makeVoid();
         }
 
@@ -70,6 +75,7 @@ class FloatNet
         bool myInitialized;
         uint myNumInputs;
         uint myNumOutputs;
+        uint myNumNodes;
 
         /*
          * Inputs have values but not nodes.

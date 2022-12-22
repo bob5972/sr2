@@ -304,7 +304,6 @@ void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
                 FRPoint_Add(&force, outputForce, outputForce);
             }
         } else {
-            PANIC("i=%d\n", i);//XXX bob5972
             ASSERT(outputDescs[i].valueType == NEURAL_VALUE_VOID);
         }
     }

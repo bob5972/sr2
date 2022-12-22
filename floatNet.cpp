@@ -34,10 +34,12 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
 
     myNumInputs = numInputs;
     myNumOutputs = numOutputs;
+    myNumNodes = numNodes;
 
-    myNodes.resize(numNodes);
-    myValues.resize(myNumInputs + numNodes);
+    myNodes.resize(myNumNodes);
+    myValues.resize(myNumInputs + myNumNodes);
 
+    ASSERT(myNumNodes == myNodes.size());
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].index = i + numInputs;
     }
@@ -83,18 +85,18 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
 
     p = prefix;
     p += "numNodes";
-    uint numNodes = MBRegistry_GetUint(mreg, p.CStr());
+    myNumNodes = MBRegistry_GetUint(mreg, p.CStr());
 
     VERIFY(myNumInputs > 0);
     if (myNumOutputs <= 0) {
         PANIC("Not enough outputs: myNumOutputs=%d\n", myNumOutputs);
     }
-    if (myNumOutputs > numNodes) {
-        PANIC("Too many outputs: myNumOutputs=%d, numNodes=%d\n",
-              myNumOutputs, numNodes);
+    if (myNumOutputs > myNumNodes) {
+        PANIC("Too many outputs: myNumOutputs=%d, myNumNodes=%d\n",
+              myNumOutputs, myNumNodes);
     }
 
-    initialize(myNumInputs, myNumOutputs, numNodes);
+    initialize(myNumInputs, myNumOutputs, myNumNodes);
     checkInvariants();
 
     for (uint i = 0; i < myNodes.size(); i++) {
@@ -109,7 +111,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         myNodes[i].load(mreg, p.CStr());
     }
 
-    myValues.resize(myNumInputs + numNodes);
+    myValues.resize(myNumInputs + myNumNodes);
 
     checkInvariants();
 }
@@ -128,6 +130,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
+    v = NULL;
 
     p = prefix;
     p += "numOutputs";
@@ -135,13 +138,16 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
+    v = NULL;
 
     p = prefix;
     p += "numNodes";
-    ret = asprintf(&v, "%d", myNodes.size());
+    ASSERT(myNumNodes == myNodes.size());
+    ret = asprintf(&v, "%d", myNumNodes);
     VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, p.CStr(), v);
     free(v);
+    v = NULL;
 
     for (uint i = 0; i < myNodes.size(); i++) {
         char *strp;
@@ -155,6 +161,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
         VERIFY(ret > 0);
         p += strp;
         free(strp);
+        strp = NULL;
 
         myNodes[i].save(mreg, p.CStr());
     }
