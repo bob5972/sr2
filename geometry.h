@@ -149,6 +149,63 @@ static inline void FRPoint_SetSpeed(FRPoint *p, float s)
     }
 }
 
+static inline float FPoint_ToRadius(const FPoint *p)
+{
+    float radius;
+    ASSERT(p != NULL);
+    radius = sqrtf((p->x * p->x) + (p->y * p->y));
+    ASSERT(radius >= 0.0f);
+    return radius;
+}
+
+static inline float FPoint_ToFRPointRadius(const FPoint *p, const FPoint *c)
+{
+    ASSERT(p != NULL);
+    ASSERT(c != NULL);
+
+    FPoint temp = *p;
+    temp.x -= c->x;
+    temp.y -= c->y;
+
+    return FPoint_ToRadius(&temp);
+}
+
+static inline float FPoint_ToTheta(const FPoint *p)
+{
+    ASSERT(p != NULL);
+
+    /*
+     * We could use atan2f here to have it deal with the signs,
+     * but then it gives negative angles.
+     */
+    float theta = atanf(p->y / p->x);
+
+    if (isnanf(theta)) {
+        theta = 0.0f;
+    } else if (p->x < 0.0f) {
+        theta += M_PI;
+    } else if (theta < 0.0f) {
+        theta += 2.0f * M_PI;
+    }
+
+    ASSERT(theta <= 2.0f * (float)M_PI);
+    ASSERT(theta >= -2.0f * (float)M_PI);
+    ASSERT(theta >= 0.0f);
+    return theta;
+}
+
+static inline float FPoint_ToFRPointTheta(const FPoint *p, const FPoint *c)
+{
+    ASSERT(p != NULL);
+    ASSERT(c != NULL);
+
+    FPoint temp = *p;
+    temp.x -= c->x;
+    temp.y -= c->y;
+
+    return FPoint_ToTheta(&temp);
+}
+
 void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp);
 void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p);
 

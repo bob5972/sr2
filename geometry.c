@@ -67,42 +67,22 @@ void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
     *p = temp;
 }
 
+float FPoint_ToFRPointTheta(const FPoint *p, const FPoint *c);
+
 void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
 {
-    FPoint zero;
-
     ASSERT(p != NULL);
     ASSERT(rp != NULL);
 
-    if (c == NULL) {
-        FPoint_Zero(&zero);
-        c = &zero;
-    }
-
     FPoint temp = *p;
-    temp.x -= c->x;
-    temp.y -= c->y;
 
-    rp->radius = sqrtf((temp.x * temp.x) + (temp.y * temp.y));
-
-    /*
-     * We could use atan2f here to have it deal with the signs,
-     * but then it gives negative angles.
-     */
-    rp->theta = atanf(temp.y / temp.x);
-
-    if (isnanf(rp->theta)) {
-        rp->theta = 0.0f;
-    } else if (temp.x < 0.0f) {
-        rp->theta += M_PI;
-    } else if (rp->theta < 0.0f) {
-        rp->theta += 2.0f * M_PI;
+    if (c != NULL) {
+        temp.x -= c->x;
+        temp.y -= c->y;
     }
 
-    ASSERT(rp->theta <= 2.0f * (float)M_PI);
-    ASSERT(rp->theta >= -2.0f * (float)M_PI);
-    ASSERT(rp->theta >= 0.0f);
-    ASSERT(rp->radius >= 0.0f);
+    rp->radius = FPoint_ToRadius(&temp);
+    rp->theta = FPoint_ToTheta(&temp);
 }
 
 bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
