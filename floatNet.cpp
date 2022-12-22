@@ -38,6 +38,11 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
 
     myNodes.resize(myNumNodes);
     myValues.resize(myNumInputs + myNumNodes);
+    myUsedInputs.resize(myNumInputs);
+    myUsedOutputs.resize(myNumOutputs);
+
+    myUsedInputs.setAll();
+    myUsedOutputs.setAll();
 
     ASSERT(myNumNodes == myNodes.size());
     for (uint i = 0; i < myNodes.size(); i++) {
@@ -239,7 +244,7 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 }
 
-void FloatNet::minimize(CPBitVector *inputBV)
+void FloatNet::minimize()
 {
     CPBitVector bv;
     bool keepGoing = TRUE;
@@ -343,12 +348,9 @@ void FloatNet::minimize(CPBitVector *inputBV)
     /*
      * Copy reachable nodes out to the caller.
      */
-    if (inputBV != NULL) {
-        ASSERT(inputBV->size() == myNumInputs);
-
-        for (uint i = 0; i < myNumInputs; i++) {
-            inputBV->put(i, bv.get(i));
-        }
+    ASSERT(myUsedInputs.size() == myNumInputs);
+    for (uint i = 0; i < myNumInputs; i++) {
+        myUsedInputs.put(i, bv.get(i));
     }
 
     checkInvariants();

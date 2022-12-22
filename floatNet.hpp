@@ -47,7 +47,14 @@ class FloatNet
         void mutate(float rate, uint maxNodeDegree, uint maxNodes);
         void save(MBRegistry *mreg, const char *prefix);
 
-        void minimize(CPBitVector *inputBV);
+        void minimize();
+
+        void getUsedInputs(CPBitVector &inputBV) {
+            inputBV = myUsedInputs;
+        }
+        void getUsedOutputs(CPBitVector &outputBV) {
+            outputBV = myUsedOutputs;
+        }
 
         uint getNumInputs()  { return myNumInputs;    }
         uint getNumOutputs() { return myNumOutputs;   }
@@ -67,6 +74,8 @@ class FloatNet
         void voidOutputNode(uint i) {
             ASSERT(myNumNodes = myNodes.size());
             ASSERT(myNumNodes >= myNumOutputs);
+
+            myUsedOutputs.reset(i);
             i = i + myNumNodes - myNumOutputs;
             myNodes[i].makeVoid();
         }
@@ -74,6 +83,9 @@ class FloatNet
     private:
         bool myInitialized;
         bool myHaveOutputOrdering;
+
+        CPBitVector myUsedInputs;
+        CPBitVector myUsedOutputs;
 
         uint myNumInputs;
         uint myNumOutputs;
