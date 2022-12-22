@@ -322,8 +322,6 @@ void FloatNet::compute(const MBVector<float> &inputs,
 void FloatNet::minimize()
 {
     CPBitVector bv;
-    bool keepGoing;
-    uint iterations;
 
     checkInvariants();
 
@@ -339,9 +337,8 @@ void FloatNet::minimize()
     /*
      * Constant folding.
      */
-    CPBitVector nodesBV;
-    nodesBV.resize(myNodes.size());
-    nodesBV.resetAll();
+    bv.resize(myNodes.size());
+    bv.resetAll();
     for (uint i = 0; i < myValues.size(); i++) {
         myValues[i] = 0.0f;
     }
@@ -353,15 +350,17 @@ void FloatNet::minimize()
         if (n->isInput()) {
             allConstant = FALSE;
         } else if (n->isConstant()) {
+            ASSERT(myNodes[i].op != ML_FOP_INPUT);
             allConstant = TRUE;
         } else {
             allConstant = TRUE;
+            ASSERT(n->inputs.size() > 0);
             for (uint ii = 0; ii < n->inputs.size(); ii++) {
                 if (n->inputs[ii] >= myNumInputs) {
                     uint indexi = n->inputs[ii];
                     MLFloatNode *ni = &myNodes[indexi];
                     ASSERT(ni->index == indexi);
-                    if (!nodesBV.get(n->inputs[ii])) {
+                    if (!bv.get(n->inputs[ii])) {
                         ASSERT(!ni->isConstant());
                         allConstant = FALSE;
                         break;
@@ -376,10 +375,17 @@ void FloatNet::minimize()
         }
 
         if (allConstant) {
-            ASSERT(myNodes[i].op != ML_FOP_INPUT);
-            myValues[i] = n->compute(myValues);
-            n->makeConstant(myValues[i]);
-            nodesBV.set(i);
+            if (i < myNumInputs) {
+                ASSERT(myNodes[i].op == ML_FOP_VOID);
+            } else {
+                ASSERT(myNodes[i].op != ML_FOP_INPUT);
+            }
+
+            if (myNodes[i].op != ML_FOP_VOID) {
+                myValues[i] = n->compute(myValues);
+                n->makeConstant(myValues[i]);
+            }
+            bv.set(i);
         }
     }
 
@@ -388,9 +394,10 @@ void FloatNet::minimize()
     /*
      * Compute reachable nodes.
      */
-    bv.resize(myNumInputs + myNodes.size());
-    keepGoing = TRUE;
-    iterations = 0;
+    bv.resize(myNodes.size());
+    bool keepGoing = TRUE;
+    uint iterations = 0;
+
     while (keepGoing) {
         keepGoing = FALSE;
         bv.resetAll();
@@ -417,6 +424,7 @@ void FloatNet::minimize()
                  * because we don't need to void them again.
                  */
                 bv.set(i);
+                ASSERT(n->inputs.size() == 0);
             } else {
                 for (uint in = 0; in < n->inputs.size(); in++) {
                     bv.set(n->inputs[in]);
@@ -444,9 +452,4 @@ void FloatNet::minimize()
     }
 
     checkInvariants();
-
-    /*
-     * XXX TODO:
-     *    Collapse zero nodes?
-     */
 }
