@@ -43,38 +43,38 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
     myUsedInputs.setAll();
     myUsedOutputs.setAll();
 
-    for (uint i = 0; i < myNumInputs; i++) {
-        myNodes[i].op = ML_FOP_INPUT;
+     ASSERT(!myHaveOutputOrdering);
+
+     loadZeroNet();
+     myInitialized = TRUE;
+ }
+
+ void FloatNet::loadZeroNet()
+ {
+    if (myInitialized) {
+        checkInvariants();
     }
+
+    ASSERT(myNumNodes == myNodes.size());
     for (uint i = 0; i < myNodes.size(); i++) {
         myNodes[i].index = i;
-    }
 
-    myInitialized = TRUE;
+        if (i < myNumInputs) {
+            myNodes[i].op = ML_FOP_INPUT;
 
-    ASSERT(!myHaveOutputOrdering);
+            ASSERT(myNodes[i].params.size() == 0);
+            ASSERT(myNodes[i].inputs.size() == 0);
+        } else {
+            myNodes[i].op = ML_FOP_0x0_ZERO;
 
-    loadZeroNet();
-    checkInvariants();
-
-    loadZeroNet();
-    checkInvariants();
-}
-
-void FloatNet::loadZeroNet()
-{
-    checkInvariants();
-
-    for (uint i = myNumInputs; i < myNodes.size(); i++) {
-        myNodes[i].op = ML_FOP_0x0_ZERO;
-
-        for (uint k = 0; k < myNodes[i].params.size(); k++) {
-            myNodes[i].params[k] = 0.0f;
-        }
-        for (uint k = 0; k < myNodes[i].inputs.size(); k++) {
-            myNodes[i].inputs[k] = 0;
-        }
-    }
+            for (uint k = 0; k < myNodes[i].params.size(); k++) {
+                myNodes[i].params[k] = 0.0f;
+            }
+            for (uint k = 0; k < myNodes[i].inputs.size(); k++) {
+                myNodes[i].inputs[k] = 0;
+            }
+         }
+     }
 
     for (uint i = 0; i < myValues.size(); i++) {
         myValues[i] = 0.0f;
@@ -82,6 +82,7 @@ void FloatNet::loadZeroNet()
 
     checkInvariants();
 }
+
 
 void FloatNet::load(MBRegistry *mreg, const char *prefix)
 {
