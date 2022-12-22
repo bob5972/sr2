@@ -1126,13 +1126,13 @@ void NeuralForceGetHeading(AIContext *nc,
     ASSERT(mob != NULL);
     ASSERT(heading != NULL);
 
-    FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-
-    if (rPos.radius < MICRON) {
-        rPos.radius = 1.0f;
+    if (FPoint_DistanceSquared(&mob->pos, &mob->lastPos) <= MICRON * MICRON) {
         rPos.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
+    } else {
+        rPos.theta = FPoint_ToFRPointTheta(&mob->pos, &mob->lastPos);
     }
 
+    rPos.radius = 1.0f;
     FRPoint_SetSpeed(&rPos, 1.0f);
 
     *heading = rPos;
