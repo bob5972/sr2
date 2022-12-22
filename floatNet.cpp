@@ -138,6 +138,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     p = prefix;
     p += "haveOutputOrdering";
     if (MBRegistry_GetBoolD(mreg, p.CStr(), FALSE)) {
+        myOutputOrdering.resize(myNumOutputs);
         for (uint i = 0; i < myNumOutputs; i++) {
             char *k = NULL;
 
@@ -148,7 +149,9 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
             VERIFY(myOutputOrdering[i] < myNodes.size());
 
             free(k);
+            k = NULL;
         }
+        myHaveOutputOrdering = TRUE;
     } else {
         myHaveOutputOrdering = FALSE;
         VERIFY(myNumNodes >= myNumOutputs);

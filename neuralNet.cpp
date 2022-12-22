@@ -212,6 +212,7 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
 
     str = prefix;
     str += "fn.";
+    MBRegistry_RemoveAllWithPrefix(mreg, str.CStr());
     fn.save(mreg, str.CStr());
 
     for (uint i = 0; i < fn.getNumInputs(); i++) {
