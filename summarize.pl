@@ -146,7 +146,7 @@ sub DumpGraph($) {
     my $iNodes = {};
 
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^(?:floatNet|shipNet).node\[(\d+)\]\.op$/) {
+        if ($k =~ /^shipNet.fn.node\[(\d+)\]\.op$/) {
             my $n = $1;
             my $op = $fleet->{$k};
             if ($op ne "ML_FOP_VOID") {
@@ -155,7 +155,7 @@ sub DumpGraph($) {
         }
     }
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^((?:floatNet|shipNet).input\[(\d+)\])\.valueType/) {
+        if ($k =~ /^(shipNet.input\[(\d+)\])\.valueType/) {
             my $prefix = $1;
             my $n = $2;
             my $type = $fleet->{$k};
@@ -179,7 +179,7 @@ sub DumpGraph($) {
     }
 
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^(?:floatNet|shipNet).output\[(\d+)\]\.forceType/) {
+        if ($k =~ /^shipNet.output\[(\d+)\]\.forceType/) {
             my $n = $1;
             my $type = $fleet->{$k};
             if ($type ne "NEURAL_FORCE_VOID") {
@@ -222,7 +222,7 @@ sub DumpGraph($) {
 
     # Dump Edges
     foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^(?:floatNet|shipNet).node\[(\d+)\]\.inputs$/) {
+        if ($k =~ /^shipNet.fn.node\[(\d+)\]\.inputs$/) {
             my $n = $1;
             my $v = $fleet->{$k};
             $v =~ s/^\{//;
