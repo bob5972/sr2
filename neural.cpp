@@ -811,10 +811,10 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
             return FALSE;
         }
 
-        f.dirFilter.useDir = TRUE;
-        f.dirFilter.forward = advance;
-        FPoint_ToFRPoint(&self->pos, &base->pos, &f.dirFilter.dir);
-        f.dirFilter.pos = self->pos;
+        f.dirFPointFilter.useDir = TRUE;
+        f.dirFPointFilter.forward = advance;
+        FPoint_Subtract(&self->pos, &base->pos, &f.dirFPointFilter.dir);
+        f.dirFPointFilter.pos = self->pos;
     }
 
     if (!nc->sg->avgFlock(&vel, &pos, &f, useFriends)) {
@@ -869,9 +869,9 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
             return FALSE;
         }
 
-        f.dirFilter.useDir = TRUE;
-        FPoint_ToFRPoint(&self->pos, &base->pos, &f.dirFilter.dir);
-        f.dirFilter.pos = self->pos;
+        f.dirFPointFilter.useDir = TRUE;
+        FPoint_Subtract(&self->pos, &base->pos, &f.dirFPointFilter.dir);
+        f.dirFPointFilter.pos = self->pos;
 
         f.dirFilter.forward = desc->forceType == NEURAL_FORCE_ADVANCE_SEPARATE ?
                               TRUE : FALSE;

@@ -448,6 +448,13 @@ bool Mob_Filter(const Mob *m, const MobFilter *f)
             return FALSE;
         }
     }
+    if (f->dirFPointFilter.useDir) {
+        if (!FPoint_IsFacingFPointVec(&m->pos, &f->dirFPointFilter.pos,
+                                      &f->dirFPointFilter.dir,
+                                      f->dirFPointFilter.forward)) {
+            return FALSE;
+        }
+    }
 
     return TRUE;
 }

@@ -57,6 +57,17 @@ typedef struct MobFilter {
         FRPoint dir;
         bool forward;
     } dirFilter;
+
+    /*
+     * Filter for mobs forward/backwards from the specified center point
+     * and direction (as an FPoint from (0,0)).
+     */
+    struct {
+        bool useDir;
+        FPoint pos;
+        FPoint dir;
+        bool forward;
+    } dirFPointFilter;
 } MobFilter;
 
 #define MOB_FIGHTER_SENSOR_RADIUS (50.0f)

@@ -256,7 +256,19 @@ FPoint_IsFacingFPoint(const FPoint *pp, const FPoint *pc,
     FPoint_Subtract(pp, pc, &pv);
     FPoint_Subtract(dp, dc, &dv);
 
-    float dot = pv.x * dv.x + pv.y * pv.y;
+    float dot = pv.x * dv.x + pv.y * dv.y;
+    return forward ? dot >= 0 : dot < 0;
+}
+
+static inline bool
+FPoint_IsFacingFPointVec(const FPoint *pp, const FPoint *pc,
+                         const FPoint *dv, bool forward)
+{
+    FPoint pv;
+
+    FPoint_Subtract(pp, pc, &pv);
+
+    float dot = pv.x * dv->x + pv.y * dv->y;
     return forward ? dot >= 0 : dot < 0;
 }
 
