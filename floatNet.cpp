@@ -192,13 +192,11 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     free(v);
     v = NULL;
 
-    for (uint i = myNumInputs; i < myNodes.size(); i++) {
-        char *strp;
+    checkInvariants();
 
-        /*
-         * Save the node ID offset by myNumInputs to it matches the
-         * ID used in the node input references.
-         */
+    for (uint i = myNumInputs; i < myNodes.size(); i++) {
+        char *strp = NULL;
+
         p = prefix;
         ret = asprintf(&strp, "node[%d].", i);
         VERIFY(ret > 0);
@@ -206,6 +204,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
         free(strp);
         strp = NULL;
 
+        ASSERT(myNodes[i].index == i);
         myNodes[i].save(mreg, p.CStr());
     }
 
@@ -337,6 +336,7 @@ void FloatNet::minimize()
     }
 
     checkInvariants();
+    return; //XXX bob5972
 
     /*
      * Constant folding.
