@@ -29,11 +29,11 @@ class FloatNet
 {
     public:
         FloatNet()
-        :myInitialized(FALSE)
+        :myInitialized(FALSE),myHaveOutputOrdering(FALSE)
         {}
 
         FloatNet(uint numInputs, uint numOutputs, uint numNodes)
-        :myInitialized(FALSE)
+        :myInitialized(FALSE),myHaveOutputOrdering(FALSE)
         {
             initialize(numInputs, numOutputs, numNodes);
         }
@@ -73,6 +73,8 @@ class FloatNet
 
     private:
         bool myInitialized;
+        bool myHaveOutputOrdering;
+
         uint myNumInputs;
         uint myNumOutputs;
         uint myNumNodes;

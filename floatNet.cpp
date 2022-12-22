@@ -46,6 +46,8 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
 
     myInitialized = TRUE;
 
+    ASSERT(!myHaveOutputOrdering);
+
     checkInvariants();
 
     loadZeroNet();
@@ -119,6 +121,15 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
 
     myValues.resize(myNumInputs + myNumNodes);
 
+    p = prefix;
+    p += "haveOutputOrdering";
+    if (MBRegistry_GetBoolD(mreg, p.CStr(), FALSE)) {
+        NOT_IMPLEMENTED();
+    } else {
+        myHaveOutputOrdering = FALSE;
+        VERIFY(myNumNodes >= myNumOutputs);
+    }
+
     checkInvariants();
 }
 
@@ -172,6 +183,12 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
         myNodes[i].save(mreg, p.CStr());
     }
 
+    if (myHaveOutputOrdering) {
+        NOT_IMPLEMENTED();
+    } else {
+        ASSERT(myNumNodes >= myNumOutputs);
+    }
+
     checkInvariants();
 }
 
@@ -185,6 +202,10 @@ void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
             myNodes[i] = myNodes[n];
         }
         myNodes[i].mutate(rate, maxNodeDegree, maxNodeDegree);
+    }
+
+    if (myHaveOutputOrdering) {
+        NOT_IMPLEMENTED();
     }
 
     checkInvariants();
@@ -207,10 +228,14 @@ void FloatNet::compute(const MBVector<float> &inputs,
         myValues[vi] = myNodes[i].compute(myValues);
     }
 
-    ASSERT(myNodes.size() >= myNumOutputs);
-    for (uint i = 0; i < myNumOutputs; i++) {
-        uint vi = i + myValues.size() - myNumOutputs;
-        outputs[i] = myValues[vi];
+    if (!myHaveOutputOrdering) {
+        ASSERT(myNodes.size() >= myNumOutputs);
+        for (uint i = 0; i < myNumOutputs; i++) {
+            uint vi = i + myValues.size() - myNumOutputs;
+            outputs[i] = myValues[vi];
+        }
+    } else {
+        NOT_IMPLEMENTED();
     }
 }
 
