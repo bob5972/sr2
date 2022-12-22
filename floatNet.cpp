@@ -105,16 +105,18 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     p += "numInnerNodes";
     if (MBRegistry_ContainsKey(mreg, p.CStr())) {
         uint numInnerNodes = MBRegistry_GetUint(mreg, p.CStr());
-        VERIFY(numInnerNodes > 1);
+        VERIFY(numInnerNodes > 0);
         myNumNodes = myNumInputs + numInnerNodes;
     } else {
         p = prefix;
         p += "numNodes";
-        uint numNodes = MBRegistry_GetUint(mreg, p.CStr());
-        VERIFY(numNodes >= myNumOutputs);
-        myNumNodes = myNumInputs + numNodes;
+        myNumNodes = MBRegistry_GetUint(mreg, p.CStr());
+        VERIFY(myNumNodes > 0);
+        myNumNodes += myNumInputs;
+        VERIFY(myNumNodes >= myNumOutputs);
     }
 
+    ASSERT(myNumNodes > myNumInputs);
     initialize(myNumInputs, myNumOutputs, myNumNodes - myNumInputs);
     checkInvariants();
 
