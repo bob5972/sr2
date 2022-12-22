@@ -150,57 +150,8 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
     }
 }
 
-// void FloatNet::nodeShiftHelper(uint index, bool shiftUp)
-// {
-//     for (uint i = index; i < myNodes.size(); i++) {
-//         MLFloatNode *n = &myNodes[i];
-
-//         if (shiftUp) {
-//             n->index++;
-//         } else {
-//             n->index--;
-//         }
-
-//         for (uint ni = 0; ni < n->inputs.size(); ni++) {
-//             if (n->inputs[ni] >= index + myNumInputs) {
-//                 if (shiftUp) {
-//                     n->inputs[ni]++;
-//                 } else {
-//                     n->inputs[ni]--;
-//                 }
-//             }
-//         }
-//     }
-// }
-
 void FloatNet::mutate(float rate, uint maxNodeDegree, uint maxNodes)
 {
-    // if (Random_Flip(rate)) {
-    //     if (myNodes.size() < maxNodes) {
-    //         int i;
-    //         myNodes.resize(myNodes.size() + 1);
-    //         for (i = 0; i < myNumOutputs; i++) {
-    //             int n = myNodes.size() - i - 1;
-    //             myNodes[n] = myNodes[n - 1];
-    //         }
-    //         int index = myNodes.size() - myNumOutputs - 1;
-    //         myNodes[myNodes.size() - myNumOutputs - 1].makeZero();
-    //         nodeShiftHelper(index, TRUE);
-    //     }
-    // }
-
-    // if (Random_Flip(rate)) {
-    //     ASSERT(myNumInputs > 1);
-    //     if (myNodes.size() > 1 && myNodes.size() > myNumOutputs) {
-    //         int index = Random_Int(0, myNodes.size() - myNumOutputs - 1);
-    //         for (uint i = index; i < myNodes.size() - 1; i++) {
-    //             myNodes[i] = myNodes[i + 1];
-    //         }
-    //         myNodes.shrink();
-    //         nodeShiftHelper(index, FALSE);
-    //     }
-    // }
-
     for (uint i = 0; i < myNodes.size(); i++) {
         if (Random_Flip(rate / 10.0f)) {
             uint n = Random_Int(0, i);
