@@ -56,6 +56,9 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
 
     loadZeroNet();
     checkInvariants();
+
+    loadZeroNet();
+    checkInvariants();
 }
 
 void FloatNet::loadZeroNet()
@@ -125,6 +128,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
         VERIFY(ret > 0);
         p += strp;
         free(strp);
+        strp = NULL;
 
         myNodes[i].load(mreg, p.CStr());
     }
