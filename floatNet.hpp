@@ -91,11 +91,8 @@ class FloatNet
         uint myNumOutputs;
         uint myNumNodes;
 
-        /*
-         * Inputs have values but not nodes.
-         * Inner nodes and Outputs have both.
-         */
         MBVector<MLFloatNode> myNodes;
+        MBVector<uint> myOutputOrdering;
         MBVector<float> myValues;
 };
 
