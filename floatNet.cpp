@@ -76,6 +76,8 @@ void FloatNet::loadZeroNet()
     for (uint i = 0; i < myValues.size(); i++) {
         myValues[i] = 0.0f;
     }
+
+    checkInvariants();
 }
 
 void FloatNet::load(MBRegistry *mreg, const char *prefix)
@@ -194,6 +196,7 @@ void FloatNet::save(MBRegistry *mreg, const char *prefix)
         VERIFY(ret > 0);
         p += strp;
         free(strp);
+        strp = NULL;
 
         ASSERT(myNodes[i].index == i);
         myNodes[i].save(mreg, p.CStr());
@@ -321,6 +324,8 @@ void FloatNet::minimize()
         myNodes[i].minimize();
     }
 
+    checkInvariants();
+
     /*
      * Constant folding.
      */
@@ -433,4 +438,3 @@ void FloatNet::minimize()
      *    Collapse zero nodes?
      */
 }
-
