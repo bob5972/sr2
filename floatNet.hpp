@@ -64,10 +64,17 @@ class FloatNet
         }
 
         void checkInvariants() {
-            ASSERT(myNumNodes == myNodes.size());
-
+            ASSERT(myNodes.size() == myNumNodes);
+            ASSERT(myNumInputs <= myNumNodes);
             for (uint i = 0; i < myNodes.size(); i++) {
-                ASSERT(myNodes[i].op != ML_FOP_INPUT);
+                ASSERT(myNodes[i].index == i);
+
+                if (i < myNumInputs) {
+                    ASSERT(myNodes[i].op == ML_FOP_INPUT ||
+                           myNodes[i].op == ML_FOP_VOID);
+                } else {
+                    ASSERT(myNodes[i].op != ML_FOP_INPUT);
+                }
             }
         }
 
