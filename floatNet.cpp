@@ -43,14 +43,14 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numInnerNodes)
     myUsedInputs.setAll();
     myUsedOutputs.setAll();
 
-     ASSERT(!myHaveOutputOrdering);
+    ASSERT(!myHaveOutputOrdering);
 
-     loadZeroNet();
-     myInitialized = TRUE;
- }
+    loadZeroNet();
+    myInitialized = TRUE;
+}
 
- void FloatNet::loadZeroNet()
- {
+void FloatNet::loadZeroNet()
+{
     if (myInitialized) {
         checkInvariants();
     }
