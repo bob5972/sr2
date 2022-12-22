@@ -336,7 +336,6 @@ void FloatNet::minimize()
     }
 
     checkInvariants();
-    return; //XXX bob5972
 
     /*
      * Constant folding.
