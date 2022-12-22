@@ -58,7 +58,10 @@ class FloatNet
 
         uint getNumInputs()  { return myNumInputs;  }
         uint getNumOutputs() { return myNumOutputs; }
-        uint getNumNodes()   { return myNumNodes;   }
+        uint getNumNodes() {
+            ASSERT(myNumNodes == myNodes.size());
+            return myNumNodes;
+        }
 
         void checkInvariants() {
             ASSERT(myNodes.size() == myNumNodes);
