@@ -99,6 +99,9 @@ class FloatNet
         MBVector<MLFloatNode> myNodes;
         MBVector<uint> myOutputOrdering;
         MBVector<float> myValues;
+
+        void constantFolding();
+        void reachableNodes();
 };
 
 #endif // _FLOATNET_H_202208121158

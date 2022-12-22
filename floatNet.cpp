@@ -319,24 +319,12 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 }
 
-void FloatNet::minimize()
+void FloatNet::constantFolding()
 {
     CPBitVector bv;
 
     checkInvariants();
 
-    /*
-     * Handle all simple reductions.
-     */
-    for (uint i = 0; i < myNodes.size(); i++) {
-        myNodes[i].minimize();
-    }
-
-    checkInvariants();
-
-    /*
-     * Constant folding.
-     */
     bv.resize(myNodes.size());
     bv.resetAll();
     for (uint i = 0; i < myValues.size(); i++) {
@@ -390,10 +378,12 @@ void FloatNet::minimize()
     }
 
     checkInvariants();
+}
 
-    /*
-     * Compute reachable nodes.
-     */
+void FloatNet::reachableNodes()
+{
+    CPBitVector bv;
+
     bv.resize(myNodes.size());
     bool keepGoing = TRUE;
     uint iterations = 0;
@@ -449,6 +439,39 @@ void FloatNet::minimize()
     ASSERT(myUsedInputs.size() == myNumInputs);
     for (uint i = 0; i < myNumInputs; i++) {
         myUsedInputs.put(i, bv.get(i));
+    }
+
+    checkInvariants();
+}
+
+void FloatNet::minimize()
+{
+    bool doConstantFolding = TRUE;
+    bool doReachable = TRUE;
+
+    checkInvariants();
+
+    /*
+     * Handle all simple reductions.
+     */
+    for (uint i = 0; i < myNodes.size(); i++) {
+        myNodes[i].minimize();
+    }
+
+    checkInvariants();
+
+    if (doConstantFolding) {
+        constantFolding();
+    }
+
+    checkInvariants();
+
+    if (doReachable) {
+        reachableNodes();
+    } else {
+        for (uint i = 0; i < myNumInputs; i++) {
+            myUsedInputs.set(i);
+        }
     }
 
     checkInvariants();
