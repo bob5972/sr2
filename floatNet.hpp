@@ -80,6 +80,8 @@ class FloatNet
 
         void voidOutputNode(uint i) {
             ASSERT(i >= 0 && i <= myNumOutputs);
+            ASSERT(myNumNodes = myNodes.size());
+            ASSERT(myNumNodes >= myNumOutputs);
             myUsedOutputs.reset(i);
         }
 
