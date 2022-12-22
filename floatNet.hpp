@@ -81,10 +81,7 @@ class FloatNet
         void voidOutputNode(uint i) {
             ASSERT(myNumNodes = myNodes.size());
             ASSERT(myNumNodes >= myNumOutputs);
-
             myUsedOutputs.reset(i);
-            i = i + myNumNodes - myNumOutputs;
-            myNodes[i].makeVoid();
         }
 
     private:
