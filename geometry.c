@@ -67,24 +67,6 @@ void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
     *p = temp;
 }
 
-float FPoint_ToFRPointTheta(const FPoint *p, const FPoint *c);
-
-void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp)
-{
-    ASSERT(p != NULL);
-    ASSERT(rp != NULL);
-
-    FPoint temp = *p;
-
-    if (c != NULL) {
-        temp.x -= c->x;
-        temp.y -= c->y;
-    }
-
-    rp->radius = FPoint_ToRadius(&temp);
-    rp->theta = FPoint_ToTheta(&temp);
-}
-
 bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
                      bool forward)
 {

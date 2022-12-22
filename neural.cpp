@@ -1293,8 +1293,8 @@ bool NeuralForce_GetFocus(AIContext *nc,
 
             limitDistance = FPoint_Distance(focusPoint, &base->pos);
 
-            FPoint_ToFRPoint(&mob->pos, &base->pos, &rPoint);
-            rPoint.radius = limitDistance;
+            FPoint_ToFRPointWithRadius(&mob->pos, &base->pos, limitDistance,
+                                       &rPoint);
             FRPoint_ToFPoint(&rPoint, &base->pos, focusPoint);
             return TRUE;
         }
@@ -1304,8 +1304,8 @@ bool NeuralForce_GetFocus(AIContext *nc,
                                                  focusPoint)) {
                 return FALSE;
             }
-            FPoint_ToFRPoint(&mob->pos, focusPoint, &rPoint);
-            rPoint.radius = desc->radius;
+            FPoint_ToFRPointWithRadius(&mob->pos, focusPoint, desc->radius,
+                                       &rPoint);
             FRPoint_ToFPoint(&rPoint, focusPoint, focusPoint);
             return TRUE;
         }

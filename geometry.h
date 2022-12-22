@@ -206,7 +206,40 @@ static inline float FPoint_ToFRPointTheta(const FPoint *p, const FPoint *c)
     return FPoint_ToTheta(&temp);
 }
 
-void FPoint_ToFRPoint(const FPoint *p, const FPoint *c, FRPoint *rp);
+static inline void FPoint_ToFRPoint(const FPoint *p, const FPoint *c,
+                                    FRPoint *rp)
+{
+    ASSERT(p != NULL);
+    ASSERT(rp != NULL);
+
+    FPoint temp = *p;
+
+    if (c != NULL) {
+        temp.x -= c->x;
+        temp.y -= c->y;
+    }
+
+    rp->radius = FPoint_ToRadius(&temp);
+    rp->theta = FPoint_ToTheta(&temp);
+}
+
+static inline void FPoint_ToFRPointWithRadius(const FPoint *p, const FPoint *c,
+                                              float radius, FRPoint *rp)
+{
+    ASSERT(p != NULL);
+    ASSERT(rp != NULL);
+
+    FPoint temp = *p;
+
+    if (c != NULL) {
+        temp.x -= c->x;
+        temp.y -= c->y;
+    }
+
+    rp->radius = radius;
+    rp->theta = FPoint_ToTheta(&temp);
+}
+
 void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p);
 
 bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
