@@ -73,8 +73,8 @@ void FloatNet::loadZeroNet()
             for (uint k = 0; k < myNodes[i].inputs.size(); k++) {
                 myNodes[i].inputs[k] = 0;
             }
-         }
-     }
+        }
+    }
 
     for (uint i = 0; i < myValues.size(); i++) {
         myValues[i] = 0.0f;
@@ -83,11 +83,9 @@ void FloatNet::loadZeroNet()
     checkInvariants();
 }
 
-
 void FloatNet::load(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
-    uint numInnerNodes;
 
     p = prefix;
     p += "numInputs";
@@ -106,7 +104,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     p = prefix;
     p += "numInnerNodes";
     if (MBRegistry_ContainsKey(mreg, p.CStr())) {
-        numInnerNodes = MBRegistry_GetUint(mreg, p.CStr());
+        uint numInnerNodes = MBRegistry_GetUint(mreg, p.CStr());
         VERIFY(numInnerNodes > 1);
         myNumNodes = myNumInputs + numInnerNodes;
     } else {
