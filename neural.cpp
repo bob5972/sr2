@@ -1403,15 +1403,14 @@ static bool NeuralForceGetAdvanceFocusHelper(AIContext *nc,
                                              Mob *mob, FPoint *focusPoint,
                                              bool advance)
 {
-    FRPoint dir;
     Mob *base = nc->sg->friendBase();
 
     if (base == NULL) {
         return FALSE;
     }
 
-    FPoint_ToFRPoint(&mob->pos, &base->pos, &dir);
-    return FPoint_IsFacing(focusPoint, &mob->pos, &dir, advance);
+    return FPoint_IsFacingFPoint(focusPoint, &mob->pos,
+                                 &mob->pos, &base->pos, advance);
 }
 
 
@@ -1443,8 +1442,7 @@ bool NeuralForce_FocusToForce(AIContext *nc,
     }
 
     if (haveForce) {
-        FPoint_ToFRPoint(focusPoint, &mob->pos, rForce);
-        FRPoint_SetSpeed(rForce, 1.0f);
+        FPoint_ToFRPointWithRadius(focusPoint, &mob->pos, 1.0f, rForce);
 
         if (desc->useTangent) {
             rForce->theta += (float)M_PI/2;

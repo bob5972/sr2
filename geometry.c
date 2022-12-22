@@ -77,7 +77,6 @@ bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
     FRPoint_ToFPoint(dir, c, &dv);
 
     float dot = pv.x * dv.x + pv.y * pv.y;
-
     return forward ? dot >= 0 : dot < 0;
 }
 

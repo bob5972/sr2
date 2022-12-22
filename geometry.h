@@ -245,6 +245,21 @@ void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p);
 bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
                      bool forward);
 
+static inline bool
+FPoint_IsFacingFPoint(const FPoint *pp, const FPoint *pc,
+                      const FPoint *dp, const FPoint *dc,
+                      bool forward)
+{
+    FPoint pv;
+    FPoint dv;
+
+    FPoint_Subtract(pp, pc, &pv);
+    FPoint_Subtract(dp, dc, &dv);
+
+    float dot = pv.x * dv.x + pv.y * pv.y;
+    return forward ? dot >= 0 : dot < 0;
+}
+
 static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
                                FRPoint *result)
 {
