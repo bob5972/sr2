@@ -100,8 +100,14 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
     }
 
     p = prefix;
-    p += "numNodes";
-    myNumNodes = MBRegistry_GetUint(mreg, p.CStr());
+    p += "numInnerNodes";
+    if (MBRegistry_ContainsKey(mreg, p.CStr())) {
+        NOT_IMPLEMENTED();
+    } else {
+        p = prefix;
+        p += "numNodes";
+        myNumNodes = MBRegistry_GetUint(mreg, p.CStr());
+    }
 
     if (myNumOutputs > myNumNodes) {
         PANIC("Too many outputs: myNumOutputs=%d, myNumNodes=%d\n",
@@ -141,7 +147,7 @@ void FloatNet::load(MBRegistry *mreg, const char *prefix)
 void FloatNet::save(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
-    char *v;
+    char *v = NULL;
     int ret;
 
     checkInvariants();
