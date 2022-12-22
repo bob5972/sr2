@@ -450,11 +450,13 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
 
     NeuralLocus_Load(mreg, &desc, prefix);
 
-    s = prefix;
-    s += "locusType";
-    desc.locusType = NeuralLocus_Random();
-    v = NeuralLocus_ToString(desc.locusType);
-    MBRegistry_PutCopy(mreg, s.CStr(), v);
+    if (Random_Flip(rate)) {
+        s = prefix;
+        s += "locusType";
+        desc.locusType = NeuralLocus_Random();
+        v = NeuralLocus_ToString(desc.locusType);
+        MBRegistry_PutCopy(mreg, s.CStr(), v);
+    }
 
     Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_SPEED);
     s = prefix;
@@ -465,66 +467,70 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
     s = prefix;
     s += "speedLimited";
     bf.key = s.CStr();
-    bf.flipRate = rate;
+    bf.flipRate = MIN(0.5f, rate);
     Mutate_Bool(mreg, &bf, 1);
 
-    if (desc.locusType == NEURAL_LOCUS_VOID) {
-        // Nothing to load.
-    } else if (desc.locusType == NEURAL_LOCUS_ORBIT) {
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_RADIUS);
-        s = prefix;
-        s += "radius";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
+    /*
+     * Mutate all the fields, not just the active ones for the current
+     * locus type, to get some genetic drift.
+     */
+    ASSERT(desc.locusType == NEURAL_LOCUS_VOID ||
+           desc.locusType == NEURAL_LOCUS_ORBIT ||
+           desc.locusType == NEURAL_LOCUS_PATROL_MAP);
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
-        s = prefix;
-        s += "period";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
+    // NEURAL_LOCUS_ORBIT
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_RADIUS);
+    s = prefix;
+    s += "radius";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
 
-        s = prefix;
-        s += "focus.";
-        NeuralForce_Mutate(mreg, rate, s.CStr());
-    } else if (desc.locusType == NEURAL_LOCUS_PATROL_MAP) {
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
-        s = prefix;
-        s += "linearPeriod";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+    s = prefix;
+    s += "period";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD_OFFSET);
-        s = prefix;
-        s += "linearXPeriodOffset";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
+    s = prefix;
+    s += "focus.";
+    NeuralForce_Mutate(mreg, rate, s.CStr());
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD_OFFSET);
-        s = prefix;
-        s += "linearYPeriodOffset";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
+    // NEURAL_LOCUS_PATROL_MAP
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+    s = prefix;
+    s += "linearPeriod";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_WEIGHT);
-        s = prefix;
-        s += "linearWeight";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD_OFFSET);
+    s = prefix;
+    s += "linearXPeriodOffset";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
-        s = prefix;
-        s += "circularPeriod";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD_OFFSET);
+    s = prefix;
+    s += "linearYPeriodOffset";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
 
-        Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_WEIGHT);
-        s = prefix;
-        s += "circularWeight";
-        vf.key = s.CStr();
-        Mutate_Float(mreg, &vf, 1);
-    } else {
-        NOT_IMPLEMENTED();
-    }
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_WEIGHT);
+    s = prefix;
+    s += "linearWeight";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
+
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_PERIOD);
+    s = prefix;
+    s += "circularPeriod";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
+
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_WEIGHT);
+    s = prefix;
+    s += "circularWeight";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
 }
 
 void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
