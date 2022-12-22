@@ -47,6 +47,9 @@ void FloatNet::initialize(uint numInputs, uint numOutputs, uint numNodes)
     myInitialized = TRUE;
 
     checkInvariants();
+
+    loadZeroNet();
+    checkInvariants();
 }
 
 void FloatNet::loadZeroNet()
