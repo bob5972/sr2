@@ -86,7 +86,6 @@ void FloatNet::loadZeroNet()
 void FloatNet::load(MBRegistry *mreg, const char *prefix)
 {
     MBString p;
-    int ret;
     uint numInnerNodes;
 
     p = prefix;
