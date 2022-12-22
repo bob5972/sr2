@@ -56,9 +56,9 @@ class FloatNet
             outputBV = myUsedOutputs;
         }
 
-        uint getNumInputs()  { return myNumInputs;  }
-        uint getNumOutputs() { return myNumOutputs; }
-        uint getNumNodes() {
+        uint getNumInputs()  { return myNumInputs;    }
+        uint getNumOutputs() { return myNumOutputs;   }
+        uint getNumNodes()   {
             ASSERT(myNumNodes == myNodes.size());
             return myNumNodes;
         }

@@ -115,6 +115,7 @@ void NeuralNet::minimize()
     floatNet.getUsedInputs(inputBV);
 
     ASSERT(inputBV.size() == inputs.size());
+    ASSERT(inputs.size() == inputDescs.size());
     for (uint i = 0; i < inputDescs.size(); i++) {
         if (!inputBV.get(i)) {
             voidInputNode(i);
