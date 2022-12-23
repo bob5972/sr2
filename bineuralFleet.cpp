@@ -2393,7 +2393,7 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "gatherAbandonStale",          0.05f },
     };
 
-    float rate = 0.03;
+    float rate = 0.06;
     MBRegistry_PutCopy(mreg, BINEURAL_SCRAMBLE_KEY, "FALSE");
     if (Random_Flip(0.01)) {
         MBRegistry_PutCopy(mreg, BINEURAL_SCRAMBLE_KEY, "TRUE");
