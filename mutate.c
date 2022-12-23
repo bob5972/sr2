@@ -230,7 +230,19 @@ void Mutate_Index(MBRegistry *mreg, const char *key, float rate)
     }
 
     x = MBRegistry_GetInt(mreg, key);
-    x = Random_Int(-1, x + 1);
+
+    if (Random_Flip(0.01f)) {
+        x = -1;
+    } else if (Random_Flip(0.1f)) {
+        x = Random_Int(-1, 8);
+    } else if (Random_Flip(0.1f)) {
+        x = Random_Int(-1, 32);
+    } else if (Random_Flip(0.5f)) {
+        x = Random_Int(-1, MAX(1, 2 * x));
+    } else {
+        x = Random_Int(-1, MAX(1, x + 1));
+    }
+
     ret = asprintf(&v, "%d", x);
     VERIFY(ret > 0);
     MBRegistry_PutCopy(mreg, key, v);
