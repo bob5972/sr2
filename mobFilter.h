@@ -28,59 +28,112 @@
 #include "battleTypes.h"
 #include "MBCompare.h"
 
+#define MOB_FILTER_TFLAG_TYPE  (1 << 0)
+#define MOB_FILTER_TFLAG_FN    (1 << 1)
+#define MOB_FILTER_TFLAG_RANGE (1 << 2)
+#define MOB_FILTER_TFLAG_DIR   (1 << 3)
+#define MOB_FILTER_TFLAG_DIRFP (1 << 4)
+
+typedef bool (*MobFilterFn)(void *cbData, const Mob *m);
 
 typedef struct MobFilter {
+    uint filterTypeFlags;
+
     struct {
-        bool useFlags;
         MobTypeFlags flags;
-    } flagsFilter;
+    } typeF;
 
     struct {
         void *cbData;
-        bool (*func)(void *cbData, const Mob *m);
-    } fnFilter;
+        MobFilterFn func;
+    } fnF;
 
     struct {
-        bool useRange;
         FPoint pos;
         float radius;
-    } rangeFilter;
+    } rangeF;
 
     /*
      * Filter for mobs forward/backwards from the specified center point
      * and direction.
      */
     struct {
-        bool useDir;
         FPoint pos;
         FRPoint dir;
         bool forward;
-    } dirFilter;
+    } dirF;
 
     /*
      * Filter for mobs forward/backwards from the specified center point
      * and direction (as an FPoint from (0,0)).
      */
     struct {
-        bool useDir;
         FPoint pos;
         FPoint dir;
         bool forward;
-    } dirFPointFilter;
+    } dirFPF;
 } MobFilter;
 
 bool MobFilter_Filter(const Mob *m, const MobFilter *f);
+bool MobFilter_IsTriviallyEmpty(const MobFilter *filter);
 
-static inline bool MobFilter_IsTriviallyEmpty(const MobFilter *filter) {
-    if (filter->flagsFilter.useFlags &&
-        filter->flagsFilter.flags == MOB_FLAG_NONE) {
-        return TRUE;
-    }
-    if (filter->rangeFilter.useRange &&
-        filter->rangeFilter.radius <= 0.0f) {
-        return TRUE;
-    }
-    return FALSE;
+static inline void MobFilter_Init(MobFilter *mf)
+{
+    MBUtil_Zero(mf, sizeof(*mf));
+}
+
+static inline void MobFilter_UseType(MobFilter *mf, MobTypeFlags flags)
+{
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_TYPE) == 0);
+    ASSERT(mf->typeF.flags == 0);
+
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_TYPE;
+    mf->typeF.flags = flags;
+}
+
+static inline void MobFilter_UseFn(MobFilter *mf, MobFilterFn func,
+                                   void *cbData)
+{
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_FN) == 0);
+    ASSERT(mf->typeF.flags == 0);
+
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_FN;
+    mf->fnF.cbData = cbData;
+    mf->fnF.func = func;
+}
+
+static inline void MobFilter_UseRange(MobFilter *mf, const FPoint *pos,
+                                      float radius)
+{
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_RANGE) == 0);
+
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_RANGE;
+    mf->rangeF.pos = *pos;
+    mf->rangeF.radius = radius;
+}
+
+static inline void MobFilter_UseDir(MobFilter *mf, const FPoint *pos,
+                                    const FRPoint *dir,
+                                    bool forward)
+{
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIR) == 0);
+
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIR;
+    mf->dirF.pos = *pos;
+    mf->dirF.dir = *dir;
+    mf->dirF.forward = forward;
+}
+
+static inline void MobFilter_UseDirFP(MobFilter *mf, const FPoint *pos,
+                                      const FPoint *dir,
+                                      bool forward)
+{
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRFP) == 0);
+
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIRFP;
+    mf->dirFPF.pos = *pos;
+    mf->dirFPF.dir = *dir;
+    mf->dirFPF.forward = forward;
 }
 
 #ifdef __cplusplus

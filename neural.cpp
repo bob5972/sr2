@@ -676,11 +676,8 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     bool backward = FALSE;
     bool retreat = FALSE;
 
-    MBUtil_Zero(&f, sizeof(f));
-    f.rangeFilter.useRange = TRUE;
-    f.rangeFilter.pos = self->pos;
-    f.rangeFilter.radius = desc->radius;
-    f.flagsFilter.useFlags = TRUE;
+    MobFilter_Init(&f);
+    MobFilter_UseRange(&f, &self->pos, desc->radius);
 
     switch (forceType) {
         case NEURAL_FORCE_ALIGN2:
@@ -784,10 +781,10 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     }
 
     if (enemy) {
-        f.flagsFilter.flags = MOB_FLAG_SHIP;
+        MobFilter_UseType(&f, MOB_FLAG_SHIP);
         useFriends = FALSE;
     } else {
-        f.flagsFilter.flags = MOB_FLAG_FIGHTER;
+        MobFilter_UseType(&f, MOB_FLAG_FIGHTER);
         useFriends = TRUE;
     }
 
@@ -796,10 +793,9 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
         ASSERT(!forward || !backward);
         ASSERT(!advance);
         ASSERT(!retreat);
-        f.dirFilter.useDir = TRUE;
-        f.dirFilter.forward = forward;
-        NeuralForceGetHeading(nc, self, &f.dirFilter.dir);
-        f.dirFilter.pos = self->pos;
+        FRPoint dir;
+        NeuralForceGetHeading(nc, self, &dir);
+        MobFilter_UseDir(&f, &self->pos, &dir, forward);
     }
 
     if (advance || retreat) {
@@ -812,10 +808,9 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
             return FALSE;
         }
 
-        f.dirFPointFilter.useDir = TRUE;
-        f.dirFPointFilter.forward = advance;
-        FPoint_Subtract(&self->pos, &base->pos, &f.dirFPointFilter.dir);
-        f.dirFPointFilter.pos = self->pos;
+        FPoint dir;
+        FPoint_Subtract(&self->pos, &base->pos, &dir);
+        MobFilter_UseDirFP(&f, &self->pos, &dir, advance);
     }
 
     if (!nc->sg->avgFlock(&vel, &pos, &f, useFriends)) {
@@ -849,33 +844,29 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
     MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
 
     MobFilter f;
-    MBUtil_Zero(&f, sizeof(f));
-    f.rangeFilter.useRange = TRUE;
-    f.rangeFilter.pos = self->pos;
-    f.rangeFilter.radius = desc->radius;
-    f.flagsFilter.useFlags = FALSE;
+    MobFilter_Init(&f);
+    MobFilter_UseRange(&f, &self->pos, desc->radius);
 
     if (desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ||
         desc->forceType == NEURAL_FORCE_BACKWARD_SEPARATE) {
-        f.dirFilter.useDir = TRUE;
-        NeuralForceGetHeading(nc, self, &f.dirFilter.dir);
-        f.dirFilter.pos = self->pos;
-        f.dirFilter.forward = desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ?
-                              TRUE : FALSE;
+        bool forward = desc->forceType == NEURAL_FORCE_FORWARD_SEPARATE ?
+                        TRUE : FALSE;
+        FRPoint dir;
+        NeuralForceGetHeading(nc, self, &dir);
+        MobFilter_UseDir(&f, &self->pos, &dir, forward);
     } else if (desc->forceType == NEURAL_FORCE_ADVANCE_SEPARATE ||
                desc->forceType == NEURAL_FORCE_RETREAT_SEPARATE) {
         Mob *base = nc->sg->friendBase();
+        bool forward = desc->forceType == NEURAL_FORCE_ADVANCE_SEPARATE ?
+                       TRUE : FALSE;
+        FPoint dir;
 
         if (base == NULL) {
             return FALSE;
         }
 
-        f.dirFPointFilter.useDir = TRUE;
-        FPoint_Subtract(&self->pos, &base->pos, &f.dirFPointFilter.dir);
-        f.dirFPointFilter.pos = self->pos;
-
-        f.dirFilter.forward = desc->forceType == NEURAL_FORCE_ADVANCE_SEPARATE ?
-                              TRUE : FALSE;
+        FPoint_Subtract(&self->pos, &base->pos, &dir);
+        MobFilter_UseDirFP(&f, &self->pos, &dir, forward);
     } else {
         ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE);
     }
