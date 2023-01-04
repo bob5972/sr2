@@ -19,6 +19,7 @@
 #include "neural.hpp"
 #include "textDump.hpp"
 #include "mutate.h"
+#include "mobFilter.h"
 
 static bool NeuralForceGetAdvanceFocusHelper(AIContext *nc,
                                              Mob *mob, FPoint *focusPoint,
@@ -881,12 +882,12 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
 
     FRPoint_Zero(&force);
 
-    if (!Mob_IsFilterEmpty(&f)) {
+    if (!MobFilter_IsTriviallyEmpty(&f)) {
         while (mit.hasNext()) {
             Mob *m = mit.next();
             ASSERT(m != NULL);
 
-            if (m->mobid != self->mobid && Mob_Filter(m, &f)) {
+            if (m->mobid != self->mobid && MobFilter_Filter(m, &f)) {
                 NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
                 x++;
             }

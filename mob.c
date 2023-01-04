@@ -1,6 +1,6 @@
 /*
  * mob.c -- part of SpaceRobots2
- * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2023 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -416,45 +416,4 @@ void MobP_InitDistanceComparator(CMBComparator *comp, const FPoint *pos)
     comp->compareFn = MobPDistanceComparatorFn;
     comp->cbData = (void *)pos;
     comp->itemSize = sizeof(Mob *);
-}
-
-bool Mob_Filter(const Mob *m, const MobFilter *f)
-{
-    ASSERT(m != NULL);
-    ASSERT(f != NULL);
-
-    if (f->flagsFilter.useFlags) {
-        if (((1 << m->type) & f->flagsFilter.flags) == 0) {
-            return FALSE;
-        }
-    }
-    if (f->rangeFilter.useRange) {
-        if (f->rangeFilter.radius <= 0.0f) {
-            return FALSE;
-        }
-        if (FPoint_DistanceSquared(&f->rangeFilter.pos, &m->pos) >
-            f->rangeFilter.radius * f->rangeFilter.radius) {
-            return FALSE;
-        }
-    }
-    if (f->fnFilter.func != NULL) {
-        if (!f->fnFilter.func(f->fnFilter.cbData, m)) {
-            return FALSE;
-        }
-    }
-    if (f->dirFilter.useDir) {
-        if (!FPoint_IsFacing(&m->pos, &f->dirFilter.pos, &f->dirFilter.dir,
-                             f->dirFilter.forward)) {
-            return FALSE;
-        }
-    }
-    if (f->dirFPointFilter.useDir) {
-        if (!FPoint_IsFacingFPointVec(&m->pos, &f->dirFPointFilter.pos,
-                                      &f->dirFPointFilter.dir,
-                                      f->dirFPointFilter.forward)) {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
 }

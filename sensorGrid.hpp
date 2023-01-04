@@ -29,6 +29,7 @@ extern "C" {
 #include "mobSet.hpp"
 #include "IntMap.hpp"
 #include "BitVector.hpp"
+#include "mobFilter.h"
 
 #define SG_STALE_CORE_DEFAULT   40
 #define SG_STALE_FIGHTER_DEFAULT 2

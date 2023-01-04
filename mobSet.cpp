@@ -171,7 +171,7 @@ void MobSet::pushMobs(MBVector<Mob *>&v, const MobFilter *f) {
     for (uint i = 0; i < myMobs.size(); i++) {
         Mob *m = &myMobs[i];
 
-        if (Mob_Filter(m, f)) {
+        if (MobFilter_Filter(m, f)) {
             v.push(m);
         }
     }

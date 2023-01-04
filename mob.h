@@ -1,6 +1,6 @@
 /*
  * mob.h -- part of SpaceRobots2
- * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2023 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,47 +28,6 @@
 #include "MBVector.h"
 #include "battleTypes.h"
 #include "MBCompare.h"
-
-
-typedef struct MobFilter {
-    struct {
-        bool useFlags;
-        MobTypeFlags flags;
-    } flagsFilter;
-
-    struct {
-        void *cbData;
-        bool (*func)(void *cbData, const Mob *m);
-    } fnFilter;
-
-    struct {
-        bool useRange;
-        FPoint pos;
-        float radius;
-    } rangeFilter;
-
-    /*
-     * Filter for mobs forward/backwards from the specified center point
-     * and direction.
-     */
-    struct {
-        bool useDir;
-        FPoint pos;
-        FRPoint dir;
-        bool forward;
-    } dirFilter;
-
-    /*
-     * Filter for mobs forward/backwards from the specified center point
-     * and direction (as an FPoint from (0,0)).
-     */
-    struct {
-        bool useDir;
-        FPoint pos;
-        FPoint dir;
-        bool forward;
-    } dirFPointFilter;
-} MobFilter;
 
 #define MOB_FIGHTER_SENSOR_RADIUS (50.0f)
 
@@ -116,20 +75,6 @@ void Mob_Init(Mob *mob, MobType t);
 
 void Mob_MaskForSensor(Mob *mob);
 void Mob_MaskForAI(Mob *mob);
-
-bool Mob_Filter(const Mob *m, const MobFilter *f);
-
-static inline bool Mob_IsFilterEmpty(const MobFilter *filter) {
-    if (filter->flagsFilter.useFlags &&
-        filter->flagsFilter.flags == MOB_FLAG_NONE) {
-        return TRUE;
-    }
-    if (filter->rangeFilter.useRange &&
-        filter->rangeFilter.radius <= 0.0f) {
-        return TRUE;
-    }
-    return FALSE;
-}
 
 static inline float Mob_GetRadius(const Mob *mob)
 {

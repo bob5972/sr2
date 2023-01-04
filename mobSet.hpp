@@ -26,6 +26,7 @@ extern "C" {
 
 #include "IntMap.hpp"
 #include "MBVector.hpp"
+#include "mobFilter.h"
 
 class MobSet {
 public:

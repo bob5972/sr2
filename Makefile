@@ -55,6 +55,7 @@ C_SOURCES = main.c \
             geometry.c \
             mapperFleet.c \
             mob.c \
+	    mobFilter.c \
             mutate.c \
             simpleFleet.c \
             sprite.c \
