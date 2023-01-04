@@ -32,6 +32,7 @@
 #define MOB_FILTER_TFLAG_FN    (1 << 1)
 #define MOB_FILTER_TFLAG_RANGE (1 << 2)
 #define MOB_FILTER_TFLAG_DIR   (1 << 3)
+#define MOB_FILTER_TFLAG_MAX   (1 << 4)
 
 typedef bool (*MobFilterFn)(void *cbData, const Mob *m);
 
@@ -69,10 +70,12 @@ bool MobFilter_IsTriviallyEmpty(const MobFilter *filter);
 static inline void MobFilter_Init(MobFilter *mf)
 {
     MBUtil_Zero(mf, sizeof(*mf));
+    ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
 }
 
 static inline void MobFilter_UseType(MobFilter *mf, MobTypeFlags flags)
 {
+    ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_TYPE) == 0);
     ASSERT(mf->typeF.flags == 0);
 
@@ -83,6 +86,7 @@ static inline void MobFilter_UseType(MobFilter *mf, MobTypeFlags flags)
 static inline void MobFilter_UseFn(MobFilter *mf, MobFilterFn func,
                                    void *cbData)
 {
+    ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_FN) == 0);
     ASSERT(mf->typeF.flags == 0);
 
@@ -94,6 +98,7 @@ static inline void MobFilter_UseFn(MobFilter *mf, MobFilterFn func,
 static inline void MobFilter_UseRange(MobFilter *mf, const FPoint *pos,
                                       float radius)
 {
+    ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_RANGE) == 0);
 
     mf->filterTypeFlags |= MOB_FILTER_TFLAG_RANGE;
@@ -105,6 +110,7 @@ static inline void MobFilter_UseDirFP(MobFilter *mf, const FPoint *pos,
                                       const FPoint *dir,
                                       bool forward)
 {
+    ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIR) == 0);
 
     mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIR;
