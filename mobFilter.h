@@ -1,6 +1,6 @@
 /*
  * mobFilter.h -- part of SpaceRobots2
- * Copyright (C) 2020-2021 Michael Banack <github@banack.net>
+ * Copyright (C) 2020-2023 Michael Banack <github@banack.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 #define MOB_FILTER_TFLAG_TYPE  (1 << 0)
 #define MOB_FILTER_TFLAG_FN    (1 << 1)
 #define MOB_FILTER_TFLAG_RANGE (1 << 2)
-#define MOB_FILTER_TFLAG_DIR   (1 << 3)
+#define MOB_FILTER_TFLAG_DIRFR (1 << 3)
 #define MOB_FILTER_TFLAG_DIRFP (1 << 4)
 
 typedef bool (*MobFilterFn)(void *cbData, const Mob *m);
@@ -61,7 +61,7 @@ typedef struct MobFilter {
         FPoint pos;
         FRPoint dir;
         bool forward;
-    } dirF;
+    } dirFRF;
 
     /*
      * Filter for mobs forward/backwards from the specified center point
@@ -112,16 +112,16 @@ static inline void MobFilter_UseRange(MobFilter *mf, const FPoint *pos,
     mf->rangeF.radius = radius;
 }
 
-static inline void MobFilter_UseDir(MobFilter *mf, const FPoint *pos,
-                                    const FRPoint *dir,
-                                    bool forward)
+static inline void MobFilter_UseDirFR(MobFilter *mf, const FPoint *pos,
+                                     const FRPoint *dir,
+                                     bool forward)
 {
-    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIR) == 0);
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRFR) == 0);
 
-    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIR;
-    mf->dirF.pos = *pos;
-    mf->dirF.dir = *dir;
-    mf->dirF.forward = forward;
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIRFR;
+    mf->dirFRF.pos = *pos;
+    mf->dirFRF.dir = *dir;
+    mf->dirFRF.forward = forward;
 }
 
 static inline void MobFilter_UseDirFP(MobFilter *mf, const FPoint *pos,

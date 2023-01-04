@@ -69,9 +69,9 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
          ASSERT(mf->fnF.func == NULL);
     }
 
-    if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIR) != 0) {
-        if (!FPoint_IsFacing(&m->pos, &mf->dirF.pos, &mf->dirF.dir,
-                             mf->dirF.forward)) {
+    if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRFR) != 0) {
+        if (!FPoint_IsFacing(&m->pos, &mf->dirFRF.pos, &mf->dirFRF.dir,
+                             mf->dirFRF.forward)) {
             return FALSE;
         }
     }
