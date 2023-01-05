@@ -32,7 +32,8 @@
 #define MOB_FILTER_TFLAG_FN     (1 << 1)
 #define MOB_FILTER_TFLAG_RANGE  (1 << 2)
 #define MOB_FILTER_TFLAG_DIRP   (1 << 3)
-#define MOB_FILTER_TFLAG_MAX    (1 << 4)
+#define MOB_FILTER_TFLAG_EMPTY  (1 << 4)
+#define MOB_FILTER_TFLAG_MAX    (1 << 5)
 
 typedef bool (*MobFilterFn)(void *cbData, const Mob *m);
 
@@ -50,7 +51,7 @@ typedef struct MobFilter {
 
     struct {
         FPoint pos;
-        float radius;
+        float radiusSquared;
     } rangeF;
 
     /*
@@ -101,9 +102,13 @@ static inline void MobFilter_UseRange(MobFilter *mf, const FPoint *pos,
     ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_RANGE) == 0);
 
-    mf->filterTypeFlags |= MOB_FILTER_TFLAG_RANGE;
-    mf->rangeF.pos = *pos;
-    mf->rangeF.radius = radius;
+    if (radius <= 0.0f) {
+        mf->filterTypeFlags |= MOB_FILTER_TFLAG_EMPTY;
+    } else {
+        mf->filterTypeFlags |= MOB_FILTER_TFLAG_RANGE;
+        mf->rangeF.pos = *pos;
+        mf->rangeF.radiusSquared = radius * radius;
+    }
 }
 
 static inline void MobFilter_UseDirP(MobFilter *mf, const FPoint *pos,

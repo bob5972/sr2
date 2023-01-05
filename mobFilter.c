@@ -24,17 +24,12 @@ bool MobFilter_IsTriviallyEmpty(const MobFilter *mf)
     ASSERT(mf != NULL);
     ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
 
-    if (mf->filterTypeFlags == 0) {
+    if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_EMPTY) != 0) {
         return TRUE;
     }
 
     if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_TYPE) != 0 &&
         mf->typeF.flags == MOB_FLAG_NONE) {
-        return TRUE;
-    }
-
-    if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_RANGE) != 0 &&
-        mf->rangeF.radius <= 0.0f) {
         return TRUE;
     }
 
@@ -65,17 +60,16 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
         flags &= ~bit;
 
         switch (bit) {
+            case MOB_FILTER_TFLAG_EMPTY:
+                return FALSE;
             case MOB_FILTER_TFLAG_TYPE:
                 if (((1 << m->type) & mf->typeF.flags) == 0) {
                     return FALSE;
                 }
                 break;
             case MOB_FILTER_TFLAG_RANGE:
-                if (mf->rangeF.radius <= 0.0f) {
-                    return FALSE;
-                }
                 if (FPoint_DistanceSquared(&mf->rangeF.pos, &m->pos) >
-                    mf->rangeF.radius * mf->rangeF.radius) {
+                    mf->rangeF.radiusSquared) {
                     return FALSE;
                 }
                 break;
@@ -97,5 +91,6 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
         }
     }
 
+    ASSERT(!MobFilter_IsTriviallyEmpty(mf));
     return TRUE;
 }
