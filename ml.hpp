@@ -284,7 +284,7 @@ class MLFloatNode {
     private:
         const MBVector<float> *myValues;
 
-        float computeWork(const MBVector<float> &values);
+        float computeWork();
 
         float getInput(uint i) {
             if (mb_debug) {

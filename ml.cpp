@@ -317,7 +317,7 @@ float MLFloatNode::compute(const MBVector<float> &values)
     float f;
 
     myValues = &values;
-    f = computeWork(values);
+    f = computeWork();
     myValues = NULL;
 
     return f;
@@ -335,7 +335,7 @@ static float MLGaussian(float x, float mean, float stddev)
 }
 
 
-float MLFloatNode::computeWork(const MBVector<float> &values)
+float MLFloatNode::computeWork()
 {
     //if (mb_debug && ML_FOP_MAX != 149) {
     //    PANIC("ML_FOP_MAX=%d\n", ML_FOP_MAX);
