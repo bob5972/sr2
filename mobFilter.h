@@ -125,9 +125,9 @@ static inline void MobFilter_UseDirP(MobFilter *mf, const FPoint *pos,
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRP) == 0);
 
     mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIRP;
-    mf->dirF.pos = *pos;
-    mf->dirF.dir = *dir;
-    mf->dirF.forward = forward;
+    mf->dirPF.pos = *pos;
+    mf->dirPF.dir = *dir;
+    mf->dirPF.forward = forward;
 }
 
 static inline void MobFilter_UseDirR(MobFilter *mf, const FPoint *pos,
@@ -137,9 +137,9 @@ static inline void MobFilter_UseDirR(MobFilter *mf, const FPoint *pos,
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRR) == 0);
 
     mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIRR;
-    mf->dirF.pos = *pos;
-    mf->dirF.dir = *dir;
-    mf->dirF.forward = forward;
+    mf->dirRF.pos = *pos;
+    mf->dirRF.dir = *dir;
+    mf->dirRF.forward = forward;
 }
 
 

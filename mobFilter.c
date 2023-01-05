@@ -92,11 +92,9 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
                 }
                 break;
             case MOB_FILTER_TFLAG_DIRR:
-                if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIR) != 0) {
-                    if (!FPoint_IsFacing(&m->pos, &mf->dirRF.pos,
-                                         &mf->dirRF.dir, mf->dirRF.forward)) {
-                        return FALSE;
-                    }
+                if (!FPoint_IsFacing(&m->pos, &mf->dirRF.pos,
+                                     &mf->dirRF.dir, mf->dirRF.forward)) {
+                    return FALSE;
                 }
                 break;
             default:

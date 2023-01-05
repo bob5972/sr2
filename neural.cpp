@@ -795,7 +795,7 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
         ASSERT(!retreat);
         FRPoint dir;
         NeuralForceGetHeading(nc, self, &dir);
-        MobFilter_UseDir(&f, &self->pos, &dir, forward);
+        MobFilter_UseDirR(&f, &self->pos, &dir, forward);
     }
 
     if (advance || retreat) {
@@ -810,7 +810,7 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
 
         FPoint dir;
         FPoint_Subtract(&self->pos, &base->pos, &dir);
-        MobFilter_UseDirFP(&f, &self->pos, &dir, advance);
+        MobFilter_UseDirP(&f, &self->pos, &dir, advance);
     }
 
     if (!nc->sg->avgFlock(&vel, &pos, &f, useFriends)) {
@@ -853,7 +853,7 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
                         TRUE : FALSE;
         FRPoint dir;
         NeuralForceGetHeading(nc, self, &dir);
-        MobFilter_UseDir(&f, &self->pos, &dir, forward);
+        MobFilter_UseDirR(&f, &self->pos, &dir, forward);
     } else if (desc->forceType == NEURAL_FORCE_ADVANCE_SEPARATE ||
                desc->forceType == NEURAL_FORCE_RETREAT_SEPARATE) {
         Mob *base = nc->sg->friendBase();
@@ -866,7 +866,7 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
         }
 
         FPoint_Subtract(&self->pos, &base->pos, &dir);
-        MobFilter_UseDirFP(&f, &self->pos, &dir, forward);
+        MobFilter_UseDirP(&f, &self->pos, &dir, forward);
     } else {
         ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE);
     }
