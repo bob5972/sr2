@@ -91,12 +91,6 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
                     return FALSE;
                 }
                 break;
-            case MOB_FILTER_TFLAG_DIRR:
-                if (!FPoint_IsFacing(&m->pos, &mf->dirRF.pos,
-                                     &mf->dirRF.dir, mf->dirRF.forward)) {
-                    return FALSE;
-                }
-                break;
             default:
                 NOT_REACHED();
         }

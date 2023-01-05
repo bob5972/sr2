@@ -32,8 +32,7 @@
 #define MOB_FILTER_TFLAG_FN     (1 << 1)
 #define MOB_FILTER_TFLAG_RANGE  (1 << 2)
 #define MOB_FILTER_TFLAG_DIRP   (1 << 3)
-#define MOB_FILTER_TFLAG_DIRR   (1 << 4)
-#define MOB_FILTER_TFLAG_MAX    (1 << 5)
+#define MOB_FILTER_TFLAG_MAX    (1 << 4)
 
 typedef bool (*MobFilterFn)(void *cbData, const Mob *m);
 
@@ -53,16 +52,6 @@ typedef struct MobFilter {
         FPoint pos;
         float radius;
     } rangeF;
-
-    /*
-     * Filter for mobs forward/backwards from the specified center point
-     * and direction.
-     */
-    struct {
-        FPoint pos;
-        FRPoint dir;
-        bool forward;
-    } dirRF;
 
     /*
      * Filter for mobs forward/backwards from the specified center point
@@ -134,24 +123,10 @@ static inline void MobFilter_UseDirR(MobFilter *mf, const FPoint *pos,
                                      const FRPoint *dir,
                                      bool forward)
 {
-    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRR) == 0);
-
-    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIRR;
-    mf->dirRF.pos = *pos;
-    mf->dirRF.dir = *dir;
-    mf->dirRF.forward = forward;
+    FPoint fdir;
+    FRPoint_ToFPoint(dir, pos, &fdir);
+    MobFilter_UseDirP(mf, pos, &fdir, forward);
 }
-
-
-// static inline void MobFilter_UseDirFR(MobFilter *mf, const FPoint *pos,
-//                                       const FRPoint *dir,
-//                                       bool forward)
-// {
-//     FPoint fdir;
-//     FRPoint_ToFPoint(dir, pos, &fdir);
-//     MobFilter_UseDirFP(mf, pos, &fdir, forward);
-// }
-
 
 #ifdef __cplusplus
     }
