@@ -303,18 +303,7 @@ void FloatNet::compute(const MBVector<float> &inputs,
     }
 
     uint size = myNodes.size();
-    uint i;
-    for (i = myNumInputs; i + 7 < size; i+=8) {
-        myValues[i +  0] = myNodes[i +  0].compute(myValues);
-        myValues[i +  1] = myNodes[i +  1].compute(myValues);
-        myValues[i +  2] = myNodes[i +  2].compute(myValues);
-        myValues[i +  3] = myNodes[i +  3].compute(myValues);
-        myValues[i +  4] = myNodes[i +  4].compute(myValues);
-        myValues[i +  5] = myNodes[i +  5].compute(myValues);
-        myValues[i +  6] = myNodes[i +  6].compute(myValues);
-        myValues[i +  7] = myNodes[i +  7].compute(myValues);
-    }
-    for (i=i; i < size; i++) {
+    for (uint i = myNumInputs; i < size; i++) {
         myValues[i] = myNodes[i].compute(myValues);
     }
 

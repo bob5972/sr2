@@ -261,7 +261,15 @@ class MLFloatNode {
         MBVector<float> params;
         MBVector<uint> inputs;
 
-        float compute(const MBVector<float> &values);
+        float compute(const MBVector<float> &values) {
+            float f;
+
+            myValues = &values;
+            f = computeWork();
+            myValues = NULL;
+
+            return f;
+        }
 
         void load(MBRegistry *mreg, const char *prefix);
         void mutate(float rate, uint maxInputs, uint maxParams);

@@ -312,17 +312,6 @@ float MLFloatCheck1x1(MLFloatOp op, float input,
     return localWeight;
 }
 
-float MLFloatNode::compute(const MBVector<float> &values)
-{
-    float f;
-
-    myValues = &values;
-    f = computeWork();
-    myValues = NULL;
-
-    return f;
-}
-
 static float MLGaussian(float x, float mean, float stddev)
 {
     float c = stddev * sqrtf(2.0f * M_PI);
