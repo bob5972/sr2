@@ -84,11 +84,19 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
                     return FALSE;
                 }
                 break;
-            case MOB_FILTER_TFLAG_DIR:
-                if (!FPoint_IsFacingFPointVec(&m->pos, &mf->dirF.pos,
-                                              &mf->dirF.dir,
-                                              mf->dirF.forward)) {
+            case MOB_FILTER_TFLAG_DIRP:
+                if (!FPoint_IsFacingFPointVec(&m->pos, &mf->dirPF.pos,
+                                              &mf->dirPF.dir,
+                                              mf->dirPF.forward)) {
                     return FALSE;
+                }
+                break;
+            case MOB_FILTER_TFLAG_DIRR:
+                if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIR) != 0) {
+                    if (!FPoint_IsFacing(&m->pos, &mf->dirRF.pos,
+                                         &mf->dirRF.dir, mf->dirRF.forward)) {
+                        return FALSE;
+                    }
                 }
                 break;
             default:

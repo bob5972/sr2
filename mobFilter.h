@@ -28,11 +28,12 @@
 #include "battleTypes.h"
 #include "MBCompare.h"
 
-#define MOB_FILTER_TFLAG_TYPE  (1 << 0)
-#define MOB_FILTER_TFLAG_FN    (1 << 1)
-#define MOB_FILTER_TFLAG_RANGE (1 << 2)
-#define MOB_FILTER_TFLAG_DIR   (1 << 3)
-#define MOB_FILTER_TFLAG_MAX   (1 << 4)
+#define MOB_FILTER_TFLAG_TYPE   (1 << 0)
+#define MOB_FILTER_TFLAG_FN     (1 << 1)
+#define MOB_FILTER_TFLAG_RANGE  (1 << 2)
+#define MOB_FILTER_TFLAG_DIRP   (1 << 3)
+#define MOB_FILTER_TFLAG_DIRR   (1 << 4)
+#define MOB_FILTER_TFLAG_MAX    (1 << 5)
 
 typedef bool (*MobFilterFn)(void *cbData, const Mob *m);
 
@@ -55,13 +56,23 @@ typedef struct MobFilter {
 
     /*
      * Filter for mobs forward/backwards from the specified center point
+     * and direction.
+     */
+    struct {
+        FPoint pos;
+        FRPoint dir;
+        bool forward;
+    } dirRF;
+
+    /*
+     * Filter for mobs forward/backwards from the specified center point
      * and direction (as an FPoint from (0,0)).
      */
     struct {
         FPoint pos;
         FPoint dir;
         bool forward;
-    } dirF;
+    } dirPF;
 } MobFilter;
 
 bool MobFilter_Filter(const Mob *m, const MobFilter *f);
@@ -106,28 +117,40 @@ static inline void MobFilter_UseRange(MobFilter *mf, const FPoint *pos,
     mf->rangeF.radius = radius;
 }
 
-static inline void MobFilter_UseDirFP(MobFilter *mf, const FPoint *pos,
-                                      const FPoint *dir,
-                                      bool forward)
+static inline void MobFilter_UseDirP(MobFilter *mf, const FPoint *pos,
+                                     const FPoint *dir,
+                                     bool forward)
 {
     ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
-    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIR) == 0);
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRP) == 0);
 
-    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIR;
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIRP;
+    mf->dirF.pos = *pos;
+    mf->dirF.dir = *dir;
+    mf->dirF.forward = forward;
+}
+
+static inline void MobFilter_UseDirR(MobFilter *mf, const FPoint *pos,
+                                     const FRPoint *dir,
+                                     bool forward)
+{
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_DIRR) == 0);
+
+    mf->filterTypeFlags |= MOB_FILTER_TFLAG_DIRR;
     mf->dirF.pos = *pos;
     mf->dirF.dir = *dir;
     mf->dirF.forward = forward;
 }
 
 
-static inline void MobFilter_UseDirFR(MobFilter *mf, const FPoint *pos,
-                                      const FRPoint *dir,
-                                      bool forward)
-{
-    FPoint fdir;
-    FRPoint_ToFPoint(dir, pos, &fdir);
-    MobFilter_UseDirFP(mf, pos, &fdir, forward);
-}
+// static inline void MobFilter_UseDirFR(MobFilter *mf, const FPoint *pos,
+//                                       const FRPoint *dir,
+//                                       bool forward)
+// {
+//     FPoint fdir;
+//     FRPoint_ToFPoint(dir, pos, &fdir);
+//     MobFilter_UseDirFP(mf, pos, &fdir, forward);
+// }
 
 
 #ifdef __cplusplus
