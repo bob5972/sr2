@@ -60,6 +60,7 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
 
     while (flags != 0) {
         uint32 index = MBUtil_FFS(flags);
+        ASSERT(index > 0);
         uint32 bit = 1 << (index - 1);
         flags &= ~bit;
 
