@@ -19,9 +19,13 @@ jobs:
         submodules: recursive
     - name: setup
       run: sudo apt-get install libsdl2-dev libsdl2-ttf-dev
-    - name: configure
-      run: ./configure
-    - name: make
+    - name: configure (debug)
+      run: ./configure debug
+    - name: make (debug)
       run: make
     - name: test
       run: ./test.sh
+    - name: configure (release)
+      run: ./configure release
+    - name: make (release)
+      run: make
