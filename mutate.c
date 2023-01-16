@@ -41,7 +41,7 @@ float Mutate_FloatRaw(float value, bool missing, MutationFloatParams *mp)
             } else {
                 value = Random_Float(mp->minValue, mp->maxValue);
             }
-        } else if (Random_Bit()) {
+        } else if (value != 0.0f && Random_Bit()) {
             if (Random_Bit()) {
                 value *= 1.0f - mp->magnitude;
             } else {
@@ -50,7 +50,7 @@ float Mutate_FloatRaw(float value, bool missing, MutationFloatParams *mp)
         } else {
             float range = fabsf(mp->maxValue - mp->minValue);
             range = Random_Float(range * (1.0f - mp->magnitude),
-                                range * (1.0f + mp->magnitude));
+                                 range * (1.0f + mp->magnitude));
             if (Random_Bit()) {
                 value += mp->magnitude * range;
             } else {
