@@ -1657,13 +1657,7 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
             desc->patrolMapDesc.circularWeight > 0.0f) {
             float cwidth = width / 2;
             float cheight = height / 2;
-            float ct = aic->ai->tick / desc->patrolMapDesc.circularPeriod;
-
-            /*
-             * This isn't actually the circumference of an ellipse,
-             * but it's a good approximation.
-             */
-            ct /= M_PI * (cwidth + cheight);
+            float ct = 2.0f * M_PI * (aic->ai->tick / desc->patrolMapDesc.circularPeriod);
 
             circular.x = cwidth + cwidth * cosf(ct);
             circular.y = cheight + cheight * sinf(ct);
@@ -1675,26 +1669,25 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
             float temp;
             float xPeriod = desc->patrolMapDesc.linearPeriod +
                             desc->patrolMapDesc.linearXPeriodOffset;
-            float ltx = aic->ai->tick / xPeriod;
-            ltx /= 2 * width;
-            linear.x = width * modff(ltx / width, &temp);
-            if (((uint)temp) % 2 == 1) {
-                /*
-                * Go backwards for the return trip.
-                */
-                linear.x = width - linear.x;
+            float xp = aic->ai->tick / xPeriod;
+
+            xp = modff(xp, &temp);
+            ASSERT(xp >= 0.0f && xp <= 1.0f);
+            if (xp <= 0.5f) {
+                linear.x = width * 2.0f * xp;
+            } else {
+                linear.x = width * (2.0f - (2.0f * xp));
             }
 
             float yPeriod = desc->patrolMapDesc.linearPeriod +
                             desc->patrolMapDesc.linearYPeriodOffset;
-            float lty = aic->ai->tick / yPeriod;
-            lty /= 2 * height;
-            linear.y = height * modff(lty / height, &temp);
-            if (((uint)temp) % 2 == 1) {
-                /*
-                * Go backwards for the return trip.
-                */
-                linear.y = height - linear.y;
+            float yp = aic->ai->tick / yPeriod;
+            yp = modff(yp, &temp);
+            ASSERT(yp >= 0.0f && yp <= 1.0f);
+            if (yp <= 0.5f) {
+                linear.y = width * 2.0f * yp;
+            } else {
+                linear.y = width * (2.0f - (2.0f * yp));
             }
 
             haveLinear = TRUE;
