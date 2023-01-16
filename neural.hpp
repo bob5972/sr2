@@ -129,6 +129,7 @@ typedef enum NeuralLocusType {
     NEURAL_LOCUS_VOID,
     NEURAL_LOCUS_ORBIT,
     NEURAL_LOCUS_PATROL_MAP,
+    NEURAL_LOCUS_PATROL_EDGES,
     NEURAL_LOCUS_MAX,
 } NeuralLocusType;
 
@@ -182,6 +183,10 @@ typedef struct NeuralLocusPatrolMapDesc {
     float circularWeight;
 } NeuralLocusPatrolMapDesc;
 
+typedef struct NeuralLocusPatrolEdgesDesc {
+    float period;
+} NeuralLocusPatrolEdgesDesc;
+
 typedef struct NeuralLocusDesc {
     NeuralLocusType locusType;
     float speed;
@@ -190,6 +195,7 @@ typedef struct NeuralLocusDesc {
     union {
         NeuralLocusOrbitDesc orbitDesc;
         NeuralLocusPatrolMapDesc patrolMapDesc;
+        NeuralLocusPatrolEdgesDesc patrolEdgesDesc;
     };
 } NeuralLocusDesc;
 

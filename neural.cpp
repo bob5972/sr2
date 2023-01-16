@@ -129,6 +129,7 @@ static const TextMapEntry tmLocus[] = {
     { TMENTRY(NEURAL_LOCUS_VOID),       },
     { TMENTRY(NEURAL_LOCUS_ORBIT),      },
     { TMENTRY(NEURAL_LOCUS_PATROL_MAP), },
+    { TMENTRY(NEURAL_LOCUS_PATROL_EDGES), },
 };
 
 const char *NeuralForce_ToString(NeuralForceType nft)
@@ -425,6 +426,10 @@ void NeuralLocus_Load(MBRegistry *mreg,
         s = prefix;
         s += "circularWeight";
         desc->patrolMapDesc.circularWeight = MBRegistry_GetFloat(mreg, s.CStr());
+    } else if (desc->locusType == NEURAL_LOCUS_PATROL_EDGES) {
+        s = prefix;
+        s += "period";
+        desc->patrolEdgesDesc.period = MBRegistry_GetFloat(mreg, s.CStr());
     } else {
         NOT_IMPLEMENTED();
     }
@@ -474,7 +479,8 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
      */
     ASSERT(desc.locusType == NEURAL_LOCUS_VOID ||
            desc.locusType == NEURAL_LOCUS_ORBIT ||
-           desc.locusType == NEURAL_LOCUS_PATROL_MAP);
+           desc.locusType == NEURAL_LOCUS_PATROL_MAP ||
+           desc.locusType == NEURAL_LOCUS_PATROL_EDGES);
 
     // NEURAL_LOCUS_ORBIT
     s = prefix;
@@ -482,12 +488,13 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
     Mutate_FloatType(mreg, s.CStr(), MUTATION_TYPE_RADIUS);
 
     s = prefix;
-    s += "period";
-    Mutate_FloatType(mreg, s.CStr(), MUTATION_TYPE_PERIOD);
-
-    s = prefix;
     s += "focus.";
     NeuralForce_Mutate(mreg, rate, s.CStr());
+
+    // NEURAL_LOCUS_ORBIT || NEURAL_LOCUS_PATROL_EDGES
+    s = prefix;
+    s += "period";
+    Mutate_FloatType(mreg, s.CStr(), MUTATION_TYPE_PERIOD);
 
     // NEURAL_LOCUS_PATROL_MAP
     s = prefix;
@@ -1717,6 +1724,39 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
         } else {
             lpos->active = FALSE;
         }
+    } else if (desc->locusType == NEURAL_LOCUS_PATROL_EDGES) {
+        float width = aic->ai->bp.width;
+        float height = aic->ai->bp.height;
+
+        if (desc->patrolEdgesDesc.period < MICRON) {
+            lpos->active = FALSE;
+            return;
+        }
+
+        float temp;
+        float period = desc->patrolEdgesDesc.period;
+        float p = aic->ai->tick / period;
+        p = modff(p, &temp);
+        ASSERT(p >= 0.0f && p <= 1.0f);
+
+        float wp = width / (2.0f * width + 2.0f * height);
+        float hp = height / (2.0f * width + 2.0f * height);
+
+        if (p <= wp) {
+            newPoint.x = width * (p / wp);
+            newPoint.y = 0;
+        } else if (p >= wp && p <= (wp + hp)) {
+            newPoint.x = width;
+            newPoint.y = height * ((p - wp) / hp);
+        } else if (p >= (wp + hp) && p <= (2.0f * wp + hp)) {
+            newPoint.x = width * (1.0f - ((p - (wp + hp)) / wp));
+            newPoint.y = height;
+        } else {
+            newPoint.x = 0;
+            newPoint.y = height * (1.0f - ((p - (2.0f * wp + hp)) / hp));
+        }
+
+        lpos->active = TRUE;
     } else {
         NOT_IMPLEMENTED();
     }
