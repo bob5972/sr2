@@ -43,6 +43,7 @@ OPTS="${OPTS} -t $THREADS"
 if [ $? != 0 ]; then exit $? ; fi;
 
 echo > $LOG_FILE
+date >> $LOG_FILE
 grep numFleets $STABLE_FILE >> $LOG_FILE
 
 echo 'sr2: measure screenS (stable)'
@@ -63,6 +64,7 @@ build/sr2 mutate $OPTS --usePopulation $STABLE_FILE \
                        --outputFile $NOOB_FILE \
                        --mutationCount $NOOB_POP
 if [ $? != 0 ]; then exit $? ; fi;
+date >> $LOG_FILE
 grep numFleets $NOOB_FILE >> $LOG_FILE
 
 if [ -f $SCREEN1_FILE ]; then
@@ -77,6 +79,7 @@ if [ -f $SCREEN1_FILE ]; then
                         --defectiveLevel $SCREEN1_DEFECTIVE \
                         --resetAfter
     if [ $? != 0 ]; then exit $? ; fi;
+    date >> $LOG_FILE
     grep numFleets $NOOB_FILE >> $LOG_FILE
 fi;
 
@@ -92,6 +95,7 @@ if [ -f $SCREEN2_FILE ]; then
                         --defectiveLevel $SCREEN2_DEFECTIVE \
                         --resetAfter
     if [ $? != 0 ]; then exit $? ; fi;
+    date >> $LOG_FILE
     grep numFleets $NOOB_FILE >> $LOG_FILE
 fi;
 
@@ -107,6 +111,7 @@ if [ -f $SCREEN3_FILE ]; then
                         --defectiveLevel $SCREEN3_DEFECTIVE \
                         --resetAfter
     if [ $? != 0 ]; then exit $? ; fi;
+    date >> $LOG_FILE
     grep numFleets $NOOB_FILE >> $LOG_FILE
 fi;
 
@@ -127,5 +132,6 @@ build/sr2 merge $OPTS --usePopulation $STABLE_FILE \
                       --inputPopulation $NOOB_FILE
 if [ $? != 0 ]; then exit $? ; fi;
 
+date >> $LOG_FILE
 grep numFleets $STABLE_FILE >> $LOG_FILE
 
