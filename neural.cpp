@@ -1343,9 +1343,13 @@ bool NeuralForce_GetFocus(AIContext *nc,
             return NeuralForceGetFocusMobPosHelper(m, focusPoint);
         }
 
-        // case NEURAL_FORCE_LOCUS: {
-        //     NOT_IMPLEMENTED();
-        // }
+        case NEURAL_FORCE_LOCUS: {
+            /*
+             * Locus forces don't formally have a focus, they're handled
+             * by the NeuralNet in NeuralNet::getFocus.
+             */
+            return FALSE;
+        }
 
         default:
             PANIC("%s: Unhandled forceType: %d\n", __FUNCTION__,
