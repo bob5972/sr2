@@ -527,18 +527,28 @@ sub Main() {
     if ($OPTIONS->{'opSummary'}) {
         my $s;
 
-        Console("Inputs:\n");
-        $s = `grep forceType $gFile | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console("ShipNet Inputs:\n");
+        $s = `egrep 'valueType|forceType' $gFile | grep shipNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
-        Console("Outputs:\n");
-        $s = `grep forceType $gFile | grep output | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console("ShipNet Outputs:\n");
+        $s = `grep forceType $gFile | grep shipNet | grep output | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
-        Console("OpCodes:\n");
-        $s = `grep op $gFile | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console("FleetNet Inputs:\n");
+        $s = `egrep 'valueType|forceType' $gFile | grep fleetNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console($s);
+        Console("\n");
+
+        Console("ShipNet OpCodes:\n");
+        $s = `grep op $gFile | grep shipNet | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console($s);
+        Console("\n");
+
+        Console("FleetNet OpCodes:\n");
+        $s = `grep op $gFile | grep fleetNet | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
     }
