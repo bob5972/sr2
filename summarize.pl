@@ -537,6 +537,12 @@ sub Main() {
         Console($s);
         Console("\n");
 
+        Console("Locus:\n");
+        $s = `grep locus $gFile | egrep 'locusType|forceType' | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console($s);
+        Console("\n");
+
+
         Console("FleetNet Inputs:\n");
         $s = `egrep 'valueType|forceType' $gFile | grep fleetNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
