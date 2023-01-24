@@ -2424,7 +2424,7 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         int ret;
         ret = asprintf(&k, "locus[%d].", i);
         VERIFY(ret > 0);
-        NeuralLocus_Mutate(mreg, MAX(1.0f, rate * 10), k);
+        NeuralLocus_Mutate(mreg, rate, k);
         free(k);
     }
 
