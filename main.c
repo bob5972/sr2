@@ -220,7 +220,7 @@ static void MainLoadDefaultPlayers(void)
         mainData.players[p].aiType = FLEET_AI_NEURAL12;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BINEURAL3;
+        mainData.players[p].aiType = FLEET_AI_BINEURAL4;
         p++;
 
         //mainData.players[p].playerName = "HoldMod";
