@@ -214,13 +214,13 @@ static void MainLoadDefaultPlayers(void)
         mainData.players[p].aiType = FLEET_AI_FLOCK9;
         p++;
 
-        // mainData.players[p].aiType = FLEET_AI_BUNDLE15;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_BUNDLE15;
+        p++;
 
-        // mainData.players[p].aiType = FLEET_AI_NEURAL12;
-        // p++;
+        mainData.players[p].aiType = FLEET_AI_NEURAL12;
+        p++;
 
-        mainData.players[p].aiType = FLEET_AI_BINEURAL2;
+        mainData.players[p].aiType = FLEET_AI_BINEURAL3;
         p++;
 
         //mainData.players[p].playerName = "HoldMod";
