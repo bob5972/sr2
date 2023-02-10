@@ -101,7 +101,12 @@ static const TextMapEntry tmCrowds[] = {
     { TMENTRY(NEURAL_CROWD_ENEMY_MISSILE),         },
     { TMENTRY(NEURAL_CROWD_CORES),                 },
     { TMENTRY(NEURAL_CROWD_BASE_ENEMY_SHIP),       },
-    { TMENTRY(NEURAL_CROWD_BASE_FRIEND_SHIP),       },
+    { TMENTRY(NEURAL_CROWD_BASE_FRIEND_SHIP),      },
+};
+
+static const TextMapEntry tmSquads[] = {
+    { TMENTRY(NEURAL_SQUAD_NONE),                  },
+    { TMENTRY(NEURAL_SQUAD_EQUAL_PARTITIONS),      },
 };
 
 static const TextMapEntry tmWaves[] = {
@@ -119,6 +124,7 @@ static const TextMapEntry tmValues[] = {
     { TMENTRY(NEURAL_VALUE_CROWD), },
     { TMENTRY(NEURAL_VALUE_TICK),  },
     { TMENTRY(NEURAL_VALUE_MOBID), },
+    { TMENTRY(NEURAL_VALUE_SQUAD), },
     { TMENTRY(NEURAL_VALUE_RANDOM_UNIT), },
     { TMENTRY(NEURAL_VALUE_CREDITS), },
     { TMENTRY(NEURAL_VALUE_FRIEND_SHIPS), },
@@ -152,6 +158,11 @@ const char *NeuralCrowd_ToString(NeuralCrowdType nct)
     return TextMap_ToString(nct, tmCrowds, ARRAYSIZE(tmCrowds));
 }
 
+const char *NeuralSquad_ToString(NeuralSquadType nct)
+{
+    return TextMap_ToString(nct, tmSquads, ARRAYSIZE(tmSquads));
+}
+
 const char *NeuralLocus_ToString(NeuralLocusType nlt)
 {
     return TextMap_ToString(nlt, tmLocus, ARRAYSIZE(tmLocus));
@@ -181,6 +192,12 @@ NeuralCrowdType NeuralCrowd_FromString(const char *str)
                                                 ARRAYSIZE(tmCrowds));
 }
 
+NeuralSquadType NeuralSquad_FromString(const char *str)
+{
+    return (NeuralSquadType) TextMap_FromString(str, tmSquads,
+                                                ARRAYSIZE(tmSquads));
+}
+
 NeuralLocusType NeuralLocus_FromString(const char *str)
 {
     return (NeuralLocusType) TextMap_FromString(str, tmLocus,
@@ -200,10 +217,11 @@ NeuralValueType NeuralValue_Random()
     EnumDistribution vts[] = {
         { NEURAL_VALUE_VOID,         0.00f, },
         { NEURAL_VALUE_ZERO,         0.02f, },
-        { NEURAL_VALUE_FORCE,        0.38f, },
-        { NEURAL_VALUE_CROWD,        0.38f, },
+        { NEURAL_VALUE_FORCE,        0.36f, },
+        { NEURAL_VALUE_CROWD,        0.36f, },
         { NEURAL_VALUE_TICK,         0.04f, },
         { NEURAL_VALUE_MOBID,        0.04f, },
+        { NEURAL_VALUE_SQUAD,        0.04f, },
         { NEURAL_VALUE_RANDOM_UNIT,  0.04f, },
         { NEURAL_VALUE_CREDITS,      0.02f, },
         { NEURAL_VALUE_FRIEND_SHIPS, 0.04f, },
@@ -226,6 +244,13 @@ NeuralCrowdType NeuralCrowd_Random()
     uint i = Random_Int(0, ARRAYSIZE(tmCrowds) - 1);
     ASSERT(ARRAYSIZE(tmCrowds) == NEURAL_CROWD_MAX);
     return (NeuralCrowdType) tmCrowds[i].value;
+}
+
+NeuralSquadType NeuralSquad_Random()
+{
+    uint i = Random_Int(0, ARRAYSIZE(tmSquads) - 1);
+    ASSERT(ARRAYSIZE(tmSquads) == NEURAL_SQUAD_MAX);
+    return (NeuralSquadType) tmSquads[i].value;
 }
 
 NeuralLocusType NeuralLocus_Random()
@@ -261,6 +286,10 @@ void NeuralValue_Load(MBRegistry *mreg,
 
         case NEURAL_VALUE_CROWD:
             NeuralCrowd_Load(mreg, &desc->crowdDesc, s.CStr());
+            break;
+
+        case NEURAL_VALUE_SQUAD:
+            NeuralSquad_Load(mreg, &desc->squadDesc, s.CStr());
             break;
 
         case NEURAL_VALUE_TICK:
@@ -344,6 +373,29 @@ void NeuralCrowd_Load(MBRegistry *mreg,
         v = NeuralCrowd_ToString(NEURAL_CROWD_FRIEND_FIGHTER);
     }
     desc->crowdType = NeuralCrowd_FromString(v);
+}
+
+void NeuralSquad_Load(MBRegistry *mreg,
+                      NeuralSquadDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *v;
+
+    s = prefix;
+    s += "numSquads";
+    desc->numSquads = MBRegistry_GetInt(mreg, s.CStr());
+
+    s = prefix;
+    s += "seed";
+    desc->seed = MBRegistry_GetInt(mreg, s.CStr());
+
+    s = prefix;
+    s += "squadType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        v = NeuralSquad_ToString(NEURAL_SQUAD_NONE);
+    }
+    desc->squadType = NeuralSquad_FromString(v);
 }
 
 void NeuralTick_Load(MBRegistry *mreg,
@@ -607,6 +659,23 @@ void NeuralValue_Mutate(MBRegistry *mreg,
             const char *v = NeuralCrowd_ToString(ct);
             MBRegistry_PutCopy(mreg, s.CStr(), v);
             desc.crowdDesc.crowdType = ct;
+        }
+    } else if (desc.valueType == NEURAL_VALUE_SQUAD) {
+        s = prefix;
+        s += "seed";
+        Mutate_Index(mreg, s.CStr(), rate);
+
+        s = prefix;
+        s += "numSquads";
+        Mutate_Index(mreg, s.CStr(), rate);
+
+        s = prefix;
+        s += "squadType";
+        if (Random_Flip(rate)) {
+            NeuralSquadType st = NeuralSquad_Random();
+            const char *v = NeuralSquad_ToString(st);
+            MBRegistry_PutCopy(mreg, s.CStr(), v);
+            desc.squadDesc.squadType = st;
         }
     } else if (desc.valueType == NEURAL_VALUE_TICK) {
         MutationFloatParams vf;
@@ -1602,6 +1671,26 @@ float NeuralValue_GetValue(AIContext *nc,
             seed = (seed << 32) | index;
             RandomState_CreateWithSeed(&lr, seed);
             return RandomState_UnitFloat(&lr);
+        }
+        case NEURAL_VALUE_SQUAD: {
+            /*
+             * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
+             * NEURAL_VALUE_MOBID.
+             */
+            uint numSquads = desc->squadDesc.numSquads;
+            if (numSquads <= 1) {
+                return 0.0f;
+            }
+
+            RandomState lr;
+            uint64 seed = mob->mobid;
+            seed = (seed << 32) | desc->squadDesc.seed;
+            RandomState_CreateWithSeed(&lr, seed);
+            float fmobid = RandomState_UnitFloat(&lr);
+            if (fmobid == 1.0f) {
+                return 1.0f - (1.0f / numSquads);
+            }
+            return floorf(fmobid / (1.0f / numSquads));
         }
         case NEURAL_VALUE_RANDOM_UNIT:
             return RandomState_UnitFloat(rs);

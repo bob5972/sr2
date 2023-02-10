@@ -111,6 +111,12 @@ typedef enum NeuralWaveType {
     NEURAL_WAVE_MAX,
 } NeuralWaveType;
 
+typedef enum NeuralSquadType {
+    NEURAL_SQUAD_NONE,
+    NEURAL_SQUAD_EQUAL_PARTITIONS,
+    NEURAL_SQUAD_MAX,
+} NeuralSquadType;
+
 typedef enum NeuralValueType {
     NEURAL_VALUE_VOID,
     NEURAL_VALUE_ZERO,
@@ -118,6 +124,7 @@ typedef enum NeuralValueType {
     NEURAL_VALUE_CROWD,
     NEURAL_VALUE_TICK,
     NEURAL_VALUE_MOBID,
+    NEURAL_VALUE_SQUAD,
     NEURAL_VALUE_RANDOM_UNIT,
     NEURAL_VALUE_CREDITS,
     NEURAL_VALUE_FRIEND_SHIPS,
@@ -154,6 +161,12 @@ typedef struct NeuralCrowdDesc {
     float radius;
 } NeuralCrowdDesc;
 
+typedef struct NeuralSquadDesc {
+    NeuralSquadType squadType;
+    int seed;
+    int numSquads;
+} NeuralSquadDesc;
+
 typedef struct NeuralScalarDesc {
     int scalarID;
 } NeuralScalarDesc;
@@ -163,6 +176,7 @@ typedef struct NeuralValueDesc {
     union {
         NeuralForceDesc forceDesc;
         NeuralCrowdDesc crowdDesc;
+        NeuralSquadDesc squadDesc;
         NeuralTickDesc tickDesc;
         NeuralScalarDesc scalarDesc;
     };
@@ -208,18 +222,21 @@ const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);
 const char *NeuralWave_ToString(NeuralWaveType nwt);
 const char *NeuralCrowd_ToString(NeuralCrowdType nct);
+const char *NeuralSquad_ToString(NeuralSquadType nst);
 const char *NeuralLocus_ToString(NeuralLocusType nlt);
 
 NeuralForceType NeuralForce_FromString(const char *str);
 NeuralValueType NeuralValue_FromString(const char *str);
 NeuralWaveType  NeuralWave_FromString(const char *str);
 NeuralCrowdType NeuralCrowd_FromString(const char *str);
+NeuralSquadType NeuralSquad_FromString(const char *str);
 NeuralLocusType NeuralLocus_FromString(const char *str);
 
 NeuralForceType NeuralForce_Random();
 NeuralValueType NeuralValue_Random();
 NeuralWaveType NeuralWave_Random();
 NeuralCrowdType NeuralCrowd_Random();
+NeuralSquadType NeuralSquad_Random();
 NeuralLocusType NeuralLocus_Random();
 
 void NeuralValue_Load(MBRegistry *mreg,
@@ -228,6 +245,8 @@ void NeuralForce_Load(MBRegistry *mreg,
                       NeuralForceDesc *desc, const char *prefix);
 void NeuralCrowd_Load(MBRegistry *mreg,
                       NeuralCrowdDesc *desc, const char *prefix);
+void NeuralSquad_Load(MBRegistry *mreg,
+                      NeuralSquadDesc *desc, const char *prefix);
 void NeuralTick_Load(MBRegistry *mreg,
                      NeuralTickDesc *desc, const char *prefix);
 void NeuralScalar_Load(MBRegistry *mreg,

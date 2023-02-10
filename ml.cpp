@@ -57,7 +57,6 @@ static TextMapEntry tmMLFloatOps[] = {
 
     { TMENTRY(ML_FOP_1x0_IDENTITY), },
     { TMENTRY(ML_FOP_1x0_NEGATE), },
-    { TMENTRY(ML_FOP_1x0_SEEDED_RANDOM_UNIT), },
     { TMENTRY(ML_FOP_1x0_SQRT), },
     { TMENTRY(ML_FOP_1x0_ARC_COSINE), },
     { TMENTRY(ML_FOP_1x0_ARC_SINE), },
@@ -110,7 +109,10 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x2_COSINE), },
     { TMENTRY(ML_FOP_1x2_INSIDE_RANGE), },
     { TMENTRY(ML_FOP_1x2_OUTSIDE_RANGE), },
+
+    { TMENTRY(ML_FOP_1x0_SEEDED_RANDOM_UNIT), },
     { TMENTRY(ML_FOP_1x2_SEEDED_RANDOM), },
+    { TMENTRY(ML_FOP_1x1_SQUAD_SELECT), },
 
     { TMENTRY(ML_FOP_1x3_IF_GTE_ELSE), },
     { TMENTRY(ML_FOP_1x3_IF_LTE_ELSE), },
@@ -598,6 +600,7 @@ float MLFloatNode::computeWork()
             float min = MIN(p0, p1);
             return (f <= min || f >= max) ? 1.0f : 0.0f;
         }
+
         case ML_FOP_1x2_SEEDED_RANDOM: {
             float p0 = getParam(0);
             float p1 = getParam(1);
@@ -611,6 +614,31 @@ float MLFloatNode::computeWork()
             value.f = getInput(0);
             RandomState_CreateWithSeed(&lr, value.u);
             return RandomState_Float(&lr, min, max);
+        }
+        case ML_FOP_1x1_SQUAD_SELECT: {
+            /*
+             * Should replicate NEURAL_VALUE_SQUAD on a given
+             * mobid.
+             */
+            float p0 = getParam(0);
+            float numSquads = floorf(p0);
+            RandomState lr;
+            union {
+                float f;
+                uint32 u;
+            } value;
+
+            if (numSquads <= 1.0f) {
+                return 0.0f;
+            }
+
+            value.f = getInput(0);
+            RandomState_CreateWithSeed(&lr, value.u);
+            float fmobid = RandomState_UnitFloat(&lr);
+            if (fmobid == 1.0f) {
+                return 1.0f - (1.0f / numSquads);
+            }
+            return floorf(fmobid / (1.0f / numSquads));
         }
 
         case ML_FOP_1x3_IF_GTE_ELSE: {
@@ -1867,6 +1895,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numParams = 0;
             break;
 
+        case ML_FOP_1x1_SQUAD_SELECT:
         case ML_FOP_1x1_WEIGHTED_INVERSE_SQUARE:
         case ML_FOP_1x1_CEIL_STEP:
         case ML_FOP_1x1_FLOOR_STEP:
