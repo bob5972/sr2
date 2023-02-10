@@ -100,6 +100,7 @@ static const TextMapEntry tmCrowds[] = {
     { TMENTRY(NEURAL_CROWD_ENEMY_SHIP),            },
     { TMENTRY(NEURAL_CROWD_ENEMY_MISSILE),         },
     { TMENTRY(NEURAL_CROWD_CORES),                 },
+    { TMENTRY(NEURAL_CROWD_FRIEND_CORES),          },
     { TMENTRY(NEURAL_CROWD_BASE_ENEMY_SHIP),       },
     { TMENTRY(NEURAL_CROWD_BASE_FRIEND_SHIP),      },
     { TMENTRY(NEURAL_CROWD_NET_ENEMY_SHIP),        },
