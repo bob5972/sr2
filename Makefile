@@ -50,6 +50,7 @@ C_SOURCES = main.c \
             dummyFleet.c \
             runAwayFleet.c \
             fleet.c \
+            fleetConfig.c \
             fleetUtil.c \
             gatherFleet.c \
             geometry.c \
