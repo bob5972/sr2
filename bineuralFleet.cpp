@@ -98,7 +98,7 @@ public:
     }
 
     void putDefaults(MBRegistry *mreg, FleetAIType aiType) {
-        BineuralConfigValue defaults[] = {
+        const BineuralConfigValue defaults[] = {
             { "attackExtendedRange",         "TRUE"      },
             { "attackRange",                 "117.644791"},
             { "baseDefenseRadius",           "143.515045"},
@@ -132,7 +132,7 @@ public:
             { "useAttackForces",             "FALSE"     },
         };
 
-        BineuralConfigValue configs1[] = {
+        const BineuralConfigValue configs1[] = {
             { "attackExtendedRange", "TRUE" },
             { "attackRange", "119.889206" },
             { "creditReserve", "0.000000" },
@@ -835,7 +835,7 @@ public:
             { "startingMaxRadius", "1434.236328" },
             { "startingMinRadius", "391.281525" },
         };
-        BineuralConfigValue configs2[] = {
+        const BineuralConfigValue configs2[] = {
             { "attackExtendedRange", "TRUE" },
             { "attackRange", "119.889206" },
             { "creditReserve", "0.000000" },
@@ -2164,7 +2164,7 @@ public:
             { "fleetNet.fn.numInnerNodes", "130" },
             { "shipNet.fn.numInnerNodes", "100" },
         };
-        BineuralConfigValue configs3[] = {
+        const BineuralConfigValue configs3[] = {
             { "attackExtendedRange", "TRUE" },
             { "attackRange", "119.889206" },
             { "creditReserve", "0.000000" },
@@ -3861,7 +3861,7 @@ public:
             { "startingMaxRadius", "1362.524536" },
             { "startingMinRadius", "800.000000" },
         };
-        BineuralConfigValue configs4[] = {
+        const BineuralConfigValue configs4[] = {
             { "attackExtendedRange", "TRUE" },
             { "attackRange", "119.889206" },
             { "creditReserve", "0.000000" },
@@ -5528,10 +5528,10 @@ public:
             { "shipNet.output[9].valueType", "NEURAL_VALUE_FORCE" },
             { "startingMaxRadius", "1430.650757" },
             { "startingMinRadius", "450.451874" },
-    };
+        };
 
         struct {
-            BineuralConfigValue *values;
+            const BineuralConfigValue *values;
             uint numValues;
         } configs[] = {
             { defaults,  ARRAYSIZE(defaults), },
@@ -5547,7 +5547,7 @@ public:
         VERIFY(bineuralIndex >= 1 && bineuralIndex < ARRAYSIZE(configs));
 
         int i = bineuralIndex;
-        BineuralConfigValue *curConfig = configs[i].values;
+        const BineuralConfigValue *curConfig = configs[i].values;
         uint size = configs[i].numValues;
         for (uint k = 0; k < size; k++) {
             if (curConfig[k].value != NULL &&
