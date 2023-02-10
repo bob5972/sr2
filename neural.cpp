@@ -1620,9 +1620,9 @@ float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
         return 0.0f;
     } else if (squadDesc->squadType == NEURAL_SQUAD_EQUAL_PARTITIONS) {
         /*
-        * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
-        * NEURAL_VALUE_MOBID.
-        */
+         * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
+         * NEURAL_VALUE_MOBID.
+         */
         uint numSquads = squadDesc->numSquads;
         if (numSquads <= 1) {
             return 0.0f;
@@ -1640,8 +1640,6 @@ float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
     } else {
         NOT_IMPLEMENTED();
     }
-
-    NOT_REACHED();
 }
 
 
