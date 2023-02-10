@@ -120,17 +120,20 @@ static const TextMapEntry tmWaves[] = {
 };
 
 static const TextMapEntry tmValues[] = {
-    { TMENTRY(NEURAL_VALUE_VOID),  },
-    { TMENTRY(NEURAL_VALUE_ZERO),  },
-    { TMENTRY(NEURAL_VALUE_FORCE), },
-    { TMENTRY(NEURAL_VALUE_CROWD), },
-    { TMENTRY(NEURAL_VALUE_TICK),  },
-    { TMENTRY(NEURAL_VALUE_MOBID), },
-    { TMENTRY(NEURAL_VALUE_SQUAD), },
-    { TMENTRY(NEURAL_VALUE_RANDOM_UNIT), },
-    { TMENTRY(NEURAL_VALUE_CREDITS), },
-    { TMENTRY(NEURAL_VALUE_FRIEND_SHIPS), },
-    { TMENTRY(NEURAL_VALUE_SCALAR), },
+    { TMENTRY(NEURAL_VALUE_VOID),            },
+    { TMENTRY(NEURAL_VALUE_ZERO),            },
+    { TMENTRY(NEURAL_VALUE_FORCE),           },
+    { TMENTRY(NEURAL_VALUE_CROWD),           },
+    { TMENTRY(NEURAL_VALUE_TICK),            },
+    { TMENTRY(NEURAL_VALUE_MOBID),           },
+    { TMENTRY(NEURAL_VALUE_SQUAD),           },
+    { TMENTRY(NEURAL_VALUE_RANDOM_UNIT),     },
+    { TMENTRY(NEURAL_VALUE_CREDITS),         },
+    { TMENTRY(NEURAL_VALUE_FRIEND_SHIPS),    },
+    { TMENTRY(NEURAL_VALUE_FRIEND_MISSILES), },
+    { TMENTRY(NEURAL_VALUE_ENEMY_SHIPS),     },
+    { TMENTRY(NEURAL_VALUE_ENEMY_MISSILES),  },
+    { TMENTRY(NEURAL_VALUE_SCALAR),          },
 };
 
 static const TextMapEntry tmLocus[] = {
@@ -217,17 +220,20 @@ NeuralForceType NeuralForce_Random()
 NeuralValueType NeuralValue_Random()
 {
     EnumDistribution vts[] = {
-        { NEURAL_VALUE_VOID,         0.00f, },
-        { NEURAL_VALUE_ZERO,         0.02f, },
-        { NEURAL_VALUE_FORCE,        0.36f, },
-        { NEURAL_VALUE_CROWD,        0.36f, },
-        { NEURAL_VALUE_TICK,         0.04f, },
-        { NEURAL_VALUE_MOBID,        0.04f, },
-        { NEURAL_VALUE_SQUAD,        0.04f, },
-        { NEURAL_VALUE_RANDOM_UNIT,  0.04f, },
-        { NEURAL_VALUE_CREDITS,      0.02f, },
-        { NEURAL_VALUE_FRIEND_SHIPS, 0.04f, },
-        { NEURAL_VALUE_SCALAR,       0.04f, },
+        { NEURAL_VALUE_VOID,            0.00f, },
+        { NEURAL_VALUE_ZERO,            0.02f, },
+        { NEURAL_VALUE_FORCE,           0.30f, },
+        { NEURAL_VALUE_CROWD,           0.30f, },
+        { NEURAL_VALUE_TICK,            0.04f, },
+        { NEURAL_VALUE_MOBID,           0.04f, },
+        { NEURAL_VALUE_SQUAD,           0.04f, },
+        { NEURAL_VALUE_RANDOM_UNIT,     0.04f, },
+        { NEURAL_VALUE_CREDITS,         0.02f, },
+        { NEURAL_VALUE_FRIEND_SHIPS,    0.04f, },
+        { NEURAL_VALUE_FRIEND_MISSILES, 0.04f, },
+        { NEURAL_VALUE_ENEMY_SHIPS,     0.04f, },
+        { NEURAL_VALUE_ENEMY_MISSILES,  0.04f, },
+        { NEURAL_VALUE_SCALAR,          0.04f, },
     };
 
     ASSERT(ARRAYSIZE(vts) == NEURAL_VALUE_MAX);
@@ -770,6 +776,9 @@ void NeuralValue_Mutate(MBRegistry *mreg,
         }
     } else if (desc.valueType == NEURAL_VALUE_ZERO ||
                desc.valueType == NEURAL_VALUE_FRIEND_SHIPS ||
+               desc.valueType == NEURAL_VALUE_FRIEND_MISSILES ||
+               desc.valueType == NEURAL_VALUE_ENEMY_SHIPS ||
+               desc.valueType == NEURAL_VALUE_ENEMY_MISSILES ||
                desc.valueType == NEURAL_VALUE_MOBID ||
                desc.valueType == NEURAL_VALUE_CREDITS ||
                desc.valueType == NEURAL_VALUE_RANDOM_UNIT) {
@@ -1803,6 +1812,12 @@ float NeuralValue_GetValue(AIContext *nc,
             return (float)ai->credits;
         case NEURAL_VALUE_FRIEND_SHIPS:
             return (float)sg->numFriends(MOB_FLAG_SHIP);
+        case NEURAL_VALUE_FRIEND_MISSILES:
+            return (float)sg->numFriends(MOB_FLAG_MISSILE);
+        case NEURAL_VALUE_ENEMY_SHIPS:
+            return (float)sg->numTargets(MOB_FLAG_SHIP);
+        case NEURAL_VALUE_ENEMY_MISSILES:
+            return (float)sg->numTargets(MOB_FLAG_MISSILE);
 
         default:
             NOT_IMPLEMENTED();
