@@ -635,7 +635,7 @@ float MLFloatNode::computeWork()
             value.f = getInput(0);
             RandomState_CreateWithSeed(&lr, value.u);
             float fmobid = RandomState_UnitFloat(&lr);
-            if (fmobid == 1.0f) {
+            if (fmobid >= 1.0f) {
                 return 1.0f - (1.0f / numSquads);
             }
             return floorf(fmobid / (1.0f / numSquads));
