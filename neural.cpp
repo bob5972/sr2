@@ -314,6 +314,9 @@ void NeuralValue_Load(MBRegistry *mreg,
         case NEURAL_VALUE_RANDOM_UNIT:
         case NEURAL_VALUE_CREDITS:
         case NEURAL_VALUE_FRIEND_SHIPS:
+        case NEURAL_VALUE_FRIEND_MISSILES:
+        case NEURAL_VALUE_ENEMY_SHIPS:
+        case NEURAL_VALUE_ENEMY_MISSILES:
             break;
 
         default:
