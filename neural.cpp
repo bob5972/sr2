@@ -1753,6 +1753,10 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
         float width = aic->ai->bp.width;
         float height = aic->ai->bp.height;
 
+        MBUtil_Zero(&circular, sizeof(circular));
+        MBUtil_Zero(&linear, sizeof(linear));
+        MBUtil_Zero(&locus, sizeof(locus));
+
         if (desc->patrolMapDesc.circularPeriod > 0.0f &&
             desc->patrolMapDesc.circularWeight > 0.0f) {
             float cwidth = width / 2;
