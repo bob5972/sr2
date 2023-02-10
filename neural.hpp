@@ -218,6 +218,15 @@ typedef struct NeuralLocusPosition {
     FPoint pos;
 } NeuralLocusPosition;
 
+// typedef struct NeuralCondition {
+//     struct {
+//         bool active;
+//         NeuralSquadDesc squadDesc;
+//         float min;
+//         float max;
+//     } squad;
+// } NeuralCondition;
+
 const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);
 const char *NeuralWave_ToString(NeuralWaveType nwt);
