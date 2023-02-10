@@ -34,9 +34,9 @@
 #include "fleetConfig.h"
 
 #define BINEURAL_MAX_NODE_DEGREE   8
-#define BINEURAL_MAX_INPUTS       30
-#define BINEURAL_MAX_OUTPUTS      30
-#define BINEURAL_MAX_NODES       130
+#define BINEURAL_MAX_INPUTS       40
+#define BINEURAL_MAX_OUTPUTS      40
+#define BINEURAL_MAX_NODES       150
 
 #define BINEURAL_MAX_LOCUS         8
 
