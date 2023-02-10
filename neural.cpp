@@ -102,6 +102,8 @@ static const TextMapEntry tmCrowds[] = {
     { TMENTRY(NEURAL_CROWD_CORES),                 },
     { TMENTRY(NEURAL_CROWD_BASE_ENEMY_SHIP),       },
     { TMENTRY(NEURAL_CROWD_BASE_FRIEND_SHIP),      },
+    { TMENTRY(NEURAL_CROWD_NET_ENEMY_SHIP),        },
+    { TMENTRY(NEURAL_CROWD_NET_FRIEND_SHIP),       },
 };
 
 static const TextMapEntry tmSquads[] = {
@@ -1652,6 +1654,9 @@ float NeuralCrowd_GetValue(AIContext *nc,
     } else if (desc->crowdType == NEURAL_CROWD_CORES) {
         return sg->numTargetsInRange(MOB_FLAG_POWER_CORE,
                                      &mob->pos, desc->radius);
+    } else if (desc->crowdType == NEURAL_CROWD_FRIEND_CORES) {
+        return sg->numFriendsInRange(MOB_FLAG_POWER_CORE,
+                                     &mob->pos, desc->radius);
     } else if  (desc->crowdType == NEURAL_CROWD_FRIEND_MISSILE) {
         return sg->numFriendsInRange(MOB_FLAG_MISSILE,
                                      &mob->pos, desc->radius);
@@ -1672,6 +1677,16 @@ float NeuralCrowd_GetValue(AIContext *nc,
                                          &base->pos, desc->radius);
         }
         return 0.0f;
+    } else if (desc->crowdType == NEURAL_CROWD_NET_ENEMY_SHIP ||
+               desc->crowdType == NEURAL_CROWD_NET_FRIEND_SHIP) {
+        int ec = sg->numTargetsInRange(MOB_FLAG_SHIP, &mob->pos, desc->radius);
+        int fc = sg->numFriendsInRange(MOB_FLAG_SHIP, &mob->pos, desc->radius);
+
+        if (desc->crowdType == NEURAL_CROWD_NET_ENEMY_SHIP) {
+            return ec - fc;
+        }
+
+        return fc - ec;
     } else {
         NOT_IMPLEMENTED();
     }
