@@ -1614,6 +1614,36 @@ float NeuralCrowd_GetValue(AIContext *nc,
     }
 }
 
+float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
+{
+    if (squadDesc->squadType == NEURAL_SQUAD_NONE) {
+        return 0.0f;
+    } else if (squadDesc->squadType == NEURAL_SQUAD_EQUAL_PARTITIONS) {
+        /*
+        * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
+        * NEURAL_VALUE_MOBID.
+        */
+        uint numSquads = squadDesc->numSquads;
+        if (numSquads <= 1) {
+            return 0.0f;
+        }
+
+        RandomState lr;
+        uint64 seed = mob->mobid;
+        seed = (seed << 32) | squadDesc->seed;
+        RandomState_CreateWithSeed(&lr, seed);
+        float fmobid = RandomState_UnitFloat(&lr);
+        if (fmobid == 1.0f) {
+            return 1.0f - (1.0f / numSquads);
+        }
+        return floorf(fmobid / (1.0f / numSquads));
+    } else {
+        NOT_IMPLEMENTED();
+    }
+
+    NOT_REACHED();
+}
+
 
 float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc)
 {
@@ -1673,30 +1703,7 @@ float NeuralValue_GetValue(AIContext *nc,
             return RandomState_UnitFloat(&lr);
         }
         case NEURAL_VALUE_SQUAD: {
-            if (desc->squadDesc.squadType == NEURAL_SQUAD_NONE) {
-                return 0.0f;
-            } else if (desc->squadDesc.squadType == NEURAL_SQUAD_EQUAL_PARTITIONS) {
-                /*
-                * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
-                * NEURAL_VALUE_MOBID.
-                */
-                uint numSquads = desc->squadDesc.numSquads;
-                if (numSquads <= 1) {
-                    return 0.0f;
-                }
-
-                RandomState lr;
-                uint64 seed = mob->mobid;
-                seed = (seed << 32) | desc->squadDesc.seed;
-                RandomState_CreateWithSeed(&lr, seed);
-                float fmobid = RandomState_UnitFloat(&lr);
-                if (fmobid == 1.0f) {
-                    return 1.0f - (1.0f / numSquads);
-                }
-                return floorf(fmobid / (1.0f / numSquads));
-            } else {
-                NOT_IMPLEMENTED();
-            }
+            return NeuralSquad_GetValue(nc, mob, &desc->squadDesc);
         }
         case NEURAL_VALUE_RANDOM_UNIT:
             return RandomState_UnitFloat(rs);

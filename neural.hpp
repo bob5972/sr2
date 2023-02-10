@@ -272,6 +272,7 @@ void NeuralLocus_Mutate(MBRegistry *mreg, float rate, const char *prefix);
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
 float NeuralCrowd_GetValue(AIContext *nc, Mob *mob, NeuralCrowdDesc *desc);
+float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *desc);
 float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc);
 
 bool NeuralForce_FocusToForce(AIContext *nc, Mob *mob,
