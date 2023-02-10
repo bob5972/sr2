@@ -487,6 +487,30 @@ void NeuralLocus_Load(MBRegistry *mreg,
     }
 }
 
+void NeuralCondition_Load(MBRegistry *mreg,
+                         NeuralConditionDesc *desc, const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    s += "squad.active";
+    desc->squad.active = MBRegistry_GetBool(mreg, s.CStr());
+
+    if (desc->squad.active) {
+        s = prefix;
+        s += "squad.desc.";
+        NeuralSquad_Load(mreg, &desc->squad.squadDesc, s.CStr());
+
+        s = prefix;
+        s += "squad.limit0";
+        desc->squad.limit0 = MBRegistry_GetFloat(mreg, s.CStr());
+
+        s = prefix;
+        s += "squad.limit1";
+        desc->squad.limit1 = MBRegistry_GetFloat(mreg, s.CStr());
+    }
+}
+
 void NeuralScalar_Load(MBRegistry *mreg,
                        NeuralScalarDesc *desc, const char *prefix)
 {
@@ -574,6 +598,38 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
     Mutate_FloatType(mreg, s.CStr(), MUTATION_TYPE_WEIGHT);
 }
 
+void NeuralCondition_Mutate(MBRegistry *mreg,
+                            float rate,
+                            NeuralNetType nnType,
+                            const char *prefix)
+{
+    MBString s;
+    MutationBoolParams bf;
+
+    if (nnType == NN_TYPE_SCALARS) {
+        return;
+    }
+    ASSERT(nnType == NN_TYPE_FORCES);
+
+    s = prefix;
+    s += "squad.active";
+    bf.key = s.CStr();
+    bf.flipRate = MIN(0.5f, rate);
+    Mutate_Bool(mreg, &bf, 1);
+
+    s = prefix;
+    s += "squad.desc.";
+    NeuralSquad_Mutate(mreg, rate, prefix);
+
+    s = prefix;
+    s += "squad.limit0";
+    Mutate_FloatType(mreg, s.CStr(), MUTATION_TYPE_UNIT);
+
+    s = prefix;
+    s += "squad.limit1";
+    Mutate_FloatType(mreg, s.CStr(), MUTATION_TYPE_UNIT);
+}
+
 void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
 {
     MBString s;
@@ -613,6 +669,28 @@ void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
         bf.key = s.CStr();
         bf.flipRate = rate;
         Mutate_Bool(mreg, &bf, 1);
+    }
+}
+
+void NeuralSquad_Mutate(MBRegistry *mreg,
+                        float rate, const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    s += "seed";
+    Mutate_Index(mreg, s.CStr(), rate);
+
+    s = prefix;
+    s += "numSquads";
+    Mutate_Index(mreg, s.CStr(), rate);
+
+    s = prefix;
+    s += "squadType";
+    if (Random_Flip(rate)) {
+        NeuralSquadType st = NeuralSquad_Random();
+        const char *v = NeuralSquad_ToString(st);
+        MBRegistry_PutCopy(mreg, s.CStr(), v);
     }
 }
 
@@ -661,22 +739,7 @@ void NeuralValue_Mutate(MBRegistry *mreg,
             desc.crowdDesc.crowdType = ct;
         }
     } else if (desc.valueType == NEURAL_VALUE_SQUAD) {
-        s = prefix;
-        s += "seed";
-        Mutate_Index(mreg, s.CStr(), rate);
-
-        s = prefix;
-        s += "numSquads";
-        Mutate_Index(mreg, s.CStr(), rate);
-
-        s = prefix;
-        s += "squadType";
-        if (Random_Flip(rate)) {
-            NeuralSquadType st = NeuralSquad_Random();
-            const char *v = NeuralSquad_ToString(st);
-            MBRegistry_PutCopy(mreg, s.CStr(), v);
-            desc.squadDesc.squadType = st;
-        }
+        NeuralSquad_Mutate(mreg, rate, prefix);
     } else if (desc.valueType == NEURAL_VALUE_TICK) {
         MutationFloatParams vf;
 
@@ -1640,6 +1703,22 @@ float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
     } else {
         NOT_IMPLEMENTED();
     }
+}
+
+bool NeuralCondition_AppliesToMob(AIContext *nc, Mob *mob,
+                                  NeuralConditionDesc *condDesc)
+{
+    if (condDesc->squad.active) {
+        float squad = NeuralSquad_GetValue(nc, mob,  &condDesc->squad.squadDesc);
+        float min = MIN(condDesc->squad.limit0, condDesc->squad.limit1);
+        float max = MAX(condDesc->squad.limit0, condDesc->squad.limit1);
+
+        if (squad < min || squad > max) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 

@@ -218,14 +218,14 @@ typedef struct NeuralLocusPosition {
     FPoint pos;
 } NeuralLocusPosition;
 
-// typedef struct NeuralCondition {
-//     struct {
-//         bool active;
-//         NeuralSquadDesc squadDesc;
-//         float min;
-//         float max;
-//     } squad;
-// } NeuralCondition;
+typedef struct NeuralConditionDesc {
+    struct {
+        bool active;
+        NeuralSquadDesc squadDesc;
+        float limit0;
+        float limit1;
+    } squad;
+} NeuralConditionDesc;
 
 const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);
@@ -262,18 +262,25 @@ void NeuralScalar_Load(MBRegistry *mreg,
                        NeuralScalarDesc *desc, const char *prefix);
 void NeuralLocus_Load(MBRegistry *mreg,
                       NeuralLocusDesc *desc, const char *prefix);
+void NeuralCondition_Load(MBRegistry *mreg,
+                          NeuralConditionDesc *desc, const char *prefix);
 
 void NeuralValue_Mutate(MBRegistry *mreg, float rate, bool isOutput,
                         NeuralNetType nnType,
                         const char *prefix);
 void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix);
 void NeuralLocus_Mutate(MBRegistry *mreg, float rate, const char *prefix);
+void NeuralSquad_Mutate(MBRegistry *mreg, float rate, const char *prefix);
+void NeuralCondition_Mutate(MBRegistry *mreg, float rate, NeuralNetType nnType,
+                            const char *prefix);
 
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
 float NeuralCrowd_GetValue(AIContext *nc, Mob *mob, NeuralCrowdDesc *desc);
 float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *desc);
 float NeuralTick_GetValue(AIContext *nc, NeuralTickDesc *desc);
+
+bool NeuralCondition_AppliesToMob(AIContext *nc, Mob *m, NeuralConditionDesc *condDesc);
 
 bool NeuralForce_FocusToForce(AIContext *nc, Mob *mob,
                               NeuralForceDesc *desc, FPoint *focusPoint,

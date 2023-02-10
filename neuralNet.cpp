@@ -60,6 +60,20 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
     inputDescs.resize(numInputs);
     outputDescs.resize(numOutputs);
 
+    if (nnTypeIn == NN_TYPE_FORCES) {
+        outputConditionDescs.resize(numOutputs);
+        for (uint i = 0; i < outputConditionDescs.size(); i++) {
+            char *lcstr = NULL;
+            int ret = asprintf(&lcstr, "%soutput[%d].condition.", prefix, i);
+            VERIFY(ret > 0);
+            NeuralCondition_Load(mreg, &outputConditionDescs[i], lcstr);
+            free(lcstr);
+        }
+    } else {
+        ASSERT(nnTypeIn == NN_TYPE_SCALARS);
+        outputConditionDescs.resize(0);
+    }
+
     for (uint i = 0; i < outputDescs.size(); i++) {
         bool voidNode = FALSE;
         char *lcstr = NULL;
@@ -230,6 +244,14 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
         NeuralValue_Mutate(mreg, rate, TRUE, nnType, str);
         free(str);
     }
+
+    for (uint i = 0; i < fn.getNumOutputs(); i++) {
+        char *str = NULL;
+        int ret = asprintf(&str, "%soutput[%d].condition.", prefix, i);
+        VERIFY(ret > 0);
+        NeuralCondition_Mutate(mreg, rate, nnType, str);
+        free(str);
+    }
 }
 
 
@@ -303,6 +325,7 @@ void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
         if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
             ASSERT(outputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
             if (outputs[i] != 0.0f &&
+                outputConditionApplies(mob, i) &&
                 getOutputForce(mob, i, &force)) {
                 FRPoint_SetSpeed(&force, outputs[i]);
                 FRPoint_Add(&force, outputForce, outputForce);

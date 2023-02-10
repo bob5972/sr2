@@ -34,6 +34,7 @@ public:
     FloatNet floatNet;
     MBVector<NeuralValueDesc> inputDescs;
     MBVector<NeuralValueDesc> outputDescs;
+    MBVector<NeuralConditionDesc> outputConditionDescs;
     MBVector<float> inputs;
     MBVector<float> outputs;
     AIContext aic;
@@ -158,6 +159,14 @@ private:
         haveForce = getFocus(mob, &desc->forceDesc, &focus);
         return NeuralForce_FocusToForce(&aic, mob, &desc->forceDesc,
                                         &focus, haveForce, rForce);
+    }
+
+    bool outputConditionApplies(Mob *m, uint i) {
+        if (i >= outputConditionDescs.size()) {
+            return TRUE;
+        }
+
+        return NeuralCondition_AppliesToMob(&aic, m, &outputConditionDescs[i]);
     }
 };
 
