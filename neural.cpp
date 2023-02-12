@@ -109,6 +109,7 @@ static const TextMapEntry tmCrowds[] = {
 
 static const TextMapEntry tmSquads[] = {
     { TMENTRY(NEURAL_SQUAD_NONE),                  },
+    { TMENTRY(NEURAL_SQUAD_MOBID),                 },
     { TMENTRY(NEURAL_SQUAD_EQUAL_PARTITIONS),      },
 };
 
@@ -1707,13 +1708,11 @@ float NeuralCrowd_GetValue(AIContext *nc,
 
 float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
 {
-    if (squadDesc->squadType == NEURAL_SQUAD_NONE) {
+    NeuralSquadType squadType = squadDesc->squadType;
+    if (squadType == NEURAL_SQUAD_NONE) {
         return 0.0f;
-    } else if (squadDesc->squadType == NEURAL_SQUAD_EQUAL_PARTITIONS) {
-        /*
-         * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
-         * NEURAL_VALUE_MOBID.
-         */
+    } else if (squadType == NEURAL_SQUAD_MOBID ||
+               squadType == NEURAL_SQUAD_EQUAL_PARTITIONS) {
         uint numSquads = squadDesc->numSquads;
         if (numSquads <= 1) {
             return 0.0f;
@@ -1724,10 +1723,21 @@ float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
         seed = (seed << 32) | squadDesc->seed;
         RandomState_CreateWithSeed(&lr, seed);
         float fmobid = RandomState_UnitFloat(&lr);
-        if (fmobid == 1.0f) {
-            return 1.0f - (1.0f / numSquads);
+
+        if (squadDesc->squadType == NEURAL_SQUAD_MOBID) {
+            return fmobid;
+        } else {
+           /*
+            * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
+            * NEURAL_VALUE_MOBID.
+            */
+           ASSERT(squadType == NEURAL_SQUAD_EQUAL_PARTITIONS);
+
+           if (fmobid == 1.0f) {
+              return 1.0f - (1.0f / numSquads);
+           }
+           return floorf(fmobid / (1.0f / numSquads));
         }
-        return floorf(fmobid / (1.0f / numSquads));
     } else {
         NOT_IMPLEMENTED();
     }
@@ -1801,11 +1811,11 @@ float NeuralValue_GetValue(AIContext *nc,
         case NEURAL_VALUE_TICK:
             return NeuralTick_GetValue(nc, &desc->tickDesc);
         case NEURAL_VALUE_MOBID: {
-            RandomState lr;
-            uint64 seed = mob->mobid;
-            seed = (seed << 32) | index;
-            RandomState_CreateWithSeed(&lr, seed);
-            return RandomState_UnitFloat(&lr);
+            NeuralSquadDesc squadDesc;
+            MBUtil_Zero(&squadDesc, sizeof(squadDesc));
+            squadDesc.squadType = NEURAL_SQUAD_MOBID;
+            squadDesc.seed = index;
+            return NeuralSquad_GetValue(nc, mob, &squadDesc);
         }
         case NEURAL_VALUE_SQUAD: {
             return NeuralSquad_GetValue(nc, mob, &desc->squadDesc);

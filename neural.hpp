@@ -116,6 +116,7 @@ typedef enum NeuralWaveType {
 
 typedef enum NeuralSquadType {
     NEURAL_SQUAD_NONE,
+    NEURAL_SQUAD_MOBID,
     NEURAL_SQUAD_EQUAL_PARTITIONS,
     NEURAL_SQUAD_MAX,
 } NeuralSquadType;
