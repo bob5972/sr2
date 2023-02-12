@@ -57,14 +57,8 @@ void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
         c = &zero;
     }
 
-    FPoint temp;
-
-    temp.x = rp->radius * cosf(rp->theta);
-    temp.y = rp->radius * sinf(rp->theta);
-    temp.x += c->x;
-    temp.y += c->y;
-
-    *p = temp;
+    p->x = rp->radius * cosf(rp->theta) + c->x;
+    p->y = rp->radius * sinf(rp->theta) + c->y;
 }
 
 bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
