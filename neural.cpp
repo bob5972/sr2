@@ -1042,19 +1042,31 @@ static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *pos, FRPoint *force)
 {
     FRPoint f;
+    FPoint p;
+    float radiusSquared;
 
-    FPoint_ToFRPoint(selfPos, pos, &f);
+    ASSERT(pos != NULL);
+    ASSERT(selfPos != NULL);
+    ASSERT(force != NULL);
 
-    /*
-     * Avoid 1/0 => NAN, and then randomize the direction when
-     * the point is more or less directly on top of us.
-     */
-    if (f.radius < MICRON) {
-        f.radius = MICRON;
+    p.x = selfPos->x - pos->x;
+    p.y = selfPos->y - pos->y;
+
+    radiusSquared = (p.x * p.x) + (p.y * p.y);
+
+    if (radiusSquared < MICRON * MICRON) {
+        /*
+         * Avoid 1/0 => NAN, and then randomize the direction when
+         * the point is more or less directly on top of us.
+         */
+        f.radius = 1.0f / (MICRON * MICRON);
         f.theta = RandomState_Float(nc->rs, 0, M_PI * 2.0f);
+    } else {
+        ASSERT(fabs(FPoint_ToRadius(&p) - sqrtf(radiusSquared)) <= MICRON);
+        f.radius = 1.0f / (radiusSquared);
+        f.theta = FPoint_ToTheta(&p);
     }
 
-    f.radius = 1.0f / (f.radius * f.radius);
     FRPoint_Add(force, &f, force);
 }
 static void NeuralForceGetEdgeFocus(AIContext *nc,
