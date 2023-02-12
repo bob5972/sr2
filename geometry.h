@@ -272,6 +272,13 @@ FPoint_IsFacingFPointVec(const FPoint *pp, const FPoint *pc,
     return forward ? dot >= 0 : dot < 0;
 }
 
+static inline void FPoint_Add(const FPoint *lhs, const FPoint *rhs,
+                              FPoint *result)
+{
+    result->x = lhs->x + rhs->x;
+    result->y = lhs->y + rhs->y;
+}
+
 static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
                                FRPoint *result)
 {
@@ -281,8 +288,7 @@ static inline void FRPoint_Add(const FRPoint *lhs, const FRPoint *rhs,
     FRPoint_ToFPoint(lhs, NULL, &vl);
     FRPoint_ToFPoint(rhs, NULL, &vr);
 
-    vs.x = vl.x + vr.x;
-    vs.y = vl.y + vr.y;
+    FPoint_Add(&vl, &vr, &vs);
 
     FPoint_ToFRPoint(&vs, NULL, result);
 }

@@ -32,7 +32,7 @@ static void NeuralForceGetHeading(AIContext *nc, Mob *mob, FRPoint *heading);
 static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint);
 static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *selfPos,
-                                       const FPoint *pos, FRPoint *force);
+                                       const FPoint *pos, FPoint *force);
 
 
 static const TextMapEntry tmForces[] = {
@@ -987,7 +987,7 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
                                         Mob *self, NeuralForceDesc *desc,
                                         FPoint *focusPoint)
 {
-    FRPoint force;
+    FPoint force;
     int x = 0;
     MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
 
@@ -1019,7 +1019,7 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
         ASSERT(desc->forceType == NEURAL_FORCE_SEPARATE);
     }
 
-    FRPoint_Zero(&force);
+    FPoint_Zero(&force);
 
     if (!MobFilter_IsTriviallyEmpty(&f)) {
         while (mit.hasNext()) {
@@ -1033,13 +1033,13 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
         }
     }
 
-    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+    FPoint_Add(&force, &self->pos, focusPoint);
     return x > 0;
 }
 
 static void NeuralForceGetRepulseFocus(AIContext *nc,
                                        const FPoint *selfPos,
-                                       const FPoint *pos, FRPoint *force)
+                                       const FPoint *pos, FPoint *force)
 {
     FRPoint f;
     FPoint p;
@@ -1067,16 +1067,18 @@ static void NeuralForceGetRepulseFocus(AIContext *nc,
         f.theta = FPoint_ToTheta(&p);
     }
 
-    FRPoint_Add(force, &f, force);
+    FRPoint_ToFPoint(&f, NULL, &p);
+    FPoint_Add(force, &p, force);
 }
+
 static void NeuralForceGetEdgeFocus(AIContext *nc,
                                     Mob *self, NeuralForceDesc *desc,
                                     FPoint *focusPoint)
 {
     FPoint edgePoint;
-    FRPoint force;
+    FPoint force;
 
-    FRPoint_Zero(&force);
+    FPoint_Zero(&force);
 
     /*
      * Left Edge
@@ -1106,7 +1108,7 @@ static void NeuralForceGetEdgeFocus(AIContext *nc,
     edgePoint.y = nc->ai->bp.height;
     NeuralForceGetRepulseFocus(nc, &self->pos, &edgePoint, &force);
 
-    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+    FPoint_Add(&force, &self->pos, focusPoint);
 }
 
 
@@ -1170,9 +1172,9 @@ void NeuralForceGetCornersFocus(AIContext *nc,
                                 Mob *self, NeuralForceDesc *desc,
                                 FPoint *focusPoint) {
     FPoint cornerPoint;
-    FRPoint force;
+    FPoint force;
 
-    FRPoint_Zero(&force);
+    FPoint_Zero(&force);
 
     cornerPoint.x = 0.0f;
     cornerPoint.y = 0.0f;
@@ -1190,7 +1192,7 @@ void NeuralForceGetCornersFocus(AIContext *nc,
     cornerPoint.y = nc->ai->bp.height;
     NeuralForceGetRepulseFocus(nc, &self->pos, &cornerPoint, &force);
 
-    FRPoint_ToFPoint(&force, &self->pos, focusPoint);
+    FPoint_Add(&force, &self->pos, focusPoint);
 }
 
 bool NeuralForceGetCloseCornerFocus(AIContext *nc,
