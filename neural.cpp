@@ -1721,13 +1721,13 @@ float NeuralCrowd_GetValue(AIContext *nc,
 float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
 {
     NeuralSquadType squadType = squadDesc->squadType;
-    uint numSquads = squadDesc->numSquads;
+    int numSquads = squadDesc->numSquads;
 
     if (squadType == NEURAL_SQUAD_NONE) {
         return 0.0f;
     }
 
-    if (numSquads <= 1) {
+    if (numSquads <= 1 || numSquads >= MAX_INT32) {
         return 0.0f;
     }
 
@@ -1764,6 +1764,7 @@ float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
         curSquad = squadType == NEURAL_SQUAD_POWER_DOWN ?
                    0.0f : 1.0f - (1.0f / numSquads);
 
+        ASSERT(numSquads > 1);
         for (i = 0; i < numSquads - 1; i++) {
             if (fmobid <= curFraction) {
                 return curSquad;
