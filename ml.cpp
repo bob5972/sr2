@@ -617,7 +617,7 @@ float MLFloatNode::computeWork()
         }
         case ML_FOP_1x1_SQUAD_SELECT: {
             /*
-             * Should replicate NEURAL_VALUE_SQUAD on a given
+             * Should replicate NEURAL_SQUAD_EQUAL_PARTITIONS on a given
              * mobid.
              */
             float p0 = getParam(0);
