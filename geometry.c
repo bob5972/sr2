@@ -45,22 +45,6 @@ bool FPoint_Clamp(FPoint *p, float xMin, float xMax,
     return clamped;
 }
 
-void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
-{
-    FPoint zero;
-
-    ASSERT(p != NULL);
-    ASSERT(rp != NULL);
-
-    if (c == NULL) {
-        FPoint_Zero(&zero);
-        c = &zero;
-    }
-
-    p->x = rp->radius * cosf(rp->theta) + c->x;
-    p->y = rp->radius * sinf(rp->theta) + c->y;
-}
-
 bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
                      bool forward)
 {

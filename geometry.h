@@ -240,7 +240,19 @@ static inline void FPoint_ToFRPointWithRadius(const FPoint *p, const FPoint *c,
     rp->theta = FPoint_ToTheta(&temp);
 }
 
-void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p);
+static inline void FRPoint_ToFPoint(const FRPoint *rp, const FPoint *c, FPoint *p)
+{
+    ASSERT(p != NULL);
+    ASSERT(rp != NULL);
+
+    p->x = rp->radius * cosf(rp->theta);
+    p->y = rp->radius * sinf(rp->theta);
+
+    if (c != NULL) {
+        p->x += c->x;
+        p->y += c->y;
+    }
+}
 
 bool FPoint_IsFacing(const FPoint *p, const FPoint *c, const FRPoint *dir,
                      bool forward);
