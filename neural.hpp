@@ -228,6 +228,7 @@ typedef struct NeuralLocusPosition {
 typedef struct NeuralConditionDesc {
     struct {
         bool active;
+        bool invert;
         NeuralSquadDesc squadDesc;
         float limit0;
         float limit1;

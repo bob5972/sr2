@@ -509,6 +509,10 @@ void NeuralCondition_Load(MBRegistry *mreg,
     s += "squad.active";
     desc->squad.active = MBRegistry_GetBool(mreg, s.CStr());
 
+    s = prefix;
+    s += "squad.invert";
+    desc->squad.invert = MBRegistry_GetBool(mreg, s.CStr());
+
     if (desc->squad.active) {
         s = prefix;
         s += "squad.desc.";
@@ -626,6 +630,12 @@ void NeuralCondition_Mutate(MBRegistry *mreg,
 
     s = prefix;
     s += "squad.active";
+    bf.key = s.CStr();
+    bf.flipRate = MIN(0.5f, rate);
+    Mutate_Bool(mreg, &bf, 1);
+
+    s = prefix;
+    s += "squad.invert";
     bf.key = s.CStr();
     bf.flipRate = MIN(0.5f, rate);
     Mutate_Bool(mreg, &bf, 1);
@@ -1751,8 +1761,14 @@ bool NeuralCondition_AppliesToMob(AIContext *nc, Mob *mob,
         float min = MIN(condDesc->squad.limit0, condDesc->squad.limit1);
         float max = MAX(condDesc->squad.limit0, condDesc->squad.limit1);
 
-        if (squad < min || squad > max) {
-            return FALSE;
+        if (!condDesc->squad.invert) {
+            if (squad < min || squad > max) {
+                return FALSE;
+            }
+        } else {
+            if (squad >= min && squad <= max) {
+                return FALSE;
+            }
         }
     }
 
