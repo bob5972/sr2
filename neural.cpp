@@ -111,6 +111,8 @@ static const TextMapEntry tmSquads[] = {
     { TMENTRY(NEURAL_SQUAD_NONE),                  },
     { TMENTRY(NEURAL_SQUAD_MOBID),                 },
     { TMENTRY(NEURAL_SQUAD_EQUAL_PARTITIONS),      },
+    { TMENTRY(NEURAL_SQUAD_POWER_UP),              },
+    { TMENTRY(NEURAL_SQUAD_POWER_DOWN),            },
 };
 
 static const TextMapEntry tmWaves[] = {
@@ -1719,35 +1721,61 @@ float NeuralCrowd_GetValue(AIContext *nc,
 float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
 {
     NeuralSquadType squadType = squadDesc->squadType;
+    uint numSquads = squadDesc->numSquads;
+
     if (squadType == NEURAL_SQUAD_NONE) {
         return 0.0f;
-    } else if (squadType == NEURAL_SQUAD_MOBID ||
-               squadType == NEURAL_SQUAD_EQUAL_PARTITIONS) {
-        uint numSquads = squadDesc->numSquads;
-        if (numSquads <= 1) {
-            return 0.0f;
+    }
+
+    if (numSquads <= 1) {
+        return 0.0f;
+    }
+
+    RandomState lr;
+    uint64 seed = mob->mobid;
+    seed = (seed << 32) | squadDesc->seed;
+    RandomState_CreateWithSeed(&lr, seed);
+    float fmobid = RandomState_UnitFloat(&lr);
+
+
+    if (squadType == NEURAL_SQUAD_MOBID) {
+        return fmobid;
+    } else if (squadType == NEURAL_SQUAD_EQUAL_PARTITIONS) {
+        /*
+        * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
+        * NEURAL_VALUE_MOBID.
+        */
+        ASSERT(squadType == NEURAL_SQUAD_EQUAL_PARTITIONS);
+
+        if (fmobid == 1.0f) {
+            return 1.0f - (1.0f / numSquads);
+        }
+        return floorf(fmobid / (1.0f / numSquads));
+    } else if (squadType == NEURAL_SQUAD_POWER_UP ||
+               squadType == NEURAL_SQUAD_POWER_DOWN) {
+        int i;
+        float base = powf(2.0f, numSquads);
+        float topHigh = base / 2.0f;
+        float bottom = base - 1.0f;
+        float curSquad;
+        float curFraction = topHigh / bottom;
+        float squadSize = 1.0f / numSquads;
+
+        curSquad = squadType == NEURAL_SQUAD_POWER_DOWN ?
+                   0.0f : 1.0f - (1.0f / numSquads);
+
+        for (i = 0; i < numSquads - 1; i++) {
+            if (fmobid <= curFraction) {
+                return curSquad;
+            }
+
+            curSquad = squadType == NEURAL_SQUAD_POWER_DOWN ?
+                       (curSquad + squadSize) :
+                       (curSquad - squadSize);
+            curFraction /= 2.0f;
         }
 
-        RandomState lr;
-        uint64 seed = mob->mobid;
-        seed = (seed << 32) | squadDesc->seed;
-        RandomState_CreateWithSeed(&lr, seed);
-        float fmobid = RandomState_UnitFloat(&lr);
-
-        if (squadDesc->squadType == NEURAL_SQUAD_MOBID) {
-            return fmobid;
-        } else {
-           /*
-            * Should replicate ML_FOP_1x1_SQUAD_SELECT on a
-            * NEURAL_VALUE_MOBID.
-            */
-           ASSERT(squadType == NEURAL_SQUAD_EQUAL_PARTITIONS);
-
-           if (fmobid == 1.0f) {
-              return 1.0f - (1.0f / numSquads);
-           }
-           return floorf(fmobid / (1.0f / numSquads));
-        }
+        return curSquad;
     } else {
         NOT_IMPLEMENTED();
     }
