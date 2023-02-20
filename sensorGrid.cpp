@@ -18,6 +18,7 @@
 
 #include "sensorGrid.hpp"
 #include "mobSet.hpp"
+#include "mutate.h"
 
 void SensorGrid::updateTick(FleetAI *ai)
 {
@@ -189,6 +190,14 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
      */
     SensorGrid::updateTick(ai);
 
+    if (ai->tick % myData.recentlyScannedResetTicks == 0) {
+        myData.recentlyScannedBV.resetAll();
+        myData.haveUnexploredFocus = TRUE;
+    }
+    if (ai->tick % myData.recentlyScannedMoveFocusTicks == 0) {
+        myData.forceUnexploredFocusMove = TRUE;
+    }
+
     /*
      * Load the new sensor updates.
      */
@@ -217,53 +226,63 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
             pos.y = mob->pos.y;
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x - (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y;
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x + (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y;
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x;
             pos.y = mob->pos.y - (TILE_SIZE / 2.0f);
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x;
             pos.y = mob->pos.y + (TILE_SIZE / 2.0f);
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x - (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y - (TILE_SIZE / 2.0f);
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x + (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y - (TILE_SIZE / 2.0f);
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x - (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y + (TILE_SIZE / 2.0f);
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
 
             pos.x = mob->pos.x + (TILE_SIZE / 2.0f);
             pos.y = mob->pos.y + (TILE_SIZE / 2.0f);
             i = GetTileIndex(&pos);
             myData.scannedBV.set(i);
+            myData.recentlyScannedBV.set(i);
         }
     }
 
     /*
      * Calculate the enemy base guess.
      */
-    generateGuess();
+    generateEnemyBaseGuess();
+    generateUnexploredFocus();
 
     // Warning("%s:%d enemyBaseGuess has=%d, noMore=%d, i=%d, xy(%f, %f)\n", __FUNCTION__, __LINE__,
     //         myData.hasEnemyBaseGuess, myData.noMoreEnemyBaseGuess,
@@ -271,7 +290,46 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
     //         myData.enemyBaseGuessPos.x, myData.enemyBaseGuessPos.y);
 }
 
-void MappingSensorGrid::generateGuess()
+void MappingSensorGrid::generateUnexploredFocus()
+{
+    if (!myData.forceUnexploredFocusMove &&
+        !hasBeenRecentlyScanned(&myData.unexploredFocusPos)) {
+        return;
+    }
+
+    myData.forceUnexploredFocusMove = FALSE;
+
+    int ys = RandomState_Int(&myData.rs, 0, myData.bvHeight - 1);
+    int xs = RandomState_Int(&myData.rs, 0, myData.bvWidth - 1);
+    int yc = 0;
+
+    while (yc < myData.bvHeight) {
+        int y = (yc + ys) % myData.bvHeight;
+        int xc = 0;
+
+        while (xc < myData.bvWidth) {
+            int x = (xc + xs) % myData.bvWidth;
+            int i = x + y * myData.bvWidth;
+            if (!myData.recentlyScannedBV.get(i)) {
+                myData.unexploredFocusPos.x = x * TILE_SIZE;
+                myData.unexploredFocusPos.y = y * TILE_SIZE;
+                myData.haveUnexploredFocus = TRUE;
+                return;
+            }
+
+            xc++;
+        }
+
+        yc++;
+    }
+
+    /*
+     * No more guesses... Turn it off until the next reset.
+     */
+    myData.haveUnexploredFocus = FALSE;
+}
+
+void MappingSensorGrid::generateEnemyBaseGuess()
 {
     Mob *eBase = enemyBase();
     if (eBase != NULL) {
@@ -329,4 +387,25 @@ void MappingSensorGrid::generateGuess()
     myData.noMoreEnemyBaseGuess = TRUE;
     myData.hasEnemyBaseGuess = FALSE;
     myData.enemyBaseGuessIndex = -1;
+}
+
+
+void SensorGrid_Mutate(MBRegistry *mreg, float rate, const char *prefix)
+{
+    MutationFloatParams vf[] = {
+        // key                     min     max       mag   jump   mutation
+        { "sensorGrid.staleCoreTime",
+                                   0.0f,   50.0f,   0.05f, 0.2f, 0.005f},
+        { "sensorGrid.staleFighterTime",
+                                   0.0f,   20.0f,   0.05f, 0.2f, 0.005f},
+    };
+
+    VERIFY(strcmp(prefix, "") == 0);
+
+    Mutate_Float(mreg, vf, ARRAYSIZE(vf));
+
+    Mutate_FloatType(mreg, "sensorGrid.mapping.recentlyScannedResetTicks",
+                     MUTATION_TYPE_TICKS);
+    Mutate_FloatType(mreg, "sensorGrid.mapping.recentlyScannedMoveFocusTicks",
+                     MUTATION_TYPE_TICKS);
 }

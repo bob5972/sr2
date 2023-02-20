@@ -34,6 +34,11 @@ extern "C" {
 #define SG_STALE_CORE_DEFAULT   40
 #define SG_STALE_FIGHTER_DEFAULT 2
 
+#define SG_RECENTLY_SCANNED_RESET_TICKS_DEFAULT       2048
+#define SG_RECENTLY_SCANNED_MOVE_FOCUS_TICKS_DEFAULT  2048
+
+void SensorGrid_Mutate(MBRegistry *mreg, float rate, const char *prefix);
+
 class SensorGrid
 {
 public:
@@ -65,7 +70,7 @@ public:
     /**
      * Load settings from MBRegistry.
      */
-    void loadRegistry(MBRegistry *mreg) {
+    virtual void loadRegistry(MBRegistry *mreg) {
         if (mreg == NULL) {
             return;
         }
@@ -351,6 +356,8 @@ class MappingSensorGrid : public SensorGrid
 {
 public:
     MappingSensorGrid(uint width, uint height, uint64 seed) {
+        RandomState_CreateWithSeed(&myData.rs, seed);
+
         myData.bvWidth = (width / TILE_SIZE) + 1;
         myData.bvHeight = (height / TILE_SIZE) + 1;
         myData.scannedBV.resize(myData.bvWidth * myData.bvHeight);
@@ -362,7 +369,13 @@ public:
         myData.hasEnemyBaseGuess = FALSE;
         myData.noMoreEnemyBaseGuess = FALSE;
 
-        RandomState_CreateWithSeed(&myData.rs, seed);
+        myData.recentlyScannedBV.resize(myData.bvWidth * myData.bvHeight);
+        ASSERT(myData.recentlyScannedBV.getFillValue() == FALSE);
+
+        myData.recentlyScannedResetTicks = SG_RECENTLY_SCANNED_RESET_TICKS_DEFAULT;
+        myData.recentlyScannedMoveFocusTicks = SG_RECENTLY_SCANNED_MOVE_FOCUS_TICKS_DEFAULT;
+        myData.unexploredFocusPos.x = RandomState_Float(&myData.rs, 0.0f, width);
+        myData.unexploredFocusPos.y = RandomState_Float(&myData.rs, 0.0f, height);
     }
 
     virtual void updateTick(FleetAI *ai);
@@ -370,6 +383,20 @@ public:
     bool hasBeenScanned(const FPoint *pos) {
         int i = GetTileIndex(pos);
         return myData.scannedBV.get(i);
+    }
+
+    bool hasBeenRecentlyScanned(const FPoint *pos) {
+        int i = GetTileIndex(pos);
+        return myData.recentlyScannedBV.get(i);
+    }
+
+    bool hasUnexploredFocus() {
+        return myData.haveUnexploredFocus;
+    }
+
+    FPoint getUnexploredFocus() {
+        ASSERT(myData.haveUnexploredFocus);
+        return myData.unexploredFocusPos;
     }
 
     bool hasEnemyBaseGuess() {
@@ -434,9 +461,35 @@ private:
         bool hasEnemyBaseGuess;
         bool noMoreEnemyBaseGuess;
         RandomState rs;
+
+        CPBitVector recentlyScannedBV;
+        uint recentlyScannedResetTicks;
+        uint recentlyScannedMoveFocusTicks;
+        FPoint unexploredFocusPos;
+        bool haveUnexploredFocus;
+        bool forceUnexploredFocusMove;
     } myData;
 
-    void generateGuess();
+    void generateEnemyBaseGuess();
+    void generateUnexploredFocus();
+
+    virtual void loadRegistry(MBRegistry *mreg) {
+        SensorGrid::loadRegistry(mreg);
+
+        if (mreg == NULL) {
+            return;
+        }
+
+        myData.recentlyScannedResetTicks =
+            (uint)MBRegistry_GetFloatD(mreg,
+                                       "sensorGrid.mapping.recentlyScannedResetTicks",
+                                       SG_RECENTLY_SCANNED_RESET_TICKS_DEFAULT);
+
+        myData.recentlyScannedMoveFocusTicks =
+            (uint)MBRegistry_GetFloatD(mreg,
+                                       "sensorGrid.mapping.recentlyScannedMoveFocusTicks",
+                                       SG_RECENTLY_SCANNED_MOVE_FOCUS_TICKS_DEFAULT);
+    }
 
     inline void GetTileCoord(const FPoint *pos,
                              uint32 *x,

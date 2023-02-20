@@ -94,6 +94,7 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),                },
     { TMENTRY(NEURAL_FORCE_CORES),                           },
     { TMENTRY(NEURAL_FORCE_LOCUS),                           },
+    { TMENTRY(NEURAL_FORCE_UNEXPLORED),                      },
 };
 
 static const TextMapEntry tmCrowds[] = {
@@ -1532,6 +1533,14 @@ bool NeuralForce_GetFocus(AIContext *nc,
              * Locus forces don't formally have a focus, they're handled
              * by the NeuralNet in NeuralNet::getFocus.
              */
+            return FALSE;
+        }
+
+        case NEURAL_FORCE_UNEXPLORED: {
+            if (nc->sg->hasUnexploredFocus()) {
+                *focusPoint = nc->sg->getUnexploredFocus();
+                return TRUE;
+            }
             return FALSE;
         }
 

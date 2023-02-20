@@ -265,10 +265,6 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "startingMaxRadius",    1000.0f, 2000.0f, 0.05f, 0.10f, 0.20f},
         { "startingMinRadius",    300.0f,  800.0f,  0.05f, 0.10f, 0.20f},
 
-        { "sensorGrid.staleCoreTime",
-                                   0.0f,   50.0f,   0.05f, 0.2f, 0.005f},
-        { "sensorGrid.staleFighterTime",
-                                   0.0f,   20.0f,   0.05f, 0.2f, 0.005f},
         { "creditReserve",       100.0f,  200.0f,   0.05f, 0.1f, 0.005f},
     };
 
@@ -295,6 +291,8 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         }
         rate = 1.0f;
     }
+
+    SensorGrid_Mutate(mreg, rate, "");
 
     NeuralNet_Mutate(mreg, "shipNet.", rate,
                      NN_TYPE_FORCES,
