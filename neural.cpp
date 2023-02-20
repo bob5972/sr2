@@ -1985,6 +1985,7 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
             float temp;
             float xPeriod = desc->patrolMapDesc.linearPeriod +
                             desc->patrolMapDesc.linearXPeriodOffset;
+            xPeriod = MAX(1.0f, xPeriod);
             float xp = aic->ai->tick / xPeriod;
 
             xp = modff(xp, &temp);
@@ -1997,13 +1998,14 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
 
             float yPeriod = desc->patrolMapDesc.linearPeriod +
                             desc->patrolMapDesc.linearYPeriodOffset;
+            yPeriod = MAX(1.0f, yPeriod);
             float yp = aic->ai->tick / yPeriod;
             yp = modff(yp, &temp);
             ASSERT(yp >= 0.0f && yp <= 1.0f);
             if (yp <= 0.5f) {
-                linear.y = width * 2.0f * yp;
+                linear.y = height * 2.0f * yp;
             } else {
-                linear.y = width * (2.0f - (2.0f * yp));
+                linear.y = height * (2.0f - (2.0f * yp));
             }
 
             haveLinear = TRUE;
