@@ -66,6 +66,8 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_FARTHEST_CORNER),                 },
     { TMENTRY(NEURAL_FORCE_CENTER),                          },
     { TMENTRY(NEURAL_FORCE_BASE),                            },
+    { TMENTRY(NEURAL_FORCE_BASE_LAX),                        },
+    { TMENTRY(NEURAL_FORCE_BASE_MIRROR_LAX),                 },
     { TMENTRY(NEURAL_FORCE_BASE_DEFENSE),                    },
     { TMENTRY(NEURAL_FORCE_BASE_SHELL),                      },
     { TMENTRY(NEURAL_FORCE_BASE_FARTHEST_FRIEND),            },
@@ -1410,6 +1412,14 @@ bool NeuralForce_GetFocus(AIContext *nc,
         }
         case NEURAL_FORCE_BASE:
             return NeuralForceGetFocusMobPosHelper(nc->sg->friendBase(), focusPoint);
+        case NEURAL_FORCE_BASE_LAX:
+            return NeuralForceGetFocusMobPosHelper(nc->sg->friendBaseShadow(), focusPoint);
+        case NEURAL_FORCE_BASE_MIRROR_LAX: {
+            FPoint *pos = nc->sg->friendBaseShadowPos();
+            focusPoint->x = nc->ai->bp.width - pos->x;
+            focusPoint->y = nc->ai->bp.height - pos->y;
+            return TRUE;
+        }
 
         case NEURAL_FORCE_BASE_DEFENSE: {
             Mob *base = nc->sg->friendBase();
