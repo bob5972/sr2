@@ -474,21 +474,28 @@ private:
     void generateUnexploredFocus();
 
     virtual void loadRegistry(MBRegistry *mreg) {
+        int x;
         SensorGrid::loadRegistry(mreg);
 
         if (mreg == NULL) {
             return;
         }
 
-        myData.recentlyScannedResetTicks =
-            (uint)MBRegistry_GetFloatD(mreg,
-                                       "sensorGrid.mapping.recentlyScannedResetTicks",
-                                       SG_RECENTLY_SCANNED_RESET_TICKS_DEFAULT);
+        x = (int)MBRegistry_GetFloatD(mreg,
+                                      "sensorGrid.mapping.recentlyScannedResetTicks",
+                                      SG_RECENTLY_SCANNED_RESET_TICKS_DEFAULT);
+        if (x <= 1) {
+            x = 0;
+        }
+        myData.recentlyScannedResetTicks = x;
 
-        myData.recentlyScannedMoveFocusTicks =
-            (uint)MBRegistry_GetFloatD(mreg,
-                                       "sensorGrid.mapping.recentlyScannedMoveFocusTicks",
-                                       SG_RECENTLY_SCANNED_MOVE_FOCUS_TICKS_DEFAULT);
+        x = (int)MBRegistry_GetFloatD(mreg,
+                                      "sensorGrid.mapping.recentlyScannedMoveFocusTicks",
+                                      SG_RECENTLY_SCANNED_MOVE_FOCUS_TICKS_DEFAULT);
+        if (x <= 1) {
+            x = 0;
+        }
+        myData.recentlyScannedMoveFocusTicks = x;
     }
 
     inline void GetTileCoord(const FPoint *pos,

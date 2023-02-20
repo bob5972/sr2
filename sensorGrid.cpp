@@ -190,11 +190,13 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
      */
     SensorGrid::updateTick(ai);
 
-    if (ai->tick % myData.recentlyScannedResetTicks == 0) {
+    if (myData.recentlyScannedResetTicks > 1 &&
+        ai->tick % myData.recentlyScannedResetTicks == 0) {
         myData.recentlyScannedBV.resetAll();
         myData.haveUnexploredFocus = TRUE;
     }
-    if (ai->tick % myData.recentlyScannedMoveFocusTicks == 0) {
+    if (myData.recentlyScannedMoveFocusTicks > 1 &&
+        ai->tick % myData.recentlyScannedMoveFocusTicks == 0) {
         myData.forceUnexploredFocusMove = TRUE;
     }
 
