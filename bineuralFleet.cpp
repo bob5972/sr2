@@ -277,19 +277,25 @@ static void BineuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "gatherAbandonStale",          0.05f },
     };
 
-    float rate = 0.05;
+    float rate = 0.01;
     MBRegistry_PutCopy(mreg, BINEURAL_SCRAMBLE_KEY, "FALSE");
-    if (Random_Flip(0.01)) {
-        MBRegistry_PutCopy(mreg, BINEURAL_SCRAMBLE_KEY, "TRUE");
 
-        for (uint i = 0; i < ARRAYSIZE(vf); i++) {
-            vf[i].mutationRate = 1.0f;
-            vf[i].jumpRate = 1.0f;
+    if (Random_Flip(0.10)) {
+        rate *= 10.0f;
+
+        if (Random_Flip(0.01)) {
+            rate = 1.0f;
+            MBRegistry_PutCopy(mreg, BINEURAL_SCRAMBLE_KEY, "TRUE");
+
+            for (uint i = 0; i < ARRAYSIZE(vf); i++) {
+                vf[i].mutationRate = 1.0f;
+                vf[i].jumpRate = 1.0f;
+            }
+            for (uint i = 0; i < ARRAYSIZE(vb); i++) {
+                vb[i].flipRate = 0.5f;
+            }
+            rate = 1.0f;
         }
-        for (uint i = 0; i < ARRAYSIZE(vb); i++) {
-            vb[i].flipRate = 0.5f;
-        }
-        rate = 1.0f;
     }
 
     SensorGrid_Mutate(mreg, rate, "");
