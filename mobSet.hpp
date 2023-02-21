@@ -34,8 +34,7 @@ public:
         myCachedBase = -1;
         myMap.setEmptyValue(-1);
 
-        myTypeCounts.resize(MOB_TYPE_MAX);
-        for (uint i = 0; i < myTypeCounts.size(); i++) {
+        for (uint i = 0; i < ARRAYSIZE(myTypeCounts); i++) {
             myTypeCounts[i] = 0;
         }
 
@@ -75,7 +74,7 @@ public:
     }
 
     int getNumTrackedBases() {
-        return myTypeCounts.get(MOB_TYPE_BASE);
+        return myTypeCounts[MOB_TYPE_BASE];
     }
 
     /**
@@ -91,13 +90,13 @@ public:
 
         // Most common case
         if (filter == (1 << MOB_TYPE_FIGHTER)) {
-            return myTypeCounts.get(MOB_TYPE_FIGHTER);
+            return myTypeCounts[MOB_TYPE_FIGHTER];
         }
 
         for (i = MOB_TYPE_MIN; i < MOB_TYPE_MAX; i++) {
             MobTypeFlags f = (1 << i);
             if ((f & filter) != 0) {
-                mobs += myTypeCounts.get(i);
+                mobs += myTypeCounts[i];
             }
         }
 
@@ -221,7 +220,7 @@ public:
 private:
     int myCachedBase;
     IntMap myMap;
-    MBVector<uint> myTypeCounts;
+    uint myTypeCounts[MOB_TYPE_MAX];
     MBVector<Mob> myMobs;
 };
 
