@@ -86,18 +86,13 @@ public:
 
     int numMobs(MobTypeFlags filter) {
         int mobs = 0;
-        int i;
 
-        // Most common case
-        if (filter == (1 << MOB_TYPE_FIGHTER)) {
-            return myTypeCounts[MOB_TYPE_FIGHTER];
-        }
-
-        for (i = MOB_TYPE_MIN; i < MOB_TYPE_MAX; i++) {
-            MobTypeFlags f = (1 << i);
-            if ((f & filter) != 0) {
-                mobs += myTypeCounts[i];
-            }
+        while (filter != 0) {
+            uint32 index = MBUtil_FFS(filter);
+            ASSERT(index > 0);
+            uint32 bit = 1 << (index - 1);
+            filter &= ~bit;
+            mobs += myTypeCounts[index - 1];
         }
 
         return mobs;
