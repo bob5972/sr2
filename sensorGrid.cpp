@@ -59,7 +59,7 @@ void SensorGrid::updateTick(FleetAI *ai)
                  * since it's either gone now, or we'll re-add it below
                  * if it shows up in the scan.
                  */
-                myTargets.removeMob(tMob->mobid);
+                tmit.remove();
                 myTargetLastSeenMap.remove(tMob->mobid);
             }
         }

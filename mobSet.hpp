@@ -153,6 +153,7 @@ public:
             i = 0;
             numReturned = 0;
             myLastMobid = MOB_ID_INVALID;
+            numMobs = 0;
         }
         MobIt(MobSet *ms, MobTypeFlags filter) {
             myMobSet = ms;
@@ -160,6 +161,7 @@ public:
             numReturned = 0;
             myLastMobid = MOB_ID_INVALID;
             myFilter = filter;
+            numMobs = myMobSet->numMobs(myFilter);
         }
 
         MobIt(MobSet *ms) {
@@ -168,10 +170,11 @@ public:
             numReturned = 0;
             myLastMobid = MOB_ID_INVALID;
             myFilter = MOB_FLAG_ALL;
+            numMobs = myMobSet->numMobs(myFilter);
         }
 
         bool hasNext() {
-            return numReturned < myMobSet->numMobs(myFilter);
+            return numReturned < numMobs;
         }
 
         Mob *next() {
@@ -194,6 +197,7 @@ public:
 
             ASSERT(numReturned > 0);
             numReturned--;
+            numMobs--;
         }
 
     private:
@@ -202,6 +206,7 @@ public:
         MobTypeFlags myFilter;
         int i;
         uint numReturned;
+        uint numMobs;
     };
 
 
