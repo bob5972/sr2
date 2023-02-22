@@ -125,8 +125,37 @@ void MobP_InitDistanceComparator(CMBComparator *comp, const FPoint *pos);
 
 void Mob_Init(Mob *mob, MobType t);
 
-void Mob_MaskForSensor(Mob *mob);
-void Mob_MaskForAI(Mob *mob);
+static inline void Mob_MaskForAI(Mob *mob)
+{
+    ASSERT(mob != NULL);
+
+    ASSERT(mob->image == MOB_IMAGE_FULL);
+    mob->image = MOB_IMAGE_AI;
+
+    MBUtil_Zero(&mob->privateFields,
+                sizeof(*mob) - OFFSETOF(Mob, privateFields));
+    ASSERT(mob->removeMob == 0);
+    ASSERT(mob->scannedBy == 0);
+}
+
+static inline void Mob_MaskForSensor(Mob *mob)
+{
+    ASSERT(mob != NULL);
+
+    Mob_MaskForAI(mob);
+
+    ASSERT(mob->image == MOB_IMAGE_AI);
+    mob->image = MOB_IMAGE_SENSOR;
+
+    MBUtil_Zero(&mob->protectedFields,
+                sizeof(*mob) - OFFSETOF(Mob, protectedFields));
+
+    ASSERT(mob->fuel == 0);
+    ASSERT(mob->birthTick == 0);
+    ASSERT(mob->rechargeTime == 0);
+    ASSERT(mob->powerCoreCredits == 0);
+    ASSERT(MBUtil_IsZero(&mob->cmd, sizeof(mob->cmd)));
+}
 
 static inline float Mob_GetRadius(const Mob *mob)
 {
