@@ -90,6 +90,7 @@ public:
         while (filter != 0) {
             uint32 index = MBUtil_FFS(filter);
             ASSERT(index > 0);
+            ASSERT(index - 1 < ARRAYSIZE(myTypeCounts));
             uint32 bit = 1 << (index - 1);
             filter &= ~bit;
             mobs += myTypeCounts[index - 1];
