@@ -376,6 +376,7 @@ public:
         myData.recentlyScannedMoveFocusTicks = SG_RECENTLY_SCANNED_MOVE_FOCUS_TICKS_DEFAULT;
         myData.unexploredFocusPos.x = RandomState_Float(&myData.rs, 0.0f, width);
         myData.unexploredFocusPos.y = RandomState_Float(&myData.rs, 0.0f, height);
+        myData.haveUnexploredFocus = FALSE;
     }
 
     virtual void updateTick(FleetAI *ai);
@@ -391,11 +392,13 @@ public:
     }
 
     bool hasUnexploredFocus() {
+        ASSERT(myData.haveUnexploredFocus == TRUE ||
+               myData.haveUnexploredFocus == FALSE);
         return myData.haveUnexploredFocus;
     }
 
     FPoint getUnexploredFocus() {
-        ASSERT(myData.haveUnexploredFocus);
+        ASSERT(myData.haveUnexploredFocus == TRUE);
         return myData.unexploredFocusPos;
     }
 
