@@ -374,8 +374,8 @@ public:
 
         myData.recentlyScannedResetTicks = SG_RECENTLY_SCANNED_RESET_TICKS_DEFAULT;
         myData.recentlyScannedMoveFocusTicks = SG_RECENTLY_SCANNED_MOVE_FOCUS_TICKS_DEFAULT;
-        myData.unexploredFocusPos.x = RandomState_Float(&myData.rs, 0.0f, width);
-        myData.unexploredFocusPos.y = RandomState_Float(&myData.rs, 0.0f, height);
+        myData.unexploredFocusPos.x = 0.0f;
+        myData.unexploredFocusPos.y = 0.0f;
         myData.haveUnexploredFocus = FALSE;
     }
 
