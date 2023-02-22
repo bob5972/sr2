@@ -131,15 +131,13 @@ void Mob_MaskForAI(Mob *mob);
 static inline float Mob_GetRadius(const Mob *mob)
 {
     ASSERT(mob != NULL);
-    ASSERT(mob->radius == MobType_GetRadius(mob->type));
-    return mob->radius;
+    return MobType_GetRadius(mob->type);
 }
 
 static inline float Mob_GetSensorRadius(const Mob *mob)
 {
     ASSERT(mob != NULL);
-    ASSERT(mob->sensorRadius == MobType_GetSensorRadius(mob->type));
-    return mob->sensorRadius;
+    return MobType_GetSensorRadius(mob->type);
 }
 
 static inline float Mob_GetSpeed(const Mob *mob)

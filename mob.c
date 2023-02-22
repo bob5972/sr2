@@ -19,12 +19,12 @@
 #include "mob.h"
 
 const MobTypeData gMobTypeData[MOB_TYPE_MAX] = {
-    // type               radius sensor speed   cost fuel recharge health
-    { MOB_TYPE_INVALID,    0.0f,   0.0f,  0.0f,  -1,   -1,  -1,      -1,  },
-    { MOB_TYPE_BASE,      50.0f, 250.0f,  0.0f,  -1,   -1,  50,      50,  },
-    { MOB_TYPE_FIGHTER,    5.0f,  50.0f,  2.5f, 100,   -1,   5,       1,  },
-    { MOB_TYPE_MISSILE,    3.0f,  30.0f,  5.0f,   5,   14,  -1,       1,  },
-    { MOB_TYPE_POWER_CORE, 2.0f,   0.0f,  0.5f,  -1, 4000,  -1,       1,  },
+    // type               radius sensor  speed cost fuel  recharge health
+    { MOB_TYPE_INVALID,    0.0f,   0.0f, 0.0f,  -1,   -1,  -1,      -1,  },
+    { MOB_TYPE_BASE,      50.0f, 250.0f, 0.0f,  -1,   -1,  50,      50,  },
+    { MOB_TYPE_FIGHTER,    5.0f,  50.0f, 2.5f, 100,   -1,   5,       1,  },
+    { MOB_TYPE_MISSILE,    3.0f,  30.0f, 5.0f,   5,   14,  -1,       1,  },
+    { MOB_TYPE_POWER_CORE, 2.0f,   0.0f, 0.5f,  -1, 4000,  -1,       1,  },
 };
 
 void Mob_Init(Mob *mob, MobType t)
@@ -39,8 +39,6 @@ void Mob_Init(Mob *mob, MobType t)
     mob->fuel = MobType_GetMaxFuel(t);
     mob->health = MobType_GetMaxHealth(t);
     mob->cmd.spawnType = MOB_TYPE_INVALID;
-    mob->radius = MobType_GetRadius(t);
-    mob->sensorRadius = MobType_GetSensorRadius(t);
 }
 
 void Mob_MaskForAI(Mob *mob)

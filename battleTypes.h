@@ -82,8 +82,6 @@ typedef struct Mob {
     PlayerID playerID;
     bool alive;
     FPoint pos;
-    float radius;
-    float sensorRadius;
     int health;
     FPoint lastPos;
 
