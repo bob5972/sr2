@@ -18,135 +18,14 @@
 
 #include "mob.h"
 
-float MobType_GetRadius(MobType type)
-{
-    static const struct {
-        MobType type;
-        float radius;
-    } v[] = {
-        { MOB_TYPE_INVALID,     0.0f, },
-        { MOB_TYPE_BASE,       50.0f, },
-        { MOB_TYPE_FIGHTER,     5.0f, },
-        { MOB_TYPE_MISSILE,     3.0f, },
-        { MOB_TYPE_POWER_CORE,  2.0f, },
-    };
-
-    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
-    ASSERT(type != MOB_TYPE_INVALID);
-    ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].type);
-    return v[type].radius;
-}
-
-float MobType_GetSensorRadius(MobType type)
-{
-    static const struct {
-        MobType type;
-        float sensorRadius;
-    } v[] = {
-        { MOB_TYPE_INVALID,      0.0f, },
-        { MOB_TYPE_BASE,       250.0f, },
-        { MOB_TYPE_FIGHTER,    MOB_FIGHTER_SENSOR_RADIUS, },
-        { MOB_TYPE_MISSILE,     30.0f, },
-        { MOB_TYPE_POWER_CORE ,  0.0f, },
-    };
-
-    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
-    ASSERT(type != MOB_TYPE_INVALID);
-    ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].type);
-    return v[type].sensorRadius;
-}
-
-float MobType_GetSpeed(MobType type)
-{
-    static const struct {
-        MobType type;
-        float speed;
-    } v[] = {
-        { MOB_TYPE_INVALID,      0.0f, },
-        { MOB_TYPE_BASE,         0.0f, },
-        { MOB_TYPE_FIGHTER,      2.5f, },
-        { MOB_TYPE_MISSILE,      5.0f, },
-        { MOB_TYPE_POWER_CORE ,  0.5f, },
-    };
-
-    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
-    ASSERT(type != MOB_TYPE_INVALID);
-    ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].type);
-    return v[type].speed;
-}
-
-int MobType_GetCost(MobType type)
-{
-    static const struct {
-        MobType type;
-        int cost;
-    } v[] = {
-        { MOB_TYPE_INVALID,      -1, },
-        { MOB_TYPE_BASE,         -1, },
-        { MOB_TYPE_FIGHTER,     100, },
-        { MOB_TYPE_MISSILE,       5, },
-        { MOB_TYPE_POWER_CORE ,  -1, },
-    };
-
-    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
-    ASSERT(type != MOB_TYPE_INVALID);
-    ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].type);
-    return v[type].cost;
-}
-
-int MobType_GetRechargeTicks(MobType type)
-{
-    if (type == MOB_TYPE_BASE) {
-        return 50;
-    }
-
-    return 5;
-}
-
-int MobType_GetMaxFuel(MobType type)
-{
-    static const struct {
-        MobType type;
-        int fuel;
-    } v[] = {
-        { MOB_TYPE_INVALID,        -1, },
-        { MOB_TYPE_BASE,           -1, },
-        { MOB_TYPE_FIGHTER,        -1, },
-        { MOB_TYPE_MISSILE,        14, },
-        { MOB_TYPE_POWER_CORE ,  4000, },
-    };
-
-    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
-    ASSERT(type != MOB_TYPE_INVALID);
-    ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].type);
-    return v[type].fuel;
-}
-
-
-int MobType_GetMaxHealth(MobType type)
-{
-    static const struct {
-        MobType type;
-        int health;
-    } v[] = {
-        { MOB_TYPE_INVALID,      -1, },
-        { MOB_TYPE_BASE,         50, },
-        { MOB_TYPE_FIGHTER,       1, },
-        { MOB_TYPE_MISSILE,       1, },
-        { MOB_TYPE_POWER_CORE ,   1, },
-    };
-
-    ASSERT(ARRAYSIZE(v) == MOB_TYPE_MAX);
-    ASSERT(type != MOB_TYPE_INVALID);
-    ASSERT(type < ARRAYSIZE(v));
-    ASSERT(type == v[type].type);
-    return v[type].health;
-}
+const MobTypeData gMobTypeData[MOB_TYPE_MAX] = {
+    // type               radius sensor speed   cost fuel recharge health
+    { MOB_TYPE_INVALID,    0.0f,   0.0f,  0.0f,  -1,   -1,  -1,      -1,  },
+    { MOB_TYPE_BASE,      50.0f, 250.0f,  0.0f,  -1,   -1,  50,      50,  },
+    { MOB_TYPE_FIGHTER,    5.0f,  50.0f,  2.5f, 100,   -1,   5,       1,  },
+    { MOB_TYPE_MISSILE,    3.0f,  30.0f,  5.0f,   5,   14,  -1,       1,  },
+    { MOB_TYPE_POWER_CORE, 2.0f,   0.0f,  0.5f,  -1, 4000,  -1,       1,  },
+};
 
 void Mob_Init(Mob *mob, MobType t)
 {

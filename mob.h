@@ -29,15 +29,67 @@
 #include "battleTypes.h"
 #include "MBCompare.h"
 
+typedef struct MobTypeData {
+    MobType type;
+    float radius;
+    float sensorRadius;
+    float speed;
+    int cost;
+    int maxFuel;
+    int rechargeTicks;
+    int maxHealth;
+} MobTypeData;
+
+extern const MobTypeData gMobTypeData[MOB_TYPE_MAX];
+
 #define MOB_FIGHTER_SENSOR_RADIUS (50.0f)
 
-float MobType_GetSpeed(MobType type);
-float MobType_GetSensorRadius(MobType type);
-float MobType_GetRadius(MobType type);
-int MobType_GetMaxFuel(MobType type);
-int MobType_GetMaxHealth(MobType type);
-int MobType_GetCost(MobType type);
-int MobType_GetRechargeTicks(MobType type);
+static inline const MobTypeData *MobType_GetData(MobType type)
+{
+    ASSERT(ARRAYSIZE(gMobTypeData) == MOB_TYPE_MAX);
+    ASSERT(type != MOB_TYPE_INVALID);
+    ASSERT(type < ARRAYSIZE(gMobTypeData));
+    ASSERT(type == gMobTypeData[type].type);
+    return &gMobTypeData[type];
+}
+
+static inline float MobType_GetRadius(MobType type)
+{
+    return MobType_GetData(type)->radius;
+}
+
+static inline float MobType_GetSensorRadius(MobType type)
+{
+    ASSERT(MOB_FIGHTER_SENSOR_RADIUS ==
+           gMobTypeData[MOB_TYPE_FIGHTER].sensorRadius);
+
+    return MobType_GetData(type)->sensorRadius;
+}
+
+static inline float MobType_GetSpeed(MobType type)
+{
+    return MobType_GetData(type)->speed;
+}
+
+static inline int MobType_GetCost(MobType type)
+{
+    return MobType_GetData(type)->cost;
+}
+
+static inline int MobType_GetRechargeTicks(MobType type)
+{
+    return MobType_GetData(type)->rechargeTicks;
+}
+
+static inline int MobType_GetMaxFuel(MobType type)
+{
+    return MobType_GetData(type)->maxFuel;
+}
+
+static inline int MobType_GetMaxHealth(MobType type)
+{
+    return MobType_GetData(type)->maxHealth;
+}
 
 /*
  * Tracks a set of mob pointers indexed by MobID.
