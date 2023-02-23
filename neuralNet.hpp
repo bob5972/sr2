@@ -27,6 +27,9 @@
 #include "neural.hpp"
 #include "MBString.hpp"
 
+
+#define NN_USE_CONDITIONS FALSE
+
 class NeuralNet {
 public:
     // Members
@@ -162,11 +165,15 @@ private:
     }
 
     bool outputConditionApplies(Mob *m, uint i) {
-        if (i >= outputConditionDescs.size()) {
+        if (!NN_USE_CONDITIONS) {
             return TRUE;
-        }
+        } else {
+            if (i >= outputConditionDescs.size()) {
+                return TRUE;
+            }
 
-        return NeuralCondition_AppliesToMob(&aic, m, &outputConditionDescs[i]);
+            return NeuralCondition_AppliesToMob(&aic, m, &outputConditionDescs[i]);
+        }
     }
 };
 

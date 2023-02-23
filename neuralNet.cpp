@@ -60,18 +60,20 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
     inputDescs.resize(numInputs);
     outputDescs.resize(numOutputs);
 
-    if (nnTypeIn == NN_TYPE_FORCES) {
-        outputConditionDescs.resize(numOutputs);
-        for (uint i = 0; i < outputConditionDescs.size(); i++) {
-            char *lcstr = NULL;
-            int ret = asprintf(&lcstr, "%soutput[%d].condition.", prefix, i);
-            VERIFY(ret > 0);
-            NeuralCondition_Load(mreg, &outputConditionDescs[i], lcstr);
-            free(lcstr);
+    if (NN_USE_CONDITIONS) {
+        if (nnTypeIn == NN_TYPE_FORCES) {
+            outputConditionDescs.resize(numOutputs);
+            for (uint i = 0; i < outputConditionDescs.size(); i++) {
+                char *lcstr = NULL;
+                int ret = asprintf(&lcstr, "%soutput[%d].condition.", prefix, i);
+                VERIFY(ret > 0);
+                NeuralCondition_Load(mreg, &outputConditionDescs[i], lcstr);
+                free(lcstr);
+            }
+        } else {
+            ASSERT(nnTypeIn == NN_TYPE_SCALARS);
+            outputConditionDescs.resize(0);
         }
-    } else {
-        ASSERT(nnTypeIn == NN_TYPE_SCALARS);
-        outputConditionDescs.resize(0);
     }
 
     for (uint i = 0; i < outputDescs.size(); i++) {
@@ -245,12 +247,14 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
         free(str);
     }
 
-    for (uint i = 0; i < fn.getNumOutputs(); i++) {
-        char *str = NULL;
-        int ret = asprintf(&str, "%soutput[%d].condition.", prefix, i);
-        VERIFY(ret > 0);
-        NeuralCondition_Mutate(mreg, rate, nnType, str);
-        free(str);
+    if (NN_USE_CONDITIONS) {
+        for (uint i = 0; i < fn.getNumOutputs(); i++) {
+            char *str = NULL;
+            int ret = asprintf(&str, "%soutput[%d].condition.", prefix, i);
+            VERIFY(ret > 0);
+            NeuralCondition_Mutate(mreg, rate, nnType, str);
+            free(str);
+        }
     }
 }
 
