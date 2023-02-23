@@ -94,6 +94,7 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),                },
     { TMENTRY(NEURAL_FORCE_CORES),                           },
     { TMENTRY(NEURAL_FORCE_LOCUS),                           },
+    { TMENTRY(NEURAL_FORCE_NEXT_LOCUS),                      },
     { TMENTRY(NEURAL_FORCE_UNEXPLORED),                      },
     { TMENTRY(NEURAL_FORCE_CIRCULAR),                        },
 };

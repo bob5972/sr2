@@ -127,6 +127,19 @@ private:
 
             *focusPoint = loci[index].pos;
             return TRUE;
+        } else if (desc->forceType == NEURAL_FORCE_NEXT_LOCUS) {
+            uint size = loci.size();
+            int offset = MAX(0, desc->index);
+            for (int i = 0; i < size; i++) {
+                int index = (i + offset) % size;
+                ASSERT(index >= 0 && index <= size);
+
+                if (loci[index].active) {
+                    *focusPoint = loci[index].pos;
+                    return TRUE;
+                }
+            }
+            return FALSE;
         } else {
             return NeuralForce_GetFocus(&aic, mob, desc, focusPoint);
         }
