@@ -90,6 +90,7 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_CORES,
     NEURAL_FORCE_LOCUS,
     NEURAL_FORCE_UNEXPLORED,
+    NEURAL_FORCE_CIRCULAR,
 
     NEURAL_FORCE_MAX,
 } NeuralForceType;

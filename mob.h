@@ -43,6 +43,7 @@ typedef struct MobTypeData {
 extern const MobTypeData gMobTypeData[MOB_TYPE_MAX];
 
 #define MOB_FIGHTER_SENSOR_RADIUS (50.0f)
+#define MOB_FIGHTER_SPEED         (2.5f)
 
 static inline const MobTypeData *MobType_GetData(MobType type)
 {
@@ -62,12 +63,13 @@ static inline float MobType_GetSensorRadius(MobType type)
 {
     ASSERT(MOB_FIGHTER_SENSOR_RADIUS ==
            gMobTypeData[MOB_TYPE_FIGHTER].sensorRadius);
-
     return MobType_GetData(type)->sensorRadius;
 }
 
 static inline float MobType_GetSpeed(MobType type)
 {
+    ASSERT(MOB_FIGHTER_SPEED ==
+           gMobTypeData[MOB_TYPE_FIGHTER].speed);
     return MobType_GetData(type)->speed;
 }
 

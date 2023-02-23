@@ -95,6 +95,7 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_CORES),                           },
     { TMENTRY(NEURAL_FORCE_LOCUS),                           },
     { TMENTRY(NEURAL_FORCE_UNEXPLORED),                      },
+    { TMENTRY(NEURAL_FORCE_CIRCULAR),                        },
 };
 
 static const TextMapEntry tmCrowds[] = {
@@ -1542,6 +1543,15 @@ bool NeuralForce_GetFocus(AIContext *nc,
                 return TRUE;
             }
             return FALSE;
+        }
+        case NEURAL_FORCE_CIRCULAR: {
+            float speed = MOB_FIGHTER_SPEED;
+            ASSERT(mob->type == MOB_TYPE_BASE || mob->type == MOB_TYPE_FIGHTER);
+            float period = desc->radius / speed;
+            float t = ((float)nc->ai->tick) / period;
+            focusPoint->x = mob->pos.x + cosf(t);
+            focusPoint->y = mob->pos.y + sinf(t);
+            return TRUE;
         }
 
         default:
