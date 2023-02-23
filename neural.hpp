@@ -147,6 +147,7 @@ typedef enum NeuralValueType {
 
 typedef enum NeuralLocusType {
     NEURAL_LOCUS_VOID,
+    NEURAL_LOCUS_TRACK,
     NEURAL_LOCUS_ORBIT,
     NEURAL_LOCUS_PATROL_MAP,
     NEURAL_LOCUS_PATROL_EDGES,
@@ -195,6 +196,10 @@ typedef struct NeuralValueDesc {
     };
 } NeuralValueDesc;
 
+typedef struct NeuralLocusTrackDesc {
+    NeuralForceDesc focus;
+} NeuralLocusTrackDesc;
+
 typedef struct NeuralLocusOrbitDesc {
     NeuralForceDesc focus;
     float radius;
@@ -220,6 +225,7 @@ typedef struct NeuralLocusDesc {
     bool speedLimited;
 
     union {
+        NeuralLocusTrackDesc trackDesc;
         NeuralLocusOrbitDesc orbitDesc;
         NeuralLocusPatrolMapDesc patrolMapDesc;
         NeuralLocusPatrolEdgesDesc patrolEdgesDesc;

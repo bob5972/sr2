@@ -145,9 +145,10 @@ static const TextMapEntry tmValues[] = {
 };
 
 static const TextMapEntry tmLocus[] = {
-    { TMENTRY(NEURAL_LOCUS_VOID),       },
-    { TMENTRY(NEURAL_LOCUS_ORBIT),      },
-    { TMENTRY(NEURAL_LOCUS_PATROL_MAP), },
+    { TMENTRY(NEURAL_LOCUS_VOID),         },
+    { TMENTRY(NEURAL_LOCUS_TRACK),        },
+    { TMENTRY(NEURAL_LOCUS_ORBIT),        },
+    { TMENTRY(NEURAL_LOCUS_PATROL_MAP),   },
     { TMENTRY(NEURAL_LOCUS_PATROL_EDGES), },
 };
 
@@ -461,6 +462,10 @@ void NeuralLocus_Load(MBRegistry *mreg,
 
     if (desc->locusType == NEURAL_LOCUS_VOID) {
         // Nothing to load.
+    } else if (desc->locusType == NEURAL_LOCUS_TRACK) {
+        s = prefix;
+        s += "focus.";
+        NeuralForce_Load(mreg, &desc->orbitDesc.focus, s.CStr());
     } else if (desc->locusType == NEURAL_LOCUS_ORBIT) {
         s = prefix;
         s += "radius";
@@ -577,6 +582,7 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
      * locus type, to get some genetic drift.
      */
     ASSERT(desc.locusType == NEURAL_LOCUS_VOID ||
+           desc.locusType == NEURAL_LOCUS_TRACK ||
            desc.locusType == NEURAL_LOCUS_ORBIT ||
            desc.locusType == NEURAL_LOCUS_PATROL_MAP ||
            desc.locusType == NEURAL_LOCUS_PATROL_EDGES);
@@ -585,6 +591,8 @@ void NeuralLocus_Mutate(MBRegistry *mreg,
     s = prefix;
     s += "radius";
     Mutate_FloatType(mreg, s.CStr(), MUTATION_TYPE_RADIUS);
+
+    // NEURAL_LOCUS_ORBIT || NEURAL_LOCUS_TRACK
 
     s = prefix;
     s += "focus.";
@@ -1939,6 +1947,9 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
 
     if (desc->locusType == NEURAL_LOCUS_VOID) {
         lpos->active = FALSE;
+    } else if (desc->locusType == NEURAL_LOCUS_TRACK) {
+        lpos->active = NeuralForce_GetFocus(aic, base, &desc->trackDesc.focus,
+                                            &newPoint);
     } else if (desc->locusType == NEURAL_LOCUS_ORBIT) {
         FRPoint rp;
         FPoint focusPoint;
