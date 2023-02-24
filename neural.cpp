@@ -97,6 +97,9 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_NEXT_LOCUS),                      },
     { TMENTRY(NEURAL_FORCE_UNEXPLORED),                      },
     { TMENTRY(NEURAL_FORCE_CIRCULAR),                        },
+    { TMENTRY(NEURAL_FORCE_MOB_ROW),                         },
+    { TMENTRY(NEURAL_FORCE_MOB_COLUMN),                      },
+    { TMENTRY(NEURAL_FORCE_MOB_SPOT),                        },
 };
 
 static const TextMapEntry tmCrowds[] = {
@@ -1560,6 +1563,28 @@ bool NeuralForce_GetFocus(AIContext *nc,
             float t = ((float)nc->ai->tick) / period;
             focusPoint->x = mob->pos.x + cosf(t);
             focusPoint->y = mob->pos.y + sinf(t);
+            return TRUE;
+        }
+        case NEURAL_FORCE_MOB_ROW: {
+            float fmobid = Random_UnitFloatFromSeed(mob->mobid);
+            focusPoint->x = mob->pos.x;
+            focusPoint->y = fmobid * nc->ai->bp.height;
+            return TRUE;
+        }
+        case NEURAL_FORCE_MOB_COLUMN: {
+            float fmobid = Random_UnitFloatFromSeed(mob->mobid);
+            focusPoint->x = fmobid * nc->ai->bp.width;
+            focusPoint->y = mob->pos.y;
+            return TRUE;
+        }
+        case NEURAL_FORCE_MOB_SPOT: {
+            uint64 mobid = mob->mobid;
+            uint64 radix1 = 0x1234567812345678;
+            uint64 radix2 = 0x9876543298765432;
+            float fmobid1 = Random_UnitFloatFromSeed(mobid ^ radix1);
+            float fmobid2 = Random_UnitFloatFromSeed(mobid ^ radix2);
+            focusPoint->x = fmobid1 * nc->ai->bp.width;
+            focusPoint->y = fmobid2 * nc->ai->bp.height;
             return TRUE;
         }
 
