@@ -527,13 +527,13 @@ sub Main() {
     if ($OPTIONS->{'opSummary'}) {
         my $s;
 
-        Console("ShipNet Inputs:\n");
-        $s = `egrep 'valueType|forceType' $gFile | grep shipNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console("ShipNet Outputs:\n");
+        $s = `grep forceType $gFile | grep shipNet | grep output | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
-        Console("ShipNet Outputs:\n");
-        $s = `grep forceType $gFile | grep shipNet | grep output | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        Console("ShipNet Inputs:\n");
+        $s = `egrep 'valueType|forceType' $gFile | grep shipNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
