@@ -1541,7 +1541,8 @@ bool NeuralForce_GetFocus(AIContext *nc,
             return NeuralForceGetFocusMobPosHelper(m, focusPoint);
         }
 
-        case NEURAL_FORCE_LOCUS: {
+        case NEURAL_FORCE_LOCUS:
+        case NEURAL_FORCE_NEXT_LOCUS: {
             /*
              * Locus forces don't formally have a focus, they're handled
              * by the NeuralNet in NeuralNet::getFocus.
