@@ -316,5 +316,4 @@ void NeuralForce_ApplyToMob(AIContext *nc, Mob *mob, FRPoint *rForce);
 
 void NeuralLocus_RunTick(AIContext *nc, NeuralLocusDesc *desc, NeuralLocusPosition *pos);
 
-
 #endif // _NEURAL_H_202212021721

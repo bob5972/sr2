@@ -1783,12 +1783,9 @@ float NeuralSquad_GetValue(AIContext *nc, Mob *mob, NeuralSquadDesc *squadDesc)
         return 0.0f;
     }
 
-    RandomState lr;
     uint64 seed = mob->mobid;
     seed = (seed << 32) | squadDesc->seed;
-    RandomState_CreateWithSeed(&lr, seed);
-    float fmobid = RandomState_UnitFloat(&lr);
-
+    float fmobid = Random_UnitFloatFromSeed(seed);
 
     if (squadType == NEURAL_SQUAD_MOBID) {
         return fmobid;
