@@ -468,25 +468,17 @@ static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
 #endif // __AVX__
 
 static void BattleScanBatch(Battle *battle, Mob *oMob,
-                            uint32 innerStart, uint32 innerSize)
+                            float *x, float *y, float *r,
+                            Mob *innerMobs, uint32 innerSize)
 {
     FCircle sc;
     PlayerID oMobPlayerID = oMob->playerID;
     uint32 inner = 0;
 
-    MobVector_Pin(&battle->mobs);
-
-    Mob *innerMobs = MobVector_GetCArray(&battle->mobs);
-    innerMobs = &innerMobs[innerStart];
-
     Mob_GetSensorCircle(oMob, &sc);
 
 #ifdef __AVX__
-
 #define VSIZE 8
-    float x[VSIZE];
-    float y[VSIZE];
-    float r[VSIZE];
     union {
         float f[VSIZE];
         uint32 u[VSIZE];
@@ -498,42 +490,30 @@ static void BattleScanBatch(Battle *battle, Mob *oMob,
     sy = _mm256_broadcast_ss(&sc.center.y);
     sr = _mm256_broadcast_ss(&sc.radius);
 
-    uint32 innerBase;
-
     while (inner + VSIZE < innerSize) {
-        innerBase = inner;
-        for (uint32 i = 0; i < VSIZE; i++) {
-            Mob *iMob = &innerMobs[inner];
-
-            x[i] = iMob->pos.x;
-            y[i] = iMob->pos.y;
-            r[i] = Mob_GetRadius(iMob);
-            inner++;
-        }
-
-        __m256 mx = _mm256_load_ps(&x[0]);
-        __m256 my = _mm256_load_ps(&y[0]);
-        __m256 mr = _mm256_load_ps(&r[0]);
+        __m256 mx = _mm256_load_ps(&x[inner]);
+        __m256 my = _mm256_load_ps(&y[inner]);
+        __m256 mr = _mm256_load_ps(&r[inner]);
         __m256 cmp = BattleScanIntersectSSE(sx, sy, sr, mx, my, mr);
         _mm256_storeu_ps(&result.f[0], cmp);
 
         for (uint32 i = 0; i < VSIZE; i++) {
             if (result.u[i] != 0) {
-                Mob *iMob = &innerMobs[innerBase + i];
+                Mob *iMob = &innerMobs[inner + i];
                 ASSERT(BattleCheckMobScan(oMob, &sc, iMob, TRUE));
                 ASSERT(oMobPlayerID < sizeof(iMob->scannedBy) * 8);
                 BitVector_SetRaw32(oMobPlayerID, &iMob->scannedBy);
                 battle->bs.sensorContacts++;
             } else {
-                Mob *iMob = &innerMobs[innerBase + i];
+                Mob *iMob = &innerMobs[inner + i];
                 ASSERT(!BattleCheckMobScan(oMob, &sc, iMob, TRUE));
             }
         }
+
+        inner += VSIZE;
     }
 
-#undef ASIZE
-#undef COUNT
-#undef VEC
+#undef VSIZE
 #endif // __AVX__
 
     while (inner < innerSize) {
@@ -545,33 +525,56 @@ static void BattleScanBatch(Battle *battle, Mob *oMob,
         }
         inner++;
     }
-
-    MobVector_Unpin(&battle->mobs);
 }
 
 static void BattleRunScanning(Battle *battle)
 {
     uint size = MobVector_Size(&battle->mobs);
 
+    MobVector_Pin(&battle->mobs);
+
+    Mob *mobs = MobVector_GetCArray(&battle->mobs);
+
     for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
+        Mob *oMob = &mobs[outer];
         BitVector_SetRaw32(oMob->playerID, &oMob->scannedBy);
     }
 
-    for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
+    uint32 i = 0;
+    while (i < size) {
+        float x[128];
+        float y[128];
+        float r[128];
+        uint32 iStart = i;
+        uint32 n = 0;
 
-        if (!BattleCanMobScan(oMob)) {
-            continue;
+        while (n < ARRAYSIZE(x) && i < size) {
+            Mob *iMob = &mobs[i];
+            x[n] = mobs[i].pos.x;
+            y[n] = mobs[i].pos.y;
+            r[n] = Mob_GetRadius(iMob);
+
+            i++;
+            n++;
         }
 
-        BattleScanBatch(battle, oMob, 0, size);
+        for (uint32 outer = 0; outer < size; outer++) {
+            Mob *oMob = &mobs[outer];
+
+            if (!BattleCanMobScan(oMob)) {
+                continue;
+            }
+
+            BattleScanBatch(battle, oMob, &x[0], &y[0], &r[0], &mobs[iStart], n);
+        }
     }
 
     for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
+        Mob *oMob = &mobs[outer];
         BitVector_ResetRaw32(oMob->playerID, &oMob->scannedBy);
     }
+
+    MobVector_Unpin(&battle->mobs);
 }
 
 
