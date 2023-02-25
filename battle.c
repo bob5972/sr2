@@ -542,9 +542,10 @@ static void BattleRunScanning(Battle *battle)
 
     uint32 i = 0;
     while (i < size) {
-        float x[128];
-        float y[128];
-        float r[128];
+#define BSIZE 256
+        float x[BSIZE];
+        float y[BSIZE];
+        float r[BSIZE];
         uint32 iStart = i;
         uint32 n = 0;
 
@@ -568,6 +569,7 @@ static void BattleRunScanning(Battle *battle)
             BattleScanBatch(battle, oMob, &x[0], &y[0], &r[0], &mobs[iStart], n);
         }
     }
+#undef BSIZE
 
     for (uint32 outer = 0; outer < size; outer++) {
         Mob *oMob = &mobs[outer];
