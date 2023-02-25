@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "battle.h"
 #include "Random.h"
 #include "fleet.h"
 #include "mutate.h"

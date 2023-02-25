@@ -352,6 +352,9 @@ static inline bool FCircle_Intersect(const FCircle *a, const FCircle *b)
     float dy = a->center.y - b->center.y;
     float dr = a->radius + b->radius;
 
+    //Warning("%s:%d dx=%f, dy=%f, dr=%f\n",
+    //        __FUNCTION__, __LINE__, dx, dy, dr);//XXX bob5972
+
     if (dx * dx + dy * dy <= dr * dr) {
         if (UNLIKELY(a->radius == 0.0f || b->radius == 0.0f)) {
             return FALSE;
