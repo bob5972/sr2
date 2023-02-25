@@ -475,6 +475,8 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 
     MobVector_Pin(&battle->mobs);
 
+    Mob *innerMobs = MobVector_GetCArray(&battle->mobs);
+
     Mob_GetSensorCircle(oMob, &sc);
 
 #ifdef __AVX__
@@ -497,8 +499,6 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
     sr = _mm256_broadcast_ss(&sc.radius);
 
     uint32 innerBase;
-
-    Mob *innerMobs = MobVector_GetCArray(&battle->mobs);
 
     while (inner + ASIZE < size) {
         innerBase = inner;
