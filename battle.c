@@ -490,7 +490,7 @@ static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
 static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 {
 #define VEC 8
-#define COUNT 2
+#define COUNT 1
 #define ASIZE (VEC * COUNT)
     float x[ASIZE];
     float y[ASIZE];
@@ -506,33 +506,21 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 
     __m256 sx, sy, sr;
 
-    // Warning("%s:%d outer radius=%f\n", __FUNCTION__, __LINE__, sc.radius);//XXX bob5972
-
     sx = _mm256_broadcast_ss(&sc.center.x);
     sy = _mm256_broadcast_ss(&sc.center.y);
     sr = _mm256_broadcast_ss(&sc.radius);
 
     uint32 inner = 0;
-    uint32 n = 0;
 
-    while (inner < size) {
-        //Warning("%s:%d n=%d, inner=%d\n", __FUNCTION__, __LINE__, n, inner);//XXX bob5972
-        while (n < ASIZE && inner < size) {
-            //Warning("%s:%d n=%d, inner=%d\n", __FUNCTION__, __LINE__, n, inner);//XXX bob5972
+    while (inner + ASIZE < size) {
+        for (uint32 i = 0; i < ASIZE; i++) {
             Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
 
-            if (FALSE && BitVector_GetRaw32(oMob->playerID, iMob->scannedBy)) {
-                // This target was already seen by the player, so this isn't
-                // a new scan.
-            } else {
-                ASSERT(n < ARRAYSIZE(x));
-                x[n] = iMob->pos.x;
-                y[n] = iMob->pos.y;
-                r[n] = Mob_GetRadius(iMob);
-                m[n] = iMob;
-                // Warning("%s:%d inner radius=%f\n", __FUNCTION__, __LINE__, r[n]);//XXX bob5972
-                n++;
-            }
+            ASSERT(n < ARRAYSIZE(x));
+            x[i] = iMob->pos.x;
+            y[i] = iMob->pos.y;
+            r[i] = Mob_GetRadius(iMob);
+            m[i] = iMob;
             inner++;
         }
 
@@ -545,7 +533,7 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
             _mm256_storeu_ps(&result.f[i * VEC], cmp);
         }
 
-        for (uint32 i = 0; i < n; i++) {
+        for (uint32 i = 0; i < ASIZE; i++) {
             if (result.u[i] != 0) {
                 ASSERT(BattleCheckMobScan(oMob, &sc, m[i]));
                 ASSERT(oMob->playerID < sizeof(m[i]->scannedBy) * 8);
@@ -555,7 +543,16 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
                 ASSERT(!BattleCheckMobScan(oMob, &sc, m[i]));
             }
         }
-        n = 0;
+    }
+
+    while (inner < size) {
+        Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
+        if (BattleCheckMobScan(oMob, &sc, iMob)) {
+            ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
+            BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
+            battle->bs.sensorContacts++;
+        }
+        inner++;
     }
 }
 
