@@ -16,23 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if defined(__SSE__)
-#include <xmmintrin.h>
-#endif
-
-#if defined(__SSE2__)
-#include <emmintrin.h>
-#endif
-
-#if defined(__SSSE3__)
-#include <tmmintrin.h>
-#endif
-
-#if defined(__SSE4_1__)
-#include <smmintrin.h>
-#endif
-
-//XXX AVX check?
 #include <immintrin.h>
 
 #include "battle.h"
@@ -441,21 +424,23 @@ static bool BattleCanMobScan(const Mob *scanning)
 
 // Can the scanning mob see the target mob?
 static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc,
-                               const Mob *target, bool earlyOut)
+                               const Mob *target, bool assertUsage)
 {
     FCircle tc;
 
     // Caller should've checked these already.
     ASSERT(BattleCanMobScan(scanning));
 
-    if (earlyOut && BitVector_GetRaw32(scanning->playerID, target->scannedBy)) {
-        // This target was already seen by the player, so this isn't
-        // a new scan.
-        return FALSE;
-    }
+    if (!assertUsage) {
+        if (BitVector_GetRaw32(scanning->playerID, target->scannedBy)) {
+            // This target was already seen by the player, so this isn't
+            // a new scan.
+            return FALSE;
+        }
 
-    // Players don't scan themselves...
-    ASSERT(scanning->playerID != target->playerID);
+        // Players don't scan themselves...
+        ASSERT(scanning->playerID != target->playerID);
+    }
 
     Mob_GetCircle(target, &tc);
     if (FCircle_Intersect(sc, &tc)) {
@@ -464,6 +449,7 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc,
     return FALSE;
 }
 
+#ifdef __AVX__
 static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
                                             __m256 mx, __m256 my, __m256 mr)
 {
@@ -479,8 +465,20 @@ static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
 
     return _mm256_cmp_ps(dd, dr2, _CMP_LE_OS);
 }
+#endif // __AVX__
+
 static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 {
+    FCircle sc;
+    PlayerID oMobPlayerID = oMob->playerID;
+    uint32 inner = 0;
+
+    MobVector_Pin(&battle->mobs);
+
+    Mob_GetSensorCircle(oMob, &sc);
+
+#ifdef __AVX__
+
 #define VEC 8
 #define COUNT 1
 #define ASIZE (VEC * COUNT)
@@ -492,20 +490,13 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
         uint32 u[ASIZE];
     } result;
 
-    FCircle sc;
-    Mob_GetSensorCircle(oMob, &sc);
-
     __m256 sx, sy, sr;
 
     sx = _mm256_broadcast_ss(&sc.center.x);
     sy = _mm256_broadcast_ss(&sc.center.y);
     sr = _mm256_broadcast_ss(&sc.radius);
 
-    uint32 inner = 0;
     uint32 innerBase;
-    PlayerID oMobPlayerID = oMob->playerID;
-
-    MobVector_Pin(&battle->mobs);
 
     Mob *innerMobs = MobVector_GetCArray(&battle->mobs);
 
@@ -514,7 +505,6 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
         for (uint32 i = 0; i < ASIZE; i++) {
             Mob *iMob = &innerMobs[inner];
 
-            ASSERT(n < ARRAYSIZE(x));
             x[i] = iMob->pos.x;
             y[i] = iMob->pos.y;
             r[i] = Mob_GetRadius(iMob);
@@ -533,31 +523,33 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
         for (uint32 i = 0; i < ASIZE; i++) {
             if (result.u[i] != 0) {
                 Mob *iMob = &innerMobs[innerBase + i];
-                ASSERT(BattleCheckMobScan(oMob, &sc, iMob, FALSE));
-                ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
-                BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
+                ASSERT(BattleCheckMobScan(oMob, &sc, iMob, TRUE));
+                ASSERT(oMobPlayerID < sizeof(iMob->scannedBy) * 8);
+                BitVector_SetRaw32(oMobPlayerID, &iMob->scannedBy);
                 battle->bs.sensorContacts++;
             } else {
-                ASSERT(!BattleCheckMobScan(oMob, &sc, iMob, FALSE));
+                Mob *iMob = &innerMobs[innerBase + i];
+                ASSERT(!BattleCheckMobScan(oMob, &sc, iMob, TRUE));
             }
         }
     }
 
+#undef ASIZE
+#undef COUNT
+#undef VEC
+#endif // __AVX__
+
     while (inner < size) {
         Mob *iMob = &innerMobs[inner];
-        if (BattleCheckMobScan(oMob, &sc, iMob, TRUE)) {
-            ASSERT(oMob->playerID < sizeof(iMob->scannedBy) * 8);
-            BitVector_SetRaw32(oMob->playerID, &iMob->scannedBy);
+        if (BattleCheckMobScan(oMob, &sc, iMob, FALSE)) {
+            ASSERT(oMobPlayerID < sizeof(iMob->scannedBy) * 8);
+            BitVector_SetRaw32(oMobPlayerID, &iMob->scannedBy);
             battle->bs.sensorContacts++;
         }
         inner++;
     }
 
     MobVector_Unpin(&battle->mobs);
-
-#undef ASIZE
-#undef COUNT
-#undef VEC
 }
 
 static void BattleRunScanning(Battle *battle)
