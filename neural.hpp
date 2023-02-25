@@ -95,6 +95,7 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_MOB_ROW,
     NEURAL_FORCE_MOB_COLUMN,
     NEURAL_FORCE_MOB_SPOT,
+    NEURAL_FORCE_LAST_TARGET_SHADOW,
 
     NEURAL_FORCE_MAX,
 } NeuralForceType;

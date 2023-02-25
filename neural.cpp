@@ -100,6 +100,7 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MOB_ROW),                         },
     { TMENTRY(NEURAL_FORCE_MOB_COLUMN),                      },
     { TMENTRY(NEURAL_FORCE_MOB_SPOT),                        },
+    { TMENTRY(NEURAL_FORCE_LAST_TARGET_SHADOW),              },
 };
 
 static const TextMapEntry tmCrowds[] = {
@@ -1587,6 +1588,11 @@ bool NeuralForce_GetFocus(AIContext *nc,
             focusPoint->x = fmobid1 * nc->ai->bp.width;
             focusPoint->y = fmobid2 * nc->ai->bp.height;
             return TRUE;
+        }
+
+        case NEURAL_FORCE_LAST_TARGET_SHADOW: {
+            Mob *m = nc->sg->farthestTargetShadow();
+            return NeuralForceGetFocusMobPosHelper(m, focusPoint);
         }
 
         default:
