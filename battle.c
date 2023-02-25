@@ -471,20 +471,6 @@ static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
     __m256 dy = _mm256_sub_ps(sy, my);
     __m256 dr = _mm256_add_ps(sr, mr);
 
-    // {
-    //     float dxresult[8];
-    //     float dyresult[8];
-    //     float drresult[8];
-    //     _mm256_storeu_ps(&dxresult[0], dx);
-    //     _mm256_storeu_ps(&dyresult[0], dy);
-    //     _mm256_storeu_ps(&drresult[0], dr);
-    //     for (uint i = 0; i < ARRAYSIZE(dxresult); i++) {
-    //         Warning("%s:%d dx=%f, dy=%f, dr=%f\n",
-    //                 __FUNCTION__, __LINE__,
-    //                 dxresult[i], dyresult[i], drresult[i]);//XXX bob5972
-    //     }
-    // }
-
     __m256 dx2 = _mm256_mul_ps(dx, dx);
     __m256 dy2 = _mm256_mul_ps(dy, dy);
     __m256 dr2 = _mm256_mul_ps(dr, dr);
@@ -568,6 +554,10 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
     }
 
     MobVector_Unpin(&battle->mobs);
+
+#undef ASIZE
+#undef COUNT
+#undef VEC
 }
 
 static void BattleRunScanning(Battle *battle)
