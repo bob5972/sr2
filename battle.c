@@ -521,7 +521,7 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
             //Warning("%s:%d n=%d, inner=%d\n", __FUNCTION__, __LINE__, n, inner);//XXX bob5972
             Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
 
-            if (BitVector_GetRaw32(oMob->playerID, iMob->scannedBy)) {
+            if (FALSE && BitVector_GetRaw32(oMob->playerID, iMob->scannedBy)) {
                 // This target was already seen by the player, so this isn't
                 // a new scan.
             } else {
@@ -563,10 +563,10 @@ static void BattleRunScanning(Battle *battle)
 {
     uint size = MobVector_Size(&battle->mobs);
 
-    for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
-        BitVector_SetRaw32(oMob->playerID, &oMob->scannedBy);
-    }
+    // for (uint32 outer = 0; outer < size; outer++) {
+    //     Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
+    //     BitVector_SetRaw32(oMob->playerID, &oMob->scannedBy);
+    // }
 
     for (uint32 outer = 0; outer < size; outer++) {
         Mob *oMob = MobVector_GetPtr(&battle->mobs, outer);
