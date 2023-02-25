@@ -467,7 +467,8 @@ static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
 }
 #endif // __AVX__
 
-static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
+static void BattleScanBatch(Battle *battle, Mob *oMob,
+                            uint32 innerStart, uint32 innerSize)
 {
     FCircle sc;
     PlayerID oMobPlayerID = oMob->playerID;
@@ -476,20 +477,19 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
     MobVector_Pin(&battle->mobs);
 
     Mob *innerMobs = MobVector_GetCArray(&battle->mobs);
+    innerMobs = &innerMobs[innerStart];
 
     Mob_GetSensorCircle(oMob, &sc);
 
 #ifdef __AVX__
 
-#define VEC 8
-#define COUNT 1
-#define ASIZE (VEC * COUNT)
-    float x[ASIZE];
-    float y[ASIZE];
-    float r[ASIZE];
+#define VSIZE 8
+    float x[VSIZE];
+    float y[VSIZE];
+    float r[VSIZE];
     union {
-        float f[ASIZE];
-        uint32 u[ASIZE];
+        float f[VSIZE];
+        uint32 u[VSIZE];
     } result;
 
     __m256 sx, sy, sr;
@@ -500,9 +500,9 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 
     uint32 innerBase;
 
-    while (inner + ASIZE < size) {
+    while (inner + VSIZE < innerSize) {
         innerBase = inner;
-        for (uint32 i = 0; i < ASIZE; i++) {
+        for (uint32 i = 0; i < VSIZE; i++) {
             Mob *iMob = &innerMobs[inner];
 
             x[i] = iMob->pos.x;
@@ -511,16 +511,13 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
             inner++;
         }
 
-        for (uint32 i = 0; i < COUNT; i++) {
-            ASSERT(i * VEC < ARRAYSIZE(x));
-            __m256 mx = _mm256_load_ps(&x[i * VEC]);
-            __m256 my = _mm256_load_ps(&y[i * VEC]);
-            __m256 mr = _mm256_load_ps(&r[i * VEC]);
-            __m256 cmp = BattleScanIntersectSSE(sx, sy, sr, mx, my, mr);
-            _mm256_storeu_ps(&result.f[i * VEC], cmp);
-        }
+        __m256 mx = _mm256_load_ps(&x[0]);
+        __m256 my = _mm256_load_ps(&y[0]);
+        __m256 mr = _mm256_load_ps(&r[0]);
+        __m256 cmp = BattleScanIntersectSSE(sx, sy, sr, mx, my, mr);
+        _mm256_storeu_ps(&result.f[0], cmp);
 
-        for (uint32 i = 0; i < ASIZE; i++) {
+        for (uint32 i = 0; i < VSIZE; i++) {
             if (result.u[i] != 0) {
                 Mob *iMob = &innerMobs[innerBase + i];
                 ASSERT(BattleCheckMobScan(oMob, &sc, iMob, TRUE));
@@ -539,7 +536,7 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 #undef VEC
 #endif // __AVX__
 
-    while (inner < size) {
+    while (inner < innerSize) {
         Mob *iMob = &innerMobs[inner];
         if (BattleCheckMobScan(oMob, &sc, iMob, FALSE)) {
             ASSERT(oMobPlayerID < sizeof(iMob->scannedBy) * 8);
@@ -568,7 +565,7 @@ static void BattleRunScanning(Battle *battle)
             continue;
         }
 
-        BattleScanBatch(battle, oMob, size);
+        BattleScanBatch(battle, oMob, 0, size);
     }
 
     for (uint32 outer = 0; outer < size; outer++) {
