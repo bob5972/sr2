@@ -466,13 +466,13 @@ static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
     __m256 dr = _mm256_add_ps(sr, mr);
 
     // {
-    //     float dxresult[4];
-    //     float dyresult[4];
-    //     float drresult[4];
+    //     float dxresult[8];
+    //     float dyresult[8];
+    //     float drresult[8];
     //     _mm256_storeu_ps(&dxresult[0], dx);
     //     _mm256_storeu_ps(&dyresult[0], dy);
     //     _mm256_storeu_ps(&drresult[0], dr);
-    //     for (uint i = 0; i < 4; i++) {
+    //     for (uint i = 0; i < ARRAYSIZE(dxresult); i++) {
     //         Warning("%s:%d dx=%f, dy=%f, dr=%f\n",
     //                 __FUNCTION__, __LINE__,
     //                 dxresult[i], dyresult[i], drresult[i]);//XXX bob5972
@@ -489,13 +489,16 @@ static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
 }
 static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 {
-    float x[8];
-    float y[8];
-    float r[8];
-    Mob *m[8];
+#define VEC 8
+#define COUNT 2
+#define ASIZE (VEC * COUNT)
+    float x[ASIZE];
+    float y[ASIZE];
+    float r[ASIZE];
+    Mob *m[ASIZE];
     union {
-        float f[8];
-        uint32 u[8];
+        float f[ASIZE];
+        uint32 u[ASIZE];
     } result;
 
     FCircle sc;
@@ -514,7 +517,7 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
 
     while (inner < size) {
         //Warning("%s:%d n=%d, inner=%d\n", __FUNCTION__, __LINE__, n, inner);//XXX bob5972
-        while (n < 8 && inner < size) {
+        while (n < ASIZE && inner < size) {
             //Warning("%s:%d n=%d, inner=%d\n", __FUNCTION__, __LINE__, n, inner);//XXX bob5972
             Mob *iMob = MobVector_GetPtr(&battle->mobs, inner);
 
@@ -533,11 +536,14 @@ static void BattleScanBatch(Battle *battle, Mob *oMob, uint32 size)
             inner++;
         }
 
-        __m256 mx = _mm256_load_ps(x);
-        __m256 my = _mm256_load_ps(y);
-        __m256 mr = _mm256_load_ps(r);
-        __m256 cmp = BattleScanIntersectSSE(sx, sy, sr, mx, my, mr);
-        _mm256_storeu_ps(&result.f[0], cmp);
+        for (uint32 i = 0; i < COUNT; i++) {
+            ASSERT(i * VEC < ARRAYSIZE(x));
+            __m256 mx = _mm256_load_ps(&x[i * VEC]);
+            __m256 my = _mm256_load_ps(&y[i * VEC]);
+            __m256 mr = _mm256_load_ps(&r[i * VEC]);
+            __m256 cmp = BattleScanIntersectSSE(sx, sy, sr, mx, my, mr);
+            _mm256_storeu_ps(&result.f[i * VEC], cmp);
+        }
 
         for (uint32 i = 0; i < n; i++) {
             if (result.u[i] != 0) {
