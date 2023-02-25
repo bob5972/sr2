@@ -158,6 +158,13 @@ public:
     }
 
     /**
+     * Find the target mob farthest from the specified point.
+     */
+    Mob *findFarthestTarget(const FPoint *pos, MobTypeFlags filter) {
+        return myTargets.findFarthestMob(pos, filter);
+    }
+
+    /**
      * Find the Nth closest friendly mob to the specified point.
      * This is 0-based, so the closest mob is found when n=0.
      */
@@ -445,6 +452,14 @@ public:
         RandomState_SetSeed(&myData.rs, seed);
     }
 
+    Mob *farthestTargetShadow() {
+        if (myData.haveFarthestTargetShadow) {
+            return &myData.farthestTargetShadow;
+        } else {
+            return NULL;
+        }
+    }
+
 private:
     /*
      * Inscribe a tile-square inside the fighter sensor radius,
@@ -471,10 +486,15 @@ private:
         FPoint unexploredFocusPos;
         bool haveUnexploredFocus;
         bool forceUnexploredFocusMove;
+
+        Mob farthestTargetShadow;
+        bool haveFarthestTargetShadow;
     } myData;
 
+    void generateScannedMap(FleetAI *ai);
     void generateEnemyBaseGuess();
     void generateUnexploredFocus();
+    void generateFarthestTargetShadow();
 
     virtual void loadRegistry(MBRegistry *mreg) {
         int x;

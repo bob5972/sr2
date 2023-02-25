@@ -190,6 +190,17 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
      */
     SensorGrid::updateTick(ai);
 
+    generateScannedMap(ai);
+    generateEnemyBaseGuess();
+    generateUnexploredFocus();
+    generateFarthestTargetShadow();
+}
+
+
+void MappingSensorGrid::generateScannedMap(FleetAI *ai)
+{
+    CMobIt mit;
+
     if (myData.recentlyScannedResetTicks > 1 &&
         ai->tick % myData.recentlyScannedResetTicks == 0) {
         myData.recentlyScannedBV.resetAll();
@@ -200,10 +211,6 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
         myData.forceUnexploredFocusMove = TRUE;
     }
 
-    /*
-     * Load the new sensor updates.
-     */
-    CMobIt mit;
     CMobIt_Start(&ai->mobs, &mit);
     while (CMobIt_HasNext(&mit)) {
         Mob *mob = CMobIt_Next(&mit);
@@ -279,17 +286,25 @@ void MappingSensorGrid::updateTick(FleetAI *ai)
             myData.recentlyScannedBV.set(i);
         }
     }
+}
 
-    /*
-     * Calculate the enemy base guess.
-     */
-    generateEnemyBaseGuess();
-    generateUnexploredFocus();
+void MappingSensorGrid::generateFarthestTargetShadow(void)
+{
+    Mob *fbase = friendBaseShadow();
+    FPoint pos;
 
-    // Warning("%s:%d enemyBaseGuess has=%d, noMore=%d, i=%d, xy(%f, %f)\n", __FUNCTION__, __LINE__,
-    //         myData.hasEnemyBaseGuess, myData.noMoreEnemyBaseGuess,
-    //         myData.enemyBaseGuessIndex,
-    //         myData.enemyBaseGuessPos.x, myData.enemyBaseGuessPos.y);
+    if (fbase != NULL) {
+        pos = fbase->pos;
+    } else {
+        pos.x = 0;
+        pos.y = 0;
+    }
+
+    Mob *ft = findFarthestTarget(&pos, MOB_FLAG_SHIP);
+    if (ft != NULL) {
+        myData.farthestTargetShadow = *ft;
+        myData.haveFarthestTargetShadow = TRUE;
+    }
 }
 
 void MappingSensorGrid::generateUnexploredFocus()
