@@ -535,11 +535,7 @@ static void BattleRunScanning(Battle *battle)
 
     Mob *mobs = MobVector_GetCArray(&battle->mobs);
 
-    for (uint32 outer = 0; outer < size; outer++) {
-        Mob *oMob = &mobs[outer];
-        BitVector_SetRaw32(oMob->playerID, &oMob->scannedBy);
-    }
-
+#ifdef __AVX__
     uint32 i = 0;
     while (i < size) {
 #define BSIZE 256
@@ -570,7 +566,39 @@ static void BattleRunScanning(Battle *battle)
         }
     }
 #undef BSIZE
+#else
+    /*
+     * If we're taking the scalar path, pre-marking all the mobs
+     * as scanned by their own player helps.
+     */
+    for (uint32 outer = 0; outer < size; outer++) {
+        Mob *oMob = &mobs[outer];
+        BitVector_SetRaw32(oMob->playerID, &oMob->scannedBy);
+    }
 
+    for (uint32 outer = 0; outer < size; outer++) {
+        Mob *oMob = &mobs[outer];
+        if (!BattleCanMobScan(oMob)) {
+            continue;
+        }
+
+        for (uint32 inner = 0; inner < size; inner++) {
+            Mob *iMob = &innerMobs[inner];
+            if (BattleCheckMobScan(oMob, &sc, iMob, FALSE)) {
+                ASSERT(oMobPlayerID < sizeof(iMob->scannedBy) * 8);
+                BitVector_SetRaw32(oMobPlayerID, &iMob->scannedBy);
+                battle->bs.sensorContacts++;
+            }
+        }
+    }
+#endif // __AVX__
+
+    /*
+     * Clear out the scan bits so that players don't scan themselves.
+     *
+     * This is arguably not useful, but keeps it consistent across the
+     * scalar/AVX path, and means that fleet.c doesn't have to check for it.
+     */
     for (uint32 outer = 0; outer < size; outer++) {
         Mob *oMob = &mobs[outer];
         BitVector_ResetRaw32(oMob->playerID, &oMob->scannedBy);
