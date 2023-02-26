@@ -48,6 +48,10 @@ typedef struct Battle {
     MobVector pendingSpawns;
 } Battle;
 
+static inline __m256 BattleCircleIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
+                                              __m256 mx, __m256 my, __m256 mr);
+
+
 Battle *Battle_Create(const BattleScenario *bsc,
                       uint64 seed)
 {
@@ -295,9 +299,9 @@ BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 }
 
 static INLINE_ALWAYS bool
-BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
+BattleCheckMobCollision(const Mob *lhs, const FCircle *lc, const Mob *rhs)
 {
-    FCircle lc, rc;
+    FCircle rc;
 
     ASSERT(BattleCanMobTypesCollide(lhs->type, rhs->type));
     if (lhs->type != MOB_TYPE_POWER_CORE &&
@@ -313,17 +317,14 @@ BattleCheckMobCollision(const Mob *lhs, const Mob *rhs)
         return FALSE;
     }
 
-    Mob_GetCircle(lhs, &lc);
     Mob_GetCircle(rhs, &rc);
-    return FCircle_Intersect(&lc, &rc);
+    return FCircle_Intersect(lc, &rc);
 }
 
 
 static void
 BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 {
-    ASSERT(BattleCheckMobCollision(oMob, iMob));
-
     battle->bs.collisions++;
 
     if (oMob->type == MOB_TYPE_POWER_CORE) {
@@ -365,19 +366,139 @@ BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
     }
 }
 
+
+static void BattleCollideBatch(Battle *battle, Mob *oMob,
+                               float *x, float *y, float *r,
+                               Mob **innerMobs, uint32 innerSize)
+{
+    FCircle oc;
+    PlayerID oMobPlayerID = oMob->playerID;
+    uint32 inner = 0;
+
+    Mob_GetCircle(oMob, &oc);
+
+#ifdef __AVX__
+#define VSIZE 8
+    union {
+        float f[VSIZE];
+        uint32 u[VSIZE];
+    } result;
+
+    __m256 sx, sy, sr;
+
+    sx = _mm256_broadcast_ss(&oc.center.x);
+    sy = _mm256_broadcast_ss(&oc.center.y);
+    sr = _mm256_broadcast_ss(&oc.radius);
+
+    while (inner + VSIZE < innerSize) {
+        __m256 mx = _mm256_load_ps(&x[inner]);
+        __m256 my = _mm256_load_ps(&y[inner]);
+        __m256 mr = _mm256_load_ps(&r[inner]);
+        __m256 cmp = BattleCircleIntersectSSE(sx, sy, sr, mx, my, mr);
+        _mm256_storeu_ps(&result.f[0], cmp);
+
+        for (uint32 i = 0; i < VSIZE; i++) {
+            Mob *iMob = innerMobs[inner + i];
+            if (result.u[i] != 0 && iMob->alive &&
+                (oMob->type == MOB_TYPE_POWER_CORE || oMobPlayerID != iMob->playerID)) {
+                ASSERT(BattleCheckMobCollision(oMob, &oc, iMob));
+                BattleRunMobCollision(battle, oMob, iMob);
+                if (!oMob->alive) {
+                    /*
+                    * If the outer mob is no longer alive, it can't collide
+                    * with anything else.
+                    */
+                   return;
+                }
+            } else {
+                ASSERT(!BattleCheckMobCollision(oMob, &oc, iMob));
+            }
+        }
+
+        inner += VSIZE;
+    }
+
+#undef VSIZE
+#endif // __AVX__
+
+    while (inner < innerSize) {
+        Mob *iMob = innerMobs[inner];
+        if (BattleCheckMobCollision(oMob, &oc, iMob)) {
+            BattleRunMobCollision(battle, oMob, iMob);
+            if (!oMob->alive) {
+                /*
+                 * If the outer mob is no longer alive, it can't collide
+                 * with anything else.
+                 */
+                return;
+            }
+        }
+        inner++;
+    }
+}
+
+
 static void BattleRunCollisions(Battle *battle)
 {
-    uint mobSize = MobVector_Size(&battle->mobs);
+    uint size = MobVector_Size(&battle->mobs);
 
+    /*
+     * Partition the mobs into ammo/non-ammo, and then check for
+     * collisions between the two groups.
+     */
+
+#ifdef __AVX__
+#define BSIZE 256
+
+    MobVector_Pin(&battle->mobs);
+    Mob *mobs = MobVector_GetCArray(&battle->mobs);
+
+    uint32 i = 0;
+    while (i < size) {
+        float x[BSIZE];
+        float y[BSIZE];
+        float r[BSIZE];
+        Mob *m[BSIZE];
+        uint32 n = 0;
+
+        while (n < ARRAYSIZE(x) && i < size) {
+            Mob *iMob = &mobs[i];
+            if (!Mob_IsAmmo(iMob)) {
+                x[n] = iMob->pos.x;
+                y[n] = iMob->pos.y;
+                r[n] = Mob_GetRadius(iMob);
+                m[n] = iMob;
+                n++;
+            }
+            i++;
+        }
+
+        for (uint32 outer = 0; outer < size; outer++) {
+            Mob *oMob = &mobs[outer];
+
+            if (!Mob_IsAmmo(oMob) || !oMob->alive) {
+                continue;
+            }
+
+            BattleCollideBatch(battle, oMob, &x[0], &y[0], &r[0], &m[0], n);
+        }
+    }
+
+    MobVector_Unpin(&battle->mobs);
+#undef BSIZE
+#else
     ASSERT(ARRAYSIZE(battle->tempMobs) >= 2);
     MobPVec_Resize(&battle->tempMobs[0], mobSize);
     MobPVec_Resize(&battle->tempMobs[1], mobSize);
+
+    MobVector_Pin(&battle->mobs);
+    Mob *mobs = MobVector_GetCArray(&battle->mobs);
 
     uint ammoSize = 0;
     uint shipSize = 0;
 
     for (uint32 x = 0; x < mobSize; x++) {
-        Mob *oMob = MobVector_GetPtr(&battle->mobs, x);
+        Mob *oMob = &mobs[x];
 
         if (oMob->alive) {
             if (Mob_IsAmmo(oMob)) {
@@ -387,6 +508,8 @@ static void BattleRunCollisions(Battle *battle)
             }
         }
     }
+
+    MobVector_Unpin(&battle->mobs);
 
     DEBUG_ONLY(
         MobPVec_Resize(&battle->tempMobs[0], ammoSize);
@@ -406,7 +529,9 @@ static void BattleRunCollisions(Battle *battle)
             }
         }
     }
+#endif // __AVX__
 }
+
 
 // Is the scanning mob allowed to scan anything?
 static bool BattleCanMobScan(const Mob *scanning)
@@ -437,9 +562,6 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc,
             // a new scan.
             return FALSE;
         }
-
-        // Players don't scan themselves...
-        ASSERT(scanning->playerID != target->playerID);
     }
 
     Mob_GetCircle(target, &tc);
@@ -450,8 +572,8 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc,
 }
 
 #ifdef __AVX__
-static inline __m256 BattleScanIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
-                                            __m256 mx, __m256 my, __m256 mr)
+static inline __m256 BattleCircleIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
+                                              __m256 mx, __m256 my, __m256 mr)
 {
     __m256 dx = _mm256_sub_ps(sx, mx);
     __m256 dy = _mm256_sub_ps(sy, my);
@@ -494,7 +616,7 @@ static void BattleScanBatch(Battle *battle, Mob *oMob,
         __m256 mx = _mm256_load_ps(&x[inner]);
         __m256 my = _mm256_load_ps(&y[inner]);
         __m256 mr = _mm256_load_ps(&r[inner]);
-        __m256 cmp = BattleScanIntersectSSE(sx, sy, sr, mx, my, mr);
+        __m256 cmp = BattleCircleIntersectSSE(sx, sy, sr, mx, my, mr);
         _mm256_storeu_ps(&result.f[0], cmp);
 
         for (uint32 i = 0; i < VSIZE; i++) {
@@ -536,9 +658,9 @@ static void BattleRunScanning(Battle *battle)
     Mob *mobs = MobVector_GetCArray(&battle->mobs);
 
 #ifdef __AVX__
+#define BSIZE 256
     uint32 i = 0;
     while (i < size) {
-#define BSIZE 256
         float x[BSIZE];
         float y[BSIZE];
         float r[BSIZE];
