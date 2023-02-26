@@ -299,26 +299,26 @@ BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 }
 
 static INLINE_ALWAYS bool
-BattleCheckMobCollision(const Mob *lhs, const FCircle *lc, const Mob *rhs)
+BattleCheckMobCollision(const Mob *oMob, const FCircle *lc, const Mob *iMob)
 {
-    FCircle rc;
+    FCircle ic;
 
-    ASSERT(BattleCanMobTypesCollide(lhs->type, rhs->type));
-    if (lhs->type != MOB_TYPE_POWER_CORE &&
-        lhs->playerID == rhs->playerID) {
+    ASSERT(BattleCanMobTypesCollide(oMob->type, iMob->type));
+    if (oMob->type != MOB_TYPE_POWER_CORE &&
+        oMob->playerID == iMob->playerID) {
         // Players generally don't collide with themselves...
-        ASSERT(rhs->type != MOB_TYPE_POWER_CORE);
+        ASSERT(iMob->type != MOB_TYPE_POWER_CORE);
         return FALSE;
     }
 
-    ASSERT(lhs->alive);
-    ASSERT(rhs->alive == TRUE || rhs->alive == FALSE);
-    if (!rhs->alive) {
+    ASSERT(oMob->alive);
+    ASSERT(iMob->alive == TRUE || iMob->alive == FALSE);
+    if (!iMob->alive) {
         return FALSE;
     }
 
-    Mob_GetCircle(rhs, &rc);
-    return FCircle_Intersect(lc, &rc);
+    Mob_GetCircle(iMob, &ic);
+    return FCircle_Intersect(lc, &ic);
 }
 
 
