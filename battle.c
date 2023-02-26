@@ -377,6 +377,8 @@ static void BattleCollideBatch(Battle *battle, Mob *oMob,
 
     Mob_GetCircle(oMob, &oc);
 
+    ASSERT(!Mob_IsAmmo(oMob));
+
 #ifdef __AVX__
 #define VSIZE 8
     union {
@@ -400,7 +402,7 @@ static void BattleCollideBatch(Battle *battle, Mob *oMob,
         for (uint32 i = 0; i < VSIZE; i++) {
             Mob *iMob = innerMobs[inner + i];
             if (result.u[i] != 0 && iMob->alive &&
-                (oMob->type == MOB_TYPE_POWER_CORE || oMobPlayerID != iMob->playerID)) {
+                (iMob->type == MOB_TYPE_POWER_CORE || oMobPlayerID != iMob->playerID)) {
                 ASSERT(BattleCheckMobCollision(oMob, &oc, iMob));
                 BattleRunMobCollision(battle, oMob, iMob);
                 if (!oMob->alive) {
@@ -463,7 +465,7 @@ static void BattleRunCollisions(Battle *battle)
 
         while (n < ARRAYSIZE(x) && i < size) {
             Mob *iMob = &mobs[i];
-            if (!Mob_IsAmmo(iMob)) {
+            if (Mob_IsAmmo(iMob)) {
                 x[n] = iMob->pos.x;
                 y[n] = iMob->pos.y;
                 r[n] = Mob_GetRadius(iMob);
@@ -476,7 +478,7 @@ static void BattleRunCollisions(Battle *battle)
         for (uint32 outer = 0; outer < size; outer++) {
             Mob *oMob = &mobs[outer];
 
-            if (!Mob_IsAmmo(oMob) || !oMob->alive) {
+            if (Mob_IsAmmo(oMob) || !oMob->alive) {
                 continue;
             }
 
