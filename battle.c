@@ -367,6 +367,8 @@ BattleRunMobCollision(Battle *battle, Mob *oMob, Mob *iMob)
 }
 
 
+#ifdef __AVX__
+#define VSIZE 8
 static void BattleCollideBatch(Battle *battle, Mob *oMob,
                                float *x, float *y, float *r,
                                Mob **innerMobs, uint32 innerSize)
@@ -377,8 +379,6 @@ static void BattleCollideBatch(Battle *battle, Mob *oMob,
 
     Mob_GetCircle(oMob, &oc);
 
-#ifdef __AVX__
-#define VSIZE 8
     union {
         float f[VSIZE];
         uint32 u[VSIZE];
@@ -418,9 +418,6 @@ static void BattleCollideBatch(Battle *battle, Mob *oMob,
         inner += VSIZE;
     }
 
-#undef VSIZE
-#endif // __AVX__
-
     while (inner < innerSize) {
         Mob *iMob = innerMobs[inner];
         if (BattleCheckMobCollision(oMob, &oc, iMob)) {
@@ -436,6 +433,8 @@ static void BattleCollideBatch(Battle *battle, Mob *oMob,
         inner++;
     }
 }
+#undef VSIZE
+#endif // __AVX__
 
 
 static void BattleRunCollisions(Battle *battle)
@@ -589,6 +588,8 @@ static inline __m256 BattleCircleIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
 }
 #endif // __AVX__
 
+#ifdef __AVX__
+#define VSIZE 8
 static void BattleScanBatch(Battle *battle, Mob *oMob,
                             float *x, float *y, float *r,
                             Mob *innerMobs, uint32 innerSize)
@@ -599,8 +600,6 @@ static void BattleScanBatch(Battle *battle, Mob *oMob,
 
     Mob_GetSensorCircle(oMob, &sc);
 
-#ifdef __AVX__
-#define VSIZE 8
     union {
         float f[VSIZE];
         uint32 u[VSIZE];
@@ -635,9 +634,6 @@ static void BattleScanBatch(Battle *battle, Mob *oMob,
         inner += VSIZE;
     }
 
-#undef VSIZE
-#endif // __AVX__
-
     while (inner < innerSize) {
         Mob *iMob = &innerMobs[inner];
         if (BattleCheckMobScan(oMob, &sc, iMob, FALSE)) {
@@ -648,6 +644,8 @@ static void BattleScanBatch(Battle *battle, Mob *oMob,
         inner++;
     }
 }
+#undef VSIZE
+#endif // __AVX__
 
 static void BattleRunScanning(Battle *battle)
 {
