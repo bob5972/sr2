@@ -299,7 +299,7 @@ BattleCanMobTypesCollide(MobType lhsType, MobType rhsType)
 }
 
 static INLINE_ALWAYS bool
-BattleCheckMobCollision(const Mob *oMob, const FCircle *lc, const Mob *iMob)
+BattleCheckMobCollision(const Mob *oMob, const FCircle *oc, const Mob *iMob)
 {
     FCircle ic;
 
@@ -318,7 +318,7 @@ BattleCheckMobCollision(const Mob *oMob, const FCircle *lc, const Mob *iMob)
     }
 
     Mob_GetCircle(iMob, &ic);
-    return FCircle_Intersect(lc, &ic);
+    return FCircle_Intersect(oc, &ic);
 }
 
 
