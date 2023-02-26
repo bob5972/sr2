@@ -304,6 +304,9 @@ BattleCheckMobCollision(const Mob *oMob, const FCircle *oc, const Mob *iMob)
     FCircle ic;
 
     ASSERT(BattleCanMobTypesCollide(oMob->type, iMob->type));
+    ASSERT(Mob_IsAmmo(oMob));
+    ASSERT(!Mob_IsAmmo(iMob));
+
     if (oMob->type != MOB_TYPE_POWER_CORE &&
         oMob->playerID == iMob->playerID) {
         // Players generally don't collide with themselves...
