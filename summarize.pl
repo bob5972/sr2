@@ -180,7 +180,9 @@ sub DumpGraph($) {
 
     foreach my $k (sort keys %{$fleet}) {
         if ($k =~ /^shipNet.output\[(\d+)\]\.forceType/) {
-            my $n = $1;
+            my $on = $1;
+            my $nk = "shipNet.fn.output[$on].node";
+            my $n = $fleet->{$nk};
             my $type = $fleet->{$k};
             if ($type ne "NEURAL_FORCE_VOID") {
                 $oNodes->{$n} = $type;
