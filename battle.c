@@ -48,7 +48,7 @@ typedef struct Battle {
     MobVector pendingSpawns;
 } Battle;
 
-static inline __m256 BattleCircleIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
+static inline __m256 BattleCircleIntersectAVX(__m256 sx, __m256 sy, __m256 sr,
                                               __m256 mx, __m256 my, __m256 mr);
 
 
@@ -397,7 +397,7 @@ static void BattleCollideBatch(Battle *battle, Mob *oMob,
         __m256 mx = _mm256_load_ps(&x[inner]);
         __m256 my = _mm256_load_ps(&y[inner]);
         __m256 mr = _mm256_load_ps(&r[inner]);
-        __m256 cmp = BattleCircleIntersectSSE(sx, sy, sr, mx, my, mr);
+        __m256 cmp = BattleCircleIntersectAVX(sx, sy, sr, mx, my, mr);
         _mm256_storeu_ps(&result.f[0], cmp);
 
         for (uint32 i = 0; i < VSIZE; i++) {
@@ -574,7 +574,7 @@ static bool BattleCheckMobScan(const Mob *scanning, const FCircle *sc,
 }
 
 #ifdef __AVX__
-static inline __m256 BattleCircleIntersectSSE(__m256 sx, __m256 sy, __m256 sr,
+static inline __m256 BattleCircleIntersectAVX(__m256 sx, __m256 sy, __m256 sr,
                                               __m256 mx, __m256 my, __m256 mr)
 {
     __m256 dx = _mm256_sub_ps(sx, mx);
@@ -618,7 +618,7 @@ static void BattleScanBatch(Battle *battle, Mob *oMob,
         __m256 mx = _mm256_load_ps(&x[inner]);
         __m256 my = _mm256_load_ps(&y[inner]);
         __m256 mr = _mm256_load_ps(&r[inner]);
-        __m256 cmp = BattleCircleIntersectSSE(sx, sy, sr, mx, my, mr);
+        __m256 cmp = BattleCircleIntersectAVX(sx, sy, sr, mx, my, mr);
         _mm256_storeu_ps(&result.f[0], cmp);
 
         for (uint32 i = 0; i < VSIZE; i++) {

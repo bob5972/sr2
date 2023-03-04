@@ -98,7 +98,7 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
 }
 
 #ifdef __AVX__
-static inline __m256 MobFilterRangeSSE(__m256 sx, __m256 sy, __m256 sr2,
+static inline __m256 MobFilterRangeAVX(__m256 sx, __m256 sy, __m256 sr2,
                                        __m256 mx, __m256 my)
 {
     __m256 dx = _mm256_sub_ps(mx, sx);
@@ -135,7 +135,7 @@ static void MobFilterRangeBatch(const FPoint *pos, float radiusSquared,
     while (maI + VSIZE < size) {
         __m256 mx = _mm256_load_ps(&x[maI]);
         __m256 my = _mm256_load_ps(&y[maI]);
-        __m256 cmp = MobFilterRangeSSE(sx, sy, sr2, mx, my);
+        __m256 cmp = MobFilterRangeAVX(sx, sy, sr2, mx, my);
         _mm256_storeu_ps(&result.f[0], cmp);
 
         for (uint32 i = 0; i < VSIZE; i++) {
