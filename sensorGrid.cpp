@@ -152,14 +152,13 @@ bool SensorGrid::avgFlock(FPoint *avgVel, FPoint *avgPos,
     if (!MobFilter_IsTriviallyEmpty(f)) {
         while (mit.hasNext()) {
             Mob *ma[512];
-            uint32 mn = 0;
+            uint mn = 0;
             mit.nextBatch(ma, &mn, ARRAYSIZE(ma));
             MobFilter_Batch(ma, &mn, f);
 
             n += mn;
-            while (mn > 0) {
-                mn--;
-                Mob *m = ma[mn];
+            for (uint x = 0; x < mn; x++) {
+                Mob *m = ma[x];
                 ASSERT(m != NULL);
 
                 lAvgVel.x += (m->pos.x - m->lastPos.x);

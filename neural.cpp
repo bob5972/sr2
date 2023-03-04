@@ -1005,7 +1005,7 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
                                         FPoint *focusPoint)
 {
     FPoint force;
-    int x = 0;
+    uint x = 0;
     MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
 
     MobFilter f;
@@ -1040,13 +1040,12 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
 
     if (!MobFilter_IsTriviallyEmpty(&f)) {
         Mob *ma[512];
-        uint32 mn = 0;
+        uint mn = 0;
         mit.nextBatch(ma, &mn, ARRAYSIZE(ma));
         MobFilter_Batch(ma, &mn, &f);
 
-        while (mn > 0) {
-            mn--;
-            Mob *m = ma[mn];
+        for (uint i = 0; i < mn; i++) {
+            Mob *m = ma[i];
             ASSERT(m != NULL);
 
             if (m->mobid != self->mobid) {
