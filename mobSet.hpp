@@ -187,6 +187,17 @@ public:
             return m;
         }
 
+        void nextBatch(Mob **ma, uint *n, uint size) {
+            uint ln = *n;
+            ma += ln;
+            while (ln < size && hasNext()) {
+                ma[0] = next();
+                ma++;
+                ln++;
+            }
+            *n = ln;
+        }
+
         void remove() {
             ASSERT(myLastMobid != MOB_ID_INVALID);
             myMobSet->removeMob(myLastMobid);
