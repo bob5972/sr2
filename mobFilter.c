@@ -30,10 +30,23 @@ bool MobFilter_IsTriviallyEmpty(const MobFilter *mf)
         return TRUE;
     }
 
-    if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_TYPE) != 0 &&
-        mf->typeF.flags == MOB_FLAG_NONE) {
+    ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_TYPE) == 0 ||
+           mf->typeF.flags != MOB_FLAG_NONE);
+
+    return FALSE;
+}
+
+bool MobFilter_IsTriviallyAll(const MobFilter *mf)
+{
+    ASSERT(mf != NULL);
+    ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
+
+    if (mf->filterTypeFlags == 0) {
         return TRUE;
     }
+
+    ASSERT(mf->filterTypeFlags != MOB_FILTER_TFLAG_TYPE ||
+           mf->typeF.flags != MOB_FLAG_ALL);
 
     return FALSE;
 }
@@ -180,7 +193,9 @@ void MobFilter_Batch(Mob **ma, uint *n, const MobFilter *mf)
     }
 #endif // __AVX__
 
-    if (!MobFilter_IsTriviallyEmpty(lmf)) {
+    if (MobFilter_IsTriviallyAll(lmf)) {
+        goodN = ln;
+    } else {
         for (uint x = 0; x < ln; x++) {
             if (MobFilter_Filter(ma[x], lmf)) {
                 ma[goodN] = ma[x];

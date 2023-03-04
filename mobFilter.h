@@ -67,6 +67,7 @@ typedef struct MobFilter {
 
 bool MobFilter_Filter(const Mob *m, const MobFilter *f);
 bool MobFilter_IsTriviallyEmpty(const MobFilter *filter);
+bool MobFilter_IsTriviallyAll(const MobFilter *filter);
 void MobFilter_Batch(Mob **ma, uint *n, const MobFilter *mf);
 
 static inline void MobFilter_Init(MobFilter *mf)
@@ -80,6 +81,13 @@ static inline void MobFilter_UseType(MobFilter *mf, MobTypeFlags flags)
     ASSERT(mf->filterTypeFlags < MOB_FILTER_TFLAG_MAX);
     ASSERT((mf->filterTypeFlags & MOB_FILTER_TFLAG_TYPE) == 0);
     ASSERT(mf->typeF.flags == 0);
+
+    /*
+     * We could support these pretty trivially, but probably the caller
+     * just wanted to not call this function.
+     */
+    ASSERT(flags != MOB_FLAG_ALL);
+    ASSERT(flags != MOB_FLAG_NONE);
 
     mf->filterTypeFlags |= MOB_FILTER_TFLAG_TYPE;
     mf->typeF.flags = flags;
