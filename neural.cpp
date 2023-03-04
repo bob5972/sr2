@@ -1039,11 +1039,17 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
     FPoint_Zero(&force);
 
     if (!MobFilter_IsTriviallyEmpty(&f)) {
-        while (mit.hasNext()) {
-            Mob *m = mit.next();
+        Mob *ma[512];
+        uint32 mn = 0;
+        mit.nextBatch(ma, &mn, ARRAYSIZE(ma));
+        MobFilter_Batch(ma, &mn, &f);
+
+        while (mn > 0) {
+            mn--;
+            Mob *m = ma[mn];
             ASSERT(m != NULL);
 
-            if (m->mobid != self->mobid && MobFilter_Filter(m, &f)) {
+            if (m->mobid != self->mobid) {
                 NeuralForceGetRepulseFocus(nc, &self->pos, &m->pos, &force);
                 x++;
             }
