@@ -67,6 +67,7 @@ typedef struct MobFilter {
 
 bool MobFilter_Filter(const Mob *m, const MobFilter *f);
 bool MobFilter_IsTriviallyEmpty(const MobFilter *filter);
+void MobFilter_Batch(Mob **ma, uint *n, const MobFilter *mf);
 
 static inline void MobFilter_Init(MobFilter *mf)
 {

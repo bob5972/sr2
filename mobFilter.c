@@ -94,3 +94,18 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
     ASSERT(!MobFilter_IsTriviallyEmpty(mf));
     return TRUE;
 }
+
+void MobFilter_Batch(Mob **ma, uint *n, const MobFilter *mf)
+{
+    uint goodN = 0;
+    uint ln = *n;
+
+    for (uint x = 0; x < ln; x++) {
+        if (MobFilter_Filter(ma[x], mf)) {
+            ma[goodN] = ma[x];
+            goodN++;
+        }
+    }
+
+    *n = goodN;
+}
