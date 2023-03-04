@@ -1044,8 +1044,9 @@ static bool NeuralForceGetSeparateFocus(AIContext *nc,
         mit.nextBatch(ma, &mn, ARRAYSIZE(ma));
         MobFilter_Batch(ma, &mn, &f);
 
-        for (uint i = 0; i < mn; i++) {
-            Mob *m = ma[i];
+        while (mn > 0) {
+            mn--;
+            Mob *m = ma[mn];
             ASSERT(m != NULL);
 
             if (m->mobid != self->mobid) {
