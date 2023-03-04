@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <immintrin.h>
+
 #include "mobFilter.h"
 
 
@@ -95,17 +97,125 @@ bool MobFilter_Filter(const Mob *m, const MobFilter *mf)
     return TRUE;
 }
 
+#ifdef __AVX__
+static inline __m256 MobFilterRangeSSE(__m256 sx, __m256 sy, __m256 sr2,
+                                       __m256 mx, __m256 my)
+{
+    __m256 dx = _mm256_sub_ps(mx, sx);
+    __m256 dy = _mm256_sub_ps(my, sy);
+    __m256 dx2 = _mm256_mul_ps(dx, dx);
+    __m256 dy2 = _mm256_mul_ps(dy, dy);
+    __m256 dd = _mm256_add_ps(dx2, dy2);
+    return _mm256_cmp_ps(dd, sr2, _CMP_LE_OS);
+}
+#endif // __AVX__
+
+
+#ifdef __AVX__
+#define VSIZE 8
+static void MobFilterRangeBatch(const FPoint *pos, float radiusSquared,
+                                float *x, float *y,
+                                Mob **maIn, uint size,
+                                Mob **maOut, uint *outSize)
+{
+    uint maI = 0;
+    uint goodN = 0;
+
+    union {
+        float f[VSIZE];
+        uint32 u[VSIZE];
+    } result;
+
+    __m256 sx, sy, sr2;
+
+    sx = _mm256_broadcast_ss(&pos->x);
+    sy = _mm256_broadcast_ss(&pos->y);
+    sr2 = _mm256_broadcast_ss(&radiusSquared);
+
+    while (maI + VSIZE < size) {
+        __m256 mx = _mm256_load_ps(&x[maI]);
+        __m256 my = _mm256_load_ps(&y[maI]);
+        __m256 cmp = MobFilterRangeSSE(sx, sy, sr2, mx, my);
+        _mm256_storeu_ps(&result.f[0], cmp);
+
+        for (uint32 i = 0; i < VSIZE; i++) {
+            if (result.u[i] != 0) {
+                ASSERT(maI + i >= goodN);
+                Mob *m = maIn[maI + i];
+                maOut[goodN] = m;
+                goodN++;
+            }
+        }
+
+        maI += VSIZE;
+    }
+
+    while (maI < size) {
+        Mob *m = maIn[maI];
+        if (FPoint_DistanceSquared(pos, &m->pos) <= radiusSquared) {
+            ASSERT(maI >= goodN);
+            maOut[goodN] = m;
+            goodN++;
+        }
+        maI++;
+    }
+
+    *outSize += goodN;
+}
+#undef VSIZE
+#endif // __AVX__
+
 void MobFilter_Batch(Mob **ma, uint *n, const MobFilter *mf)
 {
     uint goodN = 0;
     uint ln = *n;
+    MobFilter noRStack;
+    const MobFilter *lmf = mf;
 
-    for (uint x = 0; x < ln; x++) {
-        if (MobFilter_Filter(ma[x], mf)) {
-            ma[goodN] = ma[x];
-            goodN++;
+#ifdef __AVX__
+    if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_RANGE) != 0) {
+        noRStack = *mf;
+        noRStack.filterTypeFlags &= ~MOB_FILTER_TFLAG_RANGE;
+        lmf = &noRStack;
+    }
+#endif // __AVX__
+
+    if (!MobFilter_IsTriviallyEmpty(lmf)) {
+        for (uint x = 0; x < ln; x++) {
+            if (MobFilter_Filter(ma[x], lmf)) {
+                ma[goodN] = ma[x];
+                goodN++;
+            }
         }
     }
+
+#ifdef __AVX__
+#define BSIZE 256
+    if ((mf->filterTypeFlags & MOB_FILTER_TFLAG_RANGE) != 0) {
+        FPoint pos = mf->rangeF.pos;
+        float radiusSquared = mf->rangeF.radiusSquared;
+        uint i = 0;
+        ln = goodN;
+        goodN = 0;
+        while (i < ln) {
+            float x[256] __attribute__ ((aligned (32)));
+            float y[256] __attribute__ ((aligned (32)));
+            uint an = 0;
+            uint32 iStart = i;
+
+            while (an < ARRAYSIZE(x) && i < ln) {
+                x[an] = ma[i]->pos.x;
+                y[an] = ma[i]->pos.y;
+                i++;
+                an++;
+            }
+
+            MobFilterRangeBatch(&pos, radiusSquared,
+                                x, y, &ma[iStart], an, &ma[goodN], &goodN);
+        }
+    }
+#undef BSIZE
+#endif // __AVX__
 
     *n = goodN;
 }
