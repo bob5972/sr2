@@ -1167,22 +1167,27 @@ public:
             MBVector<Mob *> tv;
             int f = 0;
             int t = 0;
-            int fNum, fMin;
-
-            sg->pushFriends(fv, MOB_FLAG_FIGHTER);
-            sg->pushClosestTargetsInRange(tv, MOB_FLAG_SHIP, &base->pos,
-                                          myConfig.baseDefenseRadius);
+            int fNum = 0;
+            int fMin;
+            Mob *fighter = NULL;
 
             CMBComparator comp;
             MobP_InitDistanceComparator(&comp, &base->pos);
 
-            fNum = fv.size();
-            fMin = fv.findMin(MBComparator<Mob *>(&comp), f, fNum);
-            Mob *fighter = fMin >= 0 ? fv[fMin] : NULL;
-            if (fighter != NULL) {
-                fv[fMin] = fv[0];
-                f++;
-                fNum--;
+            sg->pushClosestTargetsInRange(tv, MOB_FLAG_SHIP, &base->pos,
+                                          myConfig.baseDefenseRadius);
+
+            if (tv.size() > 0) {
+                sg->pushFriends(fv, MOB_FLAG_FIGHTER);
+
+                fNum = fv.size();
+                fMin = fv.findMin(MBComparator<Mob *>(&comp), f, fNum);
+                fighter = fMin >= 0 ? fv[fMin] : NULL;
+                if (fighter != NULL) {
+                    fv[fMin] = fv[0];
+                    f++;
+                    fNum--;
+                }
             }
 
             Mob *target = (t < tv.size()) ? tv[t++] : NULL;
