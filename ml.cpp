@@ -42,6 +42,8 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_0x1_CONSTANT), },
     { TMENTRY(ML_FOP_0x1_UNIT_CONSTANT), },
     { TMENTRY(ML_FOP_0x3_CONSTANT_CLAMPED), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N1_0), },
+    { TMENTRY(ML_FOP_0x1_CONSTANT_N1_1), },
     { TMENTRY(ML_FOP_0x1_CONSTANT_0_10), },
     { TMENTRY(ML_FOP_0x1_CONSTANT_0_100), },
     { TMENTRY(ML_FOP_0x1_CONSTANT_0_1K), },
@@ -349,6 +351,18 @@ float MLFloatNode::computeWork()
             float p2 = getParam(2);
             float min = MIN(p1, p2);
             float max = MAX(p1, p2);
+            return MIN(MAX(p0, min), max);
+        }
+         case ML_FOP_0x1_CONSTANT_N1_0: {
+            float p0 = getParam(0);
+            float min = -1.0f;
+            float max = 0.0f;
+            return MIN(MAX(p0, min), max);
+        }
+         case ML_FOP_0x1_CONSTANT_N1_1: {
+            float p0 = getParam(0);
+            float min = -1.0f;
+            float max = 1.0f;
             return MIN(MAX(p0, min), max);
         }
         case ML_FOP_0x1_CONSTANT_0_10: {
@@ -1845,6 +1859,8 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
 
         case ML_FOP_0x1_CONSTANT:
         case ML_FOP_0x1_UNIT_CONSTANT:
+        case ML_FOP_0x1_CONSTANT_N1_0:
+        case ML_FOP_0x1_CONSTANT_N1_1:
         case ML_FOP_0x1_CONSTANT_0_10:
         case ML_FOP_0x1_CONSTANT_0_100:
         case ML_FOP_0x1_CONSTANT_0_1K:
@@ -2197,6 +2213,8 @@ bool MLFloatNode::isConstant()
         case ML_FOP_0x1_CONSTANT:
         case ML_FOP_0x1_UNIT_CONSTANT:
         case ML_FOP_0x3_CONSTANT_CLAMPED:
+        case ML_FOP_0x1_CONSTANT_N1_0:
+        case ML_FOP_0x1_CONSTANT_N1_1:
         case ML_FOP_0x1_CONSTANT_0_10:
         case ML_FOP_0x1_CONSTANT_0_100:
         case ML_FOP_0x1_CONSTANT_0_1K:
