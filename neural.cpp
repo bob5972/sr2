@@ -102,6 +102,8 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MOB_SPOT),                        },
     { TMENTRY(NEURAL_FORCE_MOB_BASE_SHELL),                  },
     { TMENTRY(NEURAL_FORCE_MOB_BASE_SECTOR),                 },
+    { TMENTRY(NEURAL_FORCE_MOB_CENTER_SHELL),                },
+    { TMENTRY(NEURAL_FORCE_MOB_CENTER_SECTOR),               },
     { TMENTRY(NEURAL_FORCE_LAST_TARGET_SHADOW),              },
 };
 
@@ -1605,13 +1607,24 @@ bool NeuralForce_GetFocus(AIContext *nc,
             focusPoint->y = fmobid2 * nc->ai->bp.height;
             return TRUE;
         }
-        case NEURAL_FORCE_MOB_BASE_SECTOR: {
+        case NEURAL_FORCE_MOB_BASE_SECTOR:
+        case NEURAL_FORCE_MOB_CENTER_SECTOR: {
             FRPoint rfocus;
-            FPoint *basePos = nc->sg->friendBaseShadowPos();
+            FPoint center;
+            FPoint *pos;
+
+            if (desc->forceType == NEURAL_FORCE_MOB_CENTER_SECTOR) {
+                center.x = nc->ai->bp.width / 2.0f;
+                center.y = nc->ai->bp.height / 2.0f;
+                pos = &center;
+            } else {
+                ASSERT(desc->forceType == NEURAL_FORCE_MOB_BASE_SECTOR);
+                pos = nc->sg->friendBaseShadowPos();
+            }
             float fmobid = Random_UnitFloatFromSeed(mob->mobid);
-            rfocus.radius = FPoint_ToFRPointRadius(&mob->pos, basePos);
+            rfocus.radius = FPoint_ToFRPointRadius(&mob->pos, pos);
             rfocus.theta = fmobid * 2.0f * M_PI;
-            FRPoint_ToFPoint(&rfocus, basePos, focusPoint);
+            FRPoint_ToFPoint(&rfocus, pos, focusPoint);
 
             if (focusPoint->x >= 0.0f && focusPoint->x <= nc->ai->bp.width &&
                 focusPoint->y >= 0.0f && focusPoint->y <= nc->ai->bp.height) {
@@ -1619,15 +1632,28 @@ bool NeuralForce_GetFocus(AIContext *nc,
             }
             return FALSE;
         }
-        case NEURAL_FORCE_MOB_BASE_SHELL: {
+        case NEURAL_FORCE_MOB_BASE_SHELL:
+        case NEURAL_FORCE_MOB_CENTER_SHELL: {
             FRPoint rfocus;
-            FPoint *basePos = nc->sg->friendBaseShadowPos();
-            float fmobid = Random_UnitFloatFromSeed(mob->mobid);
+            FPoint center;
+            FPoint *pos;
             float d = sqrtf(nc->ai->bp.width * nc->ai->bp.width +
                             nc->ai->bp.height * nc->ai->bp.height);
+
+            if (desc->forceType == NEURAL_FORCE_MOB_CENTER_SECTOR) {
+                center.x = nc->ai->bp.width / 2.0f;
+                center.y = nc->ai->bp.height / 2.0f;
+                pos = &center;
+                d /= 2.0f;
+            } else {
+                ASSERT(desc->forceType == NEURAL_FORCE_MOB_BASE_SECTOR);
+                pos = nc->sg->friendBaseShadowPos();
+            }
+            float fmobid = Random_UnitFloatFromSeed(mob->mobid);
+
             rfocus.radius = fmobid * d;
-            rfocus.theta = FPoint_ToFRPointTheta(&mob->pos, basePos);
-            FRPoint_ToFPoint(&rfocus, basePos, focusPoint);
+            rfocus.theta = FPoint_ToFRPointTheta(&mob->pos, pos);
+            FRPoint_ToFPoint(&rfocus, pos, focusPoint);
 
             if (focusPoint->x >= 0.0f && focusPoint->x <= nc->ai->bp.width &&
                 focusPoint->y >= 0.0f && focusPoint->y <= nc->ai->bp.height) {
