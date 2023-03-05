@@ -196,6 +196,7 @@ void MobFilter_Batch(Mob **ma, uint *n, const MobFilter *mf)
     if (MobFilter_IsTriviallyAll(lmf)) {
         goodN = ln;
     } else {
+        ASSERT(lmf->filterTypeFlags != 0);
         for (uint x = 0; x < ln; x++) {
             if (MobFilter_Filter(ma[x], lmf)) {
                 ma[goodN] = ma[x];
