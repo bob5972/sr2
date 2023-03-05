@@ -16529,22 +16529,27 @@ public:
             MBVector<Mob *> tv;
             int f = 0;
             int t = 0;
+            Mob *fighter = NULL;
+            Mob *target = NULL;
 
             sg->pushClosestTargetsInRange(tv, MOB_FLAG_SHIP, &base->pos,
                                           myConfig.baseDefenseRadius);
 
-            if (myConfig.fighterBaseDefenseUseRadius) {
-                sg->pushClosestFriendsInRange(fv, MOB_FLAG_FIGHTER, &base->pos,
-                                              myConfig.baseDefenseRadius);
-            } else {
-                CMBComparator comp;
-                MobP_InitDistanceComparator(&comp, &base->pos);
-                sg->pushFriends(fv, MOB_FLAG_FIGHTER);
-                fv.sort(MBComparator<Mob *>(&comp));
-            }
+            if (tv.size() > 0) {
+                if (myConfig.fighterBaseDefenseUseRadius) {
+                    sg->pushClosestFriendsInRange(fv, MOB_FLAG_FIGHTER,
+                                                  &base->pos,
+                                                  myConfig.baseDefenseRadius);
+                } else {
+                    CMBComparator comp;
+                    MobP_InitDistanceComparator(&comp, &base->pos);
+                    sg->pushFriends(fv, MOB_FLAG_FIGHTER);
+                    fv.sortMinN(MBComparator<Mob *>(&comp), tv.size());
+                }
 
-            Mob *fighter = (f < fv.size()) ? fv[f++] : NULL;
-            Mob *target = (t < tv.size()) ? tv[t++] : NULL;
+                fighter = (f < fv.size()) ? fv[f++] : NULL;
+                target = (t < tv.size()) ? tv[t++] : NULL;
+            }
 
             while (target != NULL && fighter != NULL) {
                 BundleShipAI *ship = (BundleShipAI *)fighter->aiMobHandle;
