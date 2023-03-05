@@ -13,4 +13,5 @@ subprojects/
 !subprojects/*.wrap
 *.local
 merge.sh
+try.sh
 zoo/
