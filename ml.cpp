@@ -99,6 +99,15 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_CLAMP_N1K_1K), },
     { TMENTRY(ML_FOP_1x0_CLAMP_N10K_10K), },
 
+    { TMENTRY(ML_FOP_1x2_CLAMP), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
+    { TMENTRY(ML_FOP_3x0_CLAMP), },
+    { TMENTRY(ML_FOP_1x2_CLAMP_BROKEN), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN), },
+    { TMENTRY(ML_FOP_3x0_CLAMP_BROKEN), },
+
     { TMENTRY(ML_FOP_1x0_INVERSE), },
     { TMENTRY(ML_FOP_1x0_SQUARE), },
     { TMENTRY(ML_FOP_1x0_INVERSE_SQUARE), },
@@ -123,11 +132,6 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x1_PRODUCT), },
     { TMENTRY(ML_FOP_1x1_SUM), },
     { TMENTRY(ML_FOP_1x1_LINEAR_COMBINATION), },
-
-    { TMENTRY(ML_FOP_1x2_CLAMP_BROKEN), },
-    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN), },
-    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN), },
-    { TMENTRY(ML_FOP_3x0_CLAMP_BROKEN), },
 
     { TMENTRY(ML_FOP_1x2_SINE), },
     { TMENTRY(ML_FOP_1x2_COSINE), },
@@ -529,15 +533,164 @@ float MLFloatNode::computeWork()
 
         case ML_FOP_1x0_CLAMP_UNIT:
             return CLAMP_UNIT(getInput(0));
-        case ML_FOP_1x0_CLAMP_UNIT:{
+        case ML_FOP_1x0_CLAMP_N1_0:{
             float f = getInput(0);
             float min = -1.0f;
             float max = 0.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N1_1:{
+            float f = getInput(0);
+            float min = -1.0f;
+            float max = 1.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_0_10:{
+            float f = getInput(0);
+            float min = 0.0f;
+            float max = 10.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_0_100:{
+            float f = getInput(0);
+            float min = 0.0f;
+            float max = 100.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_0_1K:{
+            float f = getInput(0);
+            float min = 0.0f;
+            float max = 1000.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_0_10K:{
+            float f = getInput(0);
+            float min = 0.0f;
+            float max = 10000.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N10_0:{
+            float f = getInput(0);
+            float min = -10.0f;
+            float max = 0.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N100_0:{
+            float f = getInput(0);
+            float min = -100.0f;
+            float max = 0.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N1K_0:{
+            float f = getInput(0);
+            float min = -1000.0f;
+            float max = 0.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N10K_0:{
+            float f = getInput(0);
+            float min = -10000.0f;
+            float max = 0.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N10_10:{
+            float f = getInput(0);
+            float min = -10.0f;
+            float max = 10.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N100_100:{
+            float f = getInput(0);
+            float min = -100.0f;
+            float max = 100.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N1K_1K:{
+            float f = getInput(0);
+            float min = -1000.0f;
+            float max = 1000.0f;
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x0_CLAMP_N10K_10K:{
+            float f = getInput(0);
+            float min = -10000.0f;
+            float max = 10000.0f;
+            return MLClamp(f, min, max);
+        }
+
+         case ML_FOP_1x2_CLAMP: {
+            float f = getInput(0);
+            float min = getParam(0);
+            float max = getParam(1);
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_3x0_CLAMP: {
+            float f = getInput(0);
+            float min = getInput(1);
+            float max = getInput(2);
+            return MLClamp(f, min, max);
+        }
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            f = MLClamp(f, min, max);
+            f = (f - min) / (max - min);
+            return CLAMP_UNIT(f);
+        }
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            f = CLAMP_UNIT(f);
+            f = f * (max - min);
+            return f;
+        }
+
+        case ML_FOP_1x2_CLAMP_BROKEN: {
+            float f = getInput(0);
+            float min = getParam(0);
+            float max = getParam(1);
             f = MAX(f, max);
             f = MIN(f, min);
             return f;
-        }//XXX bob5972
+        }
+        case ML_FOP_3x0_CLAMP_BROKEN: {
+            float f = getInput(0);
+            float min = getInput(1);
+            float max = getInput(2);
+            f = MAX(f, max);
+            f = MIN(f, min);
+            return f;
+        }
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            f = MAX(f, max);
+            f = MIN(f, min);
 
+            f = (f - min) / (max - min);
+            return f;
+        }
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN: {
+            float f = getInput(0);
+            float p0 = getParam(0);
+            float p1 = getParam(1);
+            float max = MAX(p0, p1);
+            float min = MIN(p0, p1);
+            f = MAX(f, 1.0f);
+            f = MIN(f, 0.0f);
+
+            f = f * (max - min);
+            return f;
+        }
 
         case ML_FOP_1x0_CEIL:
             return ceilf(getInput(0));
@@ -572,50 +725,6 @@ float MLFloatNode::computeWork()
             return getInput(0) * getParam(0);
         case ML_FOP_1x1_SUM:
             return getInput(0) + getParam(0);
-
-        case ML_FOP_1x2_CLAMP_BROKEN: {
-            float f = getInput(0);
-            float min = getParam(0);
-            float max = getParam(1);
-            f = MAX(f, max);
-            f = MIN(f, min);
-            return f;
-        }
-
-        case ML_FOP_3x0_CLAMP_BROKEN: {
-            float f = getInput(0);
-            float min = getInput(1);
-            float max = getInput(2);
-            f = MAX(f, max);
-            f = MIN(f, min);
-            return f;
-        }
-
-        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN: {
-            float f = getInput(0);
-            float p0 = getParam(0);
-            float p1 = getParam(1);
-            float max = MAX(p0, p1);
-            float min = MIN(p0, p1);
-            f = MAX(f, max);
-            f = MIN(f, min);
-
-            f = (f - min) / (max - min);
-            return f;
-        }
-
-        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN: {
-            float f = getInput(0);
-            float p0 = getParam(0);
-            float p1 = getParam(1);
-            float max = MAX(p0, p1);
-            float min = MIN(p0, p1);
-            f = MAX(f, 1.0f);
-            f = MIN(f, 0.0f);
-
-            f = f * (max - min);
-            return f;
-        }
 
         case ML_FOP_1x2_SINE: {
             float p = getParam(0);
@@ -1938,8 +2047,42 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_1x0_COS:
         case ML_FOP_1x0_TAN:
         case ML_FOP_1x0_PROB_NOT:
-        case ML_FOP_1x0_CLAMP_UNIT:
             numInputs = 1;
+            numParams = 0;
+            break;
+
+        case ML_FOP_1x0_CLAMP_UNIT:
+        case ML_FOP_1x0_CLAMP_N1_0:
+        case ML_FOP_1x0_CLAMP_N1_1:
+        case ML_FOP_1x0_CLAMP_0_10:
+        case ML_FOP_1x0_CLAMP_0_100:
+        case ML_FOP_1x0_CLAMP_0_1K:
+        case ML_FOP_1x0_CLAMP_0_10K:
+        case ML_FOP_1x0_CLAMP_N10_0:
+        case ML_FOP_1x0_CLAMP_N100_0:
+        case ML_FOP_1x0_CLAMP_N1K_0:
+        case ML_FOP_1x0_CLAMP_N10K_0:
+        case ML_FOP_1x0_CLAMP_N10_10:
+        case ML_FOP_1x0_CLAMP_N100_100:
+        case ML_FOP_1x0_CLAMP_N1K_1K:
+        case ML_FOP_1x0_CLAMP_N10K_10K:
+            numInputs = 1;
+            numParams = 0;
+            break;
+
+        case ML_FOP_1x2_CLAMP:
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT:
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT:
+        case ML_FOP_1x2_CLAMP_BROKEN:
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN:
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN:
+            numInputs = 1;
+            numParams = 2;
+            break;
+
+        case ML_FOP_3x0_CLAMP:
+        case ML_FOP_3x0_CLAMP_BROKEN:
+            numInputs = 3;
             numParams = 0;
             break;
 
@@ -1974,9 +2117,6 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numParams = 1;
             break;
 
-        case ML_FOP_1x2_CLAMP_BROKEN:
-        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN:
-        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN:
         case ML_FOP_1x2_SINE:
         case ML_FOP_1x2_COSINE:
         case ML_FOP_1x2_INSIDE_RANGE:
@@ -1984,11 +2124,6 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
         case ML_FOP_1x2_SEEDED_RANDOM:
             numInputs = 1;
             numParams = 2;
-            break;
-
-        case ML_FOP_3x0_CLAMP_BROKEN:
-            numInputs = 3;
-            numParams = 0;
             break;
 
         case ML_FOP_1x3_IF_GTE_ELSE:
