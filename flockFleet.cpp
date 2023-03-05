@@ -1194,10 +1194,12 @@ public:
 
                 fMin = fv.findMin(MBComparator<Mob *>(&comp), f, fNum);
                 fighter = fMin >= 0 ? fv[fMin] : NULL;
-                fv[fMin] = fv[0];
-                f++;
-                fNum--;
-                ASSERT(fNum >= 0);
+                if (fighter != NULL) {
+                    fv[fMin] = fv[0];
+                    f++;
+                    fNum--;
+                    ASSERT(fNum >= 0);
+                }
 
                 target = (t < tv.size()) ? tv[t++] : NULL;
             }
