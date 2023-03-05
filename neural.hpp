@@ -164,6 +164,7 @@ typedef struct NeuralForceDesc {
     float radius;
     int index;
     bool useTangent;
+    bool useBase;
     bool filterForward;
     bool filterBackward;
     bool filterAdvance;

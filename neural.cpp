@@ -357,6 +357,10 @@ void NeuralForce_Load(MBRegistry *mreg,
     desc->useTangent = MBRegistry_GetBool(mreg, s.CStr());
 
     s = prefix;
+    s += "useBase";
+    desc->useBase = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
     s += "filterForward";
     desc->filterForward = MBRegistry_GetBool(mreg, s.CStr());
 
@@ -701,7 +705,7 @@ void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
 
     MutationBoolParams bf;
     const char *strs[] = {
-        "useTangent", "filterForward", "filterBackward",
+        "useTangent", "useBase", "filterForward", "filterBackward",
         "filterAdvance", "filterRetreat",
     };
 
@@ -1326,6 +1330,10 @@ bool NeuralForce_GetFocus(AIContext *nc,
                           NeuralForceDesc *desc,
                           FPoint *focusPoint)
 {
+    if (desc->useBase) {
+        mob = nc->sg->friendBaseShadow();
+    }
+
     switch(desc->forceType) {
         case NEURAL_FORCE_VOID:
         case NEURAL_FORCE_ZERO:
