@@ -1179,9 +1179,11 @@ public:
             fNum = fv.size();
             fMin = fv.findMin(MBComparator<Mob *>(&comp), f, fNum);
             Mob *fighter = fMin >= 0 ? fv[fMin] : NULL;
-            fv[fMin] = fv[0];
-            f++;
-            fNum--;
+            if (fighter != NULL) {
+                fv[fMin] = fv[0];
+                f++;
+                fNum--;
+            }
 
             Mob *target = (t < tv.size()) ? tv[t++] : NULL;
 
