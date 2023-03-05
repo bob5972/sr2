@@ -100,6 +100,8 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MOB_ROW),                         },
     { TMENTRY(NEURAL_FORCE_MOB_COLUMN),                      },
     { TMENTRY(NEURAL_FORCE_MOB_SPOT),                        },
+    { TMENTRY(NEURAL_FORCE_MOB_BASE_SHELL),                  },
+    { TMENTRY(NEURAL_FORCE_MOB_BASE_SECTOR),                 },
     { TMENTRY(NEURAL_FORCE_LAST_TARGET_SHADOW),              },
 };
 
@@ -1602,6 +1604,36 @@ bool NeuralForce_GetFocus(AIContext *nc,
             focusPoint->x = fmobid1 * nc->ai->bp.width;
             focusPoint->y = fmobid2 * nc->ai->bp.height;
             return TRUE;
+        }
+        case NEURAL_FORCE_MOB_BASE_SECTOR: {
+            FRPoint rfocus;
+            FPoint *basePos = nc->sg->friendBaseShadowPos();
+            float fmobid = Random_UnitFloatFromSeed(mob->mobid);
+            rfocus.radius = FPoint_ToFRPointRadius(&mob->pos, basePos);
+            rfocus.theta = fmobid * 2.0f * M_PI;
+            FRPoint_ToFPoint(&rfocus, basePos, focusPoint);
+
+            if (focusPoint->x >= 0.0f && focusPoint->x <= nc->ai->bp.width &&
+                focusPoint->y >= 0.0f && focusPoint->y <= nc->ai->bp.height) {
+                return TRUE;
+            }
+            return FALSE;
+        }
+        case NEURAL_FORCE_MOB_BASE_SHELL: {
+            FRPoint rfocus;
+            FPoint *basePos = nc->sg->friendBaseShadowPos();
+            float fmobid = Random_UnitFloatFromSeed(mob->mobid);
+            float d = sqrtf(nc->ai->bp.width * nc->ai->bp.width +
+                            nc->ai->bp.height * nc->ai->bp.height);
+            rfocus.radius = fmobid * d;
+            rfocus.theta = FPoint_ToFRPointTheta(&mob->pos, basePos);
+            FRPoint_ToFPoint(&rfocus, basePos, focusPoint);
+
+            if (focusPoint->x >= 0.0f && focusPoint->x <= nc->ai->bp.width &&
+                focusPoint->y >= 0.0f && focusPoint->y <= nc->ai->bp.height) {
+                return TRUE;
+            }
+            return FALSE;
         }
 
         case NEURAL_FORCE_LAST_TARGET_SHADOW: {
