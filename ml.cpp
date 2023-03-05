@@ -31,6 +31,13 @@ static inline float MLClampUnit(float x) {
 }
 #define CLAMP_UNIT(_x) (MLClampUnit(_x))
 
+static inline float MLClamp(float x, float min, float max) {
+    if (isnan(x)) {
+        return min;
+    }
+    return MAX(min, MIN(max, x));
+}
+
 
 static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_INVALID), },
@@ -102,10 +109,10 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x1_SUM), },
     { TMENTRY(ML_FOP_1x1_LINEAR_COMBINATION), },
 
-    { TMENTRY(ML_FOP_1x2_CLAMP), },
-    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT), },
-    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT), },
-    { TMENTRY(ML_FOP_3x0_CLAMP), },
+    { TMENTRY(ML_FOP_1x2_CLAMP_BROKEN), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN), },
+    { TMENTRY(ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN), },
+    { TMENTRY(ML_FOP_3x0_CLAMP_BROKEN), },
 
     { TMENTRY(ML_FOP_1x2_SINE), },
     { TMENTRY(ML_FOP_1x2_COSINE), },
@@ -541,7 +548,7 @@ float MLFloatNode::computeWork()
         case ML_FOP_1x1_SUM:
             return getInput(0) + getParam(0);
 
-        case ML_FOP_1x2_CLAMP: {
+        case ML_FOP_1x2_CLAMP_BROKEN: {
             float f = getInput(0);
             float min = getParam(0);
             float max = getParam(1);
@@ -550,7 +557,7 @@ float MLFloatNode::computeWork()
             return f;
         }
 
-        case ML_FOP_3x0_CLAMP: {
+        case ML_FOP_3x0_CLAMP_BROKEN: {
             float f = getInput(0);
             float min = getInput(1);
             float max = getInput(2);
@@ -559,7 +566,7 @@ float MLFloatNode::computeWork()
             return f;
         }
 
-        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT: {
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN: {
             float f = getInput(0);
             float p0 = getParam(0);
             float p1 = getParam(1);
@@ -572,7 +579,7 @@ float MLFloatNode::computeWork()
             return f;
         }
 
-        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT: {
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN: {
             float f = getInput(0);
             float p0 = getParam(0);
             float p1 = getParam(1);
@@ -1942,9 +1949,9 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numParams = 1;
             break;
 
-        case ML_FOP_1x2_CLAMP:
-        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT:
-        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT:
+        case ML_FOP_1x2_CLAMP_BROKEN:
+        case ML_FOP_1x2_CLAMPED_SCALE_TO_UNIT_BROKEN:
+        case ML_FOP_1x2_CLAMPED_SCALE_FROM_UNIT_BROKEN:
         case ML_FOP_1x2_SINE:
         case ML_FOP_1x2_COSINE:
         case ML_FOP_1x2_INSIDE_RANGE:
@@ -1954,7 +1961,7 @@ void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP)
             numParams = 2;
             break;
 
-        case ML_FOP_3x0_CLAMP:
+        case ML_FOP_3x0_CLAMP_BROKEN:
             numInputs = 3;
             numParams = 0;
             break;
