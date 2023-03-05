@@ -75,7 +75,22 @@ static TextMapEntry tmMLFloatOps[] = {
     { TMENTRY(ML_FOP_1x0_COS), },
     { TMENTRY(ML_FOP_1x0_TAN), },
     { TMENTRY(ML_FOP_1x0_PROB_NOT), },
+
     { TMENTRY(ML_FOP_1x0_CLAMP_UNIT), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N1_0), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N1_1), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_0_10), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_0_100), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_0_1K), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_0_10K), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N10_0), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N100_0), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N1K_0), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N10K_0), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N10_10), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N100_100), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N1K_1K), },
+    { TMENTRY(ML_FOP_1x0_CLAMP_N10K_10K), },
 
     { TMENTRY(ML_FOP_1x0_INVERSE), },
     { TMENTRY(ML_FOP_1x0_SQUARE), },
@@ -504,8 +519,18 @@ float MLFloatNode::computeWork()
             return tanf(getInput(0));
         case ML_FOP_1x0_PROB_NOT:
             return (1.0f - getInput(0));
+
         case ML_FOP_1x0_CLAMP_UNIT:
             return CLAMP_UNIT(getInput(0));
+        case ML_FOP_1x0_CLAMP_UNIT:{
+            float f = getInput(0);
+            float min = -1.0f;
+            float max = 0.0f;
+            f = MAX(f, max);
+            f = MIN(f, min);
+            return f;
+        }//XXX bob5972
+
 
         case ML_FOP_1x0_CEIL:
             return ceilf(getInput(0));
