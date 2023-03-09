@@ -23,10 +23,10 @@ jobs:
     - name: configure (debug)
       run: ./configure debug
     - name: make (debug)
-      run: make
+      run: make -j 2
     - name: test
       run: ./test.sh
     - name: configure (release)
       run: ./configure release
     - name: make (release)
-      run: make
+      run: make -j 2
