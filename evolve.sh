@@ -40,7 +40,7 @@ OPTS="${OPTS} -S $SCENARIO"
 OPTS="${OPTS} -t $THREADS"
 
 ./compile.sh $BUILDTYPE
-if [ $? != 0 ]; then exit $? ; fi;
+if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
 echo > $LOG_FILE
 date >> $LOG_FILE
@@ -50,20 +50,20 @@ echo 'sr2: measure screenS (stable)'
 build/sr2 measure $OPTS --usePopulation $STABLE_FILE \
                         --controlPopulation $SCREENS_FILE \
                         --loop $SCREENS_STALE_ITERATIONS
-if [ $? != 0 ]; then exit $? ; fi;
+if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
 echo 'sr2: kill screenS (stable)'
 build/sr2 kill $OPTS --usePopulation $STABLE_FILE \
                      --defectiveLevel $SCREENS_DEFECTIVE \
                      --minPop $STABLE_POP \
                      --maxPop $STABLE_POP
-if [ $? != 0 ]; then exit $? ; fi;
+if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
 echo 'sr2: mutate'
 build/sr2 mutate $OPTS --usePopulation $STABLE_FILE \
                        --outputFile $NOOB_FILE \
                        --mutationCount $NOOB_POP
-if [ $? != 0 ]; then exit $? ; fi;
+if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 date >> $LOG_FILE
 grep numFleets $NOOB_FILE >> $LOG_FILE
 
@@ -72,13 +72,13 @@ if [ -f $SCREEN1_FILE ]; then
     build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
                             --controlPopulation $SCREEN1_FILE \
                             --loop $SCREEN1_ITERATIONS
-    if [ $? != 0 ]; then exit $? ; fi;
+    if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
     echo 'sr2: kill screen1'
     build/sr2 kill $OPTS --usePopulation $NOOB_FILE \
                         --defectiveLevel $SCREEN1_DEFECTIVE \
                         --resetAfter
-    if [ $? != 0 ]; then exit $? ; fi;
+    if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
     date >> $LOG_FILE
     grep numFleets $NOOB_FILE >> $LOG_FILE
 fi;
@@ -88,13 +88,13 @@ if [ -f $SCREEN2_FILE ]; then
     build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
                             --controlPopulation $SCREEN2_FILE \
                             --loop $SCREEN2_ITERATIONS
-    if [ $? != 0 ]; then exit $? ; fi;
+    if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
     echo 'sr2: kill screen2'
     build/sr2 kill $OPTS --usePopulation $NOOB_FILE \
                         --defectiveLevel $SCREEN2_DEFECTIVE \
                         --resetAfter
-    if [ $? != 0 ]; then exit $? ; fi;
+    if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
     date >> $LOG_FILE
     grep numFleets $NOOB_FILE >> $LOG_FILE
 fi;
@@ -104,13 +104,13 @@ if [ -f $SCREEN3_FILE ]; then
     build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
                             --controlPopulation $SCREEN3_FILE \
                             --loop $SCREEN3_ITERATIONS
-    if [ $? != 0 ]; then exit $? ; fi;
+    if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
     echo 'sr2: kill screen3'
     build/sr2 kill $OPTS --usePopulation $NOOB_FILE \
                         --defectiveLevel $SCREEN3_DEFECTIVE \
                         --resetAfter
-    if [ $? != 0 ]; then exit $? ; fi;
+    if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
     date >> $LOG_FILE
     grep numFleets $NOOB_FILE >> $LOG_FILE
 fi;
@@ -120,17 +120,17 @@ echo 'sr2: measure screenS (noob)'
 build/sr2 measure $OPTS --usePopulation $NOOB_FILE \
                         --controlPopulation $SCREENS_FILE \
                         --loop $SCREENS_NEW_ITERATIONS
-if [ $? != 0 ]; then exit $? ; fi;
+if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
 echo 'sr2: kill screenS (noob)'
 build/sr2 kill $OPTS --usePopulation $NOOB_FILE \
                      --defectiveLevel $SCREENS_DEFECTIVE
-if [ $? != 0 ]; then exit $? ; fi;
+if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
 echo 'sr2: merge'
 build/sr2 merge $OPTS --usePopulation $STABLE_FILE \
                       --inputPopulation $NOOB_FILE
-if [ $? != 0 ]; then exit $? ; fi;
+if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 
 date >> $LOG_FILE
 grep numFleets $STABLE_FILE >> $LOG_FILE
