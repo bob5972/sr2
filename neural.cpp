@@ -1640,13 +1640,13 @@ bool NeuralForce_GetFocus(AIContext *nc,
             float d = sqrtf(nc->ai->bp.width * nc->ai->bp.width +
                             nc->ai->bp.height * nc->ai->bp.height);
 
-            if (desc->forceType == NEURAL_FORCE_MOB_CENTER_SECTOR) {
+            if (desc->forceType == NEURAL_FORCE_MOB_CENTER_SHELL) {
                 center.x = nc->ai->bp.width / 2.0f;
                 center.y = nc->ai->bp.height / 2.0f;
                 pos = &center;
                 d /= 2.0f;
             } else {
-                ASSERT(desc->forceType == NEURAL_FORCE_MOB_BASE_SECTOR);
+                ASSERT(desc->forceType == NEURAL_FORCE_MOB_BASE_SHELL);
                 pos = nc->sg->friendBaseShadowPos();
             }
             float fmobid = Random_UnitFloatFromSeed(mob->mobid);
