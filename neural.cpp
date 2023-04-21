@@ -1299,20 +1299,16 @@ NeuralForceGetBaseControlLimitFocus(AIContext *nc,
     farthestFriend = nc->sg->findFarthestFriend(&base->pos, MOB_FLAG_FIGHTER);
 
     if (nearestEnemy == NULL) {
-        return NeuralForceGetFocusMobPosHelper(farthestFriend,
-                                                focusPoint);
+        return NeuralForceGetFocusMobPosHelper(farthestFriend, focusPoint);
     } else if (farthestFriend == NULL) {
-        return NeuralForceGetFocusMobPosHelper(nearestEnemy,
-                                                focusPoint);
+        return NeuralForceGetFocusMobPosHelper(nearestEnemy, focusPoint);
     }
 
     if (FPoint_DistanceSquared(&base->pos, &nearestEnemy->pos) <=
         FPoint_DistanceSquared(&base->pos,&farthestFriend->pos)) {
-        return NeuralForceGetFocusMobPosHelper(nearestEnemy,
-                                                focusPoint);
+        return NeuralForceGetFocusMobPosHelper(nearestEnemy, focusPoint);
     }
-    return NeuralForceGetFocusMobPosHelper(farthestFriend,
-                                            focusPoint);
+    return NeuralForceGetFocusMobPosHelper(farthestFriend, focusPoint);
 }
 
 static
@@ -1715,7 +1711,9 @@ bool NeuralForce_GetFocus(AIContext *nc,
     NOT_REACHED();
 }
 
-
+/*
+ * NeuralForceGetFocusMobPosHelper --
+ */
 static bool NeuralForceGetFocusMobPosHelper(Mob *mob, FPoint *focusPoint)
 {
     ASSERT(focusPoint != NULL);
