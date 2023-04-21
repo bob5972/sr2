@@ -477,7 +477,7 @@ MainAddTargetPlayersForOptimize(void)
     const int doSystematic = 1;
     const int doTable = 2;
     const int doRandom = 3;
-    int method = doSystematic;
+    int method;
     BattlePlayer targetPlayers[MAX_PLAYERS];
     uint32 tpIndex = 0;
     BattlePlayer *mainPlayers = &mainData.players[0];
@@ -491,14 +491,39 @@ MainAddTargetPlayersForOptimize(void)
      * Target fleets to optimize.
      * Customize as needed.
      */
+    method = doSimple;
     if (method == doSimple) {
         targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL5;
         targetPlayers[tpIndex].playerName = "BineuralFleet5.Test";
-        tpIndex++;
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "gatherRange", "200");
-        // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackRange", "100");
+        // int keep[] = { 0, 2, 18, 24 };
+        // int drop[] = {1, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23};
+        // for (uint i = 0; i <= 24; i++) {
+        //     char *cstr;
+        //     int ret;
+        //     // bool doKeep = FALSE;
+        //     bool doDrop = FALSE;
+        //     // for (uint k = 0; k < ARRAYSIZE(keep); k++) {
+        //     //     if (i == keep[k]) {
+        //     //         doKeep = TRUE;
+        //     //     }
+        //     // }
+        //     for (uint k = 0; k < ARRAYSIZE(drop); k++) {
+        //         if (i == drop[k]) {
+        //             doDrop = TRUE;
+        //         }
+        //     }
+        //     if (doDrop) {
+        //         ret = asprintf(&cstr, "shipNet.output[%d].valueType", i);
+        //         VERIFY(ret > 0);
+        //         MBRegistry_PutCopy(targetPlayers[tpIndex].mreg,
+        //                             cstr, "NEURAL_VALUE_VOID");
+        //         free(cstr);
+        //     }
+        // }
+
+        tpIndex++;
     } else if (method == doSystematic) {
         targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL5;
         targetPlayers[tpIndex].playerName = "BineuralFleet5.Base";
@@ -515,7 +540,7 @@ MainAddTargetPlayersForOptimize(void)
 
             targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
 
-            asprintf(&cstr, "shipNet.output[%d].valueType", i);
+            ret = asprintf(&cstr, "shipNet.output[%d].valueType", i);
             VERIFY(ret > 0);
             MBRegistry_PutCopy(targetPlayers[tpIndex].mreg,
                                cstr, "NEURAL_VALUE_VOID");

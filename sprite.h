@@ -77,25 +77,25 @@ typedef enum SpriteSet {
 
     SPRITE_SET_URSA_BLUE,           // Neural1
     SPRITE_SET_URSA_BLUE2,          // Neural8
-    SPRITE_SET_URSA_PURPLE,         // Neural2
+    SPRITE_SET_URSA_PURPLE,         // Neural2 / Neural3
     SPRITE_SET_URSA_PURPLE2,        // Neural9
-    SPRITE_SET_URSA_PINK,           // Neural3
+    SPRITE_SET_URSA_PINK,           // Bineural5
     SPRITE_SET_URSA_PINK2,          // Neural10
     SPRITE_SET_URSA_ORANGE,         // Neural4
     SPRITE_SET_URSA_GREEN,          // Neural5
     SPRITE_SET_URSA_GREEN2,         // Neural11
-    SPRITE_SET_URSA_GREEN3,
-    SPRITE_SET_URSA_BLUE3,
+    SPRITE_SET_URSA_GREEN3,         // Bineural1
+    SPRITE_SET_URSA_BLUE3,          // Bineural2
     SPRITE_SET_URSA_MAGENTA,        // Neural6
     SPRITE_SET_URSA_RED,            // Neural7
     SPRITE_SET_URSA_ORANGE2,        // Neural12
-    SPRITE_SET_URSA_GREEN4,
-    SPRITE_SET_URSA_ORANGE3,
+    SPRITE_SET_URSA_GREEN4,         // Bineural3
+    SPRITE_SET_URSA_ORANGE3,        // Bineural4
 
-    SPRITE_SET_VEGA_BLUE,           // Bineural1
-    SPRITE_SET_VEGA_ORANGE,         // Bineural2
-    SPRITE_SET_VEGA_PURPLE,         // Bineural3
-    SPRITE_SET_VEGA_GREEN,          // Bineural4
+    SPRITE_SET_VEGA_BLUE,
+    SPRITE_SET_VEGA_ORANGE,
+    SPRITE_SET_VEGA_PURPLE,
+    SPRITE_SET_VEGA_GREEN,
     SPRITE_SET_VEGA_ORANGE2,
     SPRITE_SET_VEGA_ORANGE3,
     SPRITE_SET_VEGA_PURPLE2,
