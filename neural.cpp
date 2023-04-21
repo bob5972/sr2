@@ -51,6 +51,7 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_BACKWARD_COHERE),                 },
     { TMENTRY(NEURAL_FORCE_ADVANCE_COHERE),                  },
     { TMENTRY(NEURAL_FORCE_RETREAT_COHERE),                  },
+    { TMENTRY(NEURAL_FORCE_BROKEN_COHERE),                   },
     { TMENTRY(NEURAL_FORCE_SEPARATE),                        },
     { TMENTRY(NEURAL_FORCE_FORWARD_SEPARATE),                },
     { TMENTRY(NEURAL_FORCE_BACKWARD_SEPARATE),               },
@@ -1394,6 +1395,31 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_ADVANCE_ENEMY_COHERE:
         case NEURAL_FORCE_RETREAT_ENEMY_COHERE: {
             return NeuralForceGetFlockFocus(nc, mob, desc, focusPoint);
+        }
+        case NEURAL_FORCE_BROKEN_COHERE: {
+            MobSet::MobIt mit = nc->sg->friendsIterator(MOB_FLAG_FIGHTER);
+            FPoint lAvgPos;
+            float flockRadius = desc->radius;
+
+            lAvgPos.x = 0.0f;
+            lAvgPos.y = 0.0f;
+
+            while (mit.hasNext()) {
+                Mob *f = mit.next();
+                ASSERT(f != NULL);
+
+                if (FPoint_Distance(&f->pos, &mob->pos) <= flockRadius) {
+                    /*
+                    * The broken version just sums the positions and doesn't
+                    * properly average them.
+                    */
+                    lAvgPos.x += f->pos.x;
+                    lAvgPos.y += f->pos.y;
+                }
+            }
+
+            *focusPoint = lAvgPos;
+            return TRUE;
         }
         case NEURAL_FORCE_ENEMY_COHERE: {
             FPoint avgPos;
