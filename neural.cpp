@@ -87,6 +87,16 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_ADVANCE_ENEMY_COHERE),            },
     { TMENTRY(NEURAL_FORCE_RETREAT_ENEMY_COHERE),            },
     { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE),                   },
+    { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE_ALIGN),             },
+    { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_MISSILE_ALIGN),     },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_MISSILE_ALIGN),    },
+    { TMENTRY(NEURAL_FORCE_ADVANCE_ENEMY_MISSILE_ALIGN),     },
+    { TMENTRY(NEURAL_FORCE_RETREAT_ENEMY_MISSILE_ALIGN),     },
+    { TMENTRY(NEURAL_FORCE_ENEMY_MISSILE_COHERE),            },
+    { TMENTRY(NEURAL_FORCE_FORWARD_ENEMY_MISSILE_COHERE),    },
+    { TMENTRY(NEURAL_FORCE_BACKWARD_ENEMY_MISSILE_COHERE),   },
+    { TMENTRY(NEURAL_FORCE_ADVANCE_ENEMY_MISSILE_COHERE),    },
+    { TMENTRY(NEURAL_FORCE_RETREAT_ENEMY_MISSILE_COHERE),    },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE),                      },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),                },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS_LAX),            },
@@ -842,119 +852,120 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     NeuralForceType forceType = desc->forceType;
     bool useFriends;
     FPoint vel, pos;
-    bool align = FALSE;
-    bool cohere = FALSE;
-    bool enemy = FALSE;
-    bool advance = FALSE;
-    bool forward = FALSE;
-    bool backward = FALSE;
-    bool retreat = FALSE;
+    const uint alignF =        (1 << 0);
+    const uint cohereF =       (1 << 1);
+    const uint enemyF =        (1 << 2);
+    const uint advanceF =      (1 << 3);
+    const uint forwardF =      (1 << 4);
+    const uint backwardF =     (1 << 5);
+    const uint retreatF =      (1 << 6);
+    const uint enemyMissileF = (1 << 7);
+
+    uint flags = 0;
 
     MobFilter_Init(&f);
     MobFilter_UseRange(&f, &self->pos, desc->radius);
 
     switch (forceType) {
         case NEURAL_FORCE_ALIGN2:
-            align = TRUE;
-            enemy = FALSE;
+            flags = alignF;
             break;
         case NEURAL_FORCE_FORWARD_ALIGN:
-            forward = TRUE;
-            align = TRUE;
-            enemy = FALSE;
+            flags = alignF | forwardF;
             break;
         case NEURAL_FORCE_BACKWARD_ALIGN:
-            backward = TRUE;
-            align = TRUE;
-            enemy = FALSE;
+            flags = alignF | backwardF;
             break;
         case NEURAL_FORCE_ADVANCE_ALIGN:
-            advance = TRUE;
-            align = TRUE;
-            enemy = FALSE;
+            flags = alignF | advanceF;
             break;
         case NEURAL_FORCE_RETREAT_ALIGN:
-            retreat = TRUE;
-            align = TRUE;
-            enemy = FALSE;
+            flags = alignF | retreatF;
             break;
         case NEURAL_FORCE_COHERE:
-            cohere = TRUE;
-            enemy = FALSE;
+            flags = cohereF;
             break;
         case NEURAL_FORCE_FORWARD_COHERE:
-            forward = TRUE;
-            cohere = TRUE;
-            enemy = FALSE;
+            flags = cohereF | forwardF;
             break;
         case NEURAL_FORCE_BACKWARD_COHERE:
-            backward = TRUE;
-            cohere = TRUE;
-            enemy = FALSE;
+            flags = cohereF | backwardF;
             break;
         case NEURAL_FORCE_ADVANCE_COHERE:
-            advance = TRUE;
-            cohere = TRUE;
-            enemy = FALSE;
+            flags = cohereF | advanceF;
             break;
         case NEURAL_FORCE_RETREAT_COHERE:
-            retreat = TRUE;
-            cohere = TRUE;
-            enemy = FALSE;
+            flags = cohereF | retreatF;
             break;
         case NEURAL_FORCE_ENEMY_ALIGN:
-            align = TRUE;
-            enemy = TRUE;
+            flags = alignF | enemyF;
             break;
         case NEURAL_FORCE_FORWARD_ENEMY_ALIGN:
-            forward = TRUE;
-            align = TRUE;
-            enemy = TRUE;
+            flags = alignF | enemyF | forwardF;
             break;
         case NEURAL_FORCE_BACKWARD_ENEMY_ALIGN:
-            backward = TRUE;
-            align = TRUE;
-            enemy = TRUE;
+            flags = alignF | enemyF | backwardF;
             break;
         case NEURAL_FORCE_ADVANCE_ENEMY_ALIGN:
-            advance = TRUE;
-            align = TRUE;
-            enemy = TRUE;
+            flags = alignF | enemyF | advanceF;
             break;
         case NEURAL_FORCE_RETREAT_ENEMY_ALIGN:
-            retreat = TRUE;
-            align = TRUE;
-            enemy = TRUE;
+            flags = alignF | enemyF | retreatF;
             break;
         case NEURAL_FORCE_ENEMY_COHERE2:
-            cohere = TRUE;
-            enemy = TRUE;
+            flags = cohereF | enemyF;
             break;
         case NEURAL_FORCE_FORWARD_ENEMY_COHERE:
-            forward = TRUE;
-            cohere = TRUE;
-            enemy = TRUE;
+            flags = cohereF | enemyF | forwardF;
             break;
         case NEURAL_FORCE_BACKWARD_ENEMY_COHERE:
-            backward = TRUE;
-            cohere = TRUE;
-            enemy = TRUE;
+            flags = cohereF | enemyF | backwardF;
             break;
         case NEURAL_FORCE_ADVANCE_ENEMY_COHERE:
-            advance = TRUE;
-            cohere = TRUE;
-            enemy = TRUE;
+            flags = cohereF | enemyF | advanceF;
             break;
         case NEURAL_FORCE_RETREAT_ENEMY_COHERE:
-            retreat = TRUE;
-            cohere = TRUE;
-            enemy = TRUE;
+            flags = cohereF | enemyF | retreatF;
+            break;
+        case NEURAL_FORCE_ENEMY_MISSILE_ALIGN:
+            flags = alignF | enemyMissileF;
+            break;
+        case NEURAL_FORCE_FORWARD_ENEMY_MISSILE_ALIGN:
+            flags = alignF | enemyMissileF | forwardF;
+            break;
+        case NEURAL_FORCE_BACKWARD_ENEMY_MISSILE_ALIGN:
+            flags = alignF | enemyMissileF | backwardF;
+            break;
+        case NEURAL_FORCE_ADVANCE_ENEMY_MISSILE_ALIGN:
+            flags = alignF | enemyMissileF | advanceF;
+            break;
+        case NEURAL_FORCE_RETREAT_ENEMY_MISSILE_ALIGN:
+            flags = alignF | enemyMissileF | retreatF;
+            break;
+        case NEURAL_FORCE_ENEMY_MISSILE_COHERE:
+            flags = cohereF | enemyMissileF;
+            break;
+        case NEURAL_FORCE_FORWARD_ENEMY_MISSILE_COHERE:
+            flags = cohereF | enemyMissileF | forwardF;
+            break;
+        case NEURAL_FORCE_BACKWARD_ENEMY_MISSILE_COHERE:
+            flags = cohereF | enemyMissileF | backwardF;
+            break;
+        case NEURAL_FORCE_ADVANCE_ENEMY_MISSILE_COHERE:
+            flags = cohereF | enemyMissileF | advanceF;
+            break;
+        case NEURAL_FORCE_RETREAT_ENEMY_MISSILE_COHERE:
+            flags = cohereF | enemyMissileF | retreatF;
             break;
         default:
             NOT_IMPLEMENTED();
     }
 
-    if (enemy) {
+    if ((flags & enemyMissileF) != 0) {
+        ASSERT((flags & enemyF) == 0);
+        MobFilter_UseType(&f, MOB_FLAG_MISSILE);
+        useFriends = FALSE;
+    } else if ((flags & enemyF) != 0) {
         MobFilter_UseType(&f, MOB_FLAG_SHIP);
         useFriends = FALSE;
     } else {
@@ -963,20 +974,22 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
     }
 
 
-    if (forward || backward) {
-        ASSERT(!forward || !backward);
-        ASSERT(!advance);
-        ASSERT(!retreat);
+    if ((flags & forwardF) != 0 || (flags & backwardF) != 0) {
+        ASSERT((flags & forwardF) == 0 ||
+               (flags & backwardF) == 0);
+        ASSERT((flags & advanceF) == 0);
+        ASSERT((flags & retreatF) == 0);
         FRPoint dir;
         NeuralForceGetHeading(nc, self, &dir);
-        MobFilter_UseDirR(&f, &self->pos, &dir, forward);
+        MobFilter_UseDirR(&f, &self->pos, &dir, (flags & forwardF) != 0);
     }
 
-    if (advance || retreat) {
+    if ((flags & advanceF) != 0 || (flags & retreatF) != 0) {
         Mob *base = nc->sg->friendBase();
-        ASSERT(!advance || !retreat);
-        ASSERT(!forward);
-        ASSERT(!backward);
+        ASSERT((flags & advanceF) == 0 ||
+               (flags & retreatF) == 0);
+        ASSERT((flags & forwardF) == 0);
+        ASSERT((flags & backwardF) == 0);
 
         if (base == NULL) {
             return FALSE;
@@ -984,15 +997,15 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
 
         FPoint dir;
         FPoint_Subtract(&self->pos, &base->pos, &dir);
-        MobFilter_UseDirP(&f, &self->pos, &dir, advance);
+        MobFilter_UseDirP(&f, &self->pos, &dir, (flags & advanceF) != 0);
     }
 
     if (!nc->sg->avgFlock(&vel, &pos, &f, useFriends)) {
         return FALSE;
     }
 
-    if (align) {
-        ASSERT(!cohere);
+    if ((flags & alignF) != 0) {
+        ASSERT((flags & cohereF) == 0);
         if (vel.x >= MICRON || vel.y >= MICRON) {
             vel.x += self->pos.x;
             vel.y += self->pos.y;
@@ -1000,7 +1013,8 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
             return TRUE;
         }
         return FALSE;
-    } else if (cohere) {
+    } else {
+        ASSERT((flags & cohereF) != 0);
         *focusPoint = pos;
         return TRUE;
     }
