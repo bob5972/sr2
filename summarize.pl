@@ -142,7 +142,8 @@ sub DumpGraph($) {
     Console("digraph G {\n");
 
     my $nodes = {};
-    my $oNodes = {};
+    my $oToNMap = {};
+    my $outputs = {};
     my $iNodes = {};
 
     foreach my $k (sort keys %{$fleet}) {
@@ -182,9 +183,10 @@ sub DumpGraph($) {
         if ($k =~ /^shipNet.output\[(\d+)\]\.forceType$/) {
             my $on = $1;
             my $n = $fleet->{"shipNet.fn.output[$on].node"};
+            $oToNMap->{$on} = $n;
             my $type = $fleet->{$k};
             if ($type ne "NEURAL_FORCE_VOID") {
-                $oNodes->{$n} = $type;
+                $outputs->{$on} = $type;
             }
         }
     }
@@ -194,7 +196,7 @@ sub DumpGraph($) {
         my $params = $fleet->{"shipNet.fn.node[$k].params"};
         my $inputs = $fleet->{"shipNet.fn.node[$k].inputs"};
 
-        my $v = "$nodes->{$k}";
+        my $v = "node:$nodes->{$k}";
         if ($inputs) {
             $v = "$v\\ninputs=$inputs";
         }
@@ -209,13 +211,18 @@ sub DumpGraph($) {
         Console("$k [label=\"$v\" $color];\n");
     }
     # Dump Outputs
-    foreach my $k (sort keys %{$oNodes}) {
-        my $v = $nodes->{$k};
+    foreach my $o (sort keys %{$outputs}) {
+        my $n = $oToNMap->{$o};
+        ASSERT(defined($n));
         my $color = "";
-        if (defined($nodes->{$k})) {
-            Console("Output_$k [label=\"" . $oNodes->{$k} . "\" color=red ];\n");
-            Console("{ rank=sink Output_$k }\n");
-            Console("$k -> Output_$k\n");
+        if (defined($nodes->{$n})) {
+            my $label = "output:$o";
+            $label .= "\\n";
+            $label .= $outputs->{$o};
+
+            Console("Output_$o [label=\"" . $label . "\" color=red ];\n");
+            Console("{ rank=sink Output_$o }\n");
+            Console("$n -> Output_$o\n");
         }
     }
 
