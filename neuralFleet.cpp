@@ -249,9 +249,16 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "gatherAbandonStale",          0.02f },
     };
 
-    float rate = 0.08;
     MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "FALSE");
-    if (Random_Flip(0.01)) {
+
+    float rate = 0.05;
+    if (Random_Flip(0.90)) {
+        rate = 0.05;
+    } else if (Random_Flip(0.10)) {
+        rate = 0.10;
+    } else if (Random_Flip(0.01)) {
+        rate = 0.20;
+    } else if (Random_Flip(0.005)) {
         MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "TRUE");
 
         for (uint i = 0; i < ARRAYSIZE(vf); i++) {
