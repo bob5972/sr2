@@ -37,9 +37,9 @@ extern "C" {
 #include "neuralNet.hpp"
 
 #define NEURAL_MAX_NODE_DEGREE  8
-#define NEURAL_MAX_INPUTS      25
-#define NEURAL_MAX_OUTPUTS     25
-#define NEURAL_MAX_NODES       100
+#define NEURAL_MAX_INPUTS      40
+#define NEURAL_MAX_OUTPUTS     40
+#define NEURAL_MAX_NODES       200
 
 #define NEURAL_SCRAMBLE_KEY "neuralFleet.scrambleMutation"
 
