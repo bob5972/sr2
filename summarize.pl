@@ -183,10 +183,12 @@ sub DumpGraph($) {
         if ($k =~ /^shipNet.output\[(\d+)\]\.forceType$/) {
             my $on = $1;
             my $n = $fleet->{"shipNet.fn.output[$on].node"};
-            $oToNMap->{$on} = $n;
             my $type = $fleet->{$k};
-            if ($type ne "NEURAL_FORCE_VOID") {
+            my $valueType = $fleet->{"shipNet.output[$on].valueType"};
+            if ($valueType ne "NEURAL_VALUE_VOID" &&
+                $type ne "NEURAL_FORCE_VOID") {
                 $outputs->{$on} = $type;
+                $oToNMap->{$on} = $n;
             }
         }
     }
