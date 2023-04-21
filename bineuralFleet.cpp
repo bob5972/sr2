@@ -230,6 +230,8 @@ void BineuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "BineuralFleet3";
     } else if (aiType == FLEET_AI_BINEURAL4) {
         ops->aiName = "BineuralFleet4";
+    } else if (aiType == FLEET_AI_BINEURAL5) {
+        ops->aiName = "BineuralFleet5";
     } else {
         NOT_IMPLEMENTED();
     }

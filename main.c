@@ -220,7 +220,7 @@ static void MainLoadDefaultPlayers(void)
         mainData.players[p].aiType = FLEET_AI_NEURAL12;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_BINEURAL4;
+        mainData.players[p].aiType = FLEET_AI_BINEURAL5;
         p++;
 
         //mainData.players[p].playerName = "HoldMod";
@@ -474,9 +474,10 @@ static void
 MainAddTargetPlayersForOptimize(void)
 {
     const int doSimple = 0;
-    const int doTable = 1;
-    const int doRandom = 2;
-    int method = doSimple;
+    const int doSystematic = 1;
+    const int doTable = 2;
+    const int doRandom = 3;
+    int method = doSystematic;
     BattlePlayer targetPlayers[MAX_PLAYERS];
     uint32 tpIndex = 0;
     BattlePlayer *mainPlayers = &mainData.players[0];
@@ -491,14 +492,37 @@ MainAddTargetPlayersForOptimize(void)
      * Customize as needed.
      */
     if (method == doSimple) {
-        targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL1;
-        targetPlayers[tpIndex].playerName = "BineuralFleet1.Test";
+        targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL5;
+        targetPlayers[tpIndex].playerName = "BineuralFleet5.Test";
         tpIndex++;
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
         // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "gatherRange", "200");
         // MBRegistry_PutConst(targetPlayers[tpIndex].mreg, "attackRange", "100");
-    } else if (method == doTable) {
+    } else if (method == doSystematic) {
+        targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL5;
+        targetPlayers[tpIndex].playerName = "BineuralFleet5.Base";
+        tpIndex++;
+
+        for (uint i = 0; i <= 24; i++) {
+            targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL5;
+            char *cstr;
+            int ret;
+            ret = asprintf(&cstr, "BineuralFleet5.%d", i);
+            VERIFY(ret > 0);
+            targetPlayers[tpIndex].playerName = cstr;
+            // the name leaks here
+
+            targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
+
+            asprintf(&cstr, "shipNet.output[%d].valueType", i);
+            VERIFY(ret > 0);
+            MBRegistry_PutCopy(targetPlayers[tpIndex].mreg,
+                               cstr, "NEURAL_VALUE_VOID");
+            free(cstr);
+            tpIndex++;
+        }
+    }else if (method == doTable) {
         struct {
             float attackRange;
             bool attackExtendedRange;
