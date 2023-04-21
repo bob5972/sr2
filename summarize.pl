@@ -145,6 +145,8 @@ sub DumpGraph($) {
     my $oToNMap = {};
     my $outputs = {};
     my $iNodes = {};
+    my $nodesSeenEdge = {};
+    my @edges;
 
     foreach my $k (sort keys %{$fleet}) {
         if ($k =~ /^shipNet.fn.node\[(\d+)\]\.op$/) {
@@ -193,8 +195,45 @@ sub DumpGraph($) {
         }
     }
 
+    # Process Output Edges
+    foreach my $o (sort keys %{$outputs}) {
+        my $n = $oToNMap->{$o};
+        ASSERT(defined($n));
+        if (defined($nodes->{$n})) {
+            push(@edges, "$n -> Output_$o");
+            $nodesSeenEdge->{$n} = TRUE;
+            $nodesSeenEdge->{"Output_$o"} = TRUE;
+        }
+    }
+    # Process regular Edges
+    foreach my $k (sort keys %{$fleet}) {
+        if ($k =~ /^shipNet.fn.node\[(\d+)\]\.inputs$/) {
+            my $n = $1;
+            my $v = $fleet->{$k};
+            $v =~ s/^\{//;
+            $v =~ s/\}$//;
+            my $inputs = $v;
+
+            while ($inputs =~ /^(\d+)\,/) {
+                my $i = $1;
+
+                if (defined($nodes->{$i})) {
+                    # Avoid voided inputs to live nodes
+                    push(@edges, "$i -> $n");
+                    $nodesSeenEdge->{$i} = TRUE;
+                    $nodesSeenEdge->{$n} = TRUE;
+                }
+                $inputs =~ s/^\s*\d+\,\s*//;
+            }
+        }
+    }
+
     # Dump Nodes
     foreach my $k (sort keys %{$nodes}) {
+        if (!$nodesSeenEdge->{$k}) {
+            next;
+        }
+
         my $params = $fleet->{"shipNet.fn.node[$k].params"};
         my $inputs = $fleet->{"shipNet.fn.node[$k].inputs"};
 
@@ -224,36 +263,22 @@ sub DumpGraph($) {
 
             Console("Output_$o [label=\"" . $label . "\" color=red ];\n");
             Console("{ rank=sink Output_$o }\n");
-            Console("$n -> Output_$o\n");
         }
     }
 
     # Rank Input
     Console("{ rank=source ");
     foreach my $k (sort keys %{$iNodes}) {
+        if (!$nodesSeenEdge->{$k}) {
+            next;
+        }
         Console("$k ");
     }
     Console("}\n");
 
     # Dump Edges
-    foreach my $k (sort keys %{$fleet}) {
-        if ($k =~ /^shipNet.fn.node\[(\d+)\]\.inputs$/) {
-            my $n = $1;
-            my $v = $fleet->{$k};
-            $v =~ s/^\{//;
-            $v =~ s/\}$//;
-            my $inputs = $v;
-
-            while ($inputs =~ /^(\d+)\,/) {
-                my $i = $1;
-
-                if (defined($nodes->{$i})) {
-                    # Avoid voided inputs to live nodes
-                    Console("$i -> $n\n");
-                }
-                $inputs =~ s/^\s*\d+\,\s*//;
-            }
-        }
+    foreach my $e (@edges) {
+        Console("$e\n");
     }
 
     Console("}\n");
