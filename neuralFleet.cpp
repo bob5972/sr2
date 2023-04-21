@@ -225,13 +225,13 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 {
     MutationFloatParams vf[] = {
         // key                     min     max       mag   jump   mutation
-        { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-        { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-        { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-        { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
-        { "gatherRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.20f},
-        { "startingMaxRadius",    1000.0f, 2000.0f, 0.05f, 0.10f, 0.20f},
-        { "startingMinRadius",    300.0f,  800.0f,  0.05f, 0.10f, 0.20f},
+        { "evadeStrictDistance",  -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
+        { "evadeRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
+        { "attackRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
+        { "guardRange",           -1.0f,   500.0f,  0.05f, 0.10f, 0.05f},
+        { "gatherRange",          -1.0f,   500.0f,  0.05f, 0.10f, 0.10f},
+        { "startingMaxRadius",    1000.0f, 2000.0f, 0.05f, 0.10f, 0.10f},
+        { "startingMinRadius",    300.0f,  800.0f,  0.05f, 0.10f, 0.10f},
 
         { "sensorGrid.staleCoreTime",
                                    0.0f,   50.0f,   0.05f, 0.2f, 0.005f},
@@ -242,11 +242,11 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutationBoolParams vb[] = {
         // key                          mutation
-        { "evadeFighters",               0.05f },
-        { "evadeUseStrictDistance",      0.05f },
-        { "attackExtendedRange",         0.05f },
-        { "rotateStartingAngle",         0.05f },
-        { "gatherAbandonStale",          0.05f },
+        { "evadeFighters",               0.02f },
+        { "evadeUseStrictDistance",      0.02f },
+        { "attackExtendedRange",         0.02f },
+        { "rotateStartingAngle",         0.02f },
+        { "gatherAbandonStale",          0.02f },
     };
 
     float rate = 0.08;
