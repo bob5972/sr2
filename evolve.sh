@@ -30,6 +30,8 @@ SCREENS_DEFECTIVE=0.1
 SCREENS_NEW_ITERATIONS=20
 SCREENS_STALE_ITERATIONS=1
 
+AUTO_RESET=""
+
 if [ -f evolve.local ]; then
     source evolve.local ;
 fi;
@@ -66,6 +68,11 @@ build/sr2 mutate $OPTS --usePopulation $STABLE_FILE \
 if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
 date >> $LOG_FILE
 grep numFleets $NOOB_FILE >> $LOG_FILE
+
+if [ "$AUTO_RESET" != "" ]; then
+    ./summarize.pl -r
+    if [ $? != 0 ]; then echo "Failed on line $LINENO"; exit $? ; fi;
+fi;
 
 if [ -f $SCREEN1_FILE ]; then
     echo 'sr2: measure screen1'

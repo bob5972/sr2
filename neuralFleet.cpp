@@ -251,8 +251,9 @@ static void NeuralFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MBRegistry_PutCopy(mreg, NEURAL_SCRAMBLE_KEY, "FALSE");
 
-    // NeuralFleets have ~1000 entries, so 0.001 is roughly 1 entry mutated
-    // This distributes the mutation range from 1~100 entries per generation
+    // NeuralFleets have ~1000 entries, so 0.001 is roughly 1 entry mutated.
+    // This distributes the mutation range from 1~100 entries per generation,
+    // or 50 entires per generation on average.
     float rate = Random_Int(1, 100) * 0.001;
 
     if (Random_Flip(0.001)) {
