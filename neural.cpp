@@ -392,8 +392,16 @@ void NeuralForce_Load(MBRegistry *mreg,
     desc->filterRetreat = MBRegistry_GetBool(mreg, s.CStr());
 
     s = prefix;
+    s += "filterRange";
+    desc->filterRange = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
     s += "radius";
     desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
+
+    s = prefix;
+    s += "range";
+    desc->range = MBRegistry_GetFloat(mreg, s.CStr());
 
     s = prefix;
     s += "index";
@@ -705,6 +713,12 @@ void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
     vf.key = s.CStr();
     Mutate_Float(mreg, &vf, 1);
 
+    Mutate_DefaultFloatParams(&vf, MUTATION_TYPE_RADIUS);
+    s = prefix;
+    s += "range";
+    vf.key = s.CStr();
+    Mutate_Float(mreg, &vf, 1);
+
     s = prefix;
     s += "forceType";
     if (Random_Flip(rate)) {
@@ -721,7 +735,7 @@ void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
     MutationBoolParams bf;
     const char *strs[] = {
         "useTangent", "useBase", "filterForward", "filterBackward",
-        "filterAdvance", "filterRetreat",
+        "filterAdvance", "filterRetreat", "filterRange",
     };
 
     for (uint i = 0; i < ARRAYSIZE(strs); i++) {
@@ -1787,6 +1801,12 @@ bool NeuralForce_FocusToForce(AIContext *nc,
     if (haveForce && (desc->filterAdvance || desc->filterRetreat)) {
         haveForce = NeuralForceGetAdvanceFocusHelper(nc, mob, focusPoint,
                                                      desc->filterAdvance);
+    }
+    if (haveForce && desc->filterRange) {
+        if (FPoint_DistanceSquared(&mob->pos, focusPoint) >
+            desc->range * desc->range) {
+            haveForce = FALSE;
+        }
     }
 
     if (haveForce) {

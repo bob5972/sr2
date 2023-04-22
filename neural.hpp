@@ -177,6 +177,7 @@ typedef enum NeuralLocusType {
 typedef struct NeuralForceDesc {
     NeuralForceType forceType;
     float radius;
+    float range;
     int index;
     bool useTangent;
     bool useBase;
@@ -184,6 +185,7 @@ typedef struct NeuralForceDesc {
     bool filterBackward;
     bool filterAdvance;
     bool filterRetreat;
+    bool filterRange;
 } NeuralForceDesc;
 
 typedef struct NeuralTickDesc {
