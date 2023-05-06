@@ -1,0 +1,37 @@
+-- project.txt -- part of Space Robots 2
+
+Next Steps:
+* Output modifiers for magnitude
+** Input => (Multiply with | Assign to) Output
+** Formalize Output Descs?
+* MatrixFleet
+** Neural inputs/outputs with just linear combinations
+* New simpler ShipAI
+** Less hashing, more flexibility
+
+Fleet Ideas:
+* Missile Flocking
+* Angular/Linear Speed Conversions (for Neural)
+* Formation forces
+* Threat/Kill zones (offense and defense)
+* Enemy base guess 2 (project from conflict zones)
+* Line of control (Slow movement like a locus?)
+* Inside / Outside Control
+* Friends between self and enemy
+* New Loci
+** Closest/Forward Locus selector force
+** Conflict Force/Locus
+** Unexplored Locus
+
+Models:
+* Macro genes => forces
+* Squad/Output Combiners (Condition + Sum Set of Outputs)
+* Vector Net
+
+Tech Debt / Quality of Life:
+* Remove FLEET_AI_NEUTRAL dependency in players[0]
+* Measure specific fleet from population
+* Extra iterations for upstarts
+* Cache advance/retreat dir (avoid FPoint_ToFRPoint calls)
+
+
