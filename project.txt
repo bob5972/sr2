@@ -1,6 +1,8 @@
 -- project.txt -- part of Space Robots 2
 
 Next Steps:
+* Macro genes => forces
+* filters on inputs
 * MatrixFleet
 ** Neural inputs/outputs with just linear combinations
 * New simpler ShipAI
@@ -21,7 +23,6 @@ Fleet Ideas:
 ** Unexplored Locus
 
 Models:
-* Macro genes => forces
 * Squad/Output Combiners (Condition + Sum Set of Outputs)
 * Vector Net
 
