@@ -219,7 +219,7 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
         char *str = NULL;
         int ret = asprintf(&str, "%sinput[%d].", prefix, i);
         VERIFY(ret > 0);
-        NeuralValue_Mutate(mreg, rate, FALSE, nnType, str);
+        NeuralInput_Mutate(mreg, rate, nnType, str);
         free(str);
     }
 
@@ -306,7 +306,6 @@ void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
                 outputConditionApplies(mob, i) &&
                 getOutputForce(mob, i, &force)) {
                 NeuralCombiner_ApplyOutput(outputDescs[i].cType, outputs[i], &force);
-                FRPoint_SetSpeed(&force, outputs[i]);
                 FRPoint_Add(&force, outputForce, outputForce);
             }
         } else {

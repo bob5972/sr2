@@ -41,11 +41,6 @@
 
 #define BINEURAL_SCRAMBLE_KEY "bineuralFleet.scrambleMutation"
 
-typedef struct BineuralConfigValue {
-    const char *key;
-    const char *value;
-} BineuralConfigValue;
-
 typedef struct BineuralLocus {
     NeuralLocusDesc desc;
     NeuralLocusPosition pos;

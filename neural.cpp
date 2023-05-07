@@ -886,7 +886,7 @@ void NeuralInput_Mutate(MBRegistry *mreg,
     MBString s;
 
     s = prefix;
-    NeuralValue_Mutate(mreg, rate, TRUE, nnType, s.CStr());
+    NeuralValue_Mutate(mreg, rate, FALSE, nnType, s.CStr());
 }
 
 void NeuralValue_Mutate(MBRegistry *mreg,
@@ -2017,9 +2017,6 @@ float NeuralForce_GetValue(AIContext *nc,
     bool haveFocus = NeuralForce_GetFocus(nc, mob, desc, &focusPoint);
     return NeuralForce_FocusToValue(nc, mob, desc, &focusPoint, haveFocus);
 }
-
-
-
 
 /*
  * NeuralForce_ApplyToMob --

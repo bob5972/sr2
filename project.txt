@@ -1,7 +1,6 @@
 -- project.txt -- part of Space Robots 2
 
 Next Steps:
-* filters on inputs
 * MatrixFleet
 ** Neural inputs/outputs with just linear combinations
 * New simpler ShipAI

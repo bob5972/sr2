@@ -44,72 +44,72 @@ void TextDump_Convert(const MBString &str, MBVector<uint> &v)
     }
 }
 
-void TextDump_Convert(const MBString &str, MBVector<float> &v)
+void TextDump_Convert(const MBString &strSrc, MBVector<float> &vDest)
 {
     uint i = 0;
     MBString s;
 
     // XXX: This is not robust.
 
-    v.makeEmpty();
+    vDest.makeEmpty();
 
-    while (i < str.length()) {
+    while (i < strSrc.length()) {
         s.makeEmpty();
 
-        while (i < str.length() &&
-              !isdigit(str.getChar(i)) &&
-              str.getChar(i) != '.') {
+        while (i < strSrc.length() &&
+              !isdigit(strSrc.getChar(i)) &&
+              strSrc.getChar(i) != '.') {
             i++;
         }
 
-        while (i < str.length() &&
-               (isdigit(str.getChar(i)) || str.getChar(i) == '.')) {
-            s += str.getChar(i);
+        while (i < strSrc.length() &&
+               (isdigit(strSrc.getChar(i)) || strSrc.getChar(i) == '.')) {
+            s += strSrc.getChar(i);
             i++;
         }
 
         if (s.length() > 0) {
-            v.push(atof(s.CStr()));
+            vDest.push(atof(s.CStr()));
         }
     }
 }
 
-void TextDump_Convert(const MBVector<uint> &v, MBString &str)
+void TextDump_Convert(const MBVector<uint> &vSrc, MBString &strDest)
 {
     uint i = 0;
 
-    str.makeEmpty();
+    strDest.makeEmpty();
 
-    str += "{";
+    strDest += "{";
 
-    for (i = 0; i < v.size(); i++) {
+    for (i = 0; i < vSrc.size(); i++) {
         char *cs;
-        asprintf(&cs, "%d, ", v[i]);
-        str += cs;
+        asprintf(&cs, "%d, ", vSrc[i]);
+        strDest += cs;
         free(cs);
     }
 
-    str += "}";
+    strDest += "}";
 }
 
 
-void TextDump_Convert(const MBVector<float> &v, MBString &str)
+void TextDump_Convert(const MBVector<float> &vSrc, MBString &strDest)
 {
     uint i = 0;
 
-    str.makeEmpty();
+    strDest.makeEmpty();
 
-    str += "{";
+    strDest += "{";
 
-    for (i = 0; i < v.size(); i++) {
+    for (i = 0; i < vSrc.size(); i++) {
         char *cs;
-        int ret = asprintf(&cs, "%f, ", (float)(v[i]));
+        int ret = asprintf(&cs, "%f, ", (float)(vSrc[i]));
         VERIFY(ret > 0);
-        str += cs;
+        strDest += cs;
         free(cs);
     }
 
-    str += "}";
+    strDest += "}";
 }
 
 const char *TextMap_ToStringD(int value, const TextMapEntry *tms, uint numTMs,
