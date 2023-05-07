@@ -19,6 +19,8 @@
 #ifndef _ML_H_202208151722
 #define _ML_H_202208151722
 
+#include <math.h>
+
 #include "MBRegistry.h"
 #include "MBVector.hpp"
 
@@ -258,6 +260,14 @@ extern "C" {
     MLFloatOp ML_StringToFloatOp(const char *opstr);
 
     void ML_UnitTest();
+
+    static inline float ML_ClampUnit(float x)
+    {
+        if (isnan(x)) {
+            return 0.0f;
+        }
+        return MAX(0.0f, MIN(1.0f, x));
+    }
 };
 
 void MLFloatOp_GetNumParams(MLFloatOp op, uint *numInputsP, uint *numParamsP);

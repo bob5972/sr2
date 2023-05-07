@@ -23,13 +23,7 @@
 #include "Random.h"
 #include "mutate.h"
 
-static inline float MLClampUnit(float x) {
-    if (isnan(x)) {
-        return 0.0f;
-    }
-    return MAX(0.0f, MIN(1.0f, x));
-}
-#define CLAMP_UNIT(_x) (MLClampUnit(_x))
+#define CLAMP_UNIT(_x) (ML_ClampUnit(_x))
 
 static inline float MLClamp(float x, float min, float max) {
     if (isnan(x)) {
