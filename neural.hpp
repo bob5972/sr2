@@ -193,6 +193,7 @@ typedef struct NeuralForceDesc {
     bool filterAdvance;
     bool filterRetreat;
     bool filterRange;
+    bool filterForceValue;
 } NeuralForceDesc;
 
 typedef struct NeuralTickDesc {
@@ -362,11 +363,15 @@ bool NeuralForce_FocusToForce(AIContext *nc, Mob *mob,
                               NeuralForceDesc *desc, FPoint *focusPoint,
                               bool haveForce, FRPoint *rForce);
 float NeuralForce_FocusToRange(Mob *mob, FPoint *focusPoint, bool haveFocus);
+float NeuralForce_FocusToValue(AIContext *nc, Mob *mob,
+                               NeuralForceDesc *desc,
+                               FPoint *focusPoint, bool haveFocus);
 bool NeuralForce_GetFocus(AIContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FPoint *focusPoint);
 bool NeuralForce_GetForce(AIContext *nc, Mob *mob,
                           NeuralForceDesc *desc, FRPoint *rForce);
 float NeuralForce_GetRange(AIContext *nc, Mob *mob, NeuralForceDesc *desc);
+float NeuralForce_GetValue(AIContext *nc, Mob *mob, NeuralForceDesc *desc);
 void NeuralForce_ApplyToMob(AIContext *nc, Mob *mob, FRPoint *rForce);
 
 void NeuralLocus_RunTick(AIContext *nc, NeuralLocusDesc *desc, NeuralLocusPosition *pos);

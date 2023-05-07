@@ -441,6 +441,10 @@ void NeuralForce_Load(MBRegistry *mreg,
     desc->filterRange = MBRegistry_GetBool(mreg, s.CStr());
 
     s = prefix;
+    s += "filterForceValue";
+    desc->filterForceValue = MBRegistry_GetBool(mreg, s.CStr());
+
+    s = prefix;
     s += "radius";
     desc->radius = MBRegistry_GetFloat(mreg, s.CStr());
 
@@ -817,7 +821,7 @@ void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
     MutationBoolParams bf;
     const char *strs[] = {
         "useTangent", "useBase", "filterForward", "filterBackward",
-        "filterAdvance", "filterRetreat", "filterRange",
+        "filterAdvance", "filterRetreat", "filterRange", "filterForceValue",
     };
 
     for (uint i = 0; i < ARRAYSIZE(strs); i++) {
@@ -1990,6 +1994,32 @@ float NeuralForce_GetRange(AIContext *nc,
     return NeuralForce_FocusToRange(mob, &focusPoint, haveFocus);
 }
 
+float NeuralForce_FocusToValue(AIContext *nc, Mob *mob,
+                               NeuralForceDesc *desc,
+                               FPoint *focusPoint, bool haveFocus)
+{
+    ASSERT(mob != NULL);
+    ASSERT(focusPoint != NULL);
+
+    if (desc->filterForceValue) {
+        FRPoint rForce;
+        haveFocus = NeuralForce_FocusToForce(nc, mob, desc, focusPoint,
+                                             haveFocus, &rForce);
+    }
+
+    return NeuralForce_FocusToRange(mob, focusPoint, haveFocus);
+}
+
+float NeuralForce_GetValue(AIContext *nc,
+                           Mob *mob, NeuralForceDesc *desc)
+{
+    FPoint focusPoint;
+    bool haveFocus = NeuralForce_GetFocus(nc, mob, desc, &focusPoint);
+    return NeuralForce_FocusToValue(nc, mob, desc, &focusPoint, haveFocus);
+}
+
+
+
 
 /*
  * NeuralForce_ApplyToMob --
@@ -2200,7 +2230,11 @@ float NeuralValue_GetValue(AIContext *nc,
         case NEURAL_VALUE_VOID:
             return 0.0f;
         case NEURAL_VALUE_FORCE:
-            return NeuralForce_GetRange(nc, mob, &desc->forceDesc);
+            if (desc->forceDesc.filterForceValue) {
+                return NeuralForce_GetValue(nc, mob, &desc->forceDesc);
+            } else {
+                return NeuralForce_GetRange(nc, mob, &desc->forceDesc);
+            }
         case NEURAL_VALUE_CROWD:
             return NeuralCrowd_GetValue(nc, mob, &desc->crowdDesc);
         case NEURAL_VALUE_TICK:

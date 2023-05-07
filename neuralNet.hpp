@@ -148,7 +148,8 @@ private:
             desc->value.forceDesc.forceType == NEURAL_FORCE_LOCUS) {
             FPoint focus;
             bool haveFocus = getFocus(mob, &desc->value.forceDesc, &focus);
-            return NeuralForce_FocusToRange(mob, &focus, haveFocus);
+            return NeuralForce_FocusToValue(&aic, mob, &desc->value.forceDesc,
+                                            &focus, haveFocus);
         } else if (desc->value.valueType == NEURAL_VALUE_SCALAR) {
             if (desc->value.scalarDesc.scalarID < 0 ||
                 desc->value.scalarDesc.scalarID >= scalarInputs.size()) {
