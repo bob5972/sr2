@@ -2422,9 +2422,9 @@ static bool NeuralForceGeneMidway(AIContext *aic,
     o0.filterBackward = FALSE;
     o0.filterForward = TRUE;
     o0.filterRetreat = FALSE;
+    o0.filterRange = FALSE;
     o0.forceType = NEURAL_FORCE_MIDWAY;
     o0.radius = 1729.684937f;
-    o0.range = 0.0f;
     o0.useBase = TRUE;
     o0.useTangent = TRUE;
 
@@ -2436,6 +2436,7 @@ static bool NeuralForceGeneMidway(AIContext *aic,
     i0.forceDesc.filterBackward = TRUE;
     i0.forceDesc.filterForward = TRUE;
     i0.forceDesc.filterRetreat = TRUE;
+    i0.forceDesc.filterRange = FALSE;
     i0.forceDesc.radius = 156.808365f;
     i0.forceDesc.useBase = TRUE;
     i0.forceDesc.useTangent = FALSE;
@@ -2448,6 +2449,7 @@ static bool NeuralForceGeneMidway(AIContext *aic,
     i1.forceDesc.filterBackward = TRUE;
     i1.forceDesc.filterForward = TRUE;
     i1.forceDesc.filterRetreat = FALSE;
+    i1.forceDesc.filterRange = FALSE;
     i1.forceDesc.radius = 0.0f;
     i1.forceDesc.useBase = FALSE;
     i1.forceDesc.useTangent = FALSE;
@@ -2502,9 +2504,9 @@ static bool NeuralForceGeneEnemyMissile(AIContext *aic,
     o0.filterBackward = FALSE;
     o0.filterForward = FALSE;
     o0.filterRetreat = FALSE;
+    o0.filterRange = FALSE;
     o0.forceType = NEURAL_FORCE_ENEMY_MISSILE;
     o0.radius = 313.822601f;
-    o0.range = 0.0f;
     o0.useBase = FALSE;
     o0.useTangent = FALSE;
 
@@ -2550,11 +2552,10 @@ static bool NeuralForceGeneRetreatCohere(AIContext *aic,
     o0.filterAdvance = FALSE;
     o0.filterBackward = FALSE;
     o0.filterForward = TRUE;
-    o0.filterRange = FALSE;
     o0.filterRetreat = FALSE;
+    o0.filterRange = FALSE;
     o0.forceType = NEURAL_FORCE_RETREAT_COHERE;
     o0.radius = 2728.651611f;
-    o0.range = 0.0f;
     o0.useBase = TRUE;
     o0.useTangent = FALSE;
 
@@ -2572,6 +2573,7 @@ static bool NeuralForceGeneRetreatCohere(AIContext *aic,
     i14.forceDesc.filterBackward = FALSE;
     i14.forceDesc.filterForward = FALSE;
     i14.forceDesc.filterRetreat = TRUE;
+    i14.forceDesc.filterRange = FALSE;
     i14.forceDesc.radius = 309.636841;
     i14.forceDesc.useBase = FALSE;
     i14.forceDesc.useTangent = TRUE;
@@ -2624,8 +2626,8 @@ static bool NeuralForceGeneRetreatEnemyAlign(AIContext *aic,
     o0.filterAdvance = TRUE;
     o0.filterBackward = TRUE;
     o0.filterForward = FALSE;
-    o0.filterRange = TRUE;
     o0.filterRetreat = FALSE;
+    o0.filterRange = FALSE;
     o0.forceType = NEURAL_FORCE_RETREAT_ENEMY_ALIGN;
     o0.radius = 2850.0f;
     o0.useBase = TRUE;
@@ -2639,6 +2641,7 @@ static bool NeuralForceGeneRetreatEnemyAlign(AIContext *aic,
     i16.forceDesc.filterBackward = TRUE;
     i16.forceDesc.filterForward = FALSE;
     i16.forceDesc.filterRetreat = FALSE;
+    i16.forceDesc.filterRange = FALSE;
     i16.forceDesc.radius = 2934.379639f;
     i16.forceDesc.useBase = FALSE;
     i16.forceDesc.useTangent = FALSE;
