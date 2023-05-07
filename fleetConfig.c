@@ -88,6 +88,9 @@ FleetConfigValue FC_neural11[] = {
 FleetConfigValue FC_neural12[] = {
 #include "fleetData/neural12.config"
 };
+FleetConfigValue FC_neural13[] = {
+#include "fleetData/neural13.config"
+};
 
 static const FleetConfigValue FC_bineuralDefaults[] = {
     { "attackExtendedRange",         "TRUE"      },
@@ -207,6 +210,9 @@ void FleetConfig_PushDefaults(MBRegistry *mreg, FleetAIType aiType)
     static const FleetConfigTable neural12 = {
         FC_neural12, ARRAYSIZE(FC_neural12),
     };
+    static const FleetConfigTable neural13 = {
+        FC_neural13, ARRAYSIZE(FC_neural13),
+    };
 
     static const FleetConfigTable bineuralDefaults = {
         FC_bineuralDefaults, ARRAYSIZE(FC_bineuralDefaults),
@@ -266,6 +272,8 @@ void FleetConfig_PushDefaults(MBRegistry *mreg, FleetAIType aiType)
             FleetConfigPush(mreg, &neuralDefaults, &neural11);
         } else if (aiType == FLEET_AI_NEURAL12) {
             FleetConfigPush(mreg, &neuralDefaults, &neural12);
+        } else if (aiType == FLEET_AI_NEURAL13) {
+            FleetConfigPush(mreg, &neuralDefaults, &neural13);
         } else {
             NOT_IMPLEMENTED();
         }
