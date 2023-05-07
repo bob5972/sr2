@@ -21,10 +21,14 @@
 #include "mutate.h"
 #include "mobFilter.h"
 
-static bool NeuralForceMidway2(AIContext *nc,
-                               Mob *mob,
-                               NeuralForceDesc *desc,
-                               FPoint *focusPoint);
+static bool NeuralForceGeneMidway(AIContext *nc,
+                                  Mob *mob,
+                                  NeuralForceDesc *desc,
+                                  FPoint *focusPoint);
+static bool NeuralForceGeneEnemyMissile(AIContext *nc,
+                                        Mob *mob,
+                                        NeuralForceDesc *desc,
+                                        FPoint *focusPoint);
 static bool NeuralForceGetAdvanceFocusHelper(AIContext *nc,
                                              Mob *mob, FPoint *focusPoint,
                                              bool advance);
@@ -105,7 +109,6 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS),                },
     { TMENTRY(NEURAL_FORCE_ENEMY_BASE_GUESS_LAX),            },
     { TMENTRY(NEURAL_FORCE_MIDWAY),                          },
-    { TMENTRY(NEURAL_FORCE_MIDWAY_2),                        },
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS),                    },
     { TMENTRY(NEURAL_FORCE_MIDWAY_GUESS_LAX),                },
     { TMENTRY(NEURAL_FORCE_CORES),                           },
@@ -121,6 +124,8 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MOB_CENTER_SHELL),                },
     { TMENTRY(NEURAL_FORCE_MOB_CENTER_SECTOR),               },
     { TMENTRY(NEURAL_FORCE_LAST_TARGET_SHADOW),              },
+    { TMENTRY(NEURAL_FORCE_GENE_MIDWAY),                     },
+    { TMENTRY(NEURAL_FORCE_GENE_ENEMY_MISSILE),              },
 };
 
 static const TextMapEntry tmCrowds[] = {
@@ -1680,9 +1685,6 @@ bool NeuralForce_GetFocus(AIContext *nc,
             }
             return FALSE;
         }
-        case NEURAL_FORCE_MIDWAY_2: {
-            return NeuralForceMidway2(nc, mob, desc, focusPoint);
-        }
         case NEURAL_FORCE_MIDWAY_GUESS: {
             if (!nc->sg->hasMidway() && nc->sg->hasMidwayGuess()) {
                 *focusPoint = nc->sg->getMidwayGuess();
@@ -1808,6 +1810,13 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_LAST_TARGET_SHADOW: {
             Mob *m = nc->sg->farthestTargetShadow();
             return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+
+        case NEURAL_FORCE_GENE_MIDWAY: {
+            return NeuralForceGeneMidway(nc, mob, desc, focusPoint);
+        }
+        case NEURAL_FORCE_GENE_ENEMY_MISSILE: {
+            return NeuralForceGeneEnemyMissile(nc, mob, desc, focusPoint);
         }
 
         default:
@@ -2377,7 +2386,7 @@ void NeuralCombiner_ApplyOutput(NeuralCombinerType cType,
     }
 }
 
-static bool NeuralForceMidway2(AIContext *aic,
+static bool NeuralForceGeneMidway(AIContext *aic,
                                Mob *mob,
                                NeuralForceDesc *desc,
                                FPoint *focusPoint)
@@ -2449,6 +2458,56 @@ static bool NeuralForceMidway2(AIContext *aic,
 
     if (haveO0) {
         FRPoint_SetSpeed(&rForce, f);
+        FRPoint_ToFPoint(&rForce, &mob->pos, focusPoint);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+static bool NeuralForceGeneEnemyMissile(AIContext *aic,
+                                        Mob *mob,
+                                        NeuralForceDesc *desc,
+                                        FPoint *focusPoint)
+{
+    NeuralForceDesc o0;
+    NeuralValueDesc i0;
+
+    /*
+     * Copy the base desc to ensure we initialize any new
+     * parameters.
+     */
+
+    o0 = *desc;
+    o0.filterAdvance = FALSE;
+    o0.filterBackward = FALSE;
+    o0.filterForward = FALSE;
+    o0.filterRetreat = FALSE;
+    o0.forceType = NEURAL_FORCE_ENEMY_MISSILE;
+    o0.radius = 313.822601;
+    o0.range = 0.0f;
+    o0.useBase = FALSE;
+    o0.useTangent = FALSE;
+
+    MBUtil_Zero(&i0, sizeof(i0));
+    i0.valueType = NEURAL_VALUE_FRIEND_SHIPS;
+
+    FPoint focusO0;
+    FRPoint rForce;
+    bool haveO0 = NeuralForce_GetFocus(aic, mob, &o0, &focusO0);
+
+    if (!haveO0) {
+        return FALSE;
+    }
+
+    float vI0 = NeuralValue_GetValue(aic, mob, &i0, 0);
+
+    ASSERT(haveO0);
+    haveO0 = NeuralForce_FocusToForce(aic, mob, &o0, &focusO0, TRUE, &rForce);
+
+    if (haveO0) {
+        FRPoint_SetSpeed(&rForce, vI0);
         FRPoint_ToFPoint(&rForce, &mob->pos, focusPoint);
         return TRUE;
     }
