@@ -149,6 +149,18 @@ static inline void FRPoint_SetSpeed(FRPoint *p, float s)
     }
 }
 
+static inline void FRPoint_Multiply(FRPoint *p, float s)
+{
+    ASSERT(p->radius >= 0.0f);
+
+    if (s >= 0.0f) {
+        p->radius *= s;
+    } else {
+        p->radius *= -s;
+        p->theta += M_PI;
+    }
+}
+
 static inline float FPoint_ToRadius(const FPoint *p)
 {
     float radius;

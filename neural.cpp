@@ -171,6 +171,11 @@ static const TextMapEntry tmLocus[] = {
     { TMENTRY(NEURAL_LOCUS_PATROL_MAP),   },
     { TMENTRY(NEURAL_LOCUS_PATROL_EDGES), },
 };
+static const TextMapEntry tmCombiners[] = {
+    { TMENTRY(NEURAL_CT_VOID),         },
+    { TMENTRY(NEURAL_CT_ASSIGN),       },
+    { TMENTRY(NEURAL_CT_MULTIPLY),     },
+};
 
 const char *NeuralForce_ToString(NeuralForceType nft)
 {
@@ -200,6 +205,11 @@ const char *NeuralSquad_ToString(NeuralSquadType nct)
 const char *NeuralLocus_ToString(NeuralLocusType nlt)
 {
     return TextMap_ToString(nlt, tmLocus, ARRAYSIZE(tmLocus));
+}
+
+const char *NeuralCombiner_ToString(NeuralCombinerType nct)
+{
+    return TextMap_ToString(nct, tmCombiners, ARRAYSIZE(tmCombiners));
 }
 
 NeuralForceType NeuralForce_FromString(const char *str)
@@ -236,6 +246,12 @@ NeuralLocusType NeuralLocus_FromString(const char *str)
 {
     return (NeuralLocusType) TextMap_FromString(str, tmLocus,
                                                 ARRAYSIZE(tmLocus));
+}
+
+NeuralCombinerType NeuralCombiner_FromString(const char *str)
+{
+    return (NeuralCombinerType) TextMap_FromString(str, tmCombiners,
+                                                ARRAYSIZE(tmCombiners));
 }
 
 NeuralForceType NeuralForce_Random()
@@ -295,6 +311,13 @@ NeuralLocusType NeuralLocus_Random()
     uint i = Random_Int(0, ARRAYSIZE(tmLocus) - 1);
     ASSERT(ARRAYSIZE(tmLocus) == NEURAL_LOCUS_MAX);
     return (NeuralLocusType) tmLocus[i].value;
+}
+
+NeuralCombinerType NeuralCombiner_Random()
+{
+    uint i = Random_Int(0, ARRAYSIZE(tmCombiners) - 1);
+    ASSERT(ARRAYSIZE(tmCombiners) == NEURAL_CT_MAX);
+    return (NeuralCombinerType) tmCombiners[i].value;
 }
 
 void NeuralValue_Load(MBRegistry *mreg,
@@ -581,6 +604,32 @@ void NeuralScalar_Load(MBRegistry *mreg,
     desc->scalarID = MBRegistry_GetInt(mreg, s.CStr());
 }
 
+void NeuralOutput_Load(MBRegistry *mreg,
+                       NeuralOutputDesc *desc, const char *prefix)
+{
+    MBString s;
+    const char *v;
+
+    s = prefix;
+    NeuralValue_Load(mreg, &desc->value, s.CStr());
+
+    if (NN_USE_CONDITIONS) {
+        s = prefix;
+        s += "condition.";
+        NeuralCondition_Load(mreg, &desc->condition, s.CStr());
+    } else {
+        MBUtil_Zero(&desc->condition, sizeof(desc->condition));
+    }
+
+    s = prefix;
+    s += "combiner.combinerType";
+    v = MBRegistry_GetCStr(mreg, s.CStr());
+    if (v == NULL) {
+        v = NeuralCombiner_ToString(NEURAL_CT_ASSIGN);
+    }
+    desc->cType = NeuralCombiner_FromString(v);
+}
+
 void NeuralLocus_Mutate(MBRegistry *mreg,
                         float rate, const char *prefix)
 {
@@ -668,6 +717,8 @@ void NeuralCondition_Mutate(MBRegistry *mreg,
 {
     MBString s;
     MutationBoolParams bf;
+
+    VERIFY(NN_USE_CONDITIONS);
 
     if (nnType == NN_TYPE_SCALARS) {
         return;
@@ -765,6 +816,30 @@ void NeuralSquad_Mutate(MBRegistry *mreg,
     if (Random_Flip(rate)) {
         NeuralSquadType st = NeuralSquad_Random();
         const char *v = NeuralSquad_ToString(st);
+        MBRegistry_PutCopy(mreg, s.CStr(), v);
+    }
+}
+
+void NeuralOutput_Mutate(MBRegistry *mreg,
+                         float rate, NeuralNetType nnType,
+                         const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    NeuralValue_Mutate(mreg, rate, TRUE, nnType, s.CStr());
+
+    if (NN_USE_CONDITIONS) {
+        s = prefix;
+        s += "condition.";
+        NeuralCondition_Mutate(mreg, rate, nnType, s.CStr());
+    }
+
+    s = prefix;
+    s += "combiner.combinerType";
+    if (Random_Flip(rate)) {
+        NeuralCombinerType ct = NeuralCombiner_Random();
+        const char *v = NeuralCombiner_ToString(ct);
         MBRegistry_PutCopy(mreg, s.CStr(), v);
     }
 }
@@ -2272,5 +2347,24 @@ void NeuralLocus_RunTick(AIContext *aic, NeuralLocusDesc *desc,
         } else {
             FPoint_MoveToPointAtSpeed(&lpos->pos, &newPoint, desc->speed);
         }
+    }
+}
+
+void NeuralCombiner_ApplyOutput(NeuralCombinerType cType,
+                                float inputValue,
+                                FRPoint *force)
+{
+    switch (cType) {
+        case NEURAL_CT_VOID:
+            FRPoint_SetSpeed(force, 0.0f);
+            break;
+        case NEURAL_CT_ASSIGN:
+            FRPoint_SetSpeed(force, inputValue);
+            break;
+        case NEURAL_CT_MULTIPLY:
+            FRPoint_Multiply(force, inputValue);
+            break;
+        default:
+            NOT_IMPLEMENTED();
     }
 }

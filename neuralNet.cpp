@@ -60,31 +60,12 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
     inputDescs.resize(numInputs);
     outputDescs.resize(numOutputs);
 
-    if (NN_USE_CONDITIONS) {
-        if (nnTypeIn == NN_TYPE_FORCES) {
-            ASSERT(outputDescs.size() == numOutputs);
-            for (uint i = 0; i < outputDescs.size(); i++) {
-                char *lcstr = NULL;
-                int ret = asprintf(&lcstr, "%soutput[%d].condition.", prefix, i);
-                VERIFY(ret > 0);
-                NeuralCondition_Load(mreg, &outputDescs[i].condition, lcstr);
-                free(lcstr);
-            }
-        } else {
-            ASSERT(nnTypeIn == NN_TYPE_SCALARS);
-            for (uint i = 0; i < outputDescs.size(); i++) {
-                MBUtil_Zero(&outputDescs[i].condition,
-                            sizeof(outputDescs[i].condition));
-            }
-        }
-    }
-
     for (uint i = 0; i < outputDescs.size(); i++) {
         bool voidNode = FALSE;
         char *lcstr = NULL;
         int ret = asprintf(&lcstr, "%soutput[%d].", prefix, i);
         VERIFY(ret > 0);
-        NeuralValue_Load(mreg, &outputDescs[i].value, lcstr);
+        NeuralOutput_Load(mreg, &outputDescs[i], lcstr);
         free(lcstr);
 
         if (nnType == NN_TYPE_SCALARS &&
@@ -246,18 +227,8 @@ void NeuralNet_Mutate(MBRegistry *mreg, const char *prefix, float rate,
         char *str = NULL;
         int ret = asprintf(&str, "%soutput[%d].", prefix, i);
         VERIFY(ret > 0);
-        NeuralValue_Mutate(mreg, rate, TRUE, nnType, str);
+        NeuralOutput_Mutate(mreg, rate, nnType, str);
         free(str);
-    }
-
-    if (NN_USE_CONDITIONS) {
-        for (uint i = 0; i < fn.getNumOutputs(); i++) {
-            char *str = NULL;
-            int ret = asprintf(&str, "%soutput[%d].condition.", prefix, i);
-            VERIFY(ret > 0);
-            NeuralCondition_Mutate(mreg, rate, nnType, str);
-            free(str);
-        }
     }
 }
 
@@ -334,6 +305,7 @@ void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
             if (outputs[i] != 0.0f &&
                 outputConditionApplies(mob, i) &&
                 getOutputForce(mob, i, &force)) {
+                NeuralCombiner_ApplyOutput(outputDescs[i].cType, outputs[i], &force);
                 FRPoint_SetSpeed(&force, outputs[i]);
                 FRPoint_Add(&force, outputForce, outputForce);
             }

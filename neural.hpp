@@ -23,6 +23,8 @@
 #include "MBRegistry.h"
 #include "aiTypes.hpp"
 
+#define NN_USE_CONDITIONS FALSE
+
 typedef enum NeuralNetType {
     NN_TYPE_INVALID,
     NN_TYPE_FORCES,
@@ -229,9 +231,17 @@ typedef struct NeuralValueDesc {
     };
 } NeuralValueDesc;
 
+typedef enum NeuralCombinerType {
+    NEURAL_CT_VOID,
+    NEURAL_CT_ASSIGN,
+    NEURAL_CT_MULTIPLY,
+    NEURAL_CT_MAX
+} NeuralCombinerType;
+
 typedef struct NeuralOutputDesc {
     NeuralValueDesc value;
     NeuralConditionDesc condition;
+    NeuralCombinerType cType;
 } NeuralOutputDesc;
 
 typedef struct NeuralLocusTrackDesc {
@@ -281,6 +291,7 @@ const char *NeuralWave_ToString(NeuralWaveType nwt);
 const char *NeuralCrowd_ToString(NeuralCrowdType nct);
 const char *NeuralSquad_ToString(NeuralSquadType nst);
 const char *NeuralLocus_ToString(NeuralLocusType nlt);
+const char *NeuralCombiner_ToString(NeuralCombinerType nct);
 
 NeuralForceType NeuralForce_FromString(const char *str);
 NeuralValueType NeuralValue_FromString(const char *str);
@@ -288,6 +299,7 @@ NeuralWaveType  NeuralWave_FromString(const char *str);
 NeuralCrowdType NeuralCrowd_FromString(const char *str);
 NeuralSquadType NeuralSquad_FromString(const char *str);
 NeuralLocusType NeuralLocus_FromString(const char *str);
+NeuralCombinerType NeuralCombiner_FromString(const char *str);
 
 NeuralForceType NeuralForce_Random();
 NeuralValueType NeuralValue_Random();
@@ -295,6 +307,7 @@ NeuralWaveType NeuralWave_Random();
 NeuralCrowdType NeuralCrowd_Random();
 NeuralSquadType NeuralSquad_Random();
 NeuralLocusType NeuralLocus_Random();
+NeuralCombinerType NeuralCombiner_Random();
 
 void NeuralValue_Load(MBRegistry *mreg,
                       NeuralValueDesc *desc, const char *prefix);
@@ -312,6 +325,8 @@ void NeuralLocus_Load(MBRegistry *mreg,
                       NeuralLocusDesc *desc, const char *prefix);
 void NeuralCondition_Load(MBRegistry *mreg,
                           NeuralConditionDesc *desc, const char *prefix);
+void NeuralOutput_Load(MBRegistry *mreg,
+                       NeuralOutputDesc *desc, const char *prefix);
 
 void NeuralValue_Mutate(MBRegistry *mreg, float rate, bool isOutput,
                         NeuralNetType nnType,
@@ -321,6 +336,7 @@ void NeuralLocus_Mutate(MBRegistry *mreg, float rate, const char *prefix);
 void NeuralSquad_Mutate(MBRegistry *mreg, float rate, const char *prefix);
 void NeuralCondition_Mutate(MBRegistry *mreg, float rate, NeuralNetType nnType,
                             const char *prefix);
+void NeuralOutput_Mutate(MBRegistry *mreg, float rate, NeuralNetType nnType, const char *prefix);
 
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
@@ -342,5 +358,7 @@ float NeuralForce_GetRange(AIContext *nc, Mob *mob, NeuralForceDesc *desc);
 void NeuralForce_ApplyToMob(AIContext *nc, Mob *mob, FRPoint *rForce);
 
 void NeuralLocus_RunTick(AIContext *nc, NeuralLocusDesc *desc, NeuralLocusPosition *pos);
+
+void NeuralCombiner_ApplyOutput(NeuralCombinerType cType, float inputValue, FRPoint *force);
 
 #endif // _NEURAL_H_202212021721

@@ -27,9 +27,6 @@
 #include "neural.hpp"
 #include "MBString.hpp"
 
-
-#define NN_USE_CONDITIONS FALSE
-
 class NeuralNet {
 public:
     // Members

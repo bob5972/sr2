@@ -1,9 +1,6 @@
 -- project.txt -- part of Space Robots 2
 
 Next Steps:
-* Output modifiers for magnitude
-** Input => (Multiply with | Assign to) Output
-** Formalize Output Descs?
 * MatrixFleet
 ** Neural inputs/outputs with just linear combinations
 * New simpler ShipAI
