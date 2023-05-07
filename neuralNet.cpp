@@ -62,17 +62,20 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
 
     if (NN_USE_CONDITIONS) {
         if (nnTypeIn == NN_TYPE_FORCES) {
-            outputConditionDescs.resize(numOutputs);
-            for (uint i = 0; i < outputConditionDescs.size(); i++) {
+            ASSERT(outputDescs.size() == numOutputs);
+            for (uint i = 0; i < outputDescs.size(); i++) {
                 char *lcstr = NULL;
                 int ret = asprintf(&lcstr, "%soutput[%d].condition.", prefix, i);
                 VERIFY(ret > 0);
-                NeuralCondition_Load(mreg, &outputConditionDescs[i], lcstr);
+                NeuralCondition_Load(mreg, &outputDescs[i].condition, lcstr);
                 free(lcstr);
             }
         } else {
             ASSERT(nnTypeIn == NN_TYPE_SCALARS);
-            outputConditionDescs.resize(0);
+            for (uint i = 0; i < outputDescs.size(); i++) {
+                MBUtil_Zero(&outputDescs[i].condition,
+                            sizeof(outputDescs[i].condition));
+            }
         }
     }
 
@@ -81,29 +84,29 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
         char *lcstr = NULL;
         int ret = asprintf(&lcstr, "%soutput[%d].", prefix, i);
         VERIFY(ret > 0);
-        NeuralValue_Load(mreg, &outputDescs[i], lcstr);
+        NeuralValue_Load(mreg, &outputDescs[i].value, lcstr);
         free(lcstr);
 
         if (nnType == NN_TYPE_SCALARS &&
-            outputDescs[i].valueType != NEURAL_VALUE_SCALAR) {
+            outputDescs[i].value.valueType != NEURAL_VALUE_SCALAR) {
             voidNode = TRUE;
         } else if (nnType == NN_TYPE_FORCES &&
-            outputDescs[i].valueType != NEURAL_VALUE_FORCE) {
+            outputDescs[i].value.valueType != NEURAL_VALUE_FORCE) {
             voidNode = TRUE;
-        } else if (outputDescs[i].forceDesc.filterForward &&
-                   outputDescs[i].forceDesc.filterBackward) {
+        } else if (outputDescs[i].value.forceDesc.filterForward &&
+                   outputDescs[i].value.forceDesc.filterBackward) {
             voidNode = TRUE;
-        } else if (outputDescs[i].forceDesc.filterAdvance &&
-                   outputDescs[i].forceDesc.filterRetreat) {
+        } else if (outputDescs[i].value.forceDesc.filterAdvance &&
+                   outputDescs[i].value.forceDesc.filterRetreat) {
             voidNode = TRUE;
         }
 
-        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
-            if (outputDescs[i].forceDesc.forceType == NEURAL_FORCE_ZERO ||
-                outputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
+        if (outputDescs[i].value.valueType == NEURAL_VALUE_FORCE) {
+            if (outputDescs[i].value.forceDesc.forceType == NEURAL_FORCE_ZERO ||
+                outputDescs[i].value.forceDesc.forceType == NEURAL_FORCE_VOID) {
                 voidNode = TRUE;
             }
-        } else if (outputDescs[i].valueType == NEURAL_VALUE_VOID) {
+        } else if (outputDescs[i].value.valueType == NEURAL_VALUE_VOID) {
             voidNode = TRUE;
         }
 
@@ -187,13 +190,13 @@ void NeuralNet::dumpSanitizedParams(MBRegistry *mreg, const char *prefix)
         }
     }
     for (uint i = 0; i < outputDescs.size(); i++) {
-        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE &&
-            outputDescs[i].forceDesc.forceType == NEURAL_FORCE_VOID) {
+        if (outputDescs[i].value.valueType == NEURAL_VALUE_FORCE &&
+            outputDescs[i].value.forceDesc.forceType == NEURAL_FORCE_VOID) {
             char *str = NULL;
             const char *value;
             int ret = asprintf(&str, "%soutput[%d].forceType", prefix, i);
             VERIFY(ret > 0);
-            value = NeuralForce_ToString(outputDescs[i].forceDesc.forceType);
+            value = NeuralForce_ToString(outputDescs[i].value.forceDesc.forceType);
             MBRegistry_PutCopy(mreg, str, value);
             free(str);
         }
@@ -303,11 +306,11 @@ void NeuralNet::doScalars()
 
     for (uint i = 0; i < outputs.size(); i++) {
         if (mb_debug) {
-            if (outputDescs[i].valueType != NEURAL_VALUE_SCALAR &&
-                outputDescs[i].valueType != NEURAL_VALUE_VOID) {
+            if (outputDescs[i].value.valueType != NEURAL_VALUE_SCALAR &&
+                outputDescs[i].value.valueType != NEURAL_VALUE_VOID) {
                 PANIC("Bad outputDesc valueType=%s(%d)\n",
-                      NeuralValue_ToString(outputDescs[i].valueType),
-                      outputDescs[i].valueType);
+                      NeuralValue_ToString(outputDescs[i].value.valueType),
+                      outputDescs[i].value.valueType);
             }
         }
     }
@@ -326,8 +329,8 @@ void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
     ASSERT(outputs.size() == outputDescs.size());
     for (uint i = 0; i < outputDescs.size(); i++) {
         FRPoint force;
-        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
-            ASSERT(outputDescs[i].forceDesc.forceType != NEURAL_FORCE_ZERO);
+        if (outputDescs[i].value.valueType == NEURAL_VALUE_FORCE) {
+            ASSERT(outputDescs[i].value.forceDesc.forceType != NEURAL_FORCE_ZERO);
             if (outputs[i] != 0.0f &&
                 outputConditionApplies(mob, i) &&
                 getOutputForce(mob, i, &force)) {
@@ -335,7 +338,7 @@ void NeuralNet::doForces(Mob *mob, FRPoint *outputForce)
                 FRPoint_Add(&force, outputForce, outputForce);
             }
         } else {
-            ASSERT(outputDescs[i].valueType == NEURAL_VALUE_VOID);
+            ASSERT(outputDescs[i].value.valueType == NEURAL_VALUE_VOID);
         }
     }
 }

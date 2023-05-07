@@ -204,6 +204,16 @@ typedef struct NeuralSquadDesc {
     int numSquads;
 } NeuralSquadDesc;
 
+typedef struct NeuralConditionDesc {
+    struct {
+        bool active;
+        bool invert;
+        NeuralSquadDesc squadDesc;
+        float limit0;
+        float limit1;
+    } squad;
+} NeuralConditionDesc;
+
 typedef struct NeuralScalarDesc {
     int scalarID;
 } NeuralScalarDesc;
@@ -218,6 +228,11 @@ typedef struct NeuralValueDesc {
         NeuralScalarDesc scalarDesc;
     };
 } NeuralValueDesc;
+
+typedef struct NeuralOutputDesc {
+    NeuralValueDesc value;
+    NeuralConditionDesc condition;
+} NeuralOutputDesc;
 
 typedef struct NeuralLocusTrackDesc {
     NeuralForceDesc focus;
@@ -259,16 +274,6 @@ typedef struct NeuralLocusPosition {
     bool active;
     FPoint pos;
 } NeuralLocusPosition;
-
-typedef struct NeuralConditionDesc {
-    struct {
-        bool active;
-        bool invert;
-        NeuralSquadDesc squadDesc;
-        float limit0;
-        float limit1;
-    } squad;
-} NeuralConditionDesc;
 
 const char *NeuralForce_ToString(NeuralForceType nft);
 const char *NeuralValue_ToString(NeuralValueType nvt);

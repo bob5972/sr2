@@ -36,8 +36,7 @@ public:
     NeuralNetType nnType;
     FloatNet floatNet;
     MBVector<NeuralValueDesc> inputDescs;
-    MBVector<NeuralValueDesc> outputDescs;
-    MBVector<NeuralConditionDesc> outputConditionDescs;
+    MBVector<NeuralOutputDesc> outputDescs;
     MBVector<float> inputs;
     MBVector<float> outputs;
     AIContext aic;
@@ -77,10 +76,10 @@ public:
     }
     void voidOutputNode(uint i) {
         floatNet.voidOutputNode(i);
-        if (outputDescs[i].valueType == NEURAL_VALUE_FORCE) {
-            outputDescs[i].forceDesc.forceType = NEURAL_FORCE_VOID;
+        if (outputDescs[i].value.valueType == NEURAL_VALUE_FORCE) {
+            outputDescs[i].value.forceDesc.forceType = NEURAL_FORCE_VOID;
         } else {
-            outputDescs[i].valueType = NEURAL_VALUE_VOID;
+            outputDescs[i].value.valueType = NEURAL_VALUE_VOID;
 
         }
     }
@@ -88,15 +87,15 @@ public:
     void minimize();
     void minimizeScalars(NeuralNet &nn);
 
-    static bool isOutputActive(const NeuralValueDesc *outputDesc) {
-        if  (outputDesc->valueType == NEURAL_VALUE_VOID ||
-             outputDesc->valueType == NEURAL_VALUE_ZERO) {
+    static bool isOutputActive(const NeuralOutputDesc *outputDesc) {
+        if  (outputDesc->value.valueType == NEURAL_VALUE_VOID ||
+             outputDesc->value.valueType == NEURAL_VALUE_ZERO) {
             return FALSE;
-        } else if (outputDesc->valueType == NEURAL_VALUE_SCALAR) {
+        } else if (outputDesc->value.valueType == NEURAL_VALUE_SCALAR) {
             return TRUE;
-        } else if (outputDesc->valueType == NEURAL_VALUE_FORCE) {
-            if (outputDesc->forceDesc.forceType == NEURAL_FORCE_VOID ||
-                outputDesc->forceDesc.forceType == NEURAL_FORCE_ZERO) {
+        } else if (outputDesc->value.valueType == NEURAL_VALUE_FORCE) {
+            if (outputDesc->value.forceDesc.forceType == NEURAL_FORCE_VOID ||
+                outputDesc->value.forceDesc.forceType == NEURAL_FORCE_ZERO) {
                 return FALSE;
             }
 
@@ -165,7 +164,7 @@ private:
         }
     }
     bool getOutputForce(Mob *mob, uint index, FRPoint *rForce) {
-        NeuralValueDesc *desc = &outputDescs[index];
+        NeuralValueDesc *desc = &outputDescs[index].value;
         FPoint focus;
         bool haveForce;
 
@@ -181,11 +180,12 @@ private:
         if (!NN_USE_CONDITIONS) {
             return TRUE;
         } else {
-            if (i >= outputConditionDescs.size()) {
+            if (i >= outputDescs.size()) {
                 return TRUE;
             }
 
-            return NeuralCondition_AppliesToMob(&aic, m, &outputConditionDescs[i]);
+            return NeuralCondition_AppliesToMob(&aic, m,
+                                                &outputDescs[i].condition);
         }
     }
 };
