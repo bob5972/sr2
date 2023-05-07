@@ -79,22 +79,23 @@ public:
     virtual void loadRegistry(MBRegistry *mreg) {
         MBString s;
         uint i;
+        uint numInputs, numOutputs;
 
         s = "numInputs";
-        uint num = MBRegistry_GetUint(mreg, s.CStr());
-        if (num == 0) {
-            num = NEURAL_FORCE_MAX - 1;
+        numInputs = MBRegistry_GetUint(mreg, s.CStr());
+        if (numInputs == 0) {
+            numInputs = NEURAL_FORCE_MAX - 1;
         }
-        inputs.resize(num);
-        inputDescs.resize(num);
+        inputs.resize(numInputs);
+        inputDescs.resize(numInputs);
 
         s = "numOutputs";
-        num = MBRegistry_GetUint(mreg, s.CStr());
-        if (num == 0) {
-            num = NEURAL_FORCE_MAX - 1;
+        numOutputs = MBRegistry_GetUint(mreg, s.CStr());
+        if (numOutputs == 0) {
+            numOutputs = NEURAL_FORCE_MAX - 1;
         }
-        outputs.resize(num);
-        outputDescs.resize(num);
+        outputs.resize(numOutputs);
+        outputDescs.resize(numOutputs);
 
         weights.resize(inputs.size() * outputs.size());
 
@@ -112,6 +113,10 @@ public:
             VERIFY(ret > 0);
             NeuralOutput_Load(mreg, &outputDescs[i], lcstr);
             free(lcstr);
+
+            if (outputDescs[i].value.valueType != NEURAL_VALUE_FORCE) {
+                outputDescs[i].value.valueType = NEURAL_VALUE_VOID;
+            }
         }
 
         MBVector<float> row;
@@ -129,7 +134,12 @@ public:
 
             for (j = 0; j < inputs.size(); j++) {
                 uint w = i * inputs.size() + j;
-                weights[w] = row[j];
+
+                if (j < row.size()) {
+                    weights[w] = row[j];
+                } else {
+                    weights[w] = 0.0f;
+                }
             }
         }
 
@@ -185,9 +195,12 @@ public:
         ASSERT(outputDescs.size() == outputs.size());
         for (i = 0; i < outputDescs.size(); i++) {
             FRPoint curForce;
-            ASSERT(outputDescs[i].value.valueType == NEURAL_VALUE_FORCE);
+            ASSERT(outputDescs[i].value.valueType == NEURAL_VALUE_FORCE ||
+                   outputDescs[i].value.valueType == NEURAL_VALUE_VOID);
 
-            if (outputs[i] != 0.0f) {
+            if (outputDescs[i].value.valueType == NEURAL_VALUE_FORCE &&
+                outputDescs[i].value.forceDesc.forceType != NEURAL_FORCE_VOID &&
+                outputs[i] != 0.0f) {
                 bool haveForce;
                 haveForce =
                     NeuralForce_GetForce(&myAIC, mob,

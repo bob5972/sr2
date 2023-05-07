@@ -64,6 +64,7 @@ void FlockFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void BundleFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 void BineuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
+void MatrixFleet_GetOps(FleetAIType aiType, FleetAIOps *ops);
 
 bool Fleet_IsFlockFleet(FleetAIType aiType);
 bool Fleet_IsBundleFleet(FleetAIType aiType);

@@ -385,6 +385,7 @@ void Fleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         { FLEET_AI_BASIC,       BasicFleet_GetOps       },
         { FLEET_AI_HOLD,        HoldFleet_GetOps        },
         { FLEET_AI_CIRCLE,      CircleFleet_GetOps      },
+        { FLEET_AI_MATRIX1,     MatrixFleet_GetOps      },
     };
 
     ASSERT(aiType != FLEET_AI_INVALID);

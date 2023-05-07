@@ -143,6 +143,29 @@ static const FleetConfigValue FC_bineural5[] = {
 #include "fleetData/bineural5.config"
 };
 
+static const FleetConfigValue FC_matrix1[] = {
+};
+
+static const FleetConfigValue FC_matrixDefaults[] = {
+    { "attackExtendedRange", "TRUE" },
+    { "attackRange", "119.589478" },
+    { "creditReserve", "0.000000" },
+    { "evadeFighters", "FALSE" },
+    { "evadeRange", "-0.997500" },
+    { "evadeStrictDistance", "130.109604" },
+    { "evadeUseStrictDistance", "FALSE" },
+    { "gatherAbandonStale", "FALSE" },
+    { "gatherRange", "51.572159" },
+    { "guardRange", "113.814850" },
+    { "rotateStartingAngle", "TRUE" },
+    { "sensorGrid.mapping.recentlyScannedMoveFocusTicks", "0.000000" },
+    { "sensorGrid.mapping.recentlyScannedResetTicks", "976.480957" },
+    { "sensorGrid.staleCoreTime", "0.000000" },
+    { "sensorGrid.staleFighterTime", "0.000000" },
+    { "startingMaxRadius", "1362.524536" },
+    { "startingMinRadius", "774.700012" },
+};
+
 static void FleetConfigPush(MBRegistry *mreg, const FleetConfigTable *defaults,
                             const FleetConfigTable *values)
 {
@@ -177,6 +200,9 @@ void FleetConfig_PushDefaults(MBRegistry *mreg, FleetAIType aiType)
     static const FleetConfigTable bineuralDefaults = {
         FC_bineuralDefaults, ARRAYSIZE(FC_bineuralDefaults),
     };
+    static const FleetConfigTable matrixDefaults = {
+        FC_matrixDefaults, ARRAYSIZE(FC_matrixDefaults),
+    };
 
 #define F(_fleetAI, _defaults, _lcName) \
     { FLEET_AI_ ## _fleetAI, _defaults, { FC_ ## _lcName, ARRAYSIZE(FC_ ## _lcName), }, }
@@ -205,6 +231,8 @@ void FleetConfig_PushDefaults(MBRegistry *mreg, FleetAIType aiType)
         F(BINEURAL3, &bineuralDefaults, bineural3),
         F(BINEURAL4, &bineuralDefaults, bineural4),
         F(BINEURAL5, &bineuralDefaults, bineural5),
+
+        F(MATRIX1, &matrixDefaults, matrix1),
     };
 
 #undef F
