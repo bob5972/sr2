@@ -100,7 +100,7 @@ void NeuralNet::load(MBRegistry *mreg, const char *prefix,
         char *lcstr = NULL;
         int ret = asprintf(&lcstr, "%sinput[%d].", prefix, i);
         VERIFY(ret > 0);
-        NeuralValue_Load(mreg, &inputDescs[i], lcstr);
+        NeuralInput_Load(mreg, &inputDescs[i], lcstr);
         free(lcstr);
     }
 
@@ -133,7 +133,7 @@ void NeuralNet::minimizeScalars(NeuralNet &nnConsumer)
     ASSERT(nnConsumer.nnType == NN_TYPE_FORCES);
 
     for (uint i = 0; i < nnConsumer.inputDescs.size(); i++) {
-        NeuralValueDesc *inp = &nnConsumer.inputDescs[i];
+        NeuralValueDesc *inp = &nnConsumer.inputDescs[i].value;
         if (inp->valueType == NEURAL_VALUE_SCALAR) {
             if (inp->scalarDesc.scalarID > 0 &&
                 inp->scalarDesc.scalarID < outputs.size()) {
@@ -160,12 +160,12 @@ void NeuralNet::dumpSanitizedParams(MBRegistry *mreg, const char *prefix)
      * reflect that here.
      */
     for (uint i = 0; i < inputDescs.size(); i++) {
-        if (inputDescs[i].valueType == NEURAL_VALUE_VOID) {
+        if (inputDescs[i].value.valueType == NEURAL_VALUE_VOID) {
             char *str = NULL;
             const char *value;
             int ret = asprintf(&str, "%sinput[%d].valueType", prefix, i);
             VERIFY(ret > 0);
-            value = NeuralValue_ToString(inputDescs[i].valueType);
+            value = NeuralValue_ToString(inputDescs[i].value.valueType);
             MBRegistry_PutCopy(mreg, str, value);
             free(str);
         }

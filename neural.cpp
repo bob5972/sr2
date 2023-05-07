@@ -652,6 +652,15 @@ void NeuralOutput_Load(MBRegistry *mreg,
     desc->cType = NeuralCombiner_FromString(v);
 }
 
+void NeuralInput_Load(MBRegistry *mreg,
+                      NeuralInputDesc *desc, const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    NeuralValue_Load(mreg, &desc->value, s.CStr());
+}
+
 void NeuralLocus_Mutate(MBRegistry *mreg,
                         float rate, const char *prefix)
 {
@@ -864,6 +873,16 @@ void NeuralOutput_Mutate(MBRegistry *mreg,
         const char *v = NeuralCombiner_ToString(ct);
         MBRegistry_PutCopy(mreg, s.CStr(), v);
     }
+}
+
+void NeuralInput_Mutate(MBRegistry *mreg,
+                        float rate, NeuralNetType nnType,
+                        const char *prefix)
+{
+    MBString s;
+
+    s = prefix;
+    NeuralValue_Mutate(mreg, rate, TRUE, nnType, s.CStr());
 }
 
 void NeuralValue_Mutate(MBRegistry *mreg,

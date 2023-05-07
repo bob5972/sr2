@@ -32,7 +32,7 @@ public:
     // Members
     NeuralNetType nnType;
     FloatNet floatNet;
-    MBVector<NeuralValueDesc> inputDescs;
+    MBVector<NeuralInputDesc> inputDescs;
     MBVector<NeuralOutputDesc> outputDescs;
     MBVector<float> inputs;
     MBVector<float> outputs;
@@ -69,7 +69,7 @@ public:
     }
 
     void voidInputNode(uint i) {
-        inputDescs[i].valueType = NEURAL_VALUE_VOID;
+        inputDescs[i].value.valueType = NEURAL_VALUE_VOID;
     }
     void voidOutputNode(uint i) {
         floatNet.voidOutputNode(i);
@@ -142,22 +142,22 @@ private:
     }
 
     float getInputValue(Mob *mob, uint index) {
-        NeuralValueDesc *desc = &inputDescs[index];
+        NeuralInputDesc *desc = &inputDescs[index];
 
-        if (desc->valueType == NEURAL_VALUE_FORCE &&
-            desc->forceDesc.forceType == NEURAL_FORCE_LOCUS) {
+        if (desc->value.valueType == NEURAL_VALUE_FORCE &&
+            desc->value.forceDesc.forceType == NEURAL_FORCE_LOCUS) {
             FPoint focus;
-            bool haveFocus = getFocus(mob, &desc->forceDesc, &focus);
+            bool haveFocus = getFocus(mob, &desc->value.forceDesc, &focus);
             return NeuralForce_FocusToRange(mob, &focus, haveFocus);
-        } else if (desc->valueType == NEURAL_VALUE_SCALAR) {
-            if (desc->scalarDesc.scalarID < 0 ||
-                desc->scalarDesc.scalarID >= scalarInputs.size()) {
+        } else if (desc->value.valueType == NEURAL_VALUE_SCALAR) {
+            if (desc->value.scalarDesc.scalarID < 0 ||
+                desc->value.scalarDesc.scalarID >= scalarInputs.size()) {
                 return 0.0f;
             }
 
-            return scalarInputs[desc->scalarDesc.scalarID];
+            return scalarInputs[desc->value.scalarDesc.scalarID];
         } else {
-            return NeuralValue_GetValue(&aic, mob, &inputDescs[index], index);
+            return NeuralValue_GetValue(&aic, mob, &inputDescs[index].value, index);
         }
     }
     bool getOutputForce(Mob *mob, uint index, FRPoint *rForce) {

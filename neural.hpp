@@ -249,6 +249,10 @@ typedef struct NeuralOutputDesc {
     NeuralCombinerType cType;
 } NeuralOutputDesc;
 
+typedef struct NeuralInputDesc {
+    NeuralValueDesc value;
+} NeuralInputDesc;
+
 typedef struct NeuralLocusTrackDesc {
     NeuralForceDesc focus;
 } NeuralLocusTrackDesc;
@@ -332,6 +336,8 @@ void NeuralCondition_Load(MBRegistry *mreg,
                           NeuralConditionDesc *desc, const char *prefix);
 void NeuralOutput_Load(MBRegistry *mreg,
                        NeuralOutputDesc *desc, const char *prefix);
+void NeuralInput_Load(MBRegistry *mreg,
+                      NeuralInputDesc *desc, const char *prefix);
 
 void NeuralValue_Mutate(MBRegistry *mreg, float rate, bool isOutput,
                         NeuralNetType nnType,
@@ -342,6 +348,7 @@ void NeuralSquad_Mutate(MBRegistry *mreg, float rate, const char *prefix);
 void NeuralCondition_Mutate(MBRegistry *mreg, float rate, NeuralNetType nnType,
                             const char *prefix);
 void NeuralOutput_Mutate(MBRegistry *mreg, float rate, NeuralNetType nnType, const char *prefix);
+void NeuralInput_Mutate(MBRegistry *mreg, float rate, NeuralNetType nnType, const char *prefix);
 
 float NeuralValue_GetValue(AIContext *nc, Mob *mob,
                            NeuralValueDesc *desc, uint i);
