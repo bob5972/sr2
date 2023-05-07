@@ -174,110 +174,48 @@ void FleetConfig_PushDefaults(MBRegistry *mreg, FleetAIType aiType)
     static const FleetConfigTable neuralDefaults = {
         FC_neuralDefaults, ARRAYSIZE(FC_neuralDefaults),
     };
-    static const FleetConfigTable neural1 = {
-        FC_neural1, ARRAYSIZE(FC_neural1),
-    };
-    static const FleetConfigTable neural2 = {
-        FC_neural2, ARRAYSIZE(FC_neural2),
-    };
-    static const FleetConfigTable neural3 = {
-        FC_neural3, ARRAYSIZE(FC_neural3),
-    };
-    static const FleetConfigTable neural4 = {
-        FC_neural4, ARRAYSIZE(FC_neural4),
-    };
-    static const FleetConfigTable neural5 = {
-        FC_neural5, ARRAYSIZE(FC_neural5),
-    };
-    static const FleetConfigTable neural6 = {
-        FC_neural6, ARRAYSIZE(FC_neural6),
-    };
-    static const FleetConfigTable neural7 = {
-        FC_neural7, ARRAYSIZE(FC_neural7),
-    };
-    static const FleetConfigTable neural8 = {
-        FC_neural8, ARRAYSIZE(FC_neural8),
-    };
-    static const FleetConfigTable neural9 = {
-        FC_neural9, ARRAYSIZE(FC_neural9),
-    };
-    static const FleetConfigTable neural10 = {
-        FC_neural10, ARRAYSIZE(FC_neural10),
-    };
-    static const FleetConfigTable neural11 = {
-        FC_neural11, ARRAYSIZE(FC_neural11),
-    };
-    static const FleetConfigTable neural12 = {
-        FC_neural12, ARRAYSIZE(FC_neural12),
-    };
-    static const FleetConfigTable neural13 = {
-        FC_neural13, ARRAYSIZE(FC_neural13),
-    };
-
     static const FleetConfigTable bineuralDefaults = {
         FC_bineuralDefaults, ARRAYSIZE(FC_bineuralDefaults),
     };
-    static const FleetConfigTable bineural1 = {
-        FC_bineural1, ARRAYSIZE(FC_bineural1),
-    };
-    static const FleetConfigTable bineural2 = {
-        FC_bineural2, ARRAYSIZE(FC_bineural2),
-    };
-    static const FleetConfigTable bineural3 = {
-        FC_bineural3, ARRAYSIZE(FC_bineural3),
-    };
-    static const FleetConfigTable bineural4 = {
-        FC_bineural4, ARRAYSIZE(FC_bineural4),
-    };
-    static const FleetConfigTable bineural5 = {
-        FC_bineural5, ARRAYSIZE(FC_bineural5),
+
+#define F(_fleetAI, _defaults, _lcName) \
+    { FLEET_AI_ ## _fleetAI, _defaults, { FC_ ## _lcName, ARRAYSIZE(FC_ ## _lcName), }, }
+
+    static const struct {
+        FleetAIType aiType;
+        const FleetConfigTable *defaults;
+        FleetConfigTable config;
+    } fleets[] = {
+        F(NEURAL1,  &neuralDefaults, neural1),
+        F(NEURAL2,  &neuralDefaults, neural2),
+        F(NEURAL3,  &neuralDefaults, neural3),
+        F(NEURAL4,  &neuralDefaults, neural4),
+        F(NEURAL5,  &neuralDefaults, neural5),
+        F(NEURAL6,  &neuralDefaults, neural6),
+        F(NEURAL7,  &neuralDefaults, neural7),
+        F(NEURAL8,  &neuralDefaults, neural8),
+        F(NEURAL9,  &neuralDefaults, neural9),
+        F(NEURAL10, &neuralDefaults, neural10),
+        F(NEURAL11, &neuralDefaults, neural11),
+        F(NEURAL12, &neuralDefaults, neural12),
+        F(NEURAL13, &neuralDefaults, neural13),
+
+        F(BINEURAL1, &bineuralDefaults, bineural1),
+        F(BINEURAL2, &bineuralDefaults, bineural2),
+        F(BINEURAL3, &bineuralDefaults, bineural3),
+        F(BINEURAL4, &bineuralDefaults, bineural4),
+        F(BINEURAL5, &bineuralDefaults, bineural5),
     };
 
-    if (Fleet_IsBineuralFleet(aiType)) {
-        if (aiType == FLEET_AI_BINEURAL1) {
-            FleetConfigPush(mreg, &bineuralDefaults, &bineural1);
-        } else if (aiType == FLEET_AI_BINEURAL2) {
-            FleetConfigPush(mreg, &bineuralDefaults, &bineural2);
-        } else if (aiType == FLEET_AI_BINEURAL3) {
-            FleetConfigPush(mreg, &bineuralDefaults, &bineural3);
-        } else if (aiType == FLEET_AI_BINEURAL4) {
-            FleetConfigPush(mreg, &bineuralDefaults, &bineural4);
-        } else if (aiType == FLEET_AI_BINEURAL5) {
-            FleetConfigPush(mreg, &bineuralDefaults, &bineural5);
-        } else {
-            NOT_IMPLEMENTED();
+#undef F
+
+    uint i;
+    for (i = 0; i < ARRAYSIZE(fleets); i++) {
+        if (fleets[i].aiType == aiType) {
+            FleetConfigPush(mreg, fleets[i].defaults, &fleets[i].config);
+            return;
         }
-    } else if (Fleet_IsNeuralFleet(aiType)) {
-        if (aiType == FLEET_AI_NEURAL1) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural1);
-        } else if (aiType == FLEET_AI_NEURAL2) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural2);
-        } else if (aiType == FLEET_AI_NEURAL3) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural3);
-        } else if (aiType == FLEET_AI_NEURAL4) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural4);
-        } else if (aiType == FLEET_AI_NEURAL5) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural5);
-        } else if (aiType == FLEET_AI_NEURAL6) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural6);
-        } else if (aiType == FLEET_AI_NEURAL7) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural7);
-        } else if (aiType == FLEET_AI_NEURAL8) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural8);
-        } else if (aiType == FLEET_AI_NEURAL9) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural9);
-        } else if (aiType == FLEET_AI_NEURAL10) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural10);
-        } else if (aiType == FLEET_AI_NEURAL11) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural11);
-        } else if (aiType == FLEET_AI_NEURAL12) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural12);
-        } else if (aiType == FLEET_AI_NEURAL13) {
-            FleetConfigPush(mreg, &neuralDefaults, &neural13);
-        } else {
-            NOT_IMPLEMENTED();
-        }
-    } else {
-        NOT_IMPLEMENTED();
     }
+
+    NOT_IMPLEMENTED();
 }
