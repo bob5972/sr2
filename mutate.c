@@ -32,9 +32,20 @@ float Mutate_FloatRaw(float value, bool missing, MutationFloatParams *mp)
             /*
              * Bias jumps slightly towards interesting values.
              */
-            if (Random_Flip(0.01)) {
+            if (Random_Flip(0.50)) {
                 float f[] = {
-                    -1.0f, 0.0f, 1.0f, mp->minValue, mp->maxValue,
+                    -1.0f, 0.0f, 1.0f,
+                    mp->minValue, mp->maxValue,
+                    -mp->minValue, -mp->maxValue,
+                    1.0f / mp->minValue, 1.0f / mp->maxValue,
+                    mp->minValue / 2.0f, mp->maxValue / 2.0f,
+                    (mp->minValue + mp->maxValue) / 2.0f,
+                    value / 2.0f, value * 2.0f, -value,
+                    1.0f / value, -1.0f / value,
+                    (mp->minValue + value) / 2.0f,
+                    (mp->maxValue + value) / 2.0f,
+                    mp->minValue + value,
+                    mp->maxValue - value,
                 };
                 uint32 r = Random_Uint32() % ARRAYSIZE(f);
                 value = f[r];
