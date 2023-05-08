@@ -385,7 +385,7 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     row.resize(numInputs);
 
     MutationFloatParams mfp;
-    Mutate_DefaultFloatParams(&mfp, MUTATION_TYPE_ANY);
+    Mutate_DefaultFloatParams(&mfp, MUTATION_TYPE_WEIGHT);
 
     for (i = 0; i < numOutputs; i++) {
         MBString rowStr;
