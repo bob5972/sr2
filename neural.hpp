@@ -157,6 +157,8 @@ typedef enum NeuralSquadType {
 typedef enum NeuralValueType {
     NEURAL_VALUE_VOID,
     NEURAL_VALUE_ZERO,
+    NEURAL_VALUE_ONE,
+    NEURAL_VALUE_NEGATIVE_ONE,
     NEURAL_VALUE_FORCE,
     NEURAL_VALUE_CROWD,
     NEURAL_VALUE_TICK,

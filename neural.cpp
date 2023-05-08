@@ -172,6 +172,8 @@ static const TextMapEntry tmWaves[] = {
 static const TextMapEntry tmValues[] = {
     { TMENTRY(NEURAL_VALUE_VOID),            },
     { TMENTRY(NEURAL_VALUE_ZERO),            },
+    { TMENTRY(NEURAL_VALUE_ONE),             },
+    { TMENTRY(NEURAL_VALUE_NEGATIVE_ONE),    },
     { TMENTRY(NEURAL_VALUE_FORCE),           },
     { TMENTRY(NEURAL_VALUE_CROWD),           },
     { TMENTRY(NEURAL_VALUE_TICK),            },
@@ -288,14 +290,16 @@ NeuralValueType NeuralValue_Random()
 {
     EnumDistribution vts[] = {
         { NEURAL_VALUE_VOID,            0.00f, },
-        { NEURAL_VALUE_ZERO,            0.02f, },
-        { NEURAL_VALUE_FORCE,           0.30f, },
-        { NEURAL_VALUE_CROWD,           0.30f, },
+        { NEURAL_VALUE_ZERO,            0.03f, },
+        { NEURAL_VALUE_ONE,             0.03f, },
+        { NEURAL_VALUE_NEGATIVE_ONE,    0.03f, },
+        { NEURAL_VALUE_FORCE,           0.26f, },
+        { NEURAL_VALUE_CROWD,           0.26f, },
         { NEURAL_VALUE_TICK,            0.04f, },
         { NEURAL_VALUE_MOBID,           0.04f, },
         { NEURAL_VALUE_SQUAD,           0.04f, },
         { NEURAL_VALUE_RANDOM_UNIT,     0.04f, },
-        { NEURAL_VALUE_CREDITS,         0.02f, },
+        { NEURAL_VALUE_CREDITS,         0.03f, },
         { NEURAL_VALUE_FRIEND_SHIPS,    0.04f, },
         { NEURAL_VALUE_FRIEND_MISSILES, 0.04f, },
         { NEURAL_VALUE_ENEMY_SHIPS,     0.04f, },
@@ -384,6 +388,8 @@ void NeuralValue_Load(MBRegistry *mreg,
 
         case NEURAL_VALUE_VOID:
         case NEURAL_VALUE_ZERO:
+        case NEURAL_VALUE_ONE:
+        case NEURAL_VALUE_NEGATIVE_ONE:
         case NEURAL_VALUE_MOBID:
         case NEURAL_VALUE_RANDOM_UNIT:
         case NEURAL_VALUE_CREDITS:
@@ -962,6 +968,8 @@ void NeuralValue_Mutate(MBRegistry *mreg,
             Mutate_Index(mreg, s.CStr(), rate);
         }
     } else if (desc.valueType == NEURAL_VALUE_ZERO ||
+               desc.valueType == NEURAL_VALUE_ONE ||
+               desc.valueType == NEURAL_VALUE_NEGATIVE_ONE ||
                desc.valueType == NEURAL_VALUE_FRIEND_SHIPS ||
                desc.valueType == NEURAL_VALUE_FRIEND_MISSILES ||
                desc.valueType == NEURAL_VALUE_ENEMY_SHIPS ||
@@ -2229,6 +2237,10 @@ float NeuralValue_GetValue(AIContext *nc,
         case NEURAL_VALUE_ZERO:
         case NEURAL_VALUE_VOID:
             return 0.0f;
+        case NEURAL_VALUE_ONE:
+            return 1.0f;
+        case NEURAL_VALUE_NEGATIVE_ONE:
+            return -1.0f;
         case NEURAL_VALUE_FORCE:
             if (desc->forceDesc.filterForceValue) {
                 return NeuralForce_GetValue(nc, mob, &desc->forceDesc);
