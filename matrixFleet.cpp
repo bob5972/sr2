@@ -173,27 +173,32 @@ public:
 
         uint i;
 
-        ASSERT(inputDescs.size() == inputs.size());
-        for (i = 0; i < inputDescs.size(); i++) {
+        uint numOutputs = outputs.size();
+        uint numInputs = inputs.size();
+        ASSERT(inputDescs.size() == numInputs);
+        ASSERT(outputDescs.size() == numOutputs);
+
+        for (i = 0; i < numInputs; i++) {
             inputs[i] = NeuralValue_GetValue(&myAIC, mob, &inputDescs[i].value,
                                              i);
         }
 
-        ASSERT(weights.size() == inputs.size() * outputs.size());
-        for (i = 0; i < outputs.size(); i++) {
+        ASSERT(weights.size() == numInputs * numOutputs);
+
+        uint w = 0;
+        for (i = 0; i < numOutputs; i++) {
             uint j;
             outputs[i] = 0.0f;
-            for (j = 0; j < inputs.size(); j++) {
-                uint w = i * inputs.size() + j;
+            for (j = 0; j < numInputs; j++) {
                 outputs[i] += weights[w] * inputs[j];
+                w++;
             }
         }
 
         FRPoint rForce;
         FRPoint_Zero(&rForce);
 
-        ASSERT(outputDescs.size() == outputs.size());
-        for (i = 0; i < outputDescs.size(); i++) {
+        for (i = 0; i < numOutputs; i++) {
             FRPoint curForce;
             ASSERT(outputDescs[i].value.valueType == NEURAL_VALUE_FORCE ||
                    outputDescs[i].value.valueType == NEURAL_VALUE_VOID);
