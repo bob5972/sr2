@@ -1924,8 +1924,11 @@ bool NeuralForce_FocusToForce(AIContext *nc,
     ASSERT(rForce != NULL);
     ASSERT(focusPoint != NULL);
 
-    ASSERT(!desc->filterForward || !desc->filterBackward);
-    ASSERT(!desc->filterAdvance || !desc->filterRetreat);
+    if ((desc->filterForward && desc->filterBackward) ||
+        (desc->filterAdvance && desc->filterRetreat) ||
+        (desc->filterRange && desc->range <= 0.0f)) {
+        haveForce = FALSE;
+    }
 
     if (haveForce && (desc->filterForward || desc->filterBackward)) {
         haveForce = NeuralForceGetForwardFocusHelper(nc, mob, focusPoint,

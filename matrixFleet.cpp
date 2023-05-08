@@ -384,6 +384,9 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     weights.resize(numInputs * numOutputs);
     row.resize(numInputs);
 
+    MutationFloatParams mfp;
+    Mutate_DefaultFloatParams(&mfp, MUTATION_TYPE_ANY);
+
     for (i = 0; i < numOutputs; i++) {
         MBString rowStr;
         uint j;
@@ -397,16 +400,20 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
         for (j = 0; j < numInputs; j++) {
             uint w = i * numInputs + j;
-            weights[w] = row[j];
+
+            if (j < row.size()) {
+                weights[w] = row[j];
+            } else {
+                weights[w] = Mutate_FloatRaw(0.0f, TRUE, &mfp);
+            }
         }
     }
 
-    MutationFloatParams mfp;
-    Mutate_DefaultFloatParams(&mfp, MUTATION_TYPE_ANY);
     for (uint w = 0; w < weights.size(); w++) {
         weights[w] = Mutate_FloatRaw(weights[w], FALSE, &mfp);
     }
 
+    row.resize(numInputs);
     for (i = 0; i < numOutputs; i++) {
         MBString rowStr;
         uint j;
@@ -416,7 +423,7 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         }
 
         char *lcstr = NULL;
-        int ret = asprintf(&lcstr, "weight[%d].", i);
+        int ret = asprintf(&lcstr, "weight[%d]", i);
         VERIFY(ret > 0);
         TextDump_Convert(row, rowStr);
         MBRegistry_PutCopy(mreg, lcstr, rowStr.CStr());

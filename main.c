@@ -1674,7 +1674,9 @@ static void MainMeasureCmd(void)
 
     ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
     for (uint i = 1; i < mainData.numPlayers; i++) {
-        VERIFY(mainData.players[i].playerType == PLAYER_TYPE_CONTROL);
+        if (mainData.players[i].playerType != PLAYER_TYPE_CONTROL) {
+            PANIC("measure needs a control fleet\n");
+        }
     }
     uint lastControl = mainData.numPlayers - 1;
 
