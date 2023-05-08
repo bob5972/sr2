@@ -834,7 +834,7 @@ void NeuralForce_Mutate(MBRegistry *mreg, float rate, const char *prefix)
         s = prefix;
         s += strs[i];
         bf.key = s.CStr();
-        bf.flipRate = rate;
+        bf.flipRate = rate / 2.0f;
         Mutate_Bool(mreg, &bf, 1);
     }
 }
