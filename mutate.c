@@ -146,7 +146,7 @@ void Mutate_DefaultFloatParams(MutationFloatParams *vf, MutationType type)
         vf->minValue = -10.0f;
         vf->maxValue = 10.0f;
         vf->magnitude = 0.05f;
-        vf->jumpRate = 0.10f;
+        vf->jumpRate = 0.15f;
         vf->mutationRate = 0.05f;
     } else if (type == MUTATION_TYPE_AMPLITUDE ||
                type == MUTATION_TYPE_BOOL ||
