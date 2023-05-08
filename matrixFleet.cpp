@@ -386,6 +386,7 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
 
     MutationFloatParams mfp;
     Mutate_DefaultFloatParams(&mfp, MUTATION_TYPE_WEIGHT);
+    mfp.mutationRate = (mfp.mutationRate + rate) / 2.0f;
 
     for (i = 0; i < numOutputs; i++) {
         MBString rowStr;
