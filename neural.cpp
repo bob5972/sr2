@@ -2258,9 +2258,11 @@ float NeuralValue_GetValue(AIContext *nc,
             return (float)sg->numTargets(MOB_FLAG_SHIP);
         case NEURAL_VALUE_ENEMY_MISSILES:
             return (float)sg->numTargets(MOB_FLAG_MISSILE);
+        case NEURAL_VALUE_SCALAR:
+            return 0.0f;
 
         default:
-            NOT_IMPLEMENTED();
+            PANIC("Unknown NeuralValue type=%d\n", desc->valueType);
     }
 }
 

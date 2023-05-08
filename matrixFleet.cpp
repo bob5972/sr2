@@ -34,6 +34,8 @@
 
 #define MATRIX_SCRAMBLE_KEY "matrix.scrambleMutation"
 
+#define MATRIX_DEFAULT_NODES 8
+
 
 class MatrixAIGovernor : public BasicAIGovernor
 {
@@ -84,7 +86,7 @@ public:
         s = "numInputs";
         numInputs = MBRegistry_GetUint(mreg, s.CStr());
         if (numInputs == 0) {
-            numInputs = NEURAL_FORCE_MAX - 1;
+            numInputs = MATRIX_DEFAULT_NODES;
         }
         inputs.resize(numInputs);
         inputDescs.resize(numInputs);
@@ -92,7 +94,7 @@ public:
         s = "numOutputs";
         numOutputs = MBRegistry_GetUint(mreg, s.CStr());
         if (numOutputs == 0) {
-            numOutputs = NEURAL_FORCE_MAX - 1;
+            numOutputs = MATRIX_DEFAULT_NODES;
         }
         outputs.resize(numOutputs);
         outputDescs.resize(numOutputs);
@@ -187,11 +189,13 @@ public:
 
         uint w = 0;
         for (i = 0; i < numOutputs; i++) {
-            uint j;
+            uint j = 0;
             outputs[i] = 0.0f;
-            for (j = 0; j < numInputs; j++) {
+
+            while (j < numInputs) {
                 outputs[i] += weights[w] * inputs[j];
                 w++;
+                j++;
             }
         }
 
@@ -316,7 +320,7 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         { "gatherAbandonStale",          0.02f },
     };
 
-    float rate = 0.01;
+    float rate = 0.10;
     MBRegistry_PutCopy(mreg, MATRIX_SCRAMBLE_KEY, "FALSE");
 
     if (Random_Flip(0.10)) {
@@ -325,6 +329,10 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         if (Random_Flip(0.01)) {
             rate = 1.0f;
             MBRegistry_PutCopy(mreg, MATRIX_SCRAMBLE_KEY, "TRUE");
+        }
+
+        if (rate >= 1.0f) {
+            rate = 1.0f;
         }
     }
 
@@ -348,7 +356,7 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     s = "numInputs";
     numInputs = MBRegistry_GetUint(mreg, s.CStr());
     if (numInputs == 0) {
-        numInputs = NEURAL_FORCE_MAX - 1;
+        numInputs = MATRIX_DEFAULT_NODES;
     }
     for (i = 0; i < numInputs; i++) {
         char *lcstr = NULL;
@@ -361,7 +369,7 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
     s = "numOutputs";
     numOutputs = MBRegistry_GetUint(mreg, s.CStr());
     if (numOutputs == 0) {
-        numOutputs = NEURAL_FORCE_MAX - 1;
+        numOutputs = MATRIX_DEFAULT_NODES;
     }
     for (i = 0; i < numOutputs; i++) {
         char *lcstr = NULL;
@@ -381,7 +389,7 @@ static void MatrixFleetMutate(FleetAIType aiType, MBRegistry *mreg)
         uint j;
 
         char *lcstr = NULL;
-        int ret = asprintf(&lcstr, "weight[%d].", i);
+        int ret = asprintf(&lcstr, "weight[%d]", i);
         VERIFY(ret > 0);
         rowStr = MBRegistry_GetCStr(mreg, lcstr);
         TextDump_Convert(rowStr, row);
