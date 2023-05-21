@@ -21,6 +21,7 @@
 #include "mutate.h"
 #include "mobFilter.h"
 #include "ml.hpp"
+#include "flockFleet.hpp"
 
 static bool NeuralForceGeneMidway(AIContext *nc,
                                   Mob *mob,
@@ -134,6 +135,17 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_MOB_CENTER_SHELL),                },
     { TMENTRY(NEURAL_FORCE_MOB_CENTER_SECTOR),               },
     { TMENTRY(NEURAL_FORCE_LAST_TARGET_SHADOW),              },
+
+    { TMENTRY(NEURAL_FORCE_FLOCK1),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK2),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK3),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK4),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK5),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK6),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK7),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK8),                          },
+    { TMENTRY(NEURAL_FORCE_FLOCK9),                          },
+
     { TMENTRY(NEURAL_FORCE_GENE_MIDWAY),                     },
     { TMENTRY(NEURAL_FORCE_GENE_ENEMY_MISSILE),              },
     { TMENTRY(NEURAL_FORCE_GENE_RETREAT_COHERE),             },
@@ -1115,7 +1127,6 @@ static bool NeuralForceGetFlockFocus(AIContext *nc,
         useFriends = TRUE;
     }
 
-
     if ((flags & forwardF) != 0 || (flags & backwardF) != 0) {
         ASSERT((flags & forwardF) == 0 ||
                (flags & backwardF) == 0);
@@ -1853,6 +1864,43 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_LAST_TARGET_SHADOW: {
             Mob *m = nc->sg->farthestTargetShadow();
             return NeuralForceGetFocusMobPosHelper(m, focusPoint);
+        }
+
+        case NEURAL_FORCE_FLOCK1: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK1, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK2: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK2, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK3: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK3, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK4: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK4, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK5: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK5, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK6: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK6, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK7: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK7, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK8: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK8, mob, focusPoint);
+            return TRUE;
+        }
+        case NEURAL_FORCE_FLOCK9: {
+            FlockFleet_GetFocus(nc, FLEET_AI_FLOCK9, mob, focusPoint);
+            return TRUE;
         }
 
         case NEURAL_FORCE_GENE_MIDWAY: {

@@ -211,7 +211,7 @@ static void MainLoadDefaultPlayers(void)
         // mainData.players[p].aiType = FLEET_AI_HOLD;
         // p++;
 
-        mainData.players[p].aiType = FLEET_AI_FLOCK1;
+        mainData.players[p].aiType = FLEET_AI_FLOCK9;
         p++;
 
         mainData.players[p].aiType = FLEET_AI_BUNDLE15;

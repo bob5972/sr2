@@ -31,6 +31,69 @@ extern "C" {
 
 #include "flockFleet.hpp"
 
+typedef struct FlockFleetConfig {
+    bool randomIdle;
+    bool alwaysFlock;
+
+    float flockRadius;
+    uint flockCrowding;
+    float alignWeight;
+    float cohereWeight;
+    bool brokenCohere;
+
+    float separateRadius;
+    float separatePeriod;
+    float separateScale;
+    float separateWeight;
+
+    float edgeRadius;
+    float edgesWeight;
+    float centerRadius;
+    float centerWeight;
+
+    float coresRadius;
+    float coresWeight;
+    float coresCrowdRadius;
+    uint  coresCrowding;
+
+    float baseRadius;
+    float baseWeight;
+    float nearBaseRadius;
+    float baseDefenseRadius;
+
+    float enemyRadius;
+    float enemyWeight;
+    float enemyCrowdRadius;
+    uint  enemyCrowding;
+
+    float enemyBaseRadius;
+    float enemyBaseWeight;
+
+    float curHeadingWeight;
+
+    float attackSeparateRadius;
+    float attackSeparateWeight;
+
+    float locusRadius;
+    float locusWeight;
+    float locusCircularPeriod;
+    float locusCircularWeight;
+    float locusLinearXPeriod;
+    float locusLinearYPeriod;
+    float locusLinearWeight;
+    float locusRandomWeight;
+    uint  locusRandomPeriod;
+    bool  useScaledLocus;
+} FlockFleetConfig;
+
+typedef struct FlockFleetLiveState {
+    float separateRadius;
+    FPoint randomLocus;
+    uint randomLocusTick;
+} FlockFleetLiveState;
+
+
+
 typedef struct FlockConfigValue {
     const char *key;
     const char *value;
@@ -40,6 +103,9 @@ typedef enum FlockPullType {
     PULL_ALWAYS,
     PULL_RANGE,
 } FlockPullType;
+
+static const FlockFleetConfig *
+FlockFleetGetConfig(FleetAIType aiType);
 
 static void FlockFleetDoIdle(AIContext *aic,
                              const FlockFleetConfig *ffc,
@@ -1569,7 +1635,27 @@ static void FlockFleetFindLocus(AIContext *aic,
     }
 }
 
-const FlockFleetConfig *FlockFleet_GetConfig(FleetAIType aiType)
+void FlockFleet_GetFocus(AIContext *aic, FleetAIType aiType, Mob *m,
+                         FPoint *focusPoint)
+{
+    const FlockFleetConfig *ffc;
+    FlockFleetLiveState ffls;
+    Mob sMob;
+
+    sMob = *m;
+    sMob.type = MOB_TYPE_FIGHTER;
+
+    ffc = FlockFleetGetConfig(aiType);
+
+    MBUtil_Zero(&ffls, sizeof(ffls));
+    ffls.separateRadius = ffc->separateRadius;
+    FlockFleetDoIdle(aic, ffc, &ffls, &sMob, FALSE);
+
+    *focusPoint = sMob.cmd.target;
+}
+
+static const FlockFleetConfig *
+FlockFleetGetConfig(FleetAIType aiType)
 {
     static bool initialized = FALSE;
     static FlockFleetConfig config1;
