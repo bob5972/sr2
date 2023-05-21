@@ -166,7 +166,6 @@ static inline float FPoint_ToRadius(const FPoint *p)
     float radius;
     ASSERT(p != NULL);
     radius = sqrtf((p->x * p->x) + (p->y * p->y));
-    ASSERT(radius >= 0.0f);
     return radius;
 }
 

@@ -29,6 +29,8 @@ extern "C" {
 #include "basicShipAI.hpp"
 #include "MBMap.hpp"
 
+#include "flockFleet.hpp"
+
 typedef struct FlockConfigValue {
     const char *key;
     const char *value;
@@ -1215,66 +1217,8 @@ public:
         BasicAIGovernor::runMob(mob);
     }
 
-    struct {
-        bool randomIdle;
-        bool alwaysFlock;
-
-        float flockRadius;
-        uint flockCrowding;
-        float alignWeight;
-        float cohereWeight;
-        bool brokenCohere;
-
-        float separateRadius;
-        float separatePeriod;
-        float separateScale;
-        float separateWeight;
-
-        float edgeRadius;
-        float edgesWeight;
-        float centerRadius;
-        float centerWeight;
-
-        float coresRadius;
-        float coresWeight;
-        float coresCrowdRadius;
-        uint  coresCrowding;
-
-        float baseRadius;
-        float baseWeight;
-        float nearBaseRadius;
-        float baseDefenseRadius;
-
-        float enemyRadius;
-        float enemyWeight;
-        float enemyCrowdRadius;
-        uint  enemyCrowding;
-
-        float enemyBaseRadius;
-        float enemyBaseWeight;
-
-        float curHeadingWeight;
-
-        float attackSeparateRadius;
-        float attackSeparateWeight;
-
-        float locusRadius;
-        float locusWeight;
-        float locusCircularPeriod;
-        float locusCircularWeight;
-        float locusLinearXPeriod;
-        float locusLinearYPeriod;
-        float locusLinearWeight;
-        float locusRandomWeight;
-        uint  locusRandomPeriod;
-        bool  useScaledLocus;
-    } myConfig;
-
-    struct {
-        float separateRadius;
-        FPoint randomLocus;
-        uint randomLocusTick;
-    } myLive;
+    FlockFleetConfig myConfig;
+    FlockFleetLiveState myLive;
 };
 
 class FlockFleet {
