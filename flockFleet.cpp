@@ -41,6 +41,10 @@ typedef enum FlockPullType {
     PULL_RANGE,
 } FlockPullType;
 
+static void FlockFleetDoIdle(AIContext *aic,
+                             const FlockFleetConfig *ffc,
+                             FlockFleetLiveState *ffls,
+                             Mob *m, bool newlyIdle);
 
 static void FlockFleetAlign(const FlockFleetConfig *ffc,
                             const FPoint *avgVel, FRPoint *rPos);
@@ -775,7 +779,7 @@ public:
             return;
         }
 
-        FlockFleet_DoIdle(&aic, &myConfig, &myLive, mob, newlyIdle);
+        FlockFleetDoIdle(&aic, &myConfig, &myLive, mob, newlyIdle);
     }
 
     virtual void runTick() {
@@ -1049,10 +1053,11 @@ static void FlockFleetRunAITick(void *aiHandle)
 }
 
 
-void FlockFleet_DoIdle(AIContext *aic,
-                       const FlockFleetConfig *ffc,
-                       FlockFleetLiveState *ffls,
-                       Mob *mob, bool newlyIdle)
+static void
+FlockFleetDoIdle(AIContext *aic,
+                 const FlockFleetConfig *ffc,
+                 FlockFleetLiveState *ffls,
+                 Mob *mob, bool newlyIdle)
 {
         FleetAI *ai = aic->ai;
         RandomState *rs = aic->rs;
