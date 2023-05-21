@@ -1059,116 +1059,116 @@ FlockFleetDoIdle(AIContext *aic,
                  FlockFleetLiveState *ffls,
                  Mob *mob, bool newlyIdle)
 {
-        FleetAI *ai = aic->ai;
-        RandomState *rs = aic->rs;
-        SensorGrid *sg = aic->sg;
+    FleetAI *ai = aic->ai;
+    RandomState *rs = aic->rs;
+    SensorGrid *sg = aic->sg;
 
-        Mob *base = sg->friendBase();
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-        bool nearBase;
-        bool doFlock;
+    Mob *base = sg->friendBase();
+    float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+    bool nearBase;
+    bool doFlock;
 
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
 
-        nearBase = FALSE;
-        if (base != NULL &&
-            ffc->nearBaseRadius > 0.0f &&
-            FPoint_Distance(&base->pos, &mob->pos) < ffc->nearBaseRadius) {
-            nearBase = TRUE;
-        }
+    nearBase = FALSE;
+    if (base != NULL &&
+        ffc->nearBaseRadius > 0.0f &&
+        FPoint_Distance(&base->pos, &mob->pos) < ffc->nearBaseRadius) {
+        nearBase = TRUE;
+    }
 
-        doFlock = FALSE;
-        if (ffc->flockCrowding <= 1 ||
-            sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos,
-                                  ffc->flockRadius) >= ffc->flockCrowding) {
-            doFlock = TRUE;
-        }
+    doFlock = FALSE;
+    if (ffc->flockCrowding <= 1 ||
+        sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos,
+                                ffc->flockRadius) >= ffc->flockCrowding) {
+        doFlock = TRUE;
+    }
 
-        if (!nearBase && (ffc->alwaysFlock || doFlock)) {
-            FRPoint rForce, rPos;
+    if (!nearBase && (ffc->alwaysFlock || doFlock)) {
+        FRPoint rForce, rPos;
 
-            FRPoint_Zero(&rForce);
-            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+        FRPoint_Zero(&rForce);
+        FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-            if (doFlock) {
-                FPoint avgVel;
-                FPoint avgPos;
-                sg->friendAvgVel(&avgVel, &mob->pos,
+        if (doFlock) {
+            FPoint avgVel;
+            FPoint avgPos;
+            sg->friendAvgVel(&avgVel, &mob->pos,
+                            ffc->flockRadius, MOB_FLAG_FIGHTER);
+            sg->friendAvgPos(&avgPos, &mob->pos,
                                 ffc->flockRadius, MOB_FLAG_FIGHTER);
-                sg->friendAvgPos(&avgPos, &mob->pos,
-                                 ffc->flockRadius, MOB_FLAG_FIGHTER);
 
-                FlockFleetAlign(ffc, &avgVel, &rForce);
-                FlockFleetCohere(aic, ffc, mob, &avgPos, &rForce);
+            FlockFleetAlign(ffc, &avgVel, &rForce);
+            FlockFleetCohere(aic, ffc, mob, &avgPos, &rForce);
 
-                FlockFleetSeparate(aic, mob, &rForce, ffls->separateRadius,
-                                   ffc->separateWeight);
-            }
-
-            FlockFleetAvoidEdges(aic, mob, &rForce, ffc->edgeRadius,
-                                 ffc->edgesWeight);
-            FlockFleetFindCenter(aic, mob, &rForce, ffc->centerRadius,
-                                 ffc->centerWeight);
-            FlockFleetFindBase(aic, mob, &rForce, ffc->baseRadius,
-                               ffc->baseWeight);
-            FlockFleetFindEnemies(aic, ffc, mob, &rForce, ffc->enemyRadius,
-                                  ffc->enemyWeight);
-            FlockFleetFindEnemyBase(aic, mob, &rForce, ffc->enemyBaseRadius,
-                                    ffc->enemyBaseWeight);
-            FlockFleetFindCores(aic, ffc, mob, &rForce, ffc->coresRadius,
-                                ffc->coresWeight);
-            FlockFleetFindLocus(aic, ffc, ffls, mob, &rForce);
-
-            rPos.radius = ffc->curHeadingWeight;
-            FRPoint_Add(&rPos, &rForce, &rPos);
-            rPos.radius = speed;
-
-            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
-            ASSERT(!isnanf(mob->cmd.target.x));
-            ASSERT(!isnanf(mob->cmd.target.y));
-        } else if (newlyIdle) {
-            if (ffc->randomIdle) {
-                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
-            }
+            FlockFleetSeparate(aic, mob, &rForce, ffls->separateRadius,
+                                ffc->separateWeight);
         }
 
+        FlockFleetAvoidEdges(aic, mob, &rForce, ffc->edgeRadius,
+                             ffc->edgesWeight);
+        FlockFleetFindCenter(aic, mob, &rForce, ffc->centerRadius,
+                             ffc->centerWeight);
+        FlockFleetFindBase(aic, mob, &rForce, ffc->baseRadius,
+                            ffc->baseWeight);
+        FlockFleetFindEnemies(aic, ffc, mob, &rForce, ffc->enemyRadius,
+                              ffc->enemyWeight);
+        FlockFleetFindEnemyBase(aic, mob, &rForce, ffc->enemyBaseRadius,
+                                ffc->enemyBaseWeight);
+        FlockFleetFindCores(aic, ffc, mob, &rForce, ffc->coresRadius,
+                            ffc->coresWeight);
+        FlockFleetFindLocus(aic, ffc, ffls, mob, &rForce);
+
+        rPos.radius = ffc->curHeadingWeight;
+        FRPoint_Add(&rPos, &rForce, &rPos);
+        rPos.radius = speed;
+
+        FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
         ASSERT(!isnanf(mob->cmd.target.x));
         ASSERT(!isnanf(mob->cmd.target.y));
-    }
-
-
-    static void FlockFleetAlign(const FlockFleetConfig *ffc,
-                                const FPoint *avgVel, FRPoint *rPos)
-    {
-        float weight = ffc->alignWeight;
-        FRPoint ravgVel;
-
-        FPoint_ToFRPoint(avgVel, NULL, &ravgVel);
-        ravgVel.radius = weight;
-
-        FRPoint_Add(rPos, &ravgVel, rPos);
-    }
-
-    static void FlockFleetCohere(AIContext *aic,
-                                 const FlockFleetConfig *ffc,
-                                 Mob *mob,
-                                 const FPoint *avgPos,
-                                 FRPoint *rPos) {
-        FPoint lAvgPos;
-        float weight = ffc->cohereWeight;
-
-        if (ffc->brokenCohere) {
-            FlockFleetBrokenCoherePos(aic, ffc, &lAvgPos, &mob->pos);
-        } else {
-            lAvgPos = *avgPos;
+    } else if (newlyIdle) {
+        if (ffc->randomIdle) {
+            mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+            mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
         }
-
-        FRPoint ravgPos;
-        FPoint_ToFRPoint(&lAvgPos, NULL, &ravgPos);
-        ravgPos.radius = weight;
-        FRPoint_Add(rPos, &ravgPos, rPos);
     }
+
+    ASSERT(!isnanf(mob->cmd.target.x));
+    ASSERT(!isnanf(mob->cmd.target.y));
+}
+
+
+static void FlockFleetAlign(const FlockFleetConfig *ffc,
+                            const FPoint *avgVel, FRPoint *rPos)
+{
+    float weight = ffc->alignWeight;
+    FRPoint ravgVel;
+
+    FPoint_ToFRPoint(avgVel, NULL, &ravgVel);
+    ravgVel.radius = weight;
+
+    FRPoint_Add(rPos, &ravgVel, rPos);
+}
+
+static void FlockFleetCohere(AIContext *aic,
+                                const FlockFleetConfig *ffc,
+                                Mob *mob,
+                                const FPoint *avgPos,
+                                FRPoint *rPos) {
+    FPoint lAvgPos;
+    float weight = ffc->cohereWeight;
+
+    if (ffc->brokenCohere) {
+        FlockFleetBrokenCoherePos(aic, ffc, &lAvgPos, &mob->pos);
+    } else {
+        lAvgPos = *avgPos;
+    }
+
+    FRPoint ravgPos;
+    FPoint_ToFRPoint(&lAvgPos, NULL, &ravgPos);
+    ravgPos.radius = weight;
+    FRPoint_Add(rPos, &ravgPos, rPos);
+}
 
 
 static void FlockFleetBrokenCoherePos(AIContext *aic,
@@ -1567,4 +1567,434 @@ static void FlockFleetFindLocus(AIContext *aic,
                              ffc->locusRadius,
                              ffc->locusWeight, PULL_RANGE);
     }
+}
+
+const FlockFleetConfig *FlockFleet_GetConfig(FleetAIType aiType)
+{
+    static bool initialized = FALSE;
+    static FlockFleetConfig config1;
+    static FlockFleetConfig config2;
+    static FlockFleetConfig config3;
+    static FlockFleetConfig config4;
+    static FlockFleetConfig config5;
+    static FlockFleetConfig config6;
+    static FlockFleetConfig config7;
+    static FlockFleetConfig config8;
+    static FlockFleetConfig config9;
+
+    if (!initialized) {
+        config1.randomIdle = TRUE;
+        config1.alwaysFlock = FALSE;
+        config1.flockRadius = 166.699997;
+        config1.flockCrowding = 2;
+        config1.alignWeight = 0.200000003;
+        config1.cohereWeight = -0.100000001;
+        config1.brokenCohere = TRUE;
+        config1.separateRadius = 50;
+        config1.separatePeriod = 0;
+        config1.separateScale = 50;
+        config1.separateWeight = 0.200000003;
+        config1.edgeRadius = 100;
+        config1.edgesWeight = 0.899999976;
+        config1.centerRadius = 0;
+        config1.centerWeight = 0;
+        config1.coresRadius = 166.699997;
+        config1.coresWeight = 0.100000001;
+        config1.coresCrowdRadius = 166.699997;
+        config1.coresCrowding = 5;
+        config1.baseRadius = 100;
+        config1.baseWeight = 0;
+        config1.nearBaseRadius = 250;
+        config1.baseDefenseRadius = 250;
+        config1.enemyRadius = 166.699997;
+        config1.enemyWeight = 0.300000012;
+        config1.enemyCrowdRadius = 166.699997;
+        config1.enemyCrowding = 5;
+        config1.enemyBaseRadius = 100;
+        config1.enemyBaseWeight = 0;
+        config1.curHeadingWeight = 0.5;
+        config1.attackSeparateRadius = 166.699997;
+        config1.attackSeparateWeight = 0.5;
+        config1.locusRadius = 10000;
+        config1.locusWeight = 0;
+        config1.locusCircularPeriod = 1000;
+        config1.locusCircularWeight = 0;
+        config1.locusLinearXPeriod = 1000;
+        config1.locusLinearYPeriod = 1000;
+        config1.locusLinearWeight = 0;
+        config1.locusRandomWeight = 0;
+        config1.locusRandomPeriod = 1000;
+        config1.useScaledLocus = FALSE;
+
+        config2.randomIdle = TRUE;
+        config2.alwaysFlock = FALSE;
+        config2.flockRadius = 398.545197;
+        config2.flockCrowding = 2;
+        config2.alignWeight = 0.239647999;
+        config2.cohereWeight = -0.00650200015;
+        config2.brokenCohere = TRUE;
+        config2.separateRadius = 121.312904;
+        config2.separatePeriod = 0;
+        config2.separateScale = 50;
+        config2.separateWeight = 0.781239986;
+        config2.edgeRadius = 161.59343;
+        config2.edgesWeight = 0.704169989;
+        config2.centerRadius = 0;
+        config2.centerWeight = 0;
+        config2.coresRadius = 398.545197;
+        config2.coresWeight = 0.122679003;
+        config2.coresCrowdRadius = 398.545197;
+        config2.coresCrowding = 5;
+        config2.baseRadius = 100;
+        config2.baseWeight = 0;
+        config2.nearBaseRadius = 250;
+        config2.baseDefenseRadius = 250;
+        config2.enemyRadius = 398.545197;
+        config2.enemyWeight = 0.556688011;
+        config2.enemyCrowdRadius = 398.545197;
+        config2.enemyCrowding = 5;
+        config2.enemyBaseRadius = 100;
+        config2.enemyBaseWeight = 0;
+        config2.curHeadingWeight = 0.838760018;
+        config2.attackSeparateRadius = 398.545197;
+        config2.attackSeparateWeight = 0.188134;
+        config2.locusRadius = 10000;
+        config2.locusWeight = 0;
+        config2.locusCircularPeriod = 1000;
+        config2.locusCircularWeight = 0;
+        config2.locusLinearXPeriod = 1000;
+        config2.locusLinearYPeriod = 1000;
+        config2.locusLinearWeight = 0;
+        config2.locusRandomWeight = 0;
+        config2.locusRandomPeriod = 1000;
+        config2.useScaledLocus = FALSE;
+
+        config3.randomIdle = TRUE;
+        config3.alwaysFlock = FALSE;
+        config3.flockRadius = 338;
+        config3.flockCrowding = 2;
+        config3.alignWeight = 0;
+        config3.cohereWeight = -0.233058006;
+        config3.brokenCohere = TRUE;
+        config3.separateRadius = 121.312904;
+        config3.separatePeriod = 0;
+        config3.separateScale = 50;
+        config3.separateWeight = 0.781239986;
+        config3.edgeRadius = 10;
+        config3.edgesWeight = 0.100000001;
+        config3.centerRadius = 0;
+        config3.centerWeight = 0;
+        config3.coresRadius = 1;
+        config3.coresWeight = 0;
+        config3.coresCrowdRadius = 1;
+        config3.coresCrowding = 2;
+        config3.baseRadius = 54;
+        config3.baseWeight = -0.58948499;
+        config3.nearBaseRadius = 8;
+        config3.baseDefenseRadius = 64;
+        config3.enemyRadius = 398.545197;
+        config3.enemyWeight = 0.931403995;
+        config3.enemyCrowdRadius = 398.545197;
+        config3.enemyCrowding = 5;
+        config3.enemyBaseRadius = 103;
+        config3.enemyBaseWeight = 0;
+        config3.curHeadingWeight = 0.838760018;
+        config3.attackSeparateRadius = 8;
+        config3.attackSeparateWeight = 0;
+        config3.locusRadius = 10000;
+        config3.locusWeight = 0;
+        config3.locusCircularPeriod = 1000;
+        config3.locusCircularWeight = 0;
+        config3.locusLinearXPeriod = 1000;
+        config3.locusLinearYPeriod = 1000;
+        config3.locusLinearWeight = 0;
+        config3.locusRandomWeight = 0;
+        config3.locusRandomPeriod = 1000;
+        config3.useScaledLocus = FALSE;
+
+        config4.randomIdle = TRUE;
+        config4.alwaysFlock = FALSE;
+        config4.flockRadius = 129.883743;
+        config4.flockCrowding = 2;
+        config4.alignWeight = 0.295572996;
+        config4.cohereWeight = -0.097492002;
+        config4.brokenCohere = TRUE;
+        config4.separateRadius = 121.312904;
+        config4.separatePeriod = 0;
+        config4.separateScale = 50;
+        config4.separateWeight = 0.781239986;
+        config4.edgeRadius = 23.6063786;
+        config4.edgesWeight = 0.95856899;
+        config4.centerRadius = 0;
+        config4.centerWeight = 0;
+        config4.coresRadius = 93.7690353;
+        config4.coresWeight = 0.210546002;
+        config4.coresCrowdRadius = 93.7690353;
+        config4.coresCrowding = 7;
+        config4.baseRadius = 38.2077713;
+        config4.baseWeight = 0.181976005;
+        config4.nearBaseRadius = 53.9313965;
+        config4.baseDefenseRadius = 49.0610542;
+        config4.enemyRadius = 398.545197;
+        config4.enemyWeight = 0.931403995;
+        config4.enemyCrowdRadius = 398.545197;
+        config4.enemyCrowding = 5;
+        config4.enemyBaseRadius = 10;
+        config4.enemyBaseWeight = -0.949999988;
+        config4.curHeadingWeight = 0.215320006;
+        config4.attackSeparateRadius = 26.1843128;
+        config4.attackSeparateWeight = -0.942996025;
+        config4.locusRadius = 10000;
+        config4.locusWeight = 0;
+        config4.locusCircularPeriod = 1000;
+        config4.locusCircularWeight = 0;
+        config4.locusLinearXPeriod = 1000;
+        config4.locusLinearYPeriod = 1000;
+        config4.locusLinearWeight = 0;
+        config4.locusRandomWeight = 0;
+        config4.locusRandomPeriod = 1000;
+        config4.useScaledLocus = FALSE;
+
+        config5.randomIdle = TRUE;
+        config5.alwaysFlock = FALSE;
+        config5.flockRadius = 136.132584;
+        config5.flockCrowding = 2;
+        config5.alignWeight = 0.193725005;
+        config5.cohereWeight = -0.365141004;
+        config5.brokenCohere = TRUE;
+        config5.separateRadius = 121.312904;
+        config5.separatePeriod = 0;
+        config5.separateScale = 50;
+        config5.separateWeight = 0.781239986;
+        config5.edgeRadius = 117.935951;
+        config5.edgesWeight = 0.00806500018;
+        config5.centerRadius = 45.7827339;
+        config5.centerWeight = 0.613753021;
+        config5.coresRadius = 134.762024;
+        config5.coresWeight = 0.239871994;
+        config5.coresCrowdRadius = 0;
+        config5.coresCrowding = 18;
+        config5.baseRadius = 391.563629;
+        config5.baseWeight = -0.319866002;
+        config5.nearBaseRadius = 1.10249996;
+        config5.baseDefenseRadius = 66.977211;
+        config5.enemyRadius = 0;
+        config5.enemyWeight = 0.936233997;
+        config5.enemyCrowdRadius = 0;
+        config5.enemyCrowding = 0;
+        config5.enemyBaseRadius = 43.7517242;
+        config5.enemyBaseWeight = 0.0962840021;
+        config5.curHeadingWeight = 0.987312973;
+        config5.attackSeparateRadius = 451.420227;
+        config5.attackSeparateWeight = -1;
+        config5.locusRadius = 10000;
+        config5.locusWeight = 0;
+        config5.locusCircularPeriod = 1000;
+        config5.locusCircularWeight = 0;
+        config5.locusLinearXPeriod = 1000;
+        config5.locusLinearYPeriod = 1000;
+        config5.locusLinearWeight = 0;
+        config5.locusRandomWeight = 0;
+        config5.locusRandomPeriod = 1000;
+        config5.useScaledLocus = FALSE;
+
+        config6.randomIdle = TRUE;
+        config6.alwaysFlock = TRUE;
+        config6.flockRadius = 97.0544891;
+        config6.flockCrowding = 2;
+        config6.alignWeight = -0.355190009;
+        config6.cohereWeight = -0.356305003;
+        config6.brokenCohere = TRUE;
+        config6.separateRadius = 129.375519;
+        config6.separatePeriod = 104.161858;
+        config6.separateScale = 57.952076;
+        config6.separateWeight = 0.78241998;
+        config6.edgeRadius = 27.1862507;
+        config6.edgesWeight = 0.742007971;
+        config6.centerRadius = 341.787628;
+        config6.centerWeight = 0.0947659984;
+        config6.coresRadius = 579.377625;
+        config6.coresWeight = 0.0126719996;
+        config6.coresCrowdRadius = 822.282104;
+        config6.coresCrowding = 7;
+        config6.baseRadius = 364.446167;
+        config6.baseWeight = -0.578068972;
+        config6.nearBaseRadius = 31.8238716;
+        config6.baseDefenseRadius = 64.1558914;
+        config6.enemyRadius = 335.253326;
+        config6.enemyWeight = 0.893275976;
+        config6.enemyCrowdRadius = 178.703293;
+        config6.enemyCrowding = 2;
+        config6.enemyBaseRadius = 46.0379486;
+        config6.enemyBaseWeight = -0.69225502;
+        config6.curHeadingWeight = 1;
+        config6.attackSeparateRadius = 3.15890789;
+        config6.attackSeparateWeight = -0.846665978;
+        config6.locusRadius = 1.04999995;
+        config6.locusWeight = 0.796088994;
+        config6.locusCircularPeriod = 1986.38318;
+        config6.locusCircularWeight = -0.623962998;
+        config6.locusLinearXPeriod = 4605.29395;
+        config6.locusLinearYPeriod = 9429.93359;
+        config6.locusLinearWeight = -0.00268299994;
+        config6.locusRandomWeight = 0;
+        config6.locusRandomPeriod = 1000;
+        config6.useScaledLocus = FALSE;
+
+        config7.randomIdle = TRUE;
+        config7.alwaysFlock = TRUE;
+        config7.flockRadius = 106.468208;
+        config7.flockCrowding = 2;
+        config7.alignWeight = -0.0708919987;
+        config7.cohereWeight = -0.0634369999;
+        config7.brokenCohere = TRUE;
+        config7.separateRadius = 119.961555;
+        config7.separatePeriod = 0;
+        config7.separateScale = 0;
+        config7.separateWeight = 0.949999988;
+        config7.edgeRadius = 25.1617184;
+        config7.edgesWeight = 0.296447009;
+        config7.centerRadius = 432.775909;
+        config7.centerWeight = 0.090749003;
+        config7.coresRadius = 579.820801;
+        config7.coresWeight = 0.113381997;
+        config7.coresCrowdRadius = 809.355225;
+        config7.coresCrowding = 11;
+        config7.baseRadius = 339.388031;
+        config7.baseWeight = -0.585777998;
+        config7.nearBaseRadius = 36.9324379;
+        config7.baseDefenseRadius = 67.3636856;
+        config7.enemyRadius = 278.176453;
+        config7.enemyWeight = 0.998551011;
+        config7.enemyCrowdRadius = 143.27301;
+        config7.enemyCrowding = 2;
+        config7.enemyBaseRadius = 85.4858627;
+        config7.enemyBaseWeight = -0.619157016;
+        config7.curHeadingWeight = 0.857375026;
+        config7.attackSeparateRadius = 1.10249996;
+        config7.attackSeparateWeight = 1;
+        config7.locusRadius = 70.0718918;
+        config7.locusWeight = 0.0261669997;
+        config7.locusCircularPeriod = 6650.7583;
+        config7.locusCircularWeight = 0.581691027;
+        config7.locusLinearXPeriod = 5635.05273;
+        config7.locusLinearYPeriod = 2768.86206;
+        config7.locusLinearWeight = 0.624552011;
+        config7.locusRandomWeight = 0;
+        config7.locusRandomPeriod = 1000;
+        config7.useScaledLocus = FALSE;;
+
+        config8.randomIdle = TRUE;
+        config8.alwaysFlock = TRUE;
+        config8.flockRadius = 110.022324;
+        config8.flockCrowding = 2;
+        config8.alignWeight = 0.941103995;
+        config8.cohereWeight = 0.111732997;
+        config8.brokenCohere = TRUE;
+        config8.separateRadius = 117.64901;
+        config8.separatePeriod = 198.535645;
+        config8.separateScale = 0;
+        config8.separateWeight = 0.902499974;
+        config8.edgeRadius = 24.759119;
+        config8.edgesWeight = 0.753382981;
+        config8.centerRadius = 0;
+        config8.centerWeight = -0.0499639995;
+        config8.coresRadius = 561.107605;
+        config8.coresWeight = 0.270990014;
+        config8.coresCrowdRadius = 446.78418;
+        config8.coresCrowding = 10;
+        config8.baseRadius = 251.561218;
+        config8.baseWeight = -0.594067991;
+        config8.nearBaseRadius = 58.2762833;
+        config8.baseDefenseRadius = 7.76565123;
+        config8.enemyRadius = 469.026489;
+        config8.enemyWeight = 0.827750981;
+        config8.enemyCrowdRadius = 737.966675;
+        config8.enemyCrowding = 8;
+        config8.enemyBaseRadius = 190.747162;
+        config8.enemyBaseWeight = -0.268014014;
+        config8.curHeadingWeight = 0.608142018;
+        config8.attackSeparateRadius = 5.24473906;
+        config8.attackSeparateWeight = 1;
+        config8.locusRadius = 1;
+        config8.locusWeight = -0.181500003;
+        config8.locusCircularPeriod = 9389.41211;
+        config8.locusCircularWeight = -0.191549003;
+        config8.locusLinearXPeriod = 4819.62744;
+        config8.locusLinearYPeriod = 4481.78223;
+        config8.locusLinearWeight = 0.0242490005;
+        config8.locusRandomWeight = 0;
+        config8.locusRandomPeriod = 1000;
+        config8.useScaledLocus = FALSE;;
+
+        config9.randomIdle = TRUE;
+        config9.alwaysFlock = TRUE;
+        config9.flockRadius = 105.816391;
+        config9.flockCrowding = 2;
+        config9.alignWeight = 1;
+        config9.cohereWeight = 0.048618;
+        config9.brokenCohere = TRUE;
+        config9.separateRadius = 105.912781;
+        config9.separatePeriod = 1543.55334;
+        config9.separateScale = 0;
+        config9.separateWeight = 0.83931601;
+        config9.edgeRadius = 26.9308472;
+        config9.edgesWeight = 0.482820988;
+        config9.centerRadius = 761.465576;
+        config9.centerWeight = -0.0489649996;
+        config9.coresRadius = 776.426697;
+        config9.coresWeight = 0.197949007;
+        config9.coresCrowdRadius = 135.280548;
+        config9.coresCrowding = 4;
+        config9.baseRadius = 292.362305;
+        config9.baseWeight = -0.328720003;
+        config9.nearBaseRadius = 10.0772543;
+        config9.baseDefenseRadius = 1.10249996;
+        config9.enemyRadius = 261.936279;
+        config9.enemyWeight = 0.518455029;
+        config9.enemyCrowdRadius = 728.962708;
+        config9.enemyCrowding = 9;
+        config9.enemyBaseRadius = 224.461044;
+        config9.enemyBaseWeight = 0.633769989;
+        config9.curHeadingWeight = 0.499466002;
+        config9.attackSeparateRadius = 116.610649;
+        config9.attackSeparateWeight = -0.846049011;
+        config9.locusRadius = 104.19899;
+        config9.locusWeight = -0.655255973;
+        config9.locusCircularPeriod = 9653.47168;
+        config9.locusCircularWeight = -0.779812992;
+        config9.locusLinearXPeriod = 7472.03223;
+        config9.locusLinearYPeriod = 8851.4043;
+        config9.locusLinearWeight = -0.803490996;
+        config9.locusRandomWeight = 0;
+        config9.locusRandomPeriod = 1000;
+        config9.useScaledLocus = FALSE;;
+
+        initialized = TRUE;
+    }
+
+    switch (aiType) {
+        case FLEET_AI_FLOCK1:
+            return &config1;
+        case FLEET_AI_FLOCK2:
+            return &config2;
+            case FLEET_AI_FLOCK3:
+            return &config3;
+        case FLEET_AI_FLOCK4:
+            return &config4;
+            case FLEET_AI_FLOCK5:
+            return &config5;
+        case FLEET_AI_FLOCK6:
+            return &config6;
+        case FLEET_AI_FLOCK7:
+            return &config7;
+        case FLEET_AI_FLOCK8:
+            return &config8;
+        case FLEET_AI_FLOCK9:
+            return &config9;
+        default:
+            NOT_IMPLEMENTED();
+    }
+
+    NOT_REACHED();
 }
