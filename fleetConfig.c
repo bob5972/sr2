@@ -144,6 +144,7 @@ static const FleetConfigValue FC_bineural5[] = {
 };
 
 static const FleetConfigValue FC_matrix1[] = {
+#include "fleetData/matrix1.config"
 };
 
 static const FleetConfigValue FC_matrixDefaults[] = {
