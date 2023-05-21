@@ -41,6 +41,65 @@ typedef enum FlockPullType {
     PULL_RANGE,
 } FlockPullType;
 
+
+static void FlockFleetAlign(const FlockFleetConfig *ffc,
+                            const FPoint *avgVel, FRPoint *rPos);
+static void FlockFleetCohere(AIContext *aic, const FlockFleetConfig *ffc,
+                             Mob *mob, const FPoint *avgPos, FRPoint *rPos);
+static void FlockFleetBrokenCoherePos(AIContext *aic,
+                                      const FlockFleetConfig *ffc,
+                                      FPoint *avgPos, const FPoint *center);
+static void FlockFleetSeparate(AIContext *aic,
+                               Mob *mob, FRPoint *rPos,
+                               float radius, float weight);
+
+static void FlockFleetRepulseVector(AIContext *aic,
+                                    FRPoint *repulseVec,
+                                    FPoint *pos, FPoint *c,
+                                    float repulseRadius);
+
+static void FlockFleetAvoidEdges(AIContext *aic,
+                                 Mob *mob, FRPoint *rPos,
+                                 float repulseRadius, float weight);
+
+static float FlockFleetEdgeDistance(AIContext *aic, FPoint *pos);
+
+static void FlockFleetFindCenter(AIContext *aic,
+                                 Mob *mob, FRPoint *rPos,
+                                 float radius, float weight);
+
+static void
+FlockFleetPullVector(FRPoint *curForce,
+                     const FPoint *cPos, const FPoint *tPos,
+                     float radius, float weight, FlockPullType pType);
+
+static void
+FlockFleetFindBase(AIContext *aic,
+                   Mob *mob, FRPoint *rPos,
+                   float radius, float weight);
+
+
+static void
+FlockFleetFindEnemyBase(AIContext *aic,
+                        Mob *mob, FRPoint *rPos,
+                        float radius, float weight);
+
+static void
+FlockFleetFindEnemies(AIContext *aic,
+                      const FlockFleetConfig *ffc,
+                      Mob *mob, FRPoint *rPos,
+                      float radius, float weight);
+
+static void
+FlockFleetFindCores(AIContext *aic,
+                    const FlockFleetConfig *ffc,
+                    Mob *mob, FRPoint *rPos, float radius, float weight);
+
+static void FlockFleetFindLocus(AIContext *aic,
+                                const FlockFleetConfig *ffc,
+                                FlockFleetLiveState *ffls,
+                                Mob *mob, FRPoint *rPos);
+
 class FlockAIGovernor : public BasicAIGovernor
 {
 public:
@@ -680,404 +739,35 @@ public:
         this->BasicAIGovernor::loadRegistry(mreg);
     }
 
-    void flockAlign(const FPoint *avgVel, FRPoint *rPos) {
-        float weight = myConfig.alignWeight;
-        FRPoint ravgVel;
-
-        FPoint_ToFRPoint(avgVel, NULL, &ravgVel);
-        ravgVel.radius = weight;
-
-        FRPoint_Add(rPos, &ravgVel, rPos);
-    }
-
-    void brokenCoherePos(FPoint *avgPos, const FPoint *center) {
-        SensorGrid *sg = mySensorGrid;
-        MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
-        FPoint lAvgPos;
-        float flockRadius = myConfig.flockRadius;
-
-        lAvgPos.x = 0.0f;
-        lAvgPos.y = 0.0f;
-
-        while (mit.hasNext()) {
-            Mob *f = mit.next();
-            ASSERT(f != NULL);
-
-            if (FPoint_Distance(&f->pos, center) <= flockRadius) {
-                /*
-                 * The broken version just sums the positions and doesn't
-                 * properly average them.
-                 */
-                lAvgPos.x += f->pos.x;
-                lAvgPos.y += f->pos.y;
-            }
-        }
-
-        ASSERT(avgPos != NULL);
-        *avgPos = lAvgPos;
-    }
-
-    void flockCohere(Mob *mob, const FPoint *avgPos, FRPoint *rPos) {
-        FPoint lAvgPos;
-        float weight = myConfig.cohereWeight;
-
-        if (myConfig.brokenCohere) {
-            brokenCoherePos(&lAvgPos, &mob->pos);
-        } else {
-            lAvgPos = *avgPos;
-        }
-
-        FRPoint ravgPos;
-        FPoint_ToFRPoint(&lAvgPos, NULL, &ravgPos);
-        ravgPos.radius = weight;
-        FRPoint_Add(rPos, &ravgPos, rPos);
-    }
-
-    void repulseVector(FRPoint *repulseVec, FPoint *pos, FPoint *c,
-                       float repulseRadius) {
-        RandomState *rs = &myRandomState;
-
-        FRPoint drp;
-
-        FPoint_ToFRPoint(pos, c, &drp);
-
-        ASSERT(drp.radius >= 0.0f);
-        ASSERT(repulseRadius >= 0.0f);
-
-        if (drp.radius <= MICRON) {
-            drp.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
-            drp.radius = 1.0f;
-        } else {
-            float repulsion;
-            float k = (drp.radius / repulseRadius) + 1.0f;
-            repulsion = 1.0f / (k * k);
-            drp.radius = -1.0f * repulsion;
-        }
-
-        FRPoint_Add(&drp, repulseVec, repulseVec);
-    }
-
-    void pullVector(FRPoint *curForce,
-                    const FPoint *cPos, const FPoint *tPos,
-                    float radius, float weight, FlockPullType pType) {
-        ASSERT(pType == PULL_ALWAYS ||
-               pType == PULL_RANGE);
-
-        if (pType == PULL_RANGE &&
-            FPoint_Distance(cPos, tPos) > radius) {
-            return;
-        } else if (weight == 0.0f) {
-            return;
-        }
-
-        FPoint eVec;
-        FRPoint reVec;
-        FPoint_Subtract(tPos, cPos, &eVec);
-        FPoint_ToFRPoint(&eVec, NULL, &reVec);
-        reVec.radius = weight;
-        FRPoint_Add(curForce, &reVec, curForce);
-    }
-
-    void flockSeparate(Mob *mob, FRPoint *rPos, float radius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        SensorGrid *sg = mySensorGrid;
-
-        MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
-        FRPoint repulseVec;
-
-        repulseVec.radius = 0.0f;
-        repulseVec.theta = 0.0f;
-
-        while (mit.hasNext()) {
-            Mob *f = mit.next();
-            ASSERT(f != NULL);
-
-
-            if (f->mobid != mob->mobid &&
-                FPoint_Distance(&f->pos, &mob->pos) <= radius) {
-                repulseVector(&repulseVec, &f->pos, &mob->pos, radius);
-            }
-        }
-
-        repulseVec.radius = weight;
-        FRPoint_Add(rPos, &repulseVec, rPos);
-    }
-
-    float edgeDistance(FPoint *pos) {
-        FleetAI *ai = myFleetAI;
-        float edgeDistance;
-        FPoint edgePoint;
-
-        edgePoint = *pos;
-        edgePoint.x = 0.0f;
-        edgeDistance = FPoint_Distance(pos, &edgePoint);
-
-        edgePoint = *pos;
-        edgePoint.x = ai->bp.width;
-        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
-
-        edgePoint = *pos;
-        edgePoint.y = 0.0f;
-        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
-
-        edgePoint = *pos;
-        edgePoint.y = ai->bp.height;
-        edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
-
-        return edgeDistance;
-    }
-
-    void avoidEdges(Mob *mob, FRPoint *rPos, float repulseRadius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        FleetAI *ai = myFleetAI;
-
-        if (edgeDistance(&mob->pos) >= repulseRadius) {
-            return;
-        }
-
-        FRPoint repulseVec;
-
-        repulseVec.radius = 0.0f;
-        repulseVec.theta = 0.0f;
-
-        FPoint edgePoint;
-
-        /*
-         * Left Edge
-         */
-        edgePoint = mob->pos;
-        edgePoint.x = 0.0f;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
-        }
-
-        /*
-         * Right Edge
-         */
-        edgePoint = mob->pos;
-        edgePoint.x = ai->bp.width;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
-        }
-
-        /*
-         * Top Edge
-         */
-        edgePoint = mob->pos;
-        edgePoint.y = 0.0f;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
-        }
-
-        /*
-         * Bottom edge
-         */
-        edgePoint = mob->pos;
-        edgePoint.y = ai->bp.height;
-        if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
-            repulseVector(&repulseVec, &edgePoint, &mob->pos,
-                          repulseRadius);
-        }
-
-        repulseVec.radius = weight;
-        FRPoint_Add(rPos, &repulseVec, rPos);
-    }
-
-
-    void findEnemies(Mob *mob, FRPoint *rPos, float radius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        SensorGrid *sg = mySensorGrid;
-        Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
-
-        if (enemy != NULL) {
-            int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                                   &mob->pos, myConfig.enemyCrowdRadius);
-            FlockPullType pType = numFriends >= myConfig.enemyCrowding ?
-                                  PULL_ALWAYS : PULL_RANGE;
-            pullVector(rPos, &mob->pos, &enemy->pos, radius, weight, pType);
-        }
-    }
-
-    void findCores(Mob *mob, FRPoint *rPos, float radius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        SensorGrid *sg = mySensorGrid;
-        Mob *core = sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
-
-        if (core != NULL) {
-            int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
-                                                   &mob->pos, myConfig.coresCrowdRadius);
-            FlockPullType pType = numFriends >= myConfig.coresCrowding ?
-                                  PULL_ALWAYS : PULL_RANGE;
-            pullVector(rPos, &mob->pos, &core->pos, radius, weight, pType);
-        }
-    }
-
-    void findCenter(Mob *mob, FRPoint *rPos, float radius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        FPoint center;
-        center.x = myFleetAI->bp.width / 2;
-        center.y = myFleetAI->bp.height / 2;
-        pullVector(rPos, &mob->pos, &center, radius, weight, PULL_RANGE);
-    }
-
-    void findLocus(Mob *mob, FRPoint *rPos) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        FPoint circular;
-        FPoint linear;
-        FPoint locus;
-        bool haveCircular = FALSE;
-        bool haveLinear = FALSE;
-        bool haveRandom = FALSE;
-        float width = myFleetAI->bp.width;
-        float height = myFleetAI->bp.height;
-        float temp;
-
-        if (myConfig.locusCircularPeriod > 0.0f &&
-            myConfig.locusCircularWeight != 0.0f) {
-            float cwidth = width / 2;
-            float cheight = height / 2;
-            float ct = myFleetAI->tick / myConfig.locusCircularPeriod;
-
-            /*
-             * This isn't actually the circumference of an ellipse,
-             * but it's a good approximation.
-             */
-            ct /= M_PI * (cwidth + cheight);
-
-            circular.x = cwidth + cwidth * cosf(ct);
-            circular.y = cheight + cheight * sinf(ct);
-            haveCircular = TRUE;
-        }
-
-        if (myConfig.locusRandomPeriod > 0.0f &&
-            myConfig.locusRandomWeight != 0.0f) {
-            /*
-             * XXX: Each ship will get a different random locus on the first
-             * tick.
-             */
-            if (myLive.randomLocusTick == 0 ||
-                myFleetAI->tick - myLive.randomLocusTick >
-                myConfig.locusRandomPeriod) {
-                RandomState *rs = &myRandomState;
-                myLive.randomLocus.x = RandomState_Float(rs, 0.0f, width);
-                myLive.randomLocus.y = RandomState_Float(rs, 0.0f, height);
-                myLive.randomLocusTick = myFleetAI->tick;
-            }
-            haveRandom = TRUE;
-        }
-
-        if (myConfig.locusLinearXPeriod > 0.0f &&
-            myConfig.locusLinearWeight != 0.0f) {
-            float ltx = myFleetAI->tick / myConfig.locusLinearXPeriod;
-            ltx /= 2 * width;
-            linear.x = width * modff(ltx / width, &temp);
-            if (((uint)temp) % 2 == 1) {
-                /*
-                 * Go backwards for the return trip.
-                 */
-                linear.x = width - linear.x;
-            }
-            haveLinear = TRUE;
-        } else {
-            linear.x = mob->pos.x;
-        }
-
-        if (myConfig.locusLinearYPeriod > 0.0f &&
-            myConfig.locusLinearWeight != 0.0f) {
-            float lty = myFleetAI->tick / myConfig.locusLinearYPeriod;
-            lty /= 2 * height;
-            linear.y = height * modff(lty / height, &temp);
-            if (((uint)temp) % 2 == 1) {
-                /*
-                 * Go backwards for the return trip.
-                 */
-                linear.y = height - linear.y;
-            }
-            haveLinear = TRUE;
-        } else {
-            linear.y = mob->pos.y;
-        }
-
-        if (haveLinear || haveCircular || haveRandom) {
-            float scale = 0.0f;
-            locus.x = 0.0f;
-            locus.y = 0.0f;
-            if (haveLinear) {
-                locus.x += myConfig.locusLinearWeight * linear.x;
-                locus.y += myConfig.locusLinearWeight * linear.y;
-                scale += myConfig.locusLinearWeight;
-            }
-            if (haveCircular) {
-                locus.x += myConfig.locusCircularWeight * circular.x;
-                locus.y += myConfig.locusCircularWeight * circular.y;
-                scale += myConfig.locusCircularWeight;
-            }
-            if (haveRandom) {
-                locus.x += myConfig.locusRandomWeight * myLive.randomLocus.x;
-                locus.y += myConfig.locusRandomWeight *  myLive.randomLocus.y;
-                scale += myConfig.locusRandomWeight;
-            }
-
-            if (myConfig.useScaledLocus) {
-                if (scale != 0.0f) {
-                    locus.x /= scale;
-                    locus.y /= scale;
-                }
-            }
-
-            pullVector(rPos, &mob->pos, &locus,
-                       myConfig.locusRadius, myConfig.locusWeight, PULL_RANGE);
-        }
-    }
-
-    void findBase(Mob *mob, FRPoint *rPos, float radius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        SensorGrid *sg = mySensorGrid;
-        Mob *base = sg->friendBase();
-
-        if (base != NULL) {
-            pullVector(rPos, &mob->pos, &base->pos, radius, weight, PULL_RANGE);
-        }
-    }
-
-    void findEnemyBase(Mob *mob, FRPoint *rPos, float radius, float weight) {
-        ASSERT(mob->type == MOB_TYPE_FIGHTER);
-        SensorGrid *sg = mySensorGrid;
-        Mob *base = sg->enemyBase();
-
-        if (base != NULL) {
-            pullVector(rPos, &mob->pos, &base->pos, radius, weight, PULL_RANGE);
-        }
-    }
-
     virtual void doAttack(Mob *mob, Mob *enemyTarget) {
         float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
         BasicAIGovernor::doAttack(mob, enemyTarget);
         FRPoint rPos;
+        AIContext aic;
+
+        aic.rs = &myRandomState;
+        aic.sg = (MappingSensorGrid *)mySensorGrid;
+        aic.ai = myFleetAI;
+
         FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
 
-        flockSeparate(mob, &rPos, myConfig.attackSeparateRadius,
-                      myConfig.attackSeparateWeight);
+        FlockFleetSeparate(&aic, mob, &rPos, myConfig.attackSeparateRadius,
+                           myConfig.attackSeparateWeight);
 
         rPos.radius = speed;
         FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
     }
 
     virtual void doIdle(Mob *mob, bool newlyIdle) {
-        FleetAI *ai = myFleetAI;
-        RandomState *rs = &myRandomState;
-        SensorGrid *sg = mySensorGrid;
-        BasicShipAI *ship = (BasicShipAI *)getShip(mob->mobid);
-        Mob *base = sg->friendBase();
-        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
-        bool nearBase;
-        bool doFlock;
+        BasicShipAI *ship;
+        AIContext aic;
 
+        aic.rs = &myRandomState;
+        aic.sg = (MappingSensorGrid *)mySensorGrid;
+        aic.ai = myFleetAI;
+
+        ship = (BasicShipAI *)getShip(mob->mobid);
         ASSERT(ship != NULL);
-
         ship->state = BSAI_STATE_IDLE;
 
         if (mob->type != MOB_TYPE_FIGHTER) {
@@ -1085,66 +775,7 @@ public:
             return;
         }
 
-        nearBase = FALSE;
-        if (base != NULL &&
-            myConfig.nearBaseRadius > 0.0f &&
-            FPoint_Distance(&base->pos, &mob->pos) < myConfig.nearBaseRadius) {
-            nearBase = TRUE;
-        }
-
-        doFlock = FALSE;
-        if (myConfig.flockCrowding <= 1 ||
-            sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos,
-                                  myConfig.flockRadius) >= myConfig.flockCrowding) {
-            doFlock = TRUE;
-        }
-
-        if (!nearBase && (myConfig.alwaysFlock || doFlock)) {
-            FRPoint rForce, rPos;
-
-            FRPoint_Zero(&rForce);
-            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
-
-            if (doFlock) {
-                FPoint avgVel;
-                FPoint avgPos;
-                sg->friendAvgVel(&avgVel, &mob->pos,
-                                myConfig.flockRadius, MOB_FLAG_FIGHTER);
-                sg->friendAvgPos(&avgPos, &mob->pos,
-                                 myConfig.flockRadius, MOB_FLAG_FIGHTER);
-
-                flockAlign(&avgVel, &rForce);
-                flockCohere(mob, &avgPos, &rForce);
-
-                flockSeparate(mob, &rForce, myLive.separateRadius,
-                              myConfig.separateWeight);
-            }
-
-            avoidEdges(mob, &rForce, myConfig.edgeRadius, myConfig.edgesWeight);
-            findCenter(mob, &rForce, myConfig.centerRadius, myConfig.centerWeight);
-            findBase(mob, &rForce, myConfig.baseRadius, myConfig.baseWeight);
-            findEnemies(mob, &rForce, myConfig.enemyRadius, myConfig.enemyWeight);
-            findEnemyBase(mob, &rForce, myConfig.enemyBaseRadius,
-                          myConfig.enemyBaseWeight);
-            findCores(mob, &rForce, myConfig.coresRadius, myConfig.coresWeight);
-            findLocus(mob, &rForce);
-
-            rPos.radius = myConfig.curHeadingWeight;
-            FRPoint_Add(&rPos, &rForce, &rPos);
-            rPos.radius = speed;
-
-            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
-            ASSERT(!isnanf(mob->cmd.target.x));
-            ASSERT(!isnanf(mob->cmd.target.y));
-        } else if (newlyIdle) {
-            if (myConfig.randomIdle) {
-                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
-                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
-            }
-        }
-
-        ASSERT(!isnanf(mob->cmd.target.x));
-        ASSERT(!isnanf(mob->cmd.target.y));
+        FlockFleet_DoIdle(&aic, &myConfig, &myLive, mob, newlyIdle);
     }
 
     virtual void runTick() {
@@ -1415,4 +1046,520 @@ static void FlockFleetRunAITick(void *aiHandle)
 {
     FlockFleet *sf = (FlockFleet *)aiHandle;
     sf->gov.runTick();
+}
+
+
+void FlockFleet_DoIdle(AIContext *aic,
+                       const FlockFleetConfig *ffc,
+                       FlockFleetLiveState *ffls,
+                       Mob *mob, bool newlyIdle)
+{
+        FleetAI *ai = aic->ai;
+        RandomState *rs = aic->rs;
+        SensorGrid *sg = aic->sg;
+
+        Mob *base = sg->friendBase();
+        float speed = MobType_GetSpeed(MOB_TYPE_FIGHTER);
+        bool nearBase;
+        bool doFlock;
+
+        ASSERT(mob->type == MOB_TYPE_FIGHTER);
+
+        nearBase = FALSE;
+        if (base != NULL &&
+            ffc->nearBaseRadius > 0.0f &&
+            FPoint_Distance(&base->pos, &mob->pos) < ffc->nearBaseRadius) {
+            nearBase = TRUE;
+        }
+
+        doFlock = FALSE;
+        if (ffc->flockCrowding <= 1 ||
+            sg->numFriendsInRange(MOB_FLAG_FIGHTER, &mob->pos,
+                                  ffc->flockRadius) >= ffc->flockCrowding) {
+            doFlock = TRUE;
+        }
+
+        if (!nearBase && (ffc->alwaysFlock || doFlock)) {
+            FRPoint rForce, rPos;
+
+            FRPoint_Zero(&rForce);
+            FPoint_ToFRPoint(&mob->pos, &mob->lastPos, &rPos);
+
+            if (doFlock) {
+                FPoint avgVel;
+                FPoint avgPos;
+                sg->friendAvgVel(&avgVel, &mob->pos,
+                                ffc->flockRadius, MOB_FLAG_FIGHTER);
+                sg->friendAvgPos(&avgPos, &mob->pos,
+                                 ffc->flockRadius, MOB_FLAG_FIGHTER);
+
+                FlockFleetAlign(ffc, &avgVel, &rForce);
+                FlockFleetCohere(aic, ffc, mob, &avgPos, &rForce);
+
+                FlockFleetSeparate(aic, mob, &rForce, ffls->separateRadius,
+                                   ffc->separateWeight);
+            }
+
+            FlockFleetAvoidEdges(aic, mob, &rForce, ffc->edgeRadius,
+                                 ffc->edgesWeight);
+            FlockFleetFindCenter(aic, mob, &rForce, ffc->centerRadius,
+                                 ffc->centerWeight);
+            FlockFleetFindBase(aic, mob, &rForce, ffc->baseRadius,
+                               ffc->baseWeight);
+            FlockFleetFindEnemies(aic, ffc, mob, &rForce, ffc->enemyRadius,
+                                  ffc->enemyWeight);
+            FlockFleetFindEnemyBase(aic, mob, &rForce, ffc->enemyBaseRadius,
+                                    ffc->enemyBaseWeight);
+            FlockFleetFindCores(aic, ffc, mob, &rForce, ffc->coresRadius,
+                                ffc->coresWeight);
+            FlockFleetFindLocus(aic, ffc, ffls, mob, &rForce);
+
+            rPos.radius = ffc->curHeadingWeight;
+            FRPoint_Add(&rPos, &rForce, &rPos);
+            rPos.radius = speed;
+
+            FRPoint_ToFPoint(&rPos, &mob->pos, &mob->cmd.target);
+            ASSERT(!isnanf(mob->cmd.target.x));
+            ASSERT(!isnanf(mob->cmd.target.y));
+        } else if (newlyIdle) {
+            if (ffc->randomIdle) {
+                mob->cmd.target.x = RandomState_Float(rs, 0.0f, ai->bp.width);
+                mob->cmd.target.y = RandomState_Float(rs, 0.0f, ai->bp.height);
+            }
+        }
+
+        ASSERT(!isnanf(mob->cmd.target.x));
+        ASSERT(!isnanf(mob->cmd.target.y));
+    }
+
+
+    static void FlockFleetAlign(const FlockFleetConfig *ffc,
+                                const FPoint *avgVel, FRPoint *rPos)
+    {
+        float weight = ffc->alignWeight;
+        FRPoint ravgVel;
+
+        FPoint_ToFRPoint(avgVel, NULL, &ravgVel);
+        ravgVel.radius = weight;
+
+        FRPoint_Add(rPos, &ravgVel, rPos);
+    }
+
+    static void FlockFleetCohere(AIContext *aic,
+                                 const FlockFleetConfig *ffc,
+                                 Mob *mob,
+                                 const FPoint *avgPos,
+                                 FRPoint *rPos) {
+        FPoint lAvgPos;
+        float weight = ffc->cohereWeight;
+
+        if (ffc->brokenCohere) {
+            FlockFleetBrokenCoherePos(aic, ffc, &lAvgPos, &mob->pos);
+        } else {
+            lAvgPos = *avgPos;
+        }
+
+        FRPoint ravgPos;
+        FPoint_ToFRPoint(&lAvgPos, NULL, &ravgPos);
+        ravgPos.radius = weight;
+        FRPoint_Add(rPos, &ravgPos, rPos);
+    }
+
+
+static void FlockFleetBrokenCoherePos(AIContext *aic,
+                                      const FlockFleetConfig *ffc,
+                                      FPoint *avgPos, const FPoint *center)
+{
+    SensorGrid *sg = aic->sg;
+    MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
+    FPoint lAvgPos;
+    float flockRadius = ffc->flockRadius;
+
+    lAvgPos.x = 0.0f;
+    lAvgPos.y = 0.0f;
+
+    while (mit.hasNext()) {
+        Mob *f = mit.next();
+        ASSERT(f != NULL);
+
+        if (FPoint_Distance(&f->pos, center) <= flockRadius) {
+            /*
+                * The broken version just sums the positions and doesn't
+                * properly average them.
+                */
+            lAvgPos.x += f->pos.x;
+            lAvgPos.y += f->pos.y;
+        }
+    }
+
+    ASSERT(avgPos != NULL);
+    *avgPos = lAvgPos;
+}
+
+
+static void
+FlockFleetSeparate(AIContext *aic,
+                   Mob *mob, FRPoint *rPos,
+                   float radius, float weight) {
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    SensorGrid *sg = aic->sg;
+
+    MobSet::MobIt mit = sg->friendsIterator(MOB_FLAG_FIGHTER);
+    FRPoint repulseVec;
+
+    repulseVec.radius = 0.0f;
+    repulseVec.theta = 0.0f;
+
+    while (mit.hasNext()) {
+        Mob *f = mit.next();
+        ASSERT(f != NULL);
+
+
+        if (f->mobid != mob->mobid &&
+            FPoint_Distance(&f->pos, &mob->pos) <= radius) {
+            FlockFleetRepulseVector(aic, &repulseVec, &f->pos,
+                                    &mob->pos, radius);
+        }
+    }
+
+    repulseVec.radius = weight;
+    FRPoint_Add(rPos, &repulseVec, rPos);
+}
+
+static void FlockFleetRepulseVector(AIContext *aic,
+                                    FRPoint *repulseVec,
+                                    FPoint *pos, FPoint *c,
+                                    float repulseRadius) {
+    RandomState *rs = aic->rs;
+
+    FRPoint drp;
+
+    FPoint_ToFRPoint(pos, c, &drp);
+
+    ASSERT(drp.radius >= 0.0f);
+    ASSERT(repulseRadius >= 0.0f);
+
+    if (drp.radius <= MICRON) {
+        drp.theta = RandomState_Float(rs, 0, M_PI * 2.0f);
+        drp.radius = 1.0f;
+    } else {
+        float repulsion;
+        float k = (drp.radius / repulseRadius) + 1.0f;
+        repulsion = 1.0f / (k * k);
+        drp.radius = -1.0f * repulsion;
+    }
+
+    FRPoint_Add(&drp, repulseVec, repulseVec);
+}
+
+
+static void FlockFleetAvoidEdges(AIContext *aic,
+                                 Mob *mob, FRPoint *rPos,
+                                 float repulseRadius, float weight)
+{
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    FleetAI *ai = aic->ai;
+
+    if (FlockFleetEdgeDistance(aic, &mob->pos) >= repulseRadius) {
+        return;
+    }
+
+    FRPoint repulseVec;
+
+    repulseVec.radius = 0.0f;
+    repulseVec.theta = 0.0f;
+
+    FPoint edgePoint;
+
+    /*
+        * Left Edge
+        */
+    edgePoint = mob->pos;
+    edgePoint.x = 0.0f;
+    if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        FlockFleetRepulseVector(aic, &repulseVec, &edgePoint, &mob->pos,
+                                repulseRadius);
+    }
+
+    /*
+        * Right Edge
+        */
+    edgePoint = mob->pos;
+    edgePoint.x = ai->bp.width;
+    if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        FlockFleetRepulseVector(aic, &repulseVec, &edgePoint, &mob->pos,
+                                repulseRadius);
+    }
+
+    /*
+        * Top Edge
+        */
+    edgePoint = mob->pos;
+    edgePoint.y = 0.0f;
+    if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        FlockFleetRepulseVector(aic, &repulseVec, &edgePoint, &mob->pos,
+                                repulseRadius);
+    }
+
+    /*
+        * Bottom edge
+        */
+    edgePoint = mob->pos;
+    edgePoint.y = ai->bp.height;
+    if (FPoint_Distance(&edgePoint, &mob->pos) <= repulseRadius) {
+        FlockFleetRepulseVector(aic, &repulseVec, &edgePoint, &mob->pos,
+                                repulseRadius);
+    }
+
+    repulseVec.radius = weight;
+    FRPoint_Add(rPos, &repulseVec, rPos);
+}
+
+static float FlockFleetEdgeDistance(AIContext *aic, FPoint *pos)
+{
+    FleetAI *ai = aic->ai;
+    float edgeDistance;
+    FPoint edgePoint;
+
+    edgePoint = *pos;
+    edgePoint.x = 0.0f;
+    edgeDistance = FPoint_Distance(pos, &edgePoint);
+
+    edgePoint = *pos;
+    edgePoint.x = ai->bp.width;
+    edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
+
+    edgePoint = *pos;
+    edgePoint.y = 0.0f;
+    edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
+
+    edgePoint = *pos;
+    edgePoint.y = ai->bp.height;
+    edgeDistance = MIN(edgeDistance, FPoint_Distance(pos, &edgePoint));
+
+    return edgeDistance;
+}
+
+
+static void FlockFleetFindCenter(AIContext *aic,
+                                 Mob *mob, FRPoint *rPos,
+                                 float radius, float weight)
+{
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    FPoint center;
+    center.x = aic->ai->bp.width / 2;
+    center.y = aic->ai->bp.height / 2;
+    FlockFleetPullVector(rPos, &mob->pos, &center, radius, weight, PULL_RANGE);
+}
+
+
+static void
+FlockFleetPullVector(FRPoint *curForce,
+                     const FPoint *cPos, const FPoint *tPos,
+                     float radius, float weight, FlockPullType pType)
+{
+    ASSERT(pType == PULL_ALWAYS ||
+            pType == PULL_RANGE);
+
+    if (pType == PULL_RANGE &&
+        FPoint_Distance(cPos, tPos) > radius) {
+        return;
+    } else if (weight == 0.0f) {
+        return;
+    }
+
+    FPoint eVec;
+    FRPoint reVec;
+    FPoint_Subtract(tPos, cPos, &eVec);
+    FPoint_ToFRPoint(&eVec, NULL, &reVec);
+    reVec.radius = weight;
+    FRPoint_Add(curForce, &reVec, curForce);
+}
+
+
+static void
+FlockFleetFindBase(AIContext *aic,
+                   Mob *mob, FRPoint *rPos,
+                   float radius, float weight)
+{
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    SensorGrid *sg = aic->sg;
+    Mob *base = sg->friendBase();
+
+    if (base != NULL) {
+        FlockFleetPullVector(rPos, &mob->pos, &base->pos, radius, weight,
+                             PULL_RANGE);
+    }
+}
+
+static void
+FlockFleetFindEnemyBase(AIContext *aic,
+                        Mob *mob, FRPoint *rPos,
+                        float radius, float weight)
+{
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    SensorGrid *sg = aic->sg;
+    Mob *base = sg->enemyBase();
+
+    if (base != NULL) {
+        FlockFleetPullVector(rPos, &mob->pos, &base->pos, radius, weight,
+                             PULL_RANGE);
+    }
+}
+
+
+static void
+FlockFleetFindEnemies(AIContext *aic,
+                      const FlockFleetConfig *ffc,
+                      Mob *mob, FRPoint *rPos,
+                      float radius, float weight)
+{
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    SensorGrid *sg = aic->sg;
+    Mob *enemy = sg->findClosestTarget(&mob->pos, MOB_FLAG_SHIP);
+
+    if (enemy != NULL) {
+        int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                                &mob->pos, ffc->enemyCrowdRadius);
+        FlockPullType pType = numFriends >= ffc->enemyCrowding ?
+                                PULL_ALWAYS : PULL_RANGE;
+        FlockFleetPullVector(rPos, &mob->pos, &enemy->pos, radius, weight,
+                             pType);
+    }
+}
+
+static void
+FlockFleetFindCores(AIContext *aic,
+                    const FlockFleetConfig *ffc,
+                    Mob *mob, FRPoint *rPos, float radius, float weight)
+{
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    SensorGrid *sg = aic->sg;
+    Mob *core = sg->findClosestTarget(&mob->pos, MOB_FLAG_POWER_CORE);
+
+    if (core != NULL) {
+        int numFriends = sg->numFriendsInRange(MOB_FLAG_FIGHTER,
+                                                &mob->pos,
+                                                ffc->coresCrowdRadius);
+        FlockPullType pType = numFriends >= ffc->coresCrowding ?
+                                PULL_ALWAYS : PULL_RANGE;
+        FlockFleetPullVector(rPos, &mob->pos, &core->pos, radius, weight,
+                             pType);
+    }
+}
+
+
+static void FlockFleetFindLocus(AIContext *aic,
+                                const FlockFleetConfig *ffc,
+                                FlockFleetLiveState *ffls,
+                                Mob *mob, FRPoint *rPos)
+{
+    ASSERT(mob->type == MOB_TYPE_FIGHTER);
+    FPoint circular;
+    FPoint linear;
+    FPoint locus;
+    bool haveCircular = FALSE;
+    bool haveLinear = FALSE;
+    bool haveRandom = FALSE;
+    float width = aic->ai->bp.width;
+    float height = aic->ai->bp.height;
+    float temp;
+
+    if (ffc->locusCircularPeriod > 0.0f &&
+        ffc->locusCircularWeight != 0.0f) {
+        float cwidth = width / 2;
+        float cheight = height / 2;
+        float ct = aic->ai->tick / ffc->locusCircularPeriod;
+
+        /*
+            * This isn't actually the circumference of an ellipse,
+            * but it's a good approximation.
+            */
+        ct /= M_PI * (cwidth + cheight);
+
+        circular.x = cwidth + cwidth * cosf(ct);
+        circular.y = cheight + cheight * sinf(ct);
+        haveCircular = TRUE;
+    }
+
+    if (ffc->locusRandomPeriod > 0.0f &&
+        ffc->locusRandomWeight != 0.0f) {
+        /*
+            * XXX: Each ship will get a different random locus on the first
+            * tick.
+            */
+        if (ffls->randomLocusTick == 0 ||
+            aic->ai->tick - ffls->randomLocusTick >
+            ffc->locusRandomPeriod) {
+            RandomState *rs = aic->rs;
+            ffls->randomLocus.x = RandomState_Float(rs, 0.0f, width);
+            ffls->randomLocus.y = RandomState_Float(rs, 0.0f, height);
+            ffls->randomLocusTick = aic->ai->tick;
+        }
+        haveRandom = TRUE;
+    }
+
+    if (ffc->locusLinearXPeriod > 0.0f &&
+        ffc->locusLinearWeight != 0.0f) {
+        float ltx = aic->ai->tick / ffc->locusLinearXPeriod;
+        ltx /= 2 * width;
+        linear.x = width * modff(ltx / width, &temp);
+        if (((uint)temp) % 2 == 1) {
+            /*
+                * Go backwards for the return trip.
+                */
+            linear.x = width - linear.x;
+        }
+        haveLinear = TRUE;
+    } else {
+        linear.x = mob->pos.x;
+    }
+
+    if (ffc->locusLinearYPeriod > 0.0f &&
+        ffc->locusLinearWeight != 0.0f) {
+        float lty = aic->ai->tick / ffc->locusLinearYPeriod;
+        lty /= 2 * height;
+        linear.y = height * modff(lty / height, &temp);
+        if (((uint)temp) % 2 == 1) {
+            /*
+                * Go backwards for the return trip.
+                */
+            linear.y = height - linear.y;
+        }
+        haveLinear = TRUE;
+    } else {
+        linear.y = mob->pos.y;
+    }
+
+    if (haveLinear || haveCircular || haveRandom) {
+        float scale = 0.0f;
+        locus.x = 0.0f;
+        locus.y = 0.0f;
+        if (haveLinear) {
+            locus.x += ffc->locusLinearWeight * linear.x;
+            locus.y += ffc->locusLinearWeight * linear.y;
+            scale += ffc->locusLinearWeight;
+        }
+        if (haveCircular) {
+            locus.x += ffc->locusCircularWeight * circular.x;
+            locus.y += ffc->locusCircularWeight * circular.y;
+            scale += ffc->locusCircularWeight;
+        }
+        if (haveRandom) {
+            locus.x += ffc->locusRandomWeight * ffls->randomLocus.x;
+            locus.y += ffc->locusRandomWeight *  ffls->randomLocus.y;
+            scale += ffc->locusRandomWeight;
+        }
+
+        if (ffc->useScaledLocus) {
+            if (scale != 0.0f) {
+                locus.x /= scale;
+                locus.y /= scale;
+            }
+        }
+
+        FlockFleetPullVector(rPos, &mob->pos, &locus,
+                             ffc->locusRadius,
+                             ffc->locusWeight, PULL_RANGE);
+    }
 }
