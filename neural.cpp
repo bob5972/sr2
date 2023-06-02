@@ -213,6 +213,7 @@ static const TextMapEntry tmCombiners[] = {
     { TMENTRY(NEURAL_CT_MULTIPLY),        },
     { TMENTRY(NEURAL_CT_DIVIDE),          },
     { TMENTRY(NEURAL_CT_ADD),             },
+    { TMENTRY(NEURAL_CT_SUBTRACT),        },
     { TMENTRY(NEURAL_CT_ARITHMETIC_MEAN), },
     { TMENTRY(NEURAL_CT_GEOMETRIC_MEAN),  },
     { TMENTRY(NEURAL_CT_TAKE_MIN),        },
@@ -2522,6 +2523,9 @@ void NeuralCombiner_ApplyOutput(NeuralCombinerType cType,
             break;
         case NEURAL_CT_ADD:
             force->radius += inputValue;
+            break;
+        case NEURAL_CT_SUBTRACT:
+            force->radius -= inputValue;
             break;
         case NEURAL_CT_ARITHMETIC_MEAN:
             force->radius = (force->radius + inputValue) / 2.0f;
