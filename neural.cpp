@@ -208,9 +208,15 @@ static const TextMapEntry tmLocus[] = {
     { TMENTRY(NEURAL_LOCUS_PATROL_EDGES), },
 };
 static const TextMapEntry tmCombiners[] = {
-    { TMENTRY(NEURAL_CT_VOID),         },
-    { TMENTRY(NEURAL_CT_ASSIGN),       },
-    { TMENTRY(NEURAL_CT_MULTIPLY),     },
+    { TMENTRY(NEURAL_CT_VOID),            },
+    { TMENTRY(NEURAL_CT_ASSIGN),          },
+    { TMENTRY(NEURAL_CT_MULTIPLY),        },
+    { TMENTRY(NEURAL_CT_DIVIDE),          },
+    { TMENTRY(NEURAL_CT_ADD),             },
+    { TMENTRY(NEURAL_CT_ARITHMETIC_MEAN), },
+    { TMENTRY(NEURAL_CT_GEOMETRIC_MEAN),  },
+    { TMENTRY(NEURAL_CT_TAKE_MIN),        },
+    { TMENTRY(NEURAL_CT_TAKE_MAX),        },
 };
 
 const char *NeuralForce_ToString(NeuralForceType nft)
@@ -2513,6 +2519,28 @@ void NeuralCombiner_ApplyOutput(NeuralCombinerType cType,
             break;
         case NEURAL_CT_MULTIPLY:
             FRPoint_Multiply(force, inputValue);
+            break;
+        case NEURAL_CT_ADD:
+            force->radius += inputValue;
+            break;
+        case NEURAL_CT_ARITHMETIC_MEAN:
+            force->radius = (force->radius + inputValue) / 2.0f;
+            break;
+        case NEURAL_CT_DIVIDE:
+            if (inputValue != 0.0f) {
+                force->radius /= inputValue;
+            } else {
+                force->radius = 0.0f;
+            }
+            break;
+        case NEURAL_CT_GEOMETRIC_MEAN:
+            force->radius = sqrtf(force->radius * inputValue);
+            break;
+        case NEURAL_CT_TAKE_MIN:
+            force->radius = MIN(force->radius, inputValue);
+            break;
+        case NEURAL_CT_TAKE_MAX:
+            force->radius = MAX(force->radius, inputValue);
             break;
         default:
             NOT_IMPLEMENTED();
