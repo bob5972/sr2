@@ -568,12 +568,12 @@ sub Main() {
         my $s;
 
         Console("ShipNet Outputs:\n");
-        $s = `grep forceType $gFile | grep shipNet | grep output | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        $s = `egrep 'forceType|combinerType' $gFile | grep shipNet | grep output | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
         Console("ShipNet Inputs:\n");
-        $s = `egrep 'valueType|forceType' $gFile | grep shipNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        $s = `egrep 'valueType|forceType|crowdType|waveType' $gFile | grep shipNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
@@ -583,20 +583,20 @@ sub Main() {
         Console("\n");
 
 
-        Console("FleetNet Inputs:\n");
-        $s = `egrep 'valueType|forceType' $gFile | grep fleetNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
-        Console($s);
-        Console("\n");
+        #Console("FleetNet Inputs:\n");
+        #$s = `egrep 'valueType|forceType' $gFile | grep fleetNet | grep input | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        #Console($s);
+        #Console("\n");
 
         Console("ShipNet OpCodes:\n");
         $s = `grep op $gFile | grep shipNet | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
         Console($s);
         Console("\n");
 
-        Console("FleetNet OpCodes:\n");
-        $s = `grep op $gFile | grep fleetNet | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
-        Console($s);
-        Console("\n");
+        #Console("FleetNet OpCodes:\n");
+        #$s = `grep op $gFile | grep fleetNet | awk -F= '{gsub(/ /,""); print \$2}'| sort |uniq -c | sort -nr`;
+        #Console($s);
+        #Console("\n");
     }
 
     MBBasic::Exit();
