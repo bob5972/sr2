@@ -201,7 +201,9 @@ void NeuralFleet_GetOps(FleetAIType aiType, FleetAIOps *ops)
         ops->aiName = "NeuralFleet12";
     } else if (aiType == FLEET_AI_NEURAL13) {
         ops->aiName = "NeuralFleet13";
-    } else {
+    } else if (aiType == FLEET_AI_NEURAL14) {
+        ops->aiName = "NeuralFleet14";
+    }else {
         NOT_IMPLEMENTED();
     }
 

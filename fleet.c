@@ -353,7 +353,7 @@ bool Fleet_IsBundleFleet(FleetAIType aiType)
 
 bool Fleet_IsNeuralFleet(FleetAIType aiType)
 {
-    if (aiType >= FLEET_AI_NEURAL1 && aiType <= FLEET_AI_NEURAL13) {
+    if (aiType >= FLEET_AI_NEURAL1 && aiType <= FLEET_AI_NEURAL14) {
         return TRUE;
     }
     return FALSE;

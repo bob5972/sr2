@@ -93,7 +93,7 @@ typedef enum SpriteSet {
     SPRITE_SET_URSA_ORANGE3,        // Bineural4
 
     SPRITE_SET_VEGA_BLUE,           // Matrix1
-    SPRITE_SET_VEGA_ORANGE,
+    SPRITE_SET_VEGA_ORANGE,         // Neural14
     SPRITE_SET_VEGA_PURPLE,
     SPRITE_SET_VEGA_GREEN,
     SPRITE_SET_VEGA_ORANGE2,

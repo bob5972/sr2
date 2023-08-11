@@ -91,6 +91,9 @@ FleetConfigValue FC_neural12[] = {
 FleetConfigValue FC_neural13[] = {
 #include "fleetData/neural13.config"
 };
+FleetConfigValue FC_neural14[] = {
+#include "fleetData/neural14.config"
+};
 
 static const FleetConfigValue FC_bineuralDefaults[] = {
     { "attackExtendedRange",         "TRUE"      },
@@ -226,6 +229,7 @@ void FleetConfig_PushDefaults(MBRegistry *mreg, FleetAIType aiType)
         F(NEURAL11, &neuralDefaults, neural11),
         F(NEURAL12, &neuralDefaults, neural12),
         F(NEURAL13, &neuralDefaults, neural13),
+        F(NEURAL14, &neuralDefaults, neural14),
 
         F(BINEURAL1, &bineuralDefaults, bineural1),
         F(BINEURAL2, &bineuralDefaults, bineural2),
