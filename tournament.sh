@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OPTS="-H -T"
+OPTS="-H"
 OPTS="${OPTS} -t 14"
 OPTS="${OPTS} -l 1"
 

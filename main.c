@@ -176,12 +176,21 @@ static void MainAddNeutralPlayer(void)
 
 static void MainLoadAllAsControlPlayers(void)
 {
+    bool strongControl = MBOpt_IsPresent("strongControl");
+    int fleetStart;
+
     MainAddNeutralPlayer();
+
+    if (strongControl) {
+        fleetStart = FLEET_AI_MAX / 2;
+    } else {
+        fleetStart = 0;
+    }
 
     /*
      * Add everybody in order of rankings.
      */
-    for (int i = 0; i < FLEET_AI_MAX; i++) {
+    for (int i = fleetStart; i < FLEET_AI_MAX; i++) {
         FleetAIType aiType = Fleet_GetTypeFromRanking(i);
         if (aiType != FLEET_AI_INVALID) {
             ASSERT(Fleet_GetRanking(aiType) == i);
@@ -192,6 +201,7 @@ static void MainLoadAllAsControlPlayers(void)
         }
     }
 }
+
 
 static void MainLoadDefaultPlayers(void)
 {
@@ -493,8 +503,8 @@ MainAddTargetPlayersForOptimize(void)
      */
     method = doSimple;
     if (method == doSimple) {
-        targetPlayers[tpIndex].aiType = FLEET_AI_BINEURAL5;
-        targetPlayers[tpIndex].playerName = "BineuralFleet5.Test";
+        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL14;
+        targetPlayers[tpIndex].playerName = "NeuralFleet14.Test";
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
         // int keep[] = { 0, 2, 18, 24 };
@@ -1836,6 +1846,7 @@ static void MainParseCmdLine(int argc, char **argv)
         { "-S", "--scenario",          TRUE,  "Scenario type"                 },
         { "-D", "--dumpPopulation",    TRUE,  "Dump Population to file"       },
         { "-U", "--usePopulation",     TRUE,  "Use Population from file"      },
+        { NULL, "--strongControl",     FALSE, "Use only strong control fleets"},
         { "-s", "--seed",              TRUE,  "Set random seed"               },
         { "-L", "--tickLimit",         TRUE,  "Time limit in ticks"           },
         { "-t", "--numThreads",        TRUE,  "Number of engine threads"      },
