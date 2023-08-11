@@ -503,8 +503,8 @@ MainAddTargetPlayersForOptimize(void)
      */
     method = doSimple;
     if (method == doSimple) {
-        targetPlayers[tpIndex].aiType = FLEET_AI_NEURAL14;
-        targetPlayers[tpIndex].playerName = "NeuralFleet14.Test";
+        targetPlayers[tpIndex].aiType = FLEET_AI_FLOCK9;
+        targetPlayers[tpIndex].playerName = "FlockFleet9.Test";
 
         // targetPlayers[tpIndex].mreg = MBRegistry_Alloc();
         // int keep[] = { 0, 2, 18, 24 };
