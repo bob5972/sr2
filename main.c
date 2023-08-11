@@ -217,7 +217,7 @@ static void MainLoadDefaultPlayers(void)
         mainData.players[p].aiType = FLEET_AI_BUNDLE15;
         p++;
 
-        mainData.players[p].aiType = FLEET_AI_NEURAL12;
+        mainData.players[p].aiType = FLEET_AI_NEURAL14;
         p++;
 
         mainData.players[p].aiType = FLEET_AI_BINEURAL5;
