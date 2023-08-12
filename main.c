@@ -306,6 +306,8 @@ static void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
 
         mainData.numBSCs = 0;
 
+        ASSERT(mainData.players[0].aiType == FLEET_AI_NEUTRAL);
+
         for (uint ti = 0; ti < p; ti++) {
             if (mainData.players[ti].playerType != PLAYER_TYPE_TARGET) {
                 continue;
@@ -337,6 +339,8 @@ static void MainConstructScenarios(bool loadPlayers, MainBattleType bt)
 
         mainData.numBSCs = 0;
         for (uint x = 1; x < mainData.numPlayers; x++) {
+
+            ASSERT(mainData.players[x].playerType == PLAYER_TYPE_CONTROL);
 
             for (uint y = 1; y < mainData.numPlayers; y++) {
                 if (x == y) {
@@ -740,8 +744,8 @@ static void MainPrintWinnerData(MainWinnerData *wd)
     ASSERT(wd->battles >= 0);
     ASSERT(wd->wins + wd->losses + wd->draws == wd->battles);
 
-    Warning("\t%3d wins, %3d losses, %3d draws => %4.1f%% wins\n",
-            wins, losses, draws, percent);
+    Warning("\t%3d wins, %3d losses, %3d draws, %3d total => %4.1f%% wins\n",
+            wins, losses, draws,  battles, percent);
 }
 
 static void MainPrintWinners(void)
