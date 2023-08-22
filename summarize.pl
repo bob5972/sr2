@@ -382,6 +382,7 @@ sub DisplaySummary() {
     my $fitnessRange = {};
     my $maxWinsP;
     my $maxFP;
+    my $maxAgeP;
     my $maxFV;
 
     for (my $i = 0.1; $i <= 1.0; $i+=0.1) {
@@ -440,6 +441,11 @@ sub DisplaySummary() {
             if (!defined($maxFP) || $f > $maxFV) {
                 $maxFP = $fPrefix;
                 $maxFV = $f;
+            }
+            if (!defined($maxAgeP) ||
+                !defined($gPop->{"$maxAgeP.age"}) ||
+                $a > $gPop->{"$maxAgeP.age"}) {
+                $maxAgeP = $fPrefix;
             }
         }
     }
@@ -504,6 +510,10 @@ sub DisplaySummary() {
     if (defined($maxFP)) {
         my $fPrefix = $maxFP;
         Console("Upstart: " . GetFleetSummary($fPrefix) . "\n");
+    }
+    if (defined($maxAgeP)) {
+        my $fPrefix = $maxAgeP;
+        Console("  Elder: " . GetFleetSummary($fPrefix) . "\n");
     }
 
     Console("\n");

@@ -34,6 +34,7 @@ typedef struct Fleet {
 } Fleet;
 
 static const FleetAIType gRankings[] = {
+                        // Full, Strong
     FLEET_AI_SIMPLE,    //  0.0%
     FLEET_AI_GATHER,    //  2.0%
     FLEET_AI_CLOUD,     //  2.0%
@@ -63,30 +64,30 @@ static const FleetAIType gRankings[] = {
     FLEET_AI_BUNDLE11,  // 56.3%
     FLEET_AI_BUNDLE13,  // 58.1%
     FLEET_AI_NEURAL6,   // 58.7%
-    FLEET_AI_NEURAL5,   // 58.8%
-    FLEET_AI_BUNDLE14,  // 58.9%
-    FLEET_AI_FLOCK4,    // 62.2%
-    FLEET_AI_NEURAL8,   // 65.7%
-    FLEET_AI_NEURAL10,  // 67.2%
-    FLEET_AI_FLOCK5,    // 68.9%
-    FLEET_AI_FLOCK3,    // 69.1%
-    FLEET_AI_NEURAL9,   // 69.4%
-    FLEET_AI_NEURAL7,   // 70.3%
-    FLEET_AI_BUNDLE12,  // 73.1%
-    FLEET_AI_FLOCK6,    // 74.2%
-    FLEET_AI_NEURAL12,  // 76.2%
-    FLEET_AI_FLOCK7,    // 76.9%
-    FLEET_AI_NEURAL11,  // 78.1%
-    FLEET_AI_BUNDLE16,  // 79.9%
-    FLEET_AI_BINEURAL1, // 80.1%
-    FLEET_AI_FLOCK8,    // 81.4%
-    FLEET_AI_BUNDLE15,  // 80.7%
-    FLEET_AI_BINEURAL2, // 82.7%
-    FLEET_AI_BINEURAL3, // 83.0%
-    FLEET_AI_BINEURAL4, // 83.2%
-    FLEET_AI_NEURAL13,  // 83.4%
-    FLEET_AI_NEURAL14,  // 89.4%
-    FLEET_AI_FLOCK9,    // 90.8%
+    FLEET_AI_NEURAL5,   // 58.8%, 24.3%
+    FLEET_AI_BUNDLE14,  // 58.9%, 24.3%
+    FLEET_AI_FLOCK4,    // 62.2%, 23.9%
+    FLEET_AI_NEURAL8,   // 65.7%, 27.2%
+    FLEET_AI_NEURAL10,  // 67.2%, 32.6%
+    FLEET_AI_NEURAL9,   // 69.4%, 33.6%
+    FLEET_AI_FLOCK5,    // 68.9%, 33.8%
+    FLEET_AI_NEURAL7,   // 70.3%, 34.5%
+    FLEET_AI_BUNDLE12,  // 73.1%, 35.1%
+    FLEET_AI_FLOCK3,    // 69.1%, 37.4%
+    FLEET_AI_FLOCK6,    // 74.2%, 41.7%
+    FLEET_AI_NEURAL12,  // 76.2%, 43.2%
+    FLEET_AI_FLOCK7,    // 76.9%, 46.4%
+    FLEET_AI_NEURAL11,  // 78.1%, 49.4%
+    FLEET_AI_BUNDLE16,  // 79.9%, 51.1%
+    FLEET_AI_BINEURAL2, // 82.7%, 55.0%
+    FLEET_AI_BINEURAL1, // 80.1%, 56.0%
+    FLEET_AI_BUNDLE15,  // 80.7%, 57.2%
+    FLEET_AI_FLOCK8,    // 81.4%, 57.4%
+    FLEET_AI_BINEURAL3, // 83.0%, 61.9%
+    FLEET_AI_BINEURAL4, // 83.2%, 63.2%
+    FLEET_AI_NEURAL13,  // 83.4%, 64.1%
+    FLEET_AI_NEURAL14,  // 89.4%, 76.7%
+    FLEET_AI_FLOCK9,    // 90.8%, 77.8%
 };
 
 static void FleetRunAITick(const BattleStatus *bs, FleetAI *ai);
