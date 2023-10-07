@@ -127,6 +127,7 @@ typedef enum NeuralForceType {
     NEURAL_FORCE_GENE_MIDWAY,
     NEURAL_FORCE_GENE_ENEMY_MISSILE,
     NEURAL_FORCE_GENE_RETREAT_COHERE,
+    NEURAL_FORCE_GENE_RETREAT_COHERE2,
     NEURAL_FORCE_GENE_RETREAT_ENEMY_ALIGN,
 
     NEURAL_FORCE_MAX,
@@ -200,12 +201,20 @@ typedef struct NeuralForceDesc {
     int index;
     bool useTangent;
     bool useBase;
+
+    /*
+     * Do we apply the filters to this force?
+     */
+    bool filterForceValue;
+
+    /*
+     * Treat the force as not present if it fails the filter checks.
+     */
     bool filterForward;
     bool filterBackward;
     bool filterAdvance;
     bool filterRetreat;
     bool filterRange;
-    bool filterForceValue;
 } NeuralForceDesc;
 
 typedef struct NeuralTickDesc {

@@ -1,8 +1,6 @@
 -- project.txt -- part of Space Robots 2
 
 Next Steps:
-* MatrixFleet
-** Neural inputs/outputs with just linear combinations
 * New simpler ShipAI
 ** Less hashing, more flexibility
 
@@ -29,5 +27,3 @@ Tech Debt / Quality of Life:
 * Measure specific fleet from population
 * Extra iterations for upstarts
 * Cache advance/retreat dir (avoid FPoint_ToFRPoint calls)
-
-

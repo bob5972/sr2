@@ -35,6 +35,10 @@ static bool NeuralForceGeneRetreatCohere(AIContext *nc,
                                          Mob *mob,
                                          NeuralForceDesc *desc,
                                          FPoint *focusPoint);
+static bool NeuralForceGeneRetreatCohere2(AIContext *nc,
+                                          Mob *mob,
+                                          NeuralForceDesc *desc,
+                                          FPoint *focusPoint);
 static bool NeuralForceGeneRetreatEnemyAlign(AIContext *nc,
                                              Mob *mob,
                                              NeuralForceDesc *desc,
@@ -149,6 +153,7 @@ static const TextMapEntry tmForces[] = {
     { TMENTRY(NEURAL_FORCE_GENE_MIDWAY),                     },
     { TMENTRY(NEURAL_FORCE_GENE_ENEMY_MISSILE),              },
     { TMENTRY(NEURAL_FORCE_GENE_RETREAT_COHERE),             },
+    { TMENTRY(NEURAL_FORCE_GENE_RETREAT_COHERE2),            },
     { TMENTRY(NEURAL_FORCE_GENE_RETREAT_ENEMY_ALIGN),        },
 };
 
@@ -1919,6 +1924,9 @@ bool NeuralForce_GetFocus(AIContext *nc,
         case NEURAL_FORCE_GENE_RETREAT_COHERE: {
             return NeuralForceGeneRetreatCohere(nc, mob, desc, focusPoint);
         }
+        case NEURAL_FORCE_GENE_RETREAT_COHERE2: {
+            return NeuralForceGeneRetreatCohere2(nc, mob, desc, focusPoint);
+        }
         case NEURAL_FORCE_GENE_RETREAT_ENEMY_ALIGN: {
             return NeuralForceGeneRetreatEnemyAlign(nc, mob, desc, focusPoint);
         }
@@ -2749,6 +2757,73 @@ static bool NeuralForceGeneRetreatCohere(AIContext *aic,
 
     if (haveO0) {
         FRPoint_SetSpeed(&rForce, vN39);
+        FRPoint_ToFPoint(&rForce, &mob->pos, focusPoint);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+
+static bool NeuralForceGeneRetreatCohere2(AIContext *aic,
+                                          Mob *mob,
+                                          NeuralForceDesc *desc,
+                                          FPoint *focusPoint)
+{
+    NeuralForceDesc o0;
+    NeuralValueDesc i16;
+
+    /*
+     * Copy the base desc to ensure we initialize any new
+     * parameters.
+     */
+
+    o0 = *desc;
+    o0.filterAdvance = FALSE;
+    o0.filterBackward = FALSE;
+    o0.filterForceValue = TRUE;
+    o0.filterForward = FALSE;
+    o0.filterRetreat = FALSE;
+    o0.filterRange = TRUE;
+    o0.forceType = NEURAL_FORCE_GENE_RETREAT_COHERE;
+    o0.radius = 1182.230713f;
+    o0.range = 0.0f;
+    o0.useBase = FALSE;
+    o0.useTangent = TRUE;
+
+    MBUtil_Zero(&i16, sizeof(i16));
+    i16.forceDesc = *desc;
+    i16.valueType = NEURAL_VALUE_FORCE;
+    i16.forceDesc.forceType = NEURAL_FORCE_BASE_FARTHEST_FRIEND;
+    i16.forceDesc.filterAdvance = TRUE;
+    i16.forceDesc.filterBackward = FALSE;
+    i16.forceDesc.filterForceValue = FALSE;
+    i16.forceDesc.filterForward = TRUE;
+    i16.forceDesc.filterRetreat = FALSE;
+    i16.forceDesc.filterRange = TRUE;
+    i16.forceDesc.radius = 2934.379639f;
+    i16.forceDesc.useBase = FALSE;
+    i16.forceDesc.useTangent = TRUE;
+
+    FPoint focusI16, focusO0;
+    FRPoint rForce;
+    bool haveO0 = NeuralForce_GetFocus(aic, mob, &o0, &focusO0);
+
+    if (!haveO0) {
+        return FALSE;
+    }
+
+    bool haveI16 = NeuralForce_GetFocus(aic, mob, &i16.forceDesc, &focusI16);
+    float vI16 = NeuralForce_FocusToRange(mob, &focusI16, haveI16);
+
+    float vN80 = cosf(vI16);
+
+    ASSERT(haveO0);
+    haveO0 = NeuralForce_FocusToForce(aic, mob, &o0, &focusO0, TRUE, &rForce);
+
+    if (haveO0) {
+        FRPoint_SetSpeed(&rForce, vN80);
         FRPoint_ToFPoint(&rForce, &mob->pos, focusPoint);
         return TRUE;
     }
